@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "homebudget-server", "homebudget-server.csproj", "{7C616B0D-7DAF-4D46-B716-D1C21288A53D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C616B0D-7DAF-4D46-B716-D1C21288A53D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C616B0D-7DAF-4D46-B716-D1C21288A53D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C616B0D-7DAF-4D46-B716-D1C21288A53D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C616B0D-7DAF-4D46-B716-D1C21288A53D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A6ECFD2E-0774-4714-AF28-BD7E79775065}
+	EndGlobalSection
+EndGlobal
