@@ -1,17 +1,19 @@
 import axios from "axios";
 import * as React from "react";
-import { Transaction } from "../models/transaction";
+import { Transaction } from "../../models/transaction";
+import CreateTransaction from "./CreateTransaction";
+import InputButton from "../form/InputButton";
 
 interface State 
 {
-    transactions: Transaction[] | null
+    transactions: Transaction[] | null;
 }
 
 export default class TransactionList extends React.Component<{}, State> {
     constructor(props: {}) {
         super(props);
         this.state = {
-            transactions: null
+            transactions: null,
         };
     }
 
@@ -26,7 +28,7 @@ export default class TransactionList extends React.Component<{}, State> {
 
     public render() {
         return <>
-            <table className="table">
+            <table className="table is-fullwidth is-hoverable">
                 <thead>
                     <tr>
                         <th>Date</th>

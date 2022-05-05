@@ -1,9 +1,9 @@
 import * as React from "react";
 
 export interface InputTextProps {
-    label: string,
+    label?: string,
     value: string,
-    disabled?: boolean
+    disabled?: boolean,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
 }
 
@@ -14,7 +14,7 @@ export default class InputText extends React.Component<InputTextProps> {
 
     public render() {
         return <div className="field">
-            <label className="label">{this.props.label}</label>
+            {this.props.label && <label className="label">{this.props.label}</label>}
             <div className="field has-addons">
                 <div className="control is-expanded">
                     <input

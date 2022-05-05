@@ -1,14 +1,10 @@
-import { History } from "history";
 import * as React from "react";
-import { connect, ConnectedProps } from "react-redux";
 import { Link } from "react-router-dom";
-import { ThunkDispatch } from "redux-thunk";
-import Remote, { GetRemoteValue, IsFetched, RemoteState } from "../lib/Remote";
-import { routes } from "../lib/routes";
-import AccountList from "./AccountList";
-import CreateAccount from "./CreateAccount";
-import CreateTransaction from "./CreateTransaction";
-import TransactionList from "./TransactionList";
+import { routes } from "../../lib/routes";
+import AccountList from "../AccountList";
+import CreateAccount from "../CreateAccount";
+import CreateTransaction from "../transaction/CreateTransaction";
+import TransactionList from "../transaction/TransactionList";
 
 /*
  * Custom props and state
@@ -25,7 +21,7 @@ interface State {
 /*
  * React object class
  */
-export default class Dashboard extends React.Component<Props, State> {
+export default class PageDashboard extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -80,7 +76,7 @@ export default class Dashboard extends React.Component<Props, State> {
                 </div>
             </div>
 
-            <Link to={routes.sampleRoute(this.state.parameter)}>{routes.sampleRoute(this.state.parameter)}</Link>
+            <Link to={routes.transactions()}>View transactions</Link>
 
         </section>;
     }

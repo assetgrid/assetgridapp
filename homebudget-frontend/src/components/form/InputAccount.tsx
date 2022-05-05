@@ -73,56 +73,50 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
 
     public render() {
         var value: string;
-        if (this.state.open) {
-            value = this.state.searchQuery;
+        if (this.props.value == null) {
+            value = "Select Account";
+        } else if (this.state.value == null) {
+            value = "#" + this.props.value + " …";
         } else {
-            if (this.props.value == null) {
-                value = "Select Account";
-            } else if (this.state.value == null) {
-                value = "#" + this.props.value + " …";
-            } else {
-                value = "#" + this.state.value.id + " " + this.state.value.name;
-            }
+            value = "#" + this.state.value.id + " " + this.state.value.name;
         }
         
         return <div className="field" tabIndex={0}
             onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && this.setState({ open: false })}
             >
             <label className="label">{this.props.label}</label>
-            <div className="field has-addons">
-                <div className="control is-expanded dropdown-search">
-                    <input
-                        className="input"
-                        type="text"
-                        placeholder={this.props.label}
-                        value={value}
-                        disabled={this.props.disabled}
-                        onFocus={e => this.setState({ open: true }) }
-                        onChange={e => this.setState({ searchQuery: e.target.value }) }
-                    />
-                    { this.state.open && this.renderDropdown() }
+            <div className={"dropdown is-fullwidth" + (this.state.open ? " is-active" : "")}>
+                <div className="dropdown-trigger">
+                    <button className="button" aria-haspopup="true" onClick={e => this.setState({ open: true }) }>
+                        <span>{value}</span>
+                        <span className="icon is-small">
+                            <i className="fas fa-angle-down" aria-hidden="true"></i>
+                        </span>
+                    </button>
+                </div>
+                <div className={"dropdown-menu"} role="menu">
+                    <div className="dropdown-content">
+                        <input
+                            className="dropdown-item"
+                            style={{border: "0"}}
+                            type="text"
+                            placeholder="Search for account"
+                            value={this.state.searchQuery}
+                            disabled={this.props.disabled}
+                            onChange={e => this.setState({ searchQuery: e.target.value }) }
+                        />
+                        <hr className="dropdown-divider" />
+                        {this.state.dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {this.state.dropdownOptions?.map(option => <a
+                            className={"dropdown-item" + (this.props.value == option.id ? " is-active" : "")}
+                            key={option.id}
+                            onClick={() => { this.setState({ value: option, open: false, searchQuery: "" }); this.props.onChange(option) }}>
+                            #{option.id} {option.name}
+                        </a>)}
+                    </div>
                 </div>
             </div>
         </div>;
-    }
-    
-    private renderDropdown()
-    {
-        if (this.state.dropdownOptions == null)
-        {
-            return <div className="dropdown">
-                <div>Loading suggestions</div>
-            </div>
-        }
-
-        return <div className="dropdown">
-            {this.state.dropdownOptions.map(option => <div
-                className="dropdown-item"
-                key={option.id}
-                onClick={() => { this.setState({ value: option, open: false, searchQuery: "" }); this.props.onChange(option) }}>
-                #{option.id} {option.name}
-            </div>)}
-        </div>
     }
 
     private refreshDropdown()

@@ -1,12 +1,12 @@
 import * as React from "react";
 
-export interface InputTextProps {
+export interface InputButtonProps {
     label: string,
     onClick?: React.MouseEventHandler<HTMLButtonElement>
 }
 
-export default class InputText extends React.Component<InputTextProps> {
-    constructor(props: InputTextProps) {
+export default class InputButton extends React.Component<InputButtonProps> {
+    constructor(props: InputButtonProps) {
         super(props);
     }
 

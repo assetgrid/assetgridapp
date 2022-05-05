@@ -1,14 +1,13 @@
 import axios from "axios";
 import * as React from "react";
 import { Account } from "../models/account";
-import { Transaction } from "../models/transaction";
 
 interface State 
 {
     accounts: Account[] | null
 }
 
-export default class TransactionList extends React.Component<{}, State> {
+export default class AccountList extends React.Component<{}, State> {
     constructor(props: {}) {
         super(props);
         this.state = {

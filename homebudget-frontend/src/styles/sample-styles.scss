@@ -1,32 +1,14 @@
-// Custom styles can be placed in this folder
-
-.dropdown-search {
-    position: relative;
-
-    .dropdown {
-        @extend %control;
-        position: absolute;
-        background-color: $input-background-color;
-        border-color: $input-border-color;
-        border-radius: $input-radius;
-        color: $input-color;
-        left: 0;
-        right: 0;
-        top: 100%;
-        z-index: 10;
-        flex-direction: column;
-        justify-content: left;
-        align-items: stretch;
-        height: auto;
-        padding: 0;
+.dropdown.is-fullwidth {
+    display: flex;
+  
+    .dropdown-trigger,
+    .dropdown-menu {
+      width: 100%;
     }
 
-    .dropdown-item {
-        @extend %control;
-        cursor: pointer;
-        &:hover {
-            background-color: #555;
-            color: white;    
-        }
+    .dropdown-trigger .button {
+        width: 100%;
+        text-align: left;
+        justify-content: space-between;
     }
-}
+  }

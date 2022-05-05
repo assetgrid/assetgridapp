@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export interface InputNumberProps {
-    label: string,
+    label?: string,
     value: number,
     disabled?: boolean
     onChange: React.ChangeEventHandler<HTMLInputElement>,
@@ -14,7 +14,7 @@ export default class InputNumber extends React.Component<InputNumberProps> {
 
     public render() {
         return <div className="field">
-            <label className="label">{this.props.label}</label>
+            {this.props.label && <label className="label">{this.props.label}</label>}
             <div className="field has-addons">
                 <div className="control is-expanded">
                     <input
