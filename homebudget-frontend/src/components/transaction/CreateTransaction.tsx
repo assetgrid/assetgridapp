@@ -40,8 +40,8 @@ export default class CreateTransaction extends React.Component<{}, State> {
 
     public render() {
         return <>
-            <h3 className="title is-3">Create Transaction</h3>
-            <h4 className="title is-4">Properties</h4>
+            <h2 className="title is-2">Create Transaction</h2>
+            <h3 className="title is-4">Properties</h3>
             <div className="columns">
                 <div className="column is-half">
                     <InputText label="Description"
@@ -71,7 +71,7 @@ export default class CreateTransaction extends React.Component<{}, State> {
                 </div>
             </div>
             
-            <h4 className="title is-4">Transaction Lines</h4>
+            <h3 className="title is-4">Transaction Lines</h3>
             {this.state.lines.map((line, i) => <div key={i} className="columns">
                 <div className="column is-3">
                     <InputNumber label={i == 0 ? "Amount" : undefined}
@@ -106,7 +106,12 @@ export default class CreateTransaction extends React.Component<{}, State> {
             )}
             <div className="buttons">
                 <InputButton label="Add line" onClick={() => this.addLine()}/>
-                <InputButton label="Create Transaction" onClick={() => this.create()} />
+            </div>
+
+            <h3 className="title is-4">Create Transaction</h3>
+            <div className="buttons">
+                <InputButton label="Create and Continue" onClick={() => this.create()} />
+                <InputButton label="Create and View Transaction" onClick={() => this.create()} />
             </div>
         </>;
     }

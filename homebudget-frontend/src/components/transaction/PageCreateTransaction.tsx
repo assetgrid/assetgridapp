@@ -8,7 +8,9 @@ export default class PageCreateTransaction extends React.Component<{}> {
 
     public render() {
         return <section className="section container">
-           <CreateTransaction />
+            <div className="box">
+                <CreateTransaction />
+            </div>
         </section>;
     }
 }

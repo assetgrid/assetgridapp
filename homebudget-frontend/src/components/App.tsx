@@ -5,6 +5,7 @@ import PageTransactions from "./transaction/PageTransactions";
 import SiteHeader from "./SiteHeader";
 import PageCreateTransaction from "./transaction/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
+import PageImportCsv from "./import/PageImportCsv";
 
 export default class FairFitPortalApp extends React.Component {
     constructor(props: {}) {
@@ -16,6 +17,7 @@ export default class FairFitPortalApp extends React.Component {
             <SiteHeader />
             <Switch>
                 <Route exact path={routes.dashboard()} component={PageDashboard} />
+                <Route exact path={routes.importCsv()} component={PageImportCsv} />
                 <Route exact path={routes.transactions()} component={PageTransactions}/>
                 <Route exact path={routes.createTransaction()} component={PageCreateTransaction}/>
             </Switch>
