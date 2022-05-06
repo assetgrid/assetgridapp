@@ -1,6 +1,7 @@
 ﻿using homebudget_server.Models;
 using homebudget_server.Models.ViewModels;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace homebudget_server.Data
 {
@@ -13,7 +14,7 @@ namespace homebudget_server.Data
                 return account;
             }
 
-            var columns = new[] { ("Id", ColumnType.Int), ("Name", ColumnType.String), ("Description", ColumnType.String) };
+            var columns = new[] { ("Id", typeof(int)), ("Name", typeof(string)), ("Description", typeof(string)) };
             var parameter = Expression.Parameter(typeof(Account), "account");
             var expression = SearchGroupToExpression(query.Query, columns, parameter);
             if (expression != null)
@@ -23,7 +24,7 @@ namespace homebudget_server.Data
             return account;
         }
 
-        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, ColumnType type)[] columns, ParameterExpression parameter)
+        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type)[] columns, ParameterExpression parameter)
         {
             Expression? result = null;
             switch (group.Type)
@@ -38,51 +39,58 @@ namespace homebudget_server.Data
                         throw new Exception($"Invalid column '{group.Query.Column}'");
                     }
 
-                    object? value;
-                    switch(columns.First(column => column.name == group.Query.Column).type)
-                    {
-                        case ColumnType.String:
-                            value = group.Query.Value;
-                            break;
-                        case ColumnType.Int:
-                            if (int.TryParse(group.Query.Value, out int intValue))
-                            {
-                                value = intValue;
-                            }
-                            else
-                            {
-                                value = null;
-                            }
-                            break;
-                        default:
-                            throw new Exception("Unknown column type");
-                    }
+                    var column = columns.First(column => column.name == group.Query.Column);
+                    var columnValue = CastJsonElement((JsonElement)group.Query.Value, column.type);
 
                     switch (group.Query.Operator)
                     {
                         case ViewSearchOperator.Equals:
-                            if (value == null)
+                            if (columnValue.GetType() != column.type)
                             {
-                                return Expression.Constant(false);
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
-                            result = Expression.Equal(Expression.Property(parameter, group.Query.Column), Expression.Constant(value));
+                            result = Expression.Equal(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
                             break;
                         case ViewSearchOperator.Contains:
-                            if (string.IsNullOrEmpty(group.Query.Value))
+                            if (columnValue.GetType() == typeof(string))
                             {
-                                return Expression.Constant(false);
+                                if (string.IsNullOrEmpty((string)columnValue))
+                                {
+                                    return Expression.Constant(false);
+                                }
+                                result = Expression.Call(
+                                    // Call method Contains on the column with the value as the parameter
+                                    Expression.Property(parameter, group.Query.Column),
+                                    typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
+                                    Expression.Constant(columnValue)
+                                    );
+                                break;
                             }
-                            result = Expression.Call(
-                                // Call method Contains on the column with the value as the parameter
-                                Expression.Property(parameter, group.Query.Column),
-                                typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
-                                Expression.Constant(group.Query.Value)
-                                );
-                            break;
+                            else if (columnValue.GetType().GetElementType() == column.type)
+                            {
+                                var method = typeof(Enumerable)
+                                    .GetMethods()
+                                    .Single(method => method.Name == "Contains" &&
+                                        method.GetParameters().Length == 2 &&
+                                        method.GetParameters()[1].Name == "value")
+                                    .MakeGenericMethod(column.type);
+                                result = Expression.Call(
+                                    // Call method Contains on the column with the value as the parameter
+                                    null,
+                                    method,
+                                    Expression.Constant(columnValue),
+                                    Expression.Property(parameter, group.Query.Column)
+                                    );
+                                break;
+                            }
+                            else
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' does not accept type {columnValue.GetType()}");
+                            }
                         default:
                             throw new Exception($"Unknown search operator '{group.Query.Operator}'");
                     }
-
+                    
                     if (group.Query.Not)
                     {
                         return Expression.Not(result);
@@ -131,6 +139,39 @@ namespace homebudget_server.Data
                 default:
                     throw new Exception($"Unknown group type '{group.Type}'");
             }
+        }
+
+        private static object CastJsonElement(JsonElement element, Type preferType)
+        {
+            if (element.ValueKind == JsonValueKind.String) return element.GetString()!;
+            if (element.ValueKind == JsonValueKind.Number)
+            {
+                if (preferType == typeof(int))
+                {
+                    return element.GetInt32();
+                }
+                else
+                {
+                    return element.GetDecimal();
+                }
+            }
+            if (element.ValueKind == JsonValueKind.Array)
+            {
+                if (preferType == typeof(int))
+                {
+                    return element.EnumerateArray().Select(obj => obj.GetInt32()).ToArray();
+                }
+                if (preferType == typeof(string))
+                {
+                    return element.EnumerateArray().Select(obj => obj.GetString()).ToArray();
+                }
+                if (preferType == typeof(decimal))
+                {
+                    return element.EnumerateArray().Select(obj => obj.GetDecimal()).ToArray();
+                }
+            }
+
+            throw new Exception($"Cannot handle JSON element of type {element.ValueKind}");
         }
 
         private enum ColumnType

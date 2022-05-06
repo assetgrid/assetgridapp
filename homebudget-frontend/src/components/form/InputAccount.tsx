@@ -132,7 +132,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         query: {
                             column: "Id",
                             operator: 0,
-                            value: this.state.searchQuery,
+                            value: Number(this.state.searchQuery.replace(/\D/g,'')),
                         }
                     },
                     {

@@ -8,7 +8,7 @@
     public class ViewSearchQuery
     {
         public string Column { get; set; }
-        public string Value { get; set; }
+        public object Value { get; set; }
         public ViewSearchOperator Operator { get; set; }
         public bool Not { get; set; }
     }
