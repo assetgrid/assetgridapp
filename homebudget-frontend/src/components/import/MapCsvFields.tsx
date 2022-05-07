@@ -14,19 +14,23 @@ interface Props {
     lines: string[];
 
     transactions: CsvCreateTransaction[] | null;
-    onChange: (transactions: CsvCreateTransaction[]) => void;
+    onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
+    options: MappingOptions;
 }
 
-interface State {
-    rowOffset: number;
-
+export interface MappingOptions {
     // Mapping options
     duplicateHandling: DuplicateHandlingOptions;
     identifierColumn: string | null;
+    amountColumn: string | null;
     sourceAccountColumn: string | null;
     sourceAccountIdentifier: AccountIdentifier;
     destinationAccountColumn: string | null;
     destinationAccountIdentifier: AccountIdentifier;
+};
+
+interface State {
+    rowOffset: number;
 }
 
 const pageSize: number = 20;
@@ -39,13 +43,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
         super(props);
         this.state = {
             rowOffset: 0,
-
-            duplicateHandling: "row",
-            identifierColumn: null,
-            sourceAccountColumn: null,
-            sourceAccountIdentifier: "name",
-            destinationAccountColumn: null,
-            destinationAccountIdentifier: "name",
         };
     }
 
@@ -53,8 +50,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
         return <>
             <h3 className="title is-5">Map CSV columns</h3>
             <InputSelect label="Duplicate handling"
-                value={this.state.duplicateHandling}
-                onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions)}
+                value={this.props.options.duplicateHandling}
+                onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
                 items={[
                     { key: "row", value: "CSV line" },
                     { key: "identifier", value: "Colum" },
@@ -77,11 +74,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 </ul>
             </div>
 
-            {["identifier", "identifier-rownumber"].indexOf(this.state.duplicateHandling) > -1 &&
+            {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
                 <InputSelect label="Identifier column"
-                    value={this.state.identifierColumn}
+                    value={this.props.options.identifierColumn}
                     placeholder={"Select column"}
-                    onChange={result => this.updateIdentifierColumn(result)}
+                    onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
                     items={Object.keys(this.props.data[0]).map(item => {
                         return {
                             key: item,
@@ -93,9 +90,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <div className="columns">
                 <div className="column is-half">
                     <InputSelect label="Source account identifier"
-                        value={this.state.sourceAccountIdentifier}
+                        value={this.props.options.sourceAccountIdentifier}
                         placeholder={"Select variable"}
-                        onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.state.sourceAccountColumn)}
+                        onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn)}
                         items={[
                             { key: "name", value: "Name" },
                             { key: "id", value: "Id" },
@@ -104,9 +101,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 </div>
                 <div className="column is-half">
                     <InputSelect label="Source account column"
-                        value={this.state.sourceAccountColumn}
+                        value={this.props.options.sourceAccountColumn}
                         placeholder={"Select column"}
-                        onChange={result => this.accountReferenceChanged("source", this.state.sourceAccountIdentifier, result)}
+                        onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result)}
                         items={Object.keys(this.props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -119,9 +116,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <div className="columns">
                 <div className="column is-half">
                     <InputSelect label="Destination account identifier"
-                        value={this.state.destinationAccountIdentifier}
+                        value={this.props.options.destinationAccountIdentifier}
                         placeholder={"Select variable"}
-                        onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.state.destinationAccountColumn)}
+                        onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn)}
                         items={[
                             { key: "name", value: "Name" },
                             { key: "id", value: "Id" },
@@ -130,9 +127,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 </div>
                 <div className="column is-half">
                     <InputSelect label="Destination account column"
-                        value={this.state.destinationAccountColumn}
+                        value={this.props.options.destinationAccountColumn}
                         placeholder={"Select column"}
-                        onChange={result => this.accountReferenceChanged("destination", this.state.destinationAccountIdentifier, result)}
+                        onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result)}
                         items={Object.keys(this.props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -141,6 +138,17 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         })} />
                 </div>
             </div>
+
+            <InputSelect label="Amount column"
+                value={this.props.options.amountColumn}
+                placeholder={"Select column"}
+                onChange={result => this.setAmountColumn(result)}
+                items={Object.keys(this.props.data[0]).map(item => {
+                    return {
+                        key: item,
+                        value: item,
+                    }
+                })} />
 
             {this.renderImportTable()}
         </>;
@@ -191,7 +199,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                 {this.printAccount(transaction.to)}
                             </AccountTooltip>
                         </td>
-                        <td></td>
+                        <td>{transaction.amount}</td>
                     </tr>
                 )}
             </tbody>
@@ -202,28 +210,38 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.updateTransactions();
     }
 
-    private updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions) {
-        this.setState({ duplicateHandling: duplicateHandling });
-        this.updateIdentifierColumn(this.state.identifierColumn);
+    private setAmountColumn(newValue: string) {
+        this.props.onChange([
+            ...this.props.data.map((row, i) => ({
+                ...this.props.transactions[i],
+                amount: (row as any)[newValue]
+            }))
+        ], {
+            ...this.props.options,
+            amountColumn: newValue,
+        });
     }
 
-    private updateIdentifierColumn(identifierColumn: string) {
+    private updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string) {
         if (this.props.transactions === null) {
             return;
         }
 
-        this.setState({ identifierColumn: identifierColumn });
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
                 identifier: this.getIdentifier(identifierColumn, i, row)
             }))
-        ]);
+        ], {
+            ...this.props.options,
+            duplicateHandling: duplicateHandling,
+            identifierColumn: identifierColumn,
+        });
     }
 
     private getIdentifier(identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string
     {
-        switch (this.state.duplicateHandling)
+        switch (this.props.options.duplicateHandling)
         {
             case "none":
                 return "";
@@ -254,7 +272,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
     private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string) {
         let newTransactions: CsvCreateTransaction[];
         if (type == "source") {
-            this.setState({ sourceAccountColumn: column, sourceAccountIdentifier: identifier });
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
@@ -266,7 +283,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 }))
             ];
         } else {
-            this.setState({ destinationAccountColumn: column, destinationAccountIdentifier: identifier });
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
@@ -278,7 +294,16 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 }))
             ];
         }
-        this.props.onChange(newTransactions);
+
+        let newOptions = { ...this.props.options };
+        if (type === "source") {
+            newOptions.sourceAccountIdentifier = identifier;
+            newOptions.sourceAccountColumn = column
+        } else {
+            newOptions.destinationAccountIdentifier = identifier;
+            newOptions.destinationAccountColumn = column
+        }
+        this.props.onChange(newTransactions, newOptions);
 
         if (type === "source") {
             this.fetchAccounts(newTransactions, identifier, null);
@@ -299,24 +324,24 @@ export default class MapCsvFields extends React.Component<Props, State> {
             created: new Date(),
             description: "",
             from: {
-                identifier: this.state.sourceAccountIdentifier,
-                value: row[this.state.sourceAccountColumn],
+                identifier: this.props.options.sourceAccountIdentifier,
+                value: row[this.props.options.sourceAccountColumn],
                 account: "fetching" as "fetching"
             },
             to: {
-                identifier: this.state.destinationAccountIdentifier,
-                value: row[this.state.destinationAccountColumn],
+                identifier: this.props.options.destinationAccountIdentifier,
+                value: row[this.props.options.destinationAccountColumn],
                 account: "fetching" as "fetching"
             },
-            identifier: this.getIdentifier(this.state.identifierColumn, i, row),
-            lines: []
+            identifier: this.getIdentifier(this.props.options.identifierColumn, i, row),
+            amount: row[this.props.options.amountColumn],
         }));
-        this.props.onChange(newTransactions);
+        this.props.onChange(newTransactions, this.props.options);
         
-        this.fetchAccounts(newTransactions, this.state.sourceAccountIdentifier, this.state.destinationAccountIdentifier);
+        this.fetchAccounts(newTransactions, this.props.options.sourceAccountIdentifier, this.props.options.destinationAccountIdentifier);
     }
 
-    private fetchAccounts(transactions: CsvCreateTransaction[], sourceIdentifier: string | null, destinationIdentifier: string | null) {
+    private fetchAccounts(transactions: CsvCreateTransaction[], sourceIdentifier: AccountIdentifier | null, destinationIdentifier: AccountIdentifier | null) {
         let uniqueAccounts = [
                 ...(sourceIdentifier !== null ? transactions.map(transaction => transaction.from) : []),
                 ...(destinationIdentifier !== null ? transactions.map(transaction => transaction.to) : [])
@@ -354,6 +379,13 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 children: query
             }
         }).then(res => {
+            let newOptions = { ...this.props.options };
+            if (sourceIdentifier !== null) {
+                newOptions.sourceAccountIdentifier = sourceIdentifier;
+            } else if (destinationIdentifier !== null) {
+                newOptions.destinationAccountIdentifier = destinationIdentifier;
+            }
+            
             this.props.onChange([
                 ...this.props.transactions.map((transaction, i) => {
                     let result = { ...this.props.transactions[i] };
@@ -373,7 +405,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     }
                     return result;
                 })
-            ]);
+            ], newOptions);
         });
     }
 

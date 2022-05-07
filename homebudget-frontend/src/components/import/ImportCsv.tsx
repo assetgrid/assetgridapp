@@ -5,19 +5,23 @@ import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
 
 interface Props {
-    onChange: (data: any[], lines: string[]) => void;
+    csvParsed: (data: any[], lines: string[]) => void;
+    fileChanged: (file: File) => void;
+    optionsChanged: (options: CsvImportOptions) => void;
+    options: CsvImportOptions;
+    csvFile: File | null;
+}
+
+export interface CsvImportOptions {
+    csvParseHeader: boolean;
+    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r";
+    csvDelimiter: string;
 }
 
 interface State {
-    csvFile: File | null;
     csvData: Papa.ParseResult<unknown> | null | "error";
     rowOffset: number;
     columnOffset: number;
-
-    // CSV options
-    csvParseHeader: boolean,
-    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r",
-    csvDelimiter: string,
 }
 
 const pageSize: number = 20;
@@ -30,24 +34,25 @@ export default class ImportCsv extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            csvFile: null,
             csvData: null,
             rowOffset: 0,
-            columnOffset: 0,
-
-            csvParseHeader: false,
-            csvDelimiter: "auto",
-            csvNewlineCharacter: "auto",
+            columnOffset: 0
         };
     }
 
+    componentDidMount(): void {
+        if (this.props.csvFile !== null) {
+            this.reparseFile(this.props.csvFile);
+        }
+    }
+
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
-        if (this.state.csvParseHeader != prevState.csvParseHeader
-            || this.state.csvNewlineCharacter != prevState.csvNewlineCharacter
-            || this.state.csvDelimiter != prevState.csvDelimiter) {
+        if (this.props.options.csvParseHeader != prevProps.options.csvParseHeader
+            || this.props.options.csvNewlineCharacter != prevProps.options.csvNewlineCharacter
+            || this.props.options.csvDelimiter != prevProps.options.csvDelimiter) {
             
-            if (this.state.csvFile != null) {
-                this.reparseFile(this.state.csvFile);
+            if (this.props.csvFile != null) {
+                this.reparseFile(this.props.csvFile);
             }
         }
     }
@@ -57,26 +62,26 @@ export default class ImportCsv extends React.Component<Props, State> {
             <h3 className="subtitle is-3">Import from CSV file</h3>
 
             <InputCheckbox label="Parse header"
-                value={this.state.csvParseHeader}
-                onChange={e => this.setState({ csvParseHeader: e.target.checked })} />
+                value={this.props.options.csvParseHeader}
+                onChange={e => this.props.optionsChanged({ ...this.props.options, csvParseHeader: e.target.checked })} />
             <InputCheckbox label="Auto-detect delimiter"
-                value={this.state.csvDelimiter == "auto"}
+                value={this.props.options.csvDelimiter == "auto"}
                 onChange={e => e.target.checked == true
-                    ? this.setState({ csvDelimiter: "auto" })
-                    : this.setState({ csvDelimiter: "" })}
+                    ? this.props.optionsChanged({ ...this.props.options, csvDelimiter: "auto" })
+                    : this.props.optionsChanged({ ...this.props.options, csvDelimiter: "" })}
             />
-            {this.state.csvDelimiter != "auto" &&
-                <InputText label="Delimiter" value={this.state.csvDelimiter} onChange={e => this.setState({ csvDelimiter: e.target.value })} />}
+            {this.props.options.csvDelimiter != "auto" &&
+                <InputText label="Delimiter" value={this.props.options.csvDelimiter} onChange={e => this.props.optionsChanged({ ...this.props.options, csvDelimiter: e.target.value })} />}
             <InputSelect label="Newline character"
-                value={this.state.csvNewlineCharacter}
-                onChange={result => this.setState({ csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
+                value={this.props.options.csvNewlineCharacter}
+                onChange={result => this.props.optionsChanged({ ...this.props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
                 items={[
                 { key: "auto", value: "Detect automatically" },
                 { key: "\n", value: "\\n" },
                 { key: "\r", value: "\\r" },
                 { key: "\r\n", value: "\\r\\n" }
             ]} />
-            <div className={"file " + (this.state.csvFile != null ? " has-name" : "")}>
+            <div className={"file " + (this.props.csvFile != null ? " has-name" : "")}>
                 <label className="file-label">
                     <input className="file-input" type="file" name="resume" onChange={e => this.fileUploaded(e)}/>
                     <span className="file-cta">
@@ -87,13 +92,13 @@ export default class ImportCsv extends React.Component<Props, State> {
                             Choose a file…
                         </span>
                     </span>
-                    {this.state.csvFile != null && <span className="file-name">
-                        {this.state.csvFile.name}
+                    {this.props.csvFile != null && <span className="file-name">
+                        {this.props.csvFile.name}
                     </span>}
                 </label>
             </div>
 
-            {this.state.csvFile != null && <>
+            {this.props.csvFile != null && <>
                 <h3 className="title is-4">CSV data</h3>
                 {this.renderCsvTable()}
             </>}
@@ -143,10 +148,10 @@ export default class ImportCsv extends React.Component<Props, State> {
     {
         let file = e.target.files[0];
         this.setState({
-            csvFile: this.state.csvFile,
             rowOffset: 0,
             columnOffset: 0,
         });
+        this.props.fileChanged(e.target.files[0]);
 
         this.reparseFile(file);
     }
@@ -154,20 +159,19 @@ export default class ImportCsv extends React.Component<Props, State> {
     private reparseFile(file: File)
     {
         this.setState({
-            csvFile: file,
             csvData: null,
         });
+        this.props.fileChanged(file);
 
         const reader = new FileReader();
         reader.onload = (event) => {
             Papa.parse(event.target.result.toString(), {
-                header: this.state.csvParseHeader,
-                delimiter: this.state.csvDelimiter == "auto" ? undefined : this.state.csvDelimiter,
-                newline: this.state.csvNewlineCharacter == "auto" ? undefined : this.state.csvNewlineCharacter,
+                header: this.props.options.csvParseHeader,
+                delimiter: this.props.options.csvDelimiter == "auto" ? undefined : this.props.options.csvDelimiter,
+                newline: this.props.options.csvNewlineCharacter == "auto" ? undefined : this.props.options.csvNewlineCharacter,
                 download: false,
                 complete: (a) => {
-                    console.log(a);
-                    this.props.onChange(a.data, event.target.result.toString().split(a.meta.linebreak));
+                    this.props.csvParsed(a.data, event.target.result.toString().split(a.meta.linebreak));
                     this.setState({ csvData: a });
                 }
             });

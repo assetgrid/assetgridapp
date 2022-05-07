@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import * as React from "react";
-import { CreateAccount as CreateAccountModel } from "../../../models/account";
+import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import { Transaction } from "../../../models/transaction";
 import InputButton from "../InputButton";
 import InputText from "../InputText";
@@ -9,7 +9,7 @@ import InputCreateAccount from "./InputCreateAccount";
 interface Props {
     value?: CreateAccountModel;
     onChange?: (account: CreateAccountModel) => void;
-    onCreated?: (account: CreateAccountModel) => void;
+    onCreated?: (account: Account) => void;
 }
 
 interface State {
@@ -47,7 +47,7 @@ export default class CreateAccount extends React.Component<Props, State> {
     private create() {
         const account = this.props.value !== undefined ? this.props.value : this.state.account;
         this.setState({ creating: true });
-        axios.post(`https://localhost:7262/account`, {
+        axios.post<CreateAccount, AxiosResponse<Account>>(`https://localhost:7262/account`, {
             name: account.name,
             description: account.description,
             accountNumber: account.accountNumber
@@ -63,7 +63,7 @@ export default class CreateAccount extends React.Component<Props, State> {
                 creating: false
             });
             if (this.props.onCreated !== undefined) {
-                this.props.onCreated(newAccount);
+                this.props.onCreated(res.data);
             }
         })
     }

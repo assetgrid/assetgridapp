@@ -10,7 +10,7 @@ export type CsvCreateTransaction = {
     created: Date;
     description: string;
     identifier: string | null;
-    lines: TransactionLine[];
+    amount: number;
 }
 
 export type AccountReference = {

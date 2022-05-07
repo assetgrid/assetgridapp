@@ -8,7 +8,7 @@ import { AccountReference, capitalize, castFieldValue, CsvCreateTransaction } fr
 
 interface Props {
     transactions: CsvCreateTransaction[];
-    update: () => void;
+    setTransactions: (transactions: CsvCreateTransaction[]) => void;
 }
 
 interface State {
@@ -52,10 +52,7 @@ export default class MissingAccounts extends React.Component<Props, State> {
                     <section className="modal-card-body">
                         <CreateAccount value={this.state.creatingAccount}
                             onChange={account => this.setState({ creatingAccount: account })}
-                            onCreated={() => {
-                                this.props.update();
-                                this.setState({ creatingAccount: null });
-                            }}/>
+                            onCreated={account => this.accountCreated(account)}/>
                     </section>
                     <footer className="modal-card-foot">
                     <button className="button is-success">Create Account</button>
@@ -95,7 +92,7 @@ export default class MissingAccounts extends React.Component<Props, State> {
         </>;
     }
 
-    private beginCreatingAccount(accountReference: AccountReference)
+    private beginCreatingAccount(accountReference: AccountReference): void
     {
         let account: CreateAccountModel = {
             name: "",
@@ -104,5 +101,28 @@ export default class MissingAccounts extends React.Component<Props, State> {
         };
         (account as any)[accountReference.identifier] = accountReference.value;
         this.setState({ creatingAccount: account });
+    }
+
+    private accountCreated(account: Account): void {
+        debugger;
+        this.props.setTransactions([...this.props.transactions.map(transaction => {
+            let newTransaction = { ...transaction };
+            let modified: boolean = false;
+            if (account[transaction.from.identifier] === transaction.from.value) {
+                newTransaction.from.account = account;
+                modified = true;
+            }
+            if (account[transaction.to.identifier] === transaction.to.value) {
+                newTransaction.to.account = account;
+                modified = true;
+            }
+
+            if (modified) {
+                return newTransaction;
+            } else {
+                return transaction;
+            }
+        })]);
+        this.setState({ creatingAccount: null });
     }
 }
