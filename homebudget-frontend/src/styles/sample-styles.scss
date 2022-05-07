@@ -3,7 +3,7 @@
   
     .dropdown-trigger,
     .dropdown-menu {
-      width: 100%;
+        width: 100%;
     }
 
     .dropdown-trigger .button {
@@ -11,4 +11,21 @@
         text-align: left;
         justify-content: space-between;
     }
-  }
+}
+
+.tooltip-container {
+    position: relative;
+
+    .tooltip {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        background-color: white;
+        z-index: 10;
+    }
+    &:hover .tooltip {
+        display: block;
+    }
+}

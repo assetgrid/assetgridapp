@@ -2,6 +2,8 @@ import axios from "axios";
 import * as React from "react";
 import { Account } from "../../models/account";
 import { Transaction } from "../../models/transaction";
+import AccountTooltip from "../account/AccountTooltip";
+import Tooltip from "../common/Tooltip";
 import InputSelect from "../form/InputSelect";
 import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
 
@@ -172,9 +174,23 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <tbody>
                 {transactions.map(transaction => 
                     <tr key={transaction.rowNumber}>
-                        <td>{transaction.identifier}</td>
-                        <td>{this.printAccount(transaction.from)}</td>
-                        <td>{this.printAccount(transaction.to)}</td>
+                        <td>{
+                            transaction.identifier.length < 30
+                                ? transaction.identifier
+                                : <Tooltip content={transaction.identifier}>
+                                    {transaction.identifier.substring(0, 30) + "…"}
+                                </Tooltip>
+                        }</td>
+                        <td>
+                            <AccountTooltip accountReference={transaction.from}>
+                                {this.printAccount(transaction.from)}
+                            </AccountTooltip>
+                        </td>
+                        <td>
+                            <AccountTooltip accountReference={transaction.to}>
+                                {this.printAccount(transaction.to)}
+                            </AccountTooltip>
+                        </td>
                         <td></td>
                     </tr>
                 )}
@@ -366,7 +382,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (account.account === "fetching") {
             return "…";
         }
-        if (account.account === null) return "";
+        if (account.value === null || account.value === "" || account.value === undefined) return "";
+        if (account.account === null) return "Not found";
         return "#" + account.account.id + " " + account.account.name;
     }
 }

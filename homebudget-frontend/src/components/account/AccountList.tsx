@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as React from "react";
-import { Account } from "../models/account";
+import { Account } from "../../models/account";
 
 interface State 
 {

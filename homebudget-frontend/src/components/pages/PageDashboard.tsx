@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
-import AccountList from "../AccountList";
+import AccountList from "../account/AccountList";
 import CreateAccount from "../form/account/CreateAccount";
 import CreateTransaction from "../transaction/CreateTransaction";
 import TransactionList from "../transaction/TransactionList";
