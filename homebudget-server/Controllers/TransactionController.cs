@@ -83,5 +83,15 @@ namespace homebudget_server.Controllers
                 })
                 .ToList();
         }
+
+        [HttpPost()]
+        [Route("/[controller]/[action]")]
+        public List<string> FindDuplicates(List<string> identifiers)
+        {
+            return _context.Transactions
+                .Where(transaction => transaction.Identifier != null && identifiers.Contains(transaction.Identifier))
+                .Select(transaction => transaction.Identifier!)
+                .ToList();
+        }
     }
 }
