@@ -52,7 +52,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 value={this.props.options.duplicateHandling}
                 onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
                 items={[
-                    { key: "row", value: "CSV line" },
                     { key: "identifier", value: "Colum" },
                     { key: "identifier-rownumber", value: "Column and count" },
                     { key: "rownumber", value: "Row number" },
@@ -62,8 +61,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
                     This value will be compared during import and transactions with the same identifier will be ignored</p>
                 <ul>
-                    <li><b>CSV line:</b> The line in the current CSV file will be used as a unique identifier.
-                        Later CSV-uploads of the exact same line (same columns, same order, same value) will be treated as a duplicate.</li>
                     <li><b>Column:</b> Use a column as a unique identifier.</li>
                     <li><b>Column and count:</b> Use a column as a unique identifier, but append a number for each occurence of the same column value in the CSV-file.
                         Useful with dates. If you have 3 transactions with value 2020-01-01, their identifier will be 2020-01-01.1, 2020-01-01.2, 2020-01-01.3
@@ -215,7 +212,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
-                identifier: this.getIdentifier(identifierColumn, i, row)
+                identifier: this.getIdentifier(duplicateHandling, identifierColumn, i, row)
             }))
         ], {
             ...this.props.options,
@@ -224,9 +221,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
         });
     }
 
-    private getIdentifier(identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string
+    private getIdentifier(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string
     {
-        switch (this.props.options.duplicateHandling)
+        switch (duplicateHandling)
         {
             case "none":
                 return "";
@@ -316,7 +313,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 value: row[this.props.options.destinationAccountColumn],
                 account: "fetching" as "fetching"
             },
-            identifier: this.getIdentifier(this.props.options.identifierColumn, i, row),
+            identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
             amount: row[this.props.options.amountColumn],
         }));
         this.props.onChange(newTransactions, this.props.options);
