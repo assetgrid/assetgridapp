@@ -14,7 +14,7 @@ namespace homebudget_server.Data
                 return account;
             }
 
-            var columns = new[] { ("Id", typeof(int)), ("Name", typeof(string)), ("Description", typeof(string)) };
+            var columns = new[] { ("Id", typeof(int)), ("Name", typeof(string)), ("Description", typeof(string)), ("AccountNumber", typeof(string)) };
             var parameter = Expression.Parameter(typeof(Account), "account");
             var expression = SearchGroupToExpression(query.Query, columns, parameter);
             if (expression != null)

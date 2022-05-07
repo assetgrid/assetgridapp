@@ -1,33 +1,30 @@
 import axios from "axios";
-import * as Papa from "papaparse";
 import * as React from "react";
-import { runInThisContext } from "vm";
 import { Account } from "../../models/account";
-import InputButton from "../form/InputButton";
-import InputCheckbox from "../form/InputCheckbox";
+import { Transaction } from "../../models/transaction";
 import InputSelect from "../form/InputSelect";
-import InputText from "../form/InputText";
+import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
 
-type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber" | "row"
-type AccountIdentifier = "id" | "name" | "account-number";
+type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber" | "row";
 
 interface Props {
     data: any[];
     lines: string[];
+
+    transactions: CsvCreateTransaction[] | null;
+    onChange: (transactions: CsvCreateTransaction[]) => void;
 }
 
 interface State {
     rowOffset: number;
 
     // Mapping options
-    mapDuplicateHandling: DuplicateHandlingOptions;
-    mapIdentifierColumn: string | null;
-    mapSourceAccountColumn: string | null;
-    mapSourceAccountIdentifier: AccountIdentifier;
-    mapDestinationAccountColumn: string | null;
-    mapDestinationAccountIdentifier: AccountIdentifier;
-
-    accountsBy: { [key: string]: { [key: string]: Account | "loading" | "not-found" } };
+    duplicateHandling: DuplicateHandlingOptions;
+    identifierColumn: string | null;
+    sourceAccountColumn: string | null;
+    sourceAccountIdentifier: AccountIdentifier;
+    destinationAccountColumn: string | null;
+    destinationAccountIdentifier: AccountIdentifier;
 }
 
 const pageSize: number = 20;
@@ -41,14 +38,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.state = {
             rowOffset: 0,
 
-            mapDuplicateHandling: "row",
-            mapIdentifierColumn: null,
-            mapSourceAccountColumn: null,
-            mapSourceAccountIdentifier: "name",
-            mapDestinationAccountColumn: null,
-            mapDestinationAccountIdentifier: "name",
-
-            accountsBy: {},
+            duplicateHandling: "row",
+            identifierColumn: null,
+            sourceAccountColumn: null,
+            sourceAccountIdentifier: "name",
+            destinationAccountColumn: null,
+            destinationAccountIdentifier: "name",
         };
     }
 
@@ -56,8 +51,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
         return <>
             <h3 className="title is-5">Map CSV columns</h3>
             <InputSelect label="Duplicate handling"
-                value={this.state.mapDuplicateHandling}
-                onChange={result => this.setState({ mapDuplicateHandling: result as DuplicateHandlingOptions })}
+                value={this.state.duplicateHandling}
+                onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions)}
                 items={[
                     { key: "row", value: "CSV line" },
                     { key: "identifier", value: "Colum" },
@@ -80,11 +75,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 </ul>
             </div>
 
-            {["identifier", "identifier-rownumber"].indexOf(this.state.mapDuplicateHandling) > -1 &&
+            {["identifier", "identifier-rownumber"].indexOf(this.state.duplicateHandling) > -1 &&
                 <InputSelect label="Identifier column"
-                    value={this.state.mapIdentifierColumn}
+                    value={this.state.identifierColumn}
                     placeholder={"Select column"}
-                    onChange={result => this.setState({ mapIdentifierColumn: result })}
+                    onChange={result => this.updateIdentifierColumn(result)}
                     items={Object.keys(this.props.data[0]).map(item => {
                         return {
                             key: item,
@@ -96,20 +91,20 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <div className="columns">
                 <div className="column is-half">
                     <InputSelect label="Source account identifier"
-                        value={this.state.mapSourceAccountIdentifier}
+                        value={this.state.sourceAccountIdentifier}
                         placeholder={"Select variable"}
-                        onChange={result => this.setState({ mapSourceAccountIdentifier: result as AccountIdentifier })}
+                        onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.state.sourceAccountColumn)}
                         items={[
                             { key: "name", value: "Name" },
                             { key: "id", value: "Id" },
-                            { key: "account-number", value: "Account Number" },
+                            { key: "accountNumber", value: "Account Number" },
                         ]} />
                 </div>
                 <div className="column is-half">
                     <InputSelect label="Source account column"
-                        value={this.state.mapSourceAccountColumn}
+                        value={this.state.sourceAccountColumn}
                         placeholder={"Select column"}
-                        onChange={result => this.setState({ mapSourceAccountColumn: result })}
+                        onChange={result => this.accountReferenceChanged("source", this.state.sourceAccountIdentifier, result)}
                         items={Object.keys(this.props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -122,20 +117,20 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <div className="columns">
                 <div className="column is-half">
                     <InputSelect label="Destination account identifier"
-                        value={this.state.mapDestinationAccountIdentifier}
+                        value={this.state.destinationAccountIdentifier}
                         placeholder={"Select variable"}
-                        onChange={result => this.setState({ mapDestinationAccountIdentifier: result as AccountIdentifier })}
+                        onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.state.destinationAccountColumn)}
                         items={[
                             { key: "name", value: "Name" },
                             { key: "id", value: "Id" },
-                            { key: "account-number", value: "Account Number" },
+                            { key: "accountNumber", value: "Account Number" },
                         ]} />
                 </div>
                 <div className="column is-half">
                     <InputSelect label="Destination account column"
-                        value={this.state.mapDestinationAccountColumn}
+                        value={this.state.destinationAccountColumn}
                         placeholder={"Select column"}
-                        onChange={result => this.setState({ mapDestinationAccountColumn: result })}
+                        onChange={result => this.accountReferenceChanged("destination", this.state.destinationAccountIdentifier, result)}
                         items={Object.keys(this.props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -151,13 +146,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
 
     private renderImportTable()
     {
-        const rows = this.props.data
-            .map((row, i) => {
-                return {
-                    row: row,
-                    rowNumber: i,
-                }
-            })
+        if (this.props.transactions === null) {
+            return <p>Loading</p>;
+        }
+
+        const transactions = this.props.transactions
             .slice(this.state.rowOffset * pageSize, (this.state.rowOffset + 1) * pageSize);
         return <table className="table is-fullwidth is-hoverable">
             <thead>
@@ -177,11 +170,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 </tr>
             </tfoot>
             <tbody>
-                {rows.map((row, i) => 
-                    <tr key={i}>
-                        <td>{this.getIdentifier(row.rowNumber, row.row)}</td>
-                        <td>{this.printAccount(this.state.mapSourceAccountIdentifier, row.row[this.state.mapSourceAccountColumn])}</td>
-                        <td>{this.printAccount(this.state.mapDestinationAccountIdentifier, row.row[this.state.mapDestinationAccountColumn])}</td>
+                {transactions.map(transaction => 
+                    <tr key={transaction.rowNumber}>
+                        <td>{transaction.identifier}</td>
+                        <td>{this.printAccount(transaction.from)}</td>
+                        <td>{this.printAccount(transaction.to)}</td>
                         <td></td>
                     </tr>
                 )}
@@ -189,123 +182,191 @@ export default class MapCsvFields extends React.Component<Props, State> {
         </table>;
     }
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
-        if (this.props.data != prevProps.data
-            || this.state.rowOffset != prevState.rowOffset
-            || this.state.mapSourceAccountColumn != prevState.mapSourceAccountColumn
-            || this.state.mapSourceAccountIdentifier != prevState.mapSourceAccountIdentifier
-            || this.state.mapDestinationAccountColumn != prevState.mapDestinationAccountColumn
-            || this.state.mapDestinationAccountIdentifier != prevState.mapDestinationAccountIdentifier) {
-            
-            // Refetch accounts from the server based on the identifier
-            const rows = this.props.data
-                .map((row, i) => {
-                    return {
-                        row: row,
-                        rowNumber: i,
-                    }
-                })
-                .slice(this.state.rowOffset * pageSize, (this.state.rowOffset + 1) * pageSize);
-            
-            let newAccounts = this.state.accountsBy;
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i].row;
-                if (newAccounts[this.state.mapSourceAccountIdentifier] === undefined) {
-                    newAccounts[this.state.mapSourceAccountIdentifier] = {};
-                }
-                if (newAccounts[this.state.mapSourceAccountIdentifier][(row as any)[this.state.mapSourceAccountColumn]] === undefined) {
-                    newAccounts[this.state.mapSourceAccountIdentifier][(row as any)[this.state.mapSourceAccountColumn]] = "loading";
-                }
-                if (newAccounts[this.state.mapDestinationAccountIdentifier] === undefined) {
-                    newAccounts[this.state.mapDestinationAccountIdentifier] = {};
-                }
-                if (newAccounts[this.state.mapDestinationAccountIdentifier][(row as any)[this.state.mapDestinationAccountColumn]] === undefined) {
-                    newAccounts[this.state.mapDestinationAccountIdentifier][(row as any)[this.state.mapDestinationAccountColumn]] = "loading";
-                }
-            }
-            this.setState({ accountsBy: { ...newAccounts } }, () => {
-                axios.post(`https://localhost:7262/Account/Search`, {
-                    query: {
-                        type: 0,
-                        children: [
-                            {
-                                type: 2,
-                                children: [],
-                                query: {
-                                    column: this.capitalize(this.state.mapSourceAccountIdentifier),
-                                    operator: 1,
-                                    value: rows.map(row => row.row[this.state.mapSourceAccountColumn]),
-                                }
-                            },
-                            {
-                                type: 2,
-                                children: [],
-                                query: {
-                                    column: this.capitalize(this.state.mapDestinationAccountIdentifier),
-                                    operator: 1,
-                                    value: rows.map(row => row.row[this.state.mapDestinationAccountColumn]),
-                                }
-                            }
-                        ]
-                    }
-                }).then(res => {
-                    let newAccounts = this.state.accountsBy;
-                    for (let i = 0; i < res.data.length; i++) {
-                        let account = res.data[i];
-                        this.state.accountsBy[this.state.mapSourceAccountIdentifier][account[this.state.mapSourceAccountIdentifier]] = account;
-                        this.state.accountsBy[this.state.mapDestinationAccountIdentifier][account[this.state.mapDestinationAccountIdentifier]] = account;
-                    }
-                    this.setState({
-                        accountsBy: { ...newAccounts }
-                    });
-                });
-            });
+    componentDidMount(): void {
+        this.updateTransactions();
+    }
+
+    private updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions) {
+        this.setState({ duplicateHandling: duplicateHandling });
+        this.updateIdentifierColumn(this.state.identifierColumn);
+    }
+
+    private updateIdentifierColumn(identifierColumn: string) {
+        if (this.props.transactions === null) {
+            return;
         }
+
+        this.setState({ identifierColumn: identifierColumn });
+        this.props.onChange([
+            ...this.props.data.map((row, i) => ({
+                ...this.props.transactions[i],
+                identifier: this.getIdentifier(identifierColumn, i, row)
+            }))
+        ]);
     }
 
-    private capitalize(word: string) {
-        const lower = word.toLowerCase();
-        return word.charAt(0).toUpperCase() + lower.slice(1);
-    }
-
-    private printAccount(identifier: AccountIdentifier, identifierValue: string)
+    private getIdentifier(identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string
     {
-        if (this.state.accountsBy[identifier] === undefined) {
-            return "…";
-        }
-        let value = this.state.accountsBy[identifier][identifierValue];
-        if (value == "loading" || value === undefined) return "…";
-        if (value == "not-found") return "";
-        return "#" + value.id + " " + value.name;
-    }
-
-    private getIdentifier(rowNumber: number, row: string[] | { [key: string]: string }): string
-    {
-        switch (this.state.mapDuplicateHandling)
+        switch (this.state.duplicateHandling)
         {
             case "none":
                 return "";
             case "rownumber":
                 return rowNumber.toString();
             case "identifier":
-                if (this.state.mapIdentifierColumn == null) {
+                if (identifierColumn == null) {
                     return "";
                 } else {
-                    return (row as any)[this.state.mapIdentifierColumn];
+                    return (row as any)[identifierColumn];
                 }
             case "identifier-rownumber":
-                if (this.state.mapIdentifierColumn == null) {
+                if (identifierColumn == null) {
                     return "";
                 } else {
-                    const value = (row as any)[this.state.mapIdentifierColumn]
+                    const value = (row as any)[identifierColumn]
                     let number = this.props.data
                         .map((row, index) => [row, index])
-                        .filter(row => row[1] <= rowNumber && row[0][this.state.mapIdentifierColumn] == value)
+                        .filter(row => row[1] <= rowNumber && row[0][identifierColumn] == value)
                         .length;
                     return value + "." + number;
                 }
             case "row":
                 return this.props.lines[rowNumber];
         }
+    }
+
+    private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string) {
+        let newTransactions: CsvCreateTransaction[];
+        if (type == "source") {
+            this.setState({ sourceAccountColumn: column, sourceAccountIdentifier: identifier });
+            newTransactions = [
+                ...this.props.data.map((row, i) => ({
+                    ...this.props.transactions[i],
+                    from: {
+                        identifier: identifier,
+                        value: row[column],
+                        account: "fetching" as "fetching"
+                    }
+                }))
+            ];
+        } else {
+            this.setState({ destinationAccountColumn: column, destinationAccountIdentifier: identifier });
+            newTransactions = [
+                ...this.props.data.map((row, i) => ({
+                    ...this.props.transactions[i],
+                    to: {
+                        identifier: identifier,
+                        value: row[column],
+                        account: "fetching" as "fetching"
+                    }
+                }))
+            ];
+        }
+        this.props.onChange(newTransactions);
+
+        if (type === "source") {
+            this.fetchAccounts(newTransactions, identifier, null);
+        } else {
+            this.fetchAccounts(newTransactions, null, identifier);
+        }
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
+        if (this.props.data != prevProps.data) {
+            this.updateTransactions();
+        }
+    }
+
+    private updateTransactions() {
+        let newTransactions = this.props.data.map((row, i) => ({
+            rowNumber: i,
+            created: new Date(),
+            description: "",
+            from: {
+                identifier: this.state.sourceAccountIdentifier,
+                value: row[this.state.sourceAccountColumn],
+                account: "fetching" as "fetching"
+            },
+            to: {
+                identifier: this.state.destinationAccountIdentifier,
+                value: row[this.state.destinationAccountColumn],
+                account: "fetching" as "fetching"
+            },
+            identifier: this.getIdentifier(this.state.identifierColumn, i, row),
+            lines: []
+        }));
+        this.props.onChange(newTransactions);
+        
+        this.fetchAccounts(newTransactions, this.state.sourceAccountIdentifier, this.state.destinationAccountIdentifier);
+    }
+
+    private fetchAccounts(transactions: CsvCreateTransaction[], sourceIdentifier: string | null, destinationIdentifier: string | null) {
+        let uniqueAccounts = [
+                ...(sourceIdentifier !== null ? transactions.map(transaction => transaction.from) : []),
+                ...(destinationIdentifier !== null ? transactions.map(transaction => transaction.to) : [])
+            ]
+            .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
+            .filter(account => account.value !== undefined && account.value !== null && account.value !== "");
+
+        let query = [];
+        if (sourceIdentifier !== null) {
+            query.push({
+                type: 2,
+                children: [],
+                query: {
+                    column: capitalize(sourceIdentifier),
+                    operator: 1,
+                    value: uniqueAccounts.map(account => castFieldValue(account.value, account.identifier)),
+                }
+            });
+        }
+        if (destinationIdentifier !== null) {
+            query.push({
+                type: 2,
+                children: [],
+                query: {
+                    column: capitalize(destinationIdentifier),
+                    operator: 1,
+                    value: uniqueAccounts.map(account => castFieldValue(account.value, account.identifier)),
+                }
+            });
+        }
+        
+        axios.post<Account[]>(`https://localhost:7262/Account/Search`, {
+            query: {
+                type: 0,
+                children: query
+            }
+        }).then(res => {
+            this.props.onChange([
+                ...this.props.transactions.map((transaction, i) => {
+                    let result = { ...this.props.transactions[i] };
+                    if (sourceIdentifier !== null) {
+                        result.from = {
+                            identifier: transaction.from.identifier,
+                            value: transaction.from.value,
+                            account: res.data.find(account => account[transaction.from.identifier] === transaction.from.value) ?? null
+                        }
+                    }
+                    if (destinationIdentifier !== null) {
+                        result.to = {
+                            identifier: transaction.to.identifier,
+                            value: transaction.to.value,
+                            account: res.data.find(account => account[transaction.to.identifier] === transaction.to.value) ?? null
+                        }
+                    }
+                    return result;
+                })
+            ]);
+        });
+    }
+
+    private printAccount(account: AccountReference)
+    {
+        if (account.account === "fetching") {
+            return "…";
+        }
+        if (account.account === null) return "";
+        return "#" + account.account.id + " " + account.account.name;
     }
 }

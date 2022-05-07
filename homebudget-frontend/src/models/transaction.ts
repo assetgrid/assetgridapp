@@ -10,6 +10,15 @@ export type Transaction = {
     description: string;
 }
 
+export type CreateTransaction = {
+    fromId: number;
+    toId: number;
+    created: Date;
+    description: string;
+    identifier: string | null;
+    lines: TransactionLine[];
+}
+
 export type TransactionLine = {
     amount: number;
     description: string;

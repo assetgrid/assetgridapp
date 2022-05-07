@@ -27,11 +27,17 @@ namespace homebudget_server.Controllers
                 var result = new Models.Account
                 {
                     Name = model.Name,
-                    Description = model.Description
+                    Description = model.Description,
+                    AccountNumber = model.AccountNumber
                 };
                 _context.Accounts.Add(result);
                 _context.SaveChanges();
-                return result.ToView();
+                return new ViewAccount
+                {
+                    AccountNumber = model.AccountNumber,
+                    Description = model.Description,
+                    Name = model.Name
+                };
             }
             throw new Exception();
         }
@@ -43,7 +49,13 @@ namespace homebudget_server.Controllers
             return _context.Accounts
                 .ApplySearch(query)
                 .ToList()
-                .Select(account => account.ToView())
+                .Select(account => new ViewAccount
+                {
+                    Id = account.Id,
+                    Name = account.Name,
+                    AccountNumber = account.AccountNumber,
+                    Description = account.Description
+                })
                 .ToList();
         }
     }

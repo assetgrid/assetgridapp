@@ -5,17 +5,8 @@ namespace homebudget_server.Models
     public class Account
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-
-        public ViewAccount ToView()
-        {
-            return new ViewAccount
-            {
-                Description = Description,
-                Id = Id,
-                Name = Name
-            };
-        }
+        public string Name { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public string? AccountNumber { get; set; }
     }
 }

@@ -8,7 +8,7 @@ interface Props {
     onChange: (selectedKey: string) => void;
 }
 
-export default class InputSelect extends React.Component<Props> {
+export default class InputSelect<T> extends React.Component<Props> {
     constructor(props: Props) {
         super(props);
     }

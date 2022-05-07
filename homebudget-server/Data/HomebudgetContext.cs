@@ -9,8 +9,17 @@ namespace homebudget_server.Data
         {
         }
 
-        public DbSet<Account> Accounts { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<TransactionLine> TransactionLines { get; set; }
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<Transaction>(entity => {
+                entity.HasIndex(e => e.Identifier).IsUnique();
+            });
+        }
+
+        public DbSet<Account> Accounts { get; set; } = null!;
+        public DbSet<Transaction> Transactions { get; set; } = null!;
+        public DbSet<TransactionLine> TransactionLines { get; set; } = null!;
     }
 }

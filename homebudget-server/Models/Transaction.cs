@@ -10,10 +10,10 @@ namespace homebudget_server.Models
         public int? ToAccountId { get; set; }
         public virtual Account? ToAccount { get; set; }
         public DateTime DatetimeCreated { get; set; }
-        public string Identifier { get; set; }
-        public string Description { get; set; }
+        public string? Identifier { get; set; }
+        public string Description { get; set; } = null!;
 
-        public virtual List<TransactionLine> TransactionLines { get; set; }
+        public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
 
         public ViewTransaction ToView()
         {

@@ -25,6 +25,9 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<string>("AccountNumber")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -55,8 +58,7 @@ namespace homebudget_server.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<int?>("ToAccountId")
                         .HasColumnType("int");
@@ -64,6 +66,9 @@ namespace homebudget_server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("FromAccountId");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
 
                     b.HasIndex("ToAccountId");
 

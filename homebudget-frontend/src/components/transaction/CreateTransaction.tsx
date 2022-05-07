@@ -105,13 +105,13 @@ export default class CreateTransaction extends React.Component<{}, State> {
             </div>
             )}
             <div className="buttons">
-                <InputButton label="Add line" onClick={() => this.addLine()}/>
+                <InputButton onClick={() => this.addLine()}>Add line</InputButton>
             </div>
 
             <h3 className="title is-4">Create Transaction</h3>
             <div className="buttons">
-                <InputButton label="Create and Continue" onClick={() => this.create()} />
-                <InputButton label="Create and View Transaction" onClick={() => this.create()} />
+                <InputButton onClick={() => this.create()}>Create and Continue</InputButton>
+                <InputButton onClick={() => this.create()}>Create and View Transaction</InputButton>
             </div>
         </>;
     }

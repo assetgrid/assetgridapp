@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace homebudget_server.Migrations
 {
-    public partial class CreateInitial : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -22,6 +22,8 @@ namespace homebudget_server.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AccountNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -39,7 +41,7 @@ namespace homebudget_server.Migrations
                     FromAccountId = table.Column<int>(type: "int", nullable: true),
                     ToAccountId = table.Column<int>(type: "int", nullable: true),
                     DatetimeCreated = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    Identifier = table.Column<string>(type: "longtext", nullable: false)
+                    Identifier = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
@@ -93,6 +95,12 @@ namespace homebudget_server.Migrations
                 name: "IX_Transactions_FromAccountId",
                 table: "Transactions",
                 column: "FromAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_Identifier",
+                table: "Transactions",
+                column: "Identifier",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_ToAccountId",

@@ -21,7 +21,7 @@ namespace homebudget_server.Controllers
         }
 
         [HttpPost(Name = "CreateTransaction")]
-        public ViewTransaction Create(CreateViewTransaction model)
+        public ViewTransaction Create(ViewCreateTransaction model)
         {
             if (ModelState.IsValid)
             {
