@@ -1,5 +1,6 @@
 import * as Papa from "papaparse";
 import * as React from "react";
+import Table from "../common/Table";
 import InputCheckbox from "../form/InputCheckbox";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
@@ -120,28 +121,18 @@ export default class ImportCsv extends React.Component<Props, State> {
         const columns = Object.keys(this.state.csvData.data[0])
             .map((column, i) => { return { columnName: column, index: i } })
             .slice(this.state.columnOffset * columnPageSize, (this.state.columnOffset + 1) * columnPageSize);
-        const rows = this.state.csvData.data.slice(this.state.rowOffset * pageSize, (this.state.rowOffset + 1) * pageSize);
-        return <table className="table is-fullwidth is-hoverable">
-            <thead>
-                <tr>
-                    {columns.map((column, i) => <th key={i}>{column.columnName}</th>)}
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    {columns.map((column, i) => <th key={i}>{column.columnName}</th>)}
-                </tr>
-            </tfoot>
-            <tbody>
-                {rows.map((row, i) => 
-                    <tr key={i}>
-                        {columns.map(column => 
-                            <td key={column.index}>{(row as any)[column.columnName]}</td>
-                        )}
-                    </tr>
+        return <Table
+            headings={<tr>
+                {columns.map((column, i) => <th key={i}>{column.columnName}</th>)}
+            </tr>}
+            pageSize={20}
+            items={this.state.csvData.data}
+            renderItem={(row, i) => <tr key={i}>
+                {columns.map(column =>
+                    <td key={column.index}>{(row as any)[column.columnName]}</td>
                 )}
-            </tbody>
-        </table>;
+            </tr>}
+        />;
     }
 
     private fileUploaded(e: React.ChangeEvent<HTMLInputElement>)
@@ -172,6 +163,8 @@ export default class ImportCsv extends React.Component<Props, State> {
                 download: false,
                 complete: (a) => {
                     this.props.csvParsed(a.data, event.target.result.toString().split(a.meta.linebreak));
+                    console.log(a.data[0]);
+                    console.log(event.target.result.toString().split(a.meta.linebreak)[0]);
                     this.setState({ csvData: a });
                 }
             });

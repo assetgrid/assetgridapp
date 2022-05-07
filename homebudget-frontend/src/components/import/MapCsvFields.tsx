@@ -3,19 +3,18 @@ import * as React from "react";
 import { Account } from "../../models/account";
 import { Transaction } from "../../models/transaction";
 import AccountTooltip from "../account/AccountTooltip";
+import Table from "../common/Table";
 import Tooltip from "../common/Tooltip";
 import InputSelect from "../form/InputSelect";
 import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
 
-type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber" | "row";
+type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
 interface Props {
     data: any[];
-    lines: string[];
-
     transactions: CsvCreateTransaction[] | null;
-    onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
     options: MappingOptions;
+    onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
 }
 
 export interface MappingOptions {
@@ -160,50 +159,36 @@ export default class MapCsvFields extends React.Component<Props, State> {
             return <p>Loading</p>;
         }
 
-        const transactions = this.props.transactions
-            .slice(this.state.rowOffset * pageSize, (this.state.rowOffset + 1) * pageSize);
-        return <table className="table is-fullwidth is-hoverable">
-            <thead>
-                <tr>
-                    <th>Identifier</th>
-                    <th>Source</th>
-                    <th>Destination</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <th>Identifier</th>
-                    <th>Source</th>
-                    <th>Destination</th>
-                    <th>Amount</th>
-                </tr>
-            </tfoot>
-            <tbody>
-                {transactions.map(transaction => 
-                    <tr key={transaction.rowNumber}>
-                        <td>{
-                            transaction.identifier.length < 30
-                                ? transaction.identifier
-                                : <Tooltip content={transaction.identifier}>
-                                    {transaction.identifier.substring(0, 30) + "…"}
-                                </Tooltip>
-                        }</td>
-                        <td>
-                            <AccountTooltip accountReference={transaction.from}>
-                                {this.printAccount(transaction.from)}
-                            </AccountTooltip>
-                        </td>
-                        <td>
-                            <AccountTooltip accountReference={transaction.to}>
-                                {this.printAccount(transaction.to)}
-                            </AccountTooltip>
-                        </td>
-                        <td>{transaction.amount}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+        return <Table pageSize={20}
+            items={this.props.transactions}
+            headings={<tr>
+                <th>Identifier</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Amount</th>
+            </tr>}
+            renderItem={transaction =>
+                <tr key={transaction.rowNumber}>
+                    <td>{
+                        transaction.identifier.length < 30
+                            ? transaction.identifier
+                            : <Tooltip content={transaction.identifier}>
+                                {transaction.identifier.substring(0, 30) + "…"}
+                            </Tooltip>
+                    }</td>
+                    <td>
+                        <AccountTooltip accountReference={transaction.from}>
+                            {this.printAccount(transaction.from)}
+                        </AccountTooltip>
+                    </td>
+                    <td>
+                        <AccountTooltip accountReference={transaction.to}>
+                            {this.printAccount(transaction.to)}
+                        </AccountTooltip>
+                    </td>
+                    <td>{transaction.amount}</td>
+                </tr>}
+        />;
     }
 
     componentDidMount(): void {
@@ -264,8 +249,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         .length;
                     return value + "." + number;
                 }
-            case "row":
-                return this.props.lines[rowNumber];
         }
     }
 

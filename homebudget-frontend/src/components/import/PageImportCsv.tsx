@@ -42,7 +42,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                 csvParseHeader: true
             },
             mappingOptions: {
-                duplicateHandling: "row",
+                duplicateHandling: "identifier",
                 identifierColumn: null,
                 sourceAccountColumn: null,
                 sourceAccountIdentifier: "name",
@@ -83,7 +83,6 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         options={this.state.mappingOptions}
                         transactions={this.state.transactions}
                         data={this.state.data}
-                        lines={this.state.lines}
                         onChange={(transactions, options) => this.setState({ transactions: transactions, mappingOptions: options })}
                     />}
                     <div className="buttons">

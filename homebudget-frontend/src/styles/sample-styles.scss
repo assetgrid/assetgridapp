@@ -15,6 +15,7 @@
 
 .tooltip-container {
     position: relative;
+    display: inline-block;
 
     .tooltip {
         position: absolute;
@@ -28,4 +29,12 @@
     &:hover .tooltip {
         display: block;
     }
+}
+
+.pagination-container {
+    display: flex;
+    flex-wrap: wrap-reverse;
+    justify-content: space-between;
+    margin-bottom: $block-spacing;
+    align-items: center;
 }
