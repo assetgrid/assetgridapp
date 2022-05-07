@@ -32,7 +32,9 @@ interface State {
     rowOffset: number;
 }
 
-const pageSize: number = 20;
+function isNullOrWhitespace(input: string) {
+    return !input || !input.trim();
+}
 
 /*
  * React object class
@@ -160,6 +162,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
             items={this.props.transactions}
             headings={<tr>
                 <th>Identifier</th>
+                <th>Date</th>
                 <th>Source</th>
                 <th>Destination</th>
                 <th>Amount</th>
@@ -173,17 +176,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                 {transaction.identifier.substring(0, 30) + "…"}
                             </Tooltip>
                     }</td>
+                    <td></td>
                     <td>
-                        <AccountTooltip accountReference={transaction.from}>
-                            {this.printAccount(transaction.from)}
-                        </AccountTooltip>
+                        {this.printAccount(transaction.from)}
                     </td>
                     <td>
-                        <AccountTooltip accountReference={transaction.to}>
-                            {this.printAccount(transaction.to)}
-                        </AccountTooltip>
+                        {this.printAccount(transaction.to)}
                     </td>
-                    <td>{transaction.amount}</td>
+                    <td style={{textAlign: "right"}}>{transaction.amount}</td>
                 </tr>}
         />;
     }
@@ -196,7 +196,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
-                amount: (row as any)[newValue]
+                amount: this.getAmount((row as any)[newValue])
             }))
         ], {
             ...this.props.options,
@@ -221,8 +221,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         });
     }
 
-    private getIdentifier(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string
-    {
+    private getIdentifier(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string {
         switch (duplicateHandling)
         {
             case "none":
@@ -249,13 +248,37 @@ export default class MapCsvFields extends React.Component<Props, State> {
         }
     }
 
+    private getAmount(value: string): number {
+        const decimalSeparator = ",";
+
+        function escapeRegExp(string: string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        }
+
+        if (value === undefined || value === null) {
+            value = "";
+        }
+
+        // Remove everything except numbers and the decimal separator
+        value = value.replace(new RegExp("[^" + escapeRegExp(decimalSeparator) + "\\-\\d]", 'g'), "");
+        // Change decimal separator to period
+        value = value.replace(new RegExp(escapeRegExp(decimalSeparator), 'g'), ".");
+        
+        let result = Number(value);
+        if (isNaN(result)) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
     private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string) {
         let newTransactions: CsvCreateTransaction[];
         if (type == "source") {
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
-                    from: {
+                    from: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: row[column],
                         account: "fetching" as "fetching"
@@ -266,7 +289,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
-                    to: {
+                    to: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: row[column],
                         account: "fetching" as "fetching"
@@ -303,18 +326,18 @@ export default class MapCsvFields extends React.Component<Props, State> {
             rowNumber: i,
             created: new Date(),
             description: "",
-            from: {
+            from: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
                 identifier: this.props.options.sourceAccountIdentifier,
                 value: row[this.props.options.sourceAccountColumn],
                 account: "fetching" as "fetching"
             },
-            to: {
+            to: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
                 identifier: this.props.options.destinationAccountIdentifier,
                 value: row[this.props.options.destinationAccountColumn],
                 account: "fetching" as "fetching"
             },
             identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
-            amount: row[this.props.options.amountColumn],
+            amount: this.getAmount(row[this.props.options.amountColumn]),
         }));
         this.props.onChange(newTransactions, this.props.options);
         
@@ -326,8 +349,10 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 ...(sourceIdentifier !== null ? transactions.map(transaction => transaction.from) : []),
                 ...(destinationIdentifier !== null ? transactions.map(transaction => transaction.to) : [])
             ]
-            .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
-            .filter(account => account.value !== undefined && account.value !== null && account.value !== "");
+            .filter(account => account != null)
+            .filter((account, index, array) => array
+                .filter(accountB => accountB !== null)
+                .findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
 
         let query = [];
         if (sourceIdentifier !== null) {
@@ -369,14 +394,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
             this.props.onChange([
                 ...this.props.transactions.map((transaction, i) => {
                     let result = { ...this.props.transactions[i] };
-                    if (sourceIdentifier !== null) {
+                    if (sourceIdentifier !== null && result.from !== null) {
                         result.from = {
                             identifier: transaction.from.identifier,
                             value: transaction.from.value,
                             account: res.data.find(account => account[transaction.from.identifier] === transaction.from.value) ?? null
                         }
                     }
-                    if (destinationIdentifier !== null) {
+                    if (destinationIdentifier !== null && result.to !== null) {
                         result.to = {
                             identifier: transaction.to.identifier,
                             value: transaction.to.value,
@@ -389,13 +414,24 @@ export default class MapCsvFields extends React.Component<Props, State> {
         });
     }
 
-    private printAccount(account: AccountReference)
+    private printAccount(account: AccountReference | null): React.ReactNode
     {
-        if (account.account === "fetching") {
-            return "…";
+        if (account === null) {
+            return "";
         }
-        if (account.value === null || account.value === "" || account.value === undefined) return "";
-        if (account.account === null) return "Not found";
-        return "#" + account.account.id + " " + account.account.name;
+        if (account.account === "fetching") {
+            return <AccountTooltip accountReference={account}>
+                &hellip;
+            </AccountTooltip>;
+        }
+        if (account.account === null) {
+            return <AccountTooltip accountReference={account}>
+                Not found
+            </AccountTooltip>;
+        };
+
+        return <AccountTooltip accountReference={account}>
+            {"#" + account.account.id + " " + account.account.name}
+        </AccountTooltip>;
     }
 }

@@ -6,6 +6,7 @@ import InputButton from "../form/InputButton";
 import InputCheckbox from "../form/InputCheckbox";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
+import Import from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
 import { CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields";
@@ -101,20 +102,12 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     </div>
                 </>}
                 {this.state.currentTab === "process" && <>
+                    <Import transactions={this.state.transactions} />
                     <div className="buttons">
                         <InputButton onClick={() => this.setState({currentTab: "missing-accounts"})}>Back</InputButton>
-                        <InputButton>Import</InputButton>
                     </div>  
                 </>}
             </div>
         </section>;
-    }
-
-    private update() {
-        this.setState({
-            data: [...this.state.data],
-            lines: [...this.state.lines],
-            transactions: [...this.state.transactions]
-        })
     }
 }

@@ -163,8 +163,6 @@ export default class ImportCsv extends React.Component<Props, State> {
                 download: false,
                 complete: (a) => {
                     this.props.csvParsed(a.data, event.target.result.toString().split(a.meta.linebreak));
-                    console.log(a.data[0]);
-                    console.log(event.target.result.toString().split(a.meta.linebreak)[0]);
                     this.setState({ csvData: a });
                 }
             });

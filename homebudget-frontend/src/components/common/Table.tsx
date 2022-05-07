@@ -13,7 +13,7 @@ interface State {
     page: number;
 }
 
-export default class Tooltip<T> extends React.Component<Props<T>, State> {
+export default class Table<T> extends React.Component<Props<T>, State> {
     constructor(props: Props<T>) {
         super(props);
         this.state = {
@@ -29,16 +29,13 @@ export default class Tooltip<T> extends React.Component<Props<T>, State> {
         let paginatedItems = this.props.items
             .map((item, index) => ({ item: item, index: index }))
             .slice((this.state.page - 1) * this.props.pageSize, this.state.page * this.props.pageSize);
-        const lastPage = Math.ceil(this.props.items.length / this.props.pageSize);
+        const lastPage = Math.max(1, Math.ceil(this.props.items.length / this.props.pageSize));
         const pagesBesideCurrent = 3;
         let paginationFrom = Math.max(2, this.state.page - pagesBesideCurrent);
         const paginationTo = Math.min(paginationFrom + 1 + pagesBesideCurrent * 2, lastPage);
         if (paginationTo - paginationFrom < pagesBesideCurrent * 2 + 1) {
             paginationFrom = Math.max(2, paginationTo - pagesBesideCurrent * 2 - 1);
         }
-
-        console.log(paginationFrom);
-        console.log(paginationTo);
 
         return <>
             <table className="table is-fullwidth is-hoverable" style={{marginBottom: 0}}>
@@ -76,14 +73,13 @@ export default class Tooltip<T> extends React.Component<Props<T>, State> {
                         </li>
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => page + paginationFrom)
-                            .map(page => <li>
-                                {(page === paginationFrom && page > 2) ||
-                                    (page === paginationTo - 1 && page < lastPage - 1)
+                            .map(page =>
+                                (page === paginationFrom && page > 2) ||
+                                (page === paginationTo - 1 && page < lastPage - 1)
                                     ? <li key={page}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={page}><a className={"pagination-link" + (this.state.page === page ? " is-current" : "")}
                                         onClick={() => this.goToPage(page)} aria-label={"Goto page " + page}>{page}</a></li>
-                                }
-                            </li>)}
+                            )}
                         {lastPage !== 1 && <li>
                             <a className={"pagination-link" + (this.state.page === lastPage ? " is-current" : "")}
                                 aria-label={"Goto page " + lastPage} onClick={() => this.goToPage(lastPage)}>{lastPage}</a>

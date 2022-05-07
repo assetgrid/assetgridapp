@@ -21,6 +21,13 @@
         public List<ViewTransactionLine> Lines { get; set; } = null!;
     }
 
+    public class ViewTransactionCreateManyResponse
+    {
+        public List<ViewCreateTransaction> Succeeded { get; set; } = null!;
+        public List<ViewCreateTransaction> Failed { get; set; } = null!;
+        public List<ViewCreateTransaction> Duplicate { get; set; } = null!;
+    }
+
     public class ViewTransactionLine
     {
         public decimal Amount { get; set; }

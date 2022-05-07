@@ -21,7 +21,6 @@ export default class TransactionList extends React.Component<{}, State> {
         axios.get(`https://localhost:7262/transaction`)
           .then(res => {
               const transactions: Transaction[] = res.data;
-              console.log(transactions);
             this.setState({ transactions: transactions });
           })
     }

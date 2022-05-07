@@ -34,12 +34,12 @@ export default class MissingAccounts extends React.Component<Props, State> {
 
     public render() {
         let uniqueAccounts = [
-                ...this.props.transactions.map(transaction => transaction.from),
-                ...this.props.transactions.map(transaction => transaction.to)
-            ]
+            ...this.props.transactions.map(transaction => transaction.from),
+            ...this.props.transactions.map(transaction => transaction.to)
+        ].filter(account => account !== null)
             .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
-            .filter(account => account.value !== undefined && account.value !== null && account.value !== "")
             .filter(account => account.account === null);
+        
         let rows = (uniqueAccounts ?? []).slice(this.state.rowOffset * pageSize, (this.state.rowOffset + 1) * pageSize);
         return <>
             { this.state.creatingAccount && <div className="modal is-active">

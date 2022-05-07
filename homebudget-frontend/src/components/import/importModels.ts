@@ -5,8 +5,8 @@ export type AccountIdentifier = "id" | "name" | "accountNumber";
 
 export type CsvCreateTransaction = {
     rowNumber: number;
-    from: AccountReference;
-    to: AccountReference;
+    from: AccountReference | null;
+    to: AccountReference | null;
     created: Date;
     description: string;
     identifier: string | null;

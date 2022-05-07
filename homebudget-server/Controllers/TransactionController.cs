@@ -93,5 +93,56 @@ namespace homebudget_server.Controllers
                 .Select(transaction => transaction.Identifier!)
                 .ToList();
         }
+
+        [HttpPost()]
+        [Route("/[controller]/[action]")]
+        public ViewTransactionCreateManyResponse CreateMany(List<ViewCreateTransaction> transactions)
+        {
+            var failed = new List<ViewCreateTransaction>();
+            var duplicate = new List<ViewCreateTransaction>();
+            var success = new List<ViewCreateTransaction>();
+
+            foreach (var transaction in transactions)
+            {
+                if (! string.IsNullOrWhiteSpace(transaction.Identifier) && _context.Transactions.Any(dbTransaction => dbTransaction.Identifier == transaction.Identifier))
+                {
+                    duplicate.Add(transaction);
+                }
+                else
+                {
+                    try
+                    {
+                        var result = new Models.Transaction
+                        {
+                            DatetimeCreated = transaction.Created,
+                            FromAccountId = transaction.FromId,
+                            Description = transaction.Description,
+                            ToAccountId = transaction.ToId,
+                            Identifier = transaction.Identifier,
+                            TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
+                            {
+                                Amount = line.Amount,
+                                Description = line.Description,
+                                Order = i + 1,
+                            }).ToList(),
+                        };
+                        _context.Transactions.Add(result);
+                        _context.SaveChanges();
+                        success.Add(transaction);
+                    }
+                    catch (Exception)
+                    {
+                        failed.Add(transaction);
+                    }
+                }
+            }
+
+            return new ViewTransactionCreateManyResponse
+            {
+                Succeeded = success,
+                Duplicate = duplicate,
+                Failed = failed,
+            };
+        }
     }
 }
