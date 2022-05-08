@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as React from "react";
 import { Account } from "../../models/account";
+import { SearchGroupType, SearchRequest, SearchResponse } from "../../models/search";
 import { Transaction } from "../../models/transaction";
 import AccountTooltip from "../account/AccountTooltip";
 import Table from "../common/Table";
@@ -30,6 +31,7 @@ export interface MappingOptions {
 
 interface State {
     rowOffset: number;
+    tableDraw: number;
 }
 
 function isNullOrWhitespace(input: string) {
@@ -44,21 +46,41 @@ export default class MapCsvFields extends React.Component<Props, State> {
         super(props);
         this.state = {
             rowOffset: 0,
+            tableDraw: 0,
         };
     }
 
     public render() {
         return <>
             <h3 className="title is-5">Map CSV columns</h3>
-            <InputSelect label="Duplicate handling"
-                value={this.props.options.duplicateHandling}
-                onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
-                items={[
-                    { key: "identifier", value: "Colum" },
-                    { key: "identifier-rownumber", value: "Column and count" },
-                    { key: "rownumber", value: "Row number" },
-                    { key: "none", value: "Allow duplicates" }
-                ]} />
+            <div className="columns">
+                <div className="column">
+                    <InputSelect label="Duplicate handling"
+                        value={this.props.options.duplicateHandling}
+                        onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
+                        items={[
+                            { key: "identifier", value: "Colum" },
+                            { key: "identifier-rownumber", value: "Column and count" },
+                            { key: "rownumber", value: "Row number" },
+                            { key: "none", value: "Allow duplicates" }
+                        ]} />
+                </div>
+                <div className="column">
+                    {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
+                        <InputSelect label="Identifier column"
+                            value={this.props.options.identifierColumn}
+                            placeholder={"Select column"}
+                            onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
+                            items={Object.keys(this.props.data[0]).map(item => {
+                                return {
+                                    key: item,
+                                    value: item,
+                                }
+                            })} />
+                    }
+                </div>
+            </div>
+            
             <div className="content">
                 <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
                     This value will be compared during import and transactions with the same identifier will be ignored</p>
@@ -71,19 +93,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
                 </ul>
             </div>
-
-            {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
-                <InputSelect label="Identifier column"
-                    value={this.props.options.identifierColumn}
-                    placeholder={"Select column"}
-                    onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
-                    items={Object.keys(this.props.data[0]).map(item => {
-                        return {
-                            key: item,
-                            value: item,
-                        }
-                    })} />
-            }
 
             <div className="columns">
                 <div className="column is-half">
@@ -167,6 +176,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <th>Destination</th>
                 <th>Amount</th>
             </tr>}
+            draw={this.state.tableDraw}
             renderItem={transaction =>
                 <tr key={transaction.rowNumber}>
                     <td>{
@@ -319,6 +329,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (this.props.data != prevProps.data) {
             this.updateTransactions();
         }
+        if (this.props.transactions !== prevProps.transactions) {
+            this.setState({ tableDraw: this.state.tableDraw + 1 });
+        }
     }
 
     private updateTransactions() {
@@ -378,12 +391,16 @@ export default class MapCsvFields extends React.Component<Props, State> {
             });
         }
         
-        axios.post<Account[]>(`https://localhost:7262/Account/Search`, {
-            query: {
-                type: 0,
-                children: query
-            }
-        }).then(res => {
+        console.log(uniqueAccounts.length);
+        axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, 
+            ({
+                from: 0,
+                to: uniqueAccounts.length,
+                query: {
+                    type: SearchGroupType.Or,
+                    children: query,
+                }
+            }) as SearchRequest).then(res => {
             let newOptions = { ...this.props.options };
             if (sourceIdentifier !== null) {
                 newOptions.sourceAccountIdentifier = sourceIdentifier;
@@ -398,14 +415,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         result.from = {
                             identifier: transaction.from.identifier,
                             value: transaction.from.value,
-                            account: res.data.find(account => account[transaction.from.identifier] === transaction.from.value) ?? null
+                            account: res.data.data.find(account => account[transaction.from.identifier] === transaction.from.value) ?? null
                         }
                     }
                     if (destinationIdentifier !== null && result.to !== null) {
                         result.to = {
                             identifier: transaction.to.identifier,
                             value: transaction.to.value,
-                            account: res.data.find(account => account[transaction.to.identifier] === transaction.to.value) ?? null
+                            account: res.data.data.find(account => account[transaction.to.identifier] === transaction.to.value) ?? null
                         }
                     }
                     return result;

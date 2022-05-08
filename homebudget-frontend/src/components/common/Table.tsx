@@ -3,8 +3,9 @@ import * as React from "react";
 export interface Props<T> {
     pageSize: number;
 
+    draw?: number;
     items?: T[];
-    fetchItems?: (from: number, to: number) => Promise<FetchItemsResult<T>>;
+    fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
     renderItem: (item: T, index: number) => JSX.IntrinsicElements["tr"];
 
     headings: JSX.IntrinsicElements["tr"];
@@ -14,6 +15,7 @@ interface FetchItemsResult<T> {
     items: T[];
     totalItems: number;
     offset: number;
+    draw: number;
 }
 
 interface State<T> {
@@ -35,7 +37,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
             totalItems: 0
         }
 
-        this.fetchItems(0, this.props.pageSize);
+        this.fetchItems(this.state.targetPage, this.props.draw);
     }
 
     public render() {
@@ -110,7 +112,13 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         </>;
     }
 
-    private defaultFetchItems(from: number, to: number): Promise<FetchItemsResult<T>> {
+    componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State<T>>): void {
+        if (prevProps.draw !== this.props.draw) {
+            this.fetchItems(this.state.targetPage, this.props.draw);
+        }
+    }
+
+    private defaultFetchItems(from: number, to: number, draw: number): Promise<FetchItemsResult<T>> {
         if (this.props.items === null) {
             throw "Error";
         }
@@ -118,25 +126,34 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
             resolve({
                 items: this.props.items.slice(from, to),
                 totalItems: this.props.items.length,
-                offset: from
+                offset: from,
+                draw: draw,
             })
         });
     }
 
-    private fetchItems(from: number, to: number): void {
+    private fetchItems(page: number, draw?: number): void {
+        const from = (page - 1) * this.props.pageSize;
+        const to = page * this.props.pageSize;
+
         (this.props.fetchItems !== undefined
-            ? this.props.fetchItems(from, to)
-            : this.defaultFetchItems(from, to))
-            .then(result => result.offset === (this.state.targetPage - 1) * this.props.pageSize && this.setState({
-                items: result.items,
-                totalItems: result.totalItems,
-                displayingPage: this.state.targetPage
-            }));
+            ? this.props.fetchItems(from, to, draw)
+            : this.defaultFetchItems(from, to, draw))
+            .then(result => {
+                if (result.offset === (this.state.targetPage - 1) * this.props.pageSize
+                    && (this.props.draw === undefined || result.draw === this.props.draw)) {
+                    this.setState({
+                        items: result.items,
+                        totalItems: result.totalItems,
+                        displayingPage: this.state.targetPage
+                    })
+                }
+            });
     }
 
     private goToPage(page: number): void {
         page = Math.max(1, Math.min(page, Math.ceil(this.state.totalItems / this.props.pageSize)));
         this.setState({ targetPage: page });
-        this.fetchItems((page - 1) * this.props.pageSize, page * this.props.pageSize);
+        this.fetchItems(page, this.props.draw);
     }
 }

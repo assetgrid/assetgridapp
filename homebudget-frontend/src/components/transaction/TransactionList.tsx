@@ -7,20 +7,25 @@ import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 
-export default class TransactionList extends React.Component<{}> {
-    constructor(props: {}) {
+interface Props {
+    draw?: number;
+}
+
+export default class TransactionList extends React.Component<Props> {
+    constructor(props: Props) {
         super(props);
     }
     
-    private fetchItems(from: number, to: number): Promise<{ items: Transaction[], totalItems: number, offset: number }> {
+    private fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
             axios.post<SearchRequest, AxiosResponse<SearchResponse<Transaction>>>(`https://localhost:7262/transaction/search`, {
                 from: from,
-                to: to
+                to: to,
             }).then(res => {
                 const transactions: Transaction[] = res.data.data;
                 resolve({
                     items: transactions,
+                    draw: draw,
                     offset: from,
                     totalItems: res.data.totalItems
                 });
@@ -39,6 +44,7 @@ export default class TransactionList extends React.Component<{}> {
                 <th>Category</th>
             </tr>}
             pageSize={20}
+            draw={this.props.draw}
             fetchItems={this.fetchItems}
             renderItem={transaction =>
                 <tr key={transaction.id}>
