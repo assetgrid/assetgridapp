@@ -44,10 +44,12 @@ namespace homebudget_server.Controllers
 
         [HttpPost()]
         [Route("/[controller]/[action]")]
-        public List<ViewAccount> Search(ViewSearch query)
+        public ViewSearchResponse<ViewAccount> Search(ViewSearch query)
         {
-            return _context.Accounts
+            var result = _context.Accounts
                 .ApplySearch(query)
+                .Skip(query.From)
+                .Take(query.To - query.From)
                 .ToList()
                 .Select(account => new ViewAccount
                 {
@@ -57,6 +59,12 @@ namespace homebudget_server.Controllers
                     Description = account.Description
                 })
                 .ToList();
+
+            return new ViewSearchResponse<ViewAccount>
+            {
+                Data = result,
+                TotalItems = _context.Accounts.ApplySearch(query).Count()
+            };
         }
     }
 }

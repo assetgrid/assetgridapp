@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as React from "react";
 import { Transaction, TransactionLine } from "../../models/transaction";
-import InputAccount from "../form/InputAccount";
+import InputAccount from "../form/account/InputAccount";
 import InputButton from "../form/InputButton";
 import InputNumber from "../form/InputNumber";
 import InputText from "../form/InputText";

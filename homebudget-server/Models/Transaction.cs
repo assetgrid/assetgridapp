@@ -14,36 +14,5 @@ namespace homebudget_server.Models
         public string Description { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
-
-        public ViewTransaction ToView()
-        {
-            return new ViewTransaction
-            {
-                Id = Id,
-                Identifier = Identifier,
-                Created = DatetimeCreated,
-                Description = Description,
-                From = FromAccount != null
-                    ? new ViewAccount
-                    {
-                        Id = Id,
-                        Name = FromAccount.Name,
-                        Description = FromAccount.Description,
-                    } : null,
-                To = ToAccount != null
-                    ? new ViewAccount
-                    {
-                        Id = Id,
-                        Name = ToAccount.Name,
-                        Description = ToAccount.Description,
-                    } : null,
-                Lines = TransactionLines
-                .OrderBy(line => line.Order)
-                .Select(line => new ViewTransactionLine
-                {
-                    Amount = line.Amount,
-                }).ToList(),
-            };
-        }
     }
 }

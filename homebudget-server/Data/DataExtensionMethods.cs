@@ -7,11 +7,11 @@ namespace homebudget_server.Data
 {
     public static class DataExtensionMethods
     {
-        public static IQueryable<Account> ApplySearch(this IQueryable<Account> account, ViewSearch query)
+        public static IQueryable<Account> ApplySearch(this IQueryable<Account> items, ViewSearch query)
         {
             if (query.Query == null)
             {
-                return account;
+                return items;
             }
 
             var columns = new[] { ("Id", typeof(int)), ("Name", typeof(string)), ("Description", typeof(string)), ("AccountNumber", typeof(string)) };
@@ -19,9 +19,32 @@ namespace homebudget_server.Data
             var expression = SearchGroupToExpression(query.Query, columns, parameter);
             if (expression != null)
             {
-                return account.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
+                return items.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
             }
-            return account;
+            return items;
+        }
+
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query)
+        {
+            if (query.Query == null)
+            {
+                return items;
+            }
+
+            var columns = new[] {
+                ("Id", typeof(int)),
+                ("FromAccountId", typeof(int)),
+                ("ToAccountId", typeof(int)),
+                ("Identifier", typeof(string)),
+                ("Description", typeof(string)),
+            };
+            var parameter = Expression.Parameter(typeof(Transaction), "transaction");
+            var expression = SearchGroupToExpression(query.Query, columns, parameter);
+            if (expression != null)
+            {
+                items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
+            }
+            return items;
         }
 
         private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type)[] columns, ParameterExpression parameter)

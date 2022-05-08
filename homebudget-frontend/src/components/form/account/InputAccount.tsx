@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as React from "react";
-import { Account } from "../../models/account";
+import { Account } from "../../../models/account";
+import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/search";
 
 export interface InputAccountProps {
     label: string,
@@ -46,25 +47,26 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
         if (this.props.value != null && this.state.value == null)
         {
             // Fetch the selected item
-            axios.post(`https://localhost:7262/Account/Search`, {
+            axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, {
+                from: 0,
+                to: 1,
                 query: {
                     type: 2,
-                    children: [],
                     query: {
                         column: "Id",
                         operator: 0,
                         value: this.props.value.toString(),
                     }
                 },
-            }).then(res => {
-                if (res.data.length == 0)
+            } as SearchRequest).then(res => {
+                if (res.data.totalItems == 0)
                 {
                     this.props.onChange(null);
                 }
                 else
                 {
                     this.setState({
-                        value: res.data[0]
+                        value: res.data.data[0]
                     });
                 }
             })
@@ -128,7 +130,6 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                 children: [
                     {
                         type: 2,
-                        children: [],
                         query: {
                             column: "Id",
                             operator: 0,
@@ -137,7 +138,6 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                     },
                     {
                         type: 2,
-                        children: [],
                         query: {
                             column: "Name",
                             operator: 1,
@@ -145,12 +145,14 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         }
                     }
                 ]
-            };
-        axios.post(`https://localhost:7262/Account/Search`, {
+            } as SearchGroup;
+        axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, {
+            from: 0,
+            to: 5,
             query: query
-        }).then(res => {
+        } as SearchRequest).then(res => {
             this.setState({
-                dropdownOptions: res.data
+                dropdownOptions: res.data.data
             });
         })
     }

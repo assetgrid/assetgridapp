@@ -44,16 +44,45 @@ namespace homebudget_server.Controllers
                     _context.Transactions.Add(result);
                     transaction.Commit();
                     _context.SaveChanges();
-                    return result.ToView();
+                    return new ViewTransaction {
+                        Id = result.Id,
+                        Identifier = result.Identifier,
+                        Created = result.DatetimeCreated,
+                        Description = result.Description,
+                        From = result.FromAccount != null
+                            ? new ViewAccount
+                            {
+                                Id = result.FromAccount.Id,
+                                Name = result.FromAccount.Name,
+                                Description = result.FromAccount.Description,
+                            } : null,
+                        To = result.ToAccount != null
+                            ? new ViewAccount
+                            {
+                                Id = result.ToAccount.Id,
+                                Name = result.ToAccount.Name,
+                                Description = result.ToAccount.Description,
+                            } : null,
+                        Lines = result.TransactionLines
+                            .OrderBy(line => line.Order)
+                            .Select(line => new ViewTransactionLine
+                            {
+                                Amount = line.Amount,
+                            }).ToList(),
+                    };
                 }
             }
             throw new Exception();
         }
 
-        [HttpGet(Name = "List")]
-        public List<ViewTransaction> List()
+        [HttpPost()]
+        [Route("/[controller]/[action]")]
+        public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)
         {
-            return _context.Transactions
+            var result = _context.Transactions
+                .ApplySearch(query)
+                .Skip(query.From)
+                .Take(query.To - query.From)
                 .Select(transaction => new ViewTransaction
                 {
                     Id = transaction.Id,
@@ -82,6 +111,12 @@ namespace homebudget_server.Controllers
                     }).ToList()
                 })
                 .ToList();
+
+            return new ViewSearchResponse<ViewTransaction>
+            {
+                Data = result,
+                TotalItems = _context.Transactions.ApplySearch(query).Count()
+            };
         }
 
         [HttpPost()]

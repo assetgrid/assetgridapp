@@ -5,7 +5,7 @@ import { AccountReference } from "../import/ImportModels";
 
 export interface Props {
     account?: Account;
-    accountReference: AccountReference;
+    accountReference?: AccountReference;
 }
 
 export default class AccountTooltip extends React.Component<Props> {

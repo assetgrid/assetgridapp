@@ -1,57 +1,47 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import * as React from "react";
 import { Account } from "../../models/account";
+import { SearchRequest, SearchResponse } from "../../models/search";
+import Table from "../common/Table";
 
-interface State 
-{
-    accounts: Account[] | null
-}
-
-export default class AccountList extends React.Component<{}, State> {
+export default class AccountList extends React.Component<{}> {
     constructor(props: {}) {
         super(props);
-        this.state = {
-            accounts: null
-        };
     }
 
-    componentDidMount() {
-        axios.post(`https://localhost:7262/Account/Search`, {})
-        .then(res => {
-            const accounts: Account[] = res.data;
-            this.setState({ accounts: accounts });
-        })
+    private fetchItems(from: number, to: number): Promise<{ items: Account[], totalItems: number, offset: number }> {
+        return new Promise(resolve => {
+            axios.post<SearchRequest, AxiosResponse<SearchResponse<Account>>>(`https://localhost:7262/Account/Search`, {
+                from: from,
+                to: to
+            }).then(res => {
+                const accounts: Account[] = res.data.data;
+                resolve({
+                    items: accounts,
+                    offset: from,
+                    totalItems: res.data.totalItems
+                });
+            })
+        });
     }
 
     public render() {
-        return <>
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                    </tr>
-                </tfoot>
-                <tbody>
-                    {this.state.accounts == null
-                        ? <tr><td colSpan={6}>Loading</td></tr>
-                        : this.state.accounts.map(account =>
-                            <tr key={account.id}>
-                                <td>{account.id}</td>
-                                <td>{account.name}</td>
-                                <td>{account.description}</td>
-                            </tr>)
-                    }
-                </tbody>
-            </table>
-        </>;
+        return <Table
+            headings={<tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Account number</th>
+            </tr>}
+            pageSize={20}
+            fetchItems={this.fetchItems}
+            renderItem={account =>
+                <tr key={account.id}>
+                    <td>{account.id}</td>
+                    <td>{account.name}</td>
+                    <td>{account.description}</td>
+                    <td>{account.accountNumber}</td>
+                </tr>}
+            />;
     }
 }
