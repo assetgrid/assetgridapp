@@ -1,4 +1,5 @@
 import axios from "axios";
+import { DateTime } from "luxon";
 import * as React from "react";
 import { Account } from "../../models/account";
 import { SearchGroupType, SearchRequest, SearchResponse } from "../../models/search";
@@ -7,6 +8,7 @@ import AccountTooltip from "../account/AccountTooltip";
 import Table from "../common/Table";
 import Tooltip from "../common/Tooltip";
 import InputSelect from "../form/InputSelect";
+import InputText from "../form/InputText";
 import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
@@ -14,6 +16,7 @@ type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifie
 interface Props {
     data: any[];
     transactions: CsvCreateTransaction[] | null;
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching"} };
     options: MappingOptions;
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
 }
@@ -27,6 +30,8 @@ export interface MappingOptions {
     sourceAccountIdentifier: AccountIdentifier;
     destinationAccountColumn: string | null;
     destinationAccountIdentifier: AccountIdentifier;
+    dateColumn: string | null;
+    dateFormat: string;
 };
 
 interface State {
@@ -92,6 +97,28 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     <li><b>Row number:</b> The row number is the unique identifier.</li>
                     <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
                 </ul>
+            </div>
+
+            <div className="columns">
+                <div className="column">
+                    <InputSelect label="Date column"
+                        value={this.props.options.dateColumn}
+                        placeholder={"Select column"}
+                        onChange={result => this.updateDateHandling(result, this.props.options.dateFormat)}
+                        items={Object.keys(this.props.data[0]).map(item => {
+                            return {
+                                key: item,
+                                value: item,
+                            }
+                        })} />
+                </div>
+                {this.props.options.dateColumn !== null && <div className="column">
+                    <InputText label="Date format"
+                        value={this.props.options.dateFormat}
+                        onChange={e => this.updateDateHandling(this.props.options.dateColumn, e.target.value)}
+                    />
+                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
+                </div>}
             </div>
 
             <div className="columns">
@@ -161,8 +188,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         </>;
     }
 
-    private renderImportTable()
-    {
+    private renderImportTable() {
         if (this.props.transactions === null) {
             return <p>Loading</p>;
         }
@@ -186,14 +212,18 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                 {transaction.identifier.substring(0, 30) + "…"}
                             </Tooltip>
                     }</td>
-                    <td></td>
+                    <td>
+                        <Tooltip content={transaction.dateText}>
+                            {transaction.date.toFormat("yyyy-MM-dd")}
+                        </Tooltip>
+                    </td>
                     <td>
                         {this.printAccount(transaction.from)}
                     </td>
                     <td>
                         {this.printAccount(transaction.to)}
                     </td>
-                    <td style={{textAlign: "right"}}>{transaction.amount}</td>
+                    <td style={{ textAlign: "right" }}>{transaction.amount}</td>
                 </tr>}
         />;
     }
@@ -211,6 +241,23 @@ export default class MapCsvFields extends React.Component<Props, State> {
         ], {
             ...this.props.options,
             amountColumn: newValue,
+        });
+    }
+
+    private updateDateHandling(dateColumn: string, dateFormat: string) {
+        this.props.onChange([
+            ...this.props.data.map((row, i) => {
+                const dateText = (row as any)[dateColumn] ?? "";
+                return {
+                    ...this.props.transactions[i],
+                    date: DateTime.fromFormat(dateText, dateFormat),
+                    dateText: dateText
+                }
+            })
+        ], {
+            ...this.props.options,
+            dateColumn: dateColumn,
+            dateFormat: dateFormat
         });
     }
 
@@ -317,12 +364,6 @@ export default class MapCsvFields extends React.Component<Props, State> {
             newOptions.destinationAccountColumn = column
         }
         this.props.onChange(newTransactions, newOptions);
-
-        if (type === "source") {
-            this.fetchAccounts(newTransactions, identifier, null);
-        } else {
-            this.fetchAccounts(newTransactions, null, identifier);
-        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
@@ -335,120 +376,52 @@ export default class MapCsvFields extends React.Component<Props, State> {
     }
 
     private updateTransactions() {
-        let newTransactions = this.props.data.map((row, i) => ({
-            rowNumber: i,
-            created: new Date(),
-            description: "",
-            from: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
-                identifier: this.props.options.sourceAccountIdentifier,
-                value: row[this.props.options.sourceAccountColumn],
-                account: "fetching" as "fetching"
-            },
-            to: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
-                identifier: this.props.options.destinationAccountIdentifier,
-                value: row[this.props.options.destinationAccountColumn],
-                account: "fetching" as "fetching"
-            },
-            identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
-            amount: this.getAmount(row[this.props.options.amountColumn]),
-        }));
-        this.props.onChange(newTransactions, this.props.options);
-        
-        this.fetchAccounts(newTransactions, this.props.options.sourceAccountIdentifier, this.props.options.destinationAccountIdentifier);
-    }
-
-    private fetchAccounts(transactions: CsvCreateTransaction[], sourceIdentifier: AccountIdentifier | null, destinationIdentifier: AccountIdentifier | null) {
-        let uniqueAccounts = [
-                ...(sourceIdentifier !== null ? transactions.map(transaction => transaction.from) : []),
-                ...(destinationIdentifier !== null ? transactions.map(transaction => transaction.to) : [])
-            ]
-            .filter(account => account != null)
-            .filter((account, index, array) => array
-                .filter(accountB => accountB !== null)
-                .findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
-
-        let query = [];
-        if (sourceIdentifier !== null) {
-            query.push({
-                type: 2,
-                children: [],
-                query: {
-                    column: capitalize(sourceIdentifier),
-                    operator: 1,
-                    value: uniqueAccounts.map(account => castFieldValue(account.value, account.identifier)),
-                }
-            });
-        }
-        if (destinationIdentifier !== null) {
-            query.push({
-                type: 2,
-                children: [],
-                query: {
-                    column: capitalize(destinationIdentifier),
-                    operator: 1,
-                    value: uniqueAccounts.map(account => castFieldValue(account.value, account.identifier)),
-                }
-            });
-        }
-        
-        console.log(uniqueAccounts.length);
-        axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, 
-            ({
-                from: 0,
-                to: uniqueAccounts.length,
-                query: {
-                    type: SearchGroupType.Or,
-                    children: query,
-                }
-            }) as SearchRequest).then(res => {
-            let newOptions = { ...this.props.options };
-            if (sourceIdentifier !== null) {
-                newOptions.sourceAccountIdentifier = sourceIdentifier;
-            } else if (destinationIdentifier !== null) {
-                newOptions.destinationAccountIdentifier = destinationIdentifier;
+        let newTransactions = this.props.data.map((row, i) => {
+            const dateText = (row as any)[this.props.options.dateColumn] ?? "";
+            return {
+                rowNumber: i,
+                dateText: dateText,
+                date: DateTime.fromFormat(dateText, this.props.options.dateFormat),
+                description: "",
+                from: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
+                    identifier: this.props.options.sourceAccountIdentifier,
+                    value: row[this.props.options.sourceAccountColumn],
+                    account: "fetching" as "fetching"
+                },
+                to: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
+                    identifier: this.props.options.destinationAccountIdentifier,
+                    value: row[this.props.options.destinationAccountColumn],
+                    account: "fetching" as "fetching"
+                },
+                identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
+                amount: this.getAmount(row[this.props.options.amountColumn]),
             }
-            
-            this.props.onChange([
-                ...this.props.transactions.map((transaction, i) => {
-                    let result = { ...this.props.transactions[i] };
-                    if (sourceIdentifier !== null && result.from !== null) {
-                        result.from = {
-                            identifier: transaction.from.identifier,
-                            value: transaction.from.value,
-                            account: res.data.data.find(account => account[transaction.from.identifier] === transaction.from.value) ?? null
-                        }
-                    }
-                    if (destinationIdentifier !== null && result.to !== null) {
-                        result.to = {
-                            identifier: transaction.to.identifier,
-                            value: transaction.to.value,
-                            account: res.data.data.find(account => account[transaction.to.identifier] === transaction.to.value) ?? null
-                        }
-                    }
-                    return result;
-                })
-            ], newOptions);
         });
+        this.props.onChange(newTransactions, this.props.options);
     }
 
-    private printAccount(account: AccountReference | null): React.ReactNode
+    private printAccount(reference: AccountReference | null): React.ReactNode
     {
-        if (account === null) {
+        if (reference === null) {
             return "";
         }
-        if (account.account === "fetching") {
-            return <AccountTooltip accountReference={account}>
+
+        let account = this.props.accountsBy[reference.identifier] ?
+            this.props.accountsBy[reference.identifier][reference.value] ?? null
+            : null;
+        if (account === "fetching") {
+            return <Tooltip content={"Fetching account with " + reference.identifier + ": " + reference.value}>
                 &hellip;
-            </AccountTooltip>;
+            </Tooltip>;
         }
-        if (account.account === null) {
-            return <AccountTooltip accountReference={account}>
+        if (account === null) {
+            return <Tooltip content={"No account found with " + reference.identifier + ": " + reference.value}>
                 Not found
-            </AccountTooltip>;
+            </Tooltip>;
         };
 
-        return <AccountTooltip accountReference={account}>
-            {"#" + account.account.id + " " + account.account.name}
+        return <AccountTooltip account={account}>
+            {"#" + account.id + " " + account.name}
         </AccountTooltip>;
     }
 }

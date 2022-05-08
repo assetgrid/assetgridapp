@@ -78,7 +78,8 @@ export default class ImportCsv extends React.Component<Props, State> {
     }
 
     private import() {
-        this.setState({ state: "importing" });
+        throw "Not implemented";
+        /* this.setState({ state: "importing" });
 
         let requestData = this.props.transactions.map(transaction => {
             if (transaction.from?.account === "fetching") throw "Fetching account";
@@ -104,6 +105,6 @@ export default class ImportCsv extends React.Component<Props, State> {
                 duplicate: res.data.duplicate,
                 state: "imported"
             })
-        });
+        }); */
     }
 }

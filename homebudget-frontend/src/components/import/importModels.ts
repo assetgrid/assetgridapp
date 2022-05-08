@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { Account } from "../../models/account";
 import { TransactionLine } from "../../models/transaction";
 
@@ -7,7 +8,8 @@ export type CsvCreateTransaction = {
     rowNumber: number;
     from: AccountReference | null;
     to: AccountReference | null;
-    created: Date;
+    dateText: string;
+    date: DateTime;
     description: string;
     identifier: string | null;
     amount: number;
@@ -16,7 +18,6 @@ export type CsvCreateTransaction = {
 export type AccountReference = {
     identifier: AccountIdentifier;
     value: string;
-    account: Account | null | "fetching";
 }
 
 export function castFieldValue(value: string, identifier: AccountIdentifier) {

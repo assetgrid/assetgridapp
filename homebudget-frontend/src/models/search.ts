@@ -20,8 +20,8 @@ export type SearchQuery = {
 }
 
 export enum SearchOperator {
-    Equals = 1,
-    Contains = 2,
+    Equals = 0,
+    Contains = 1,
 }
 
 export enum SearchGroupType {
