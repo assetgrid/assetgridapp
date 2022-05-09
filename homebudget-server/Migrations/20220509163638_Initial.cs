@@ -38,9 +38,9 @@ namespace homebudget_server.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    FromAccountId = table.Column<int>(type: "int", nullable: true),
-                    ToAccountId = table.Column<int>(type: "int", nullable: true),
-                    DatetimeCreated = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    SourceAccountId = table.Column<int>(type: "int", nullable: true),
+                    DestinationAccountId = table.Column<int>(type: "int", nullable: true),
+                    DateTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Identifier = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
@@ -50,13 +50,13 @@ namespace homebudget_server.Migrations
                 {
                     table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Transactions_Accounts_FromAccountId",
-                        column: x => x.FromAccountId,
+                        name: "FK_Transactions_Accounts_DestinationAccountId",
+                        column: x => x.DestinationAccountId,
                         principalTable: "Accounts",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Transactions_Accounts_ToAccountId",
-                        column: x => x.ToAccountId,
+                        name: "FK_Transactions_Accounts_SourceAccountId",
+                        column: x => x.SourceAccountId,
                         principalTable: "Accounts",
                         principalColumn: "Id");
                 })
@@ -92,9 +92,9 @@ namespace homebudget_server.Migrations
                 column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_FromAccountId",
+                name: "IX_Transactions_DestinationAccountId",
                 table: "Transactions",
-                column: "FromAccountId");
+                column: "DestinationAccountId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_Identifier",
@@ -103,9 +103,9 @@ namespace homebudget_server.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_ToAccountId",
+                name: "IX_Transactions_SourceAccountId",
                 table: "Transactions",
-                column: "ToAccountId");
+                column: "SourceAccountId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

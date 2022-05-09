@@ -34,8 +34,8 @@ export default class MissingAccounts extends React.Component<Props, State> {
 
     public render(): React.ReactNode {
         let uniqueAccountReferences = [
-            ...this.props.transactions.map(transaction => transaction.from),
-            ...this.props.transactions.map(transaction => transaction.to)
+            ...this.props.transactions.map(transaction => transaction.source),
+            ...this.props.transactions.map(transaction => transaction.destination)
         ].filter(reference => reference !== null)
             .filter((a, index, array) => array.findIndex(b => a.identifier == b.identifier && a.value == b.value) == index)
             .filter(reference => this.props.accountsBy[reference.identifier][reference.value] === null);

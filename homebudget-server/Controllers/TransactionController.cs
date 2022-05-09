@@ -29,10 +29,10 @@ namespace homebudget_server.Controllers
                 {
                     var result = new Models.Transaction
                     {
-                        DatetimeCreated = model.Created,
-                        FromAccountId = model.FromId,
+                        DateTime = model.DateTime,
+                        SourceAccountId = model.SourceId,
                         Description = model.Description,
-                        ToAccountId = model.ToId,
+                        DestinationAccountId = model.DestinationId,
                         Identifier = model.Identifier,
                         TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
                         {
@@ -47,21 +47,21 @@ namespace homebudget_server.Controllers
                     return new ViewTransaction {
                         Id = result.Id,
                         Identifier = result.Identifier,
-                        Created = result.DatetimeCreated,
+                        DateTime = result.DateTime,
                         Description = result.Description,
-                        From = result.FromAccount != null
+                        Source = result.SourceAccount != null
                             ? new ViewAccount
                             {
-                                Id = result.FromAccount.Id,
-                                Name = result.FromAccount.Name,
-                                Description = result.FromAccount.Description,
+                                Id = result.SourceAccount.Id,
+                                Name = result.SourceAccount.Name,
+                                Description = result.SourceAccount.Description,
                             } : null,
-                        To = result.ToAccount != null
+                        Destination = result.DestinationAccount != null
                             ? new ViewAccount
                             {
-                                Id = result.ToAccount.Id,
-                                Name = result.ToAccount.Name,
-                                Description = result.ToAccount.Description,
+                                Id = result.DestinationAccount.Id,
+                                Name = result.DestinationAccount.Name,
+                                Description = result.DestinationAccount.Description,
                             } : null,
                         Lines = result.TransactionLines
                             .OrderBy(line => line.Order)
@@ -86,21 +86,21 @@ namespace homebudget_server.Controllers
                 .Select(transaction => new ViewTransaction
                 {
                     Id = transaction.Id,
-                    Created = transaction.DatetimeCreated,
+                    DateTime = transaction.DateTime,
                     Description = transaction.Description,
-                    From = transaction.FromAccount != null
+                    Source = transaction.SourceAccount != null
                         ? new ViewAccount
                         {
-                            Id = transaction.FromAccount.Id,
-                            Description = transaction.FromAccount.Description,
-                            Name = transaction.FromAccount.Name
+                            Id = transaction.SourceAccount.Id,
+                            Description = transaction.SourceAccount.Description,
+                            Name = transaction.SourceAccount.Name
                         } : null,
-                    To = transaction.ToAccount != null
+                    Destination = transaction.DestinationAccount != null
                         ? new ViewAccount
                         {
-                            Id = transaction.ToAccount.Id,
-                            Description = transaction.ToAccount.Description,
-                            Name = transaction.ToAccount.Name
+                            Id = transaction.DestinationAccount.Id,
+                            Description = transaction.DestinationAccount.Description,
+                            Name = transaction.DestinationAccount.Name
                         } : null,
                     Identifier = transaction.Identifier,
                     Lines = transaction.TransactionLines
@@ -149,10 +149,10 @@ namespace homebudget_server.Controllers
                     {
                         var result = new Models.Transaction
                         {
-                            DatetimeCreated = transaction.Created,
-                            FromAccountId = transaction.FromId,
+                            DateTime = transaction.DateTime,
+                            SourceAccountId = transaction.SourceId,
                             Description = transaction.Description,
-                            ToAccountId = transaction.ToId,
+                            DestinationAccountId = transaction.DestinationId,
                             Identifier = transaction.Identifier,
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {

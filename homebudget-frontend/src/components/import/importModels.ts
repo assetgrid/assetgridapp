@@ -6,10 +6,10 @@ export type AccountIdentifier = "id" | "name" | "accountNumber";
 
 export type CsvCreateTransaction = {
     rowNumber: number;
-    from: AccountReference | null;
-    to: AccountReference | null;
+    source: AccountReference | null;
+    destination: AccountReference | null;
     dateText: string;
-    date: DateTime;
+    dateTime: DateTime;
     description: string;
     identifier: string | null;
     amount: number;

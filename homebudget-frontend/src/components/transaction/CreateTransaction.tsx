@@ -8,8 +8,8 @@ import InputText from "../form/InputText";
 
 interface State
 {
-    fromId: number | null,
-    toId: number | null,
+    sourceId: number | null,
+    destinationId: number | null,
     description: string,
     identifier: string,
     created: Date,
@@ -51,15 +51,15 @@ export default class CreateTransaction extends React.Component<{}, State> {
                     <div className="columns">
                         <div className="column is-6">
                             <InputAccount label="From"
-                                value={this.state.fromId}
+                                value={this.state.sourceId}
                                 disabled={this.state.creating}
-                                onChange={account => this.setState({ fromId: account?.id ?? null})} />
+                                onChange={account => this.setState({ sourceId: account?.id ?? null})} />
                         </div>
                         <div className="column is-6">
                             <InputAccount label="To"
-                                value={this.state.toId}
+                                value={this.state.destinationId}
                                 disabled={this.state.creating}
-                                onChange={account => this.setState({ toId: account?.id ?? null})} />
+                                onChange={account => this.setState({ destinationId: account?.id ?? null})} />
                         </div>
                     </div>
                 </div>
@@ -139,8 +139,8 @@ export default class CreateTransaction extends React.Component<{}, State> {
     private create() {
         this.setState({ creating: true });
         axios.post(`https://localhost:7262/Transaction`, {
-            fromId: this.state.fromId,
-            toId: this.state.toId,
+            fromId: this.state.sourceId,
+            toId: this.state.destinationId,
             description: this.state.description,
             identifier: this.state.identifier,
             lines: this.state.lines

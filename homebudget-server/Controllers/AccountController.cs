@@ -34,9 +34,10 @@ namespace homebudget_server.Controllers
                 _context.SaveChanges();
                 return new ViewAccount
                 {
-                    AccountNumber = model.AccountNumber,
-                    Description = model.Description,
-                    Name = model.Name
+                    Id = result.Id,
+                    AccountNumber = result.AccountNumber,
+                    Description = result.Description,
+                    Name = result.Name
                 };
             }
             throw new Exception();

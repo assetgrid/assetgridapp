@@ -1,19 +1,20 @@
+import { DateTime } from "luxon";
 import { Account } from "./account";
 
 export type Transaction = {
     id: number;
-    from: Account;
-    to: Account;
-    created: Date;
+    sourceAccount: Account;
+    destinationAccount: Account;
+    dateTime: Date;
     identifier: string;
     lines: TransactionLine[];
     description: string;
 }
 
 export type CreateTransaction = {
-    fromId: number;
-    toId: number;
-    created: Date;
+    sourceId: number;
+    destinationId: number;
+    dateTime: DateTime;
     description: string;
     identifier: string | null;
     lines: TransactionLine[];

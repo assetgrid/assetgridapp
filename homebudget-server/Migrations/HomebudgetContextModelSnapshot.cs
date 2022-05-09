@@ -47,30 +47,30 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DatetimeCreated")
+                    b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int?>("FromAccountId")
+                    b.Property<int?>("DestinationAccountId")
                         .HasColumnType("int");
 
                     b.Property<string>("Identifier")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<int?>("ToAccountId")
+                    b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FromAccountId");
+                    b.HasIndex("DestinationAccountId");
 
                     b.HasIndex("Identifier")
                         .IsUnique();
 
-                    b.HasIndex("ToAccountId");
+                    b.HasIndex("SourceAccountId");
 
                     b.ToTable("Transactions");
                 });
@@ -103,17 +103,17 @@ namespace homebudget_server.Migrations
 
             modelBuilder.Entity("homebudget_server.Models.Transaction", b =>
                 {
-                    b.HasOne("homebudget_server.Models.Account", "FromAccount")
+                    b.HasOne("homebudget_server.Models.Account", "DestinationAccount")
                         .WithMany()
-                        .HasForeignKey("FromAccountId");
+                        .HasForeignKey("DestinationAccountId");
 
-                    b.HasOne("homebudget_server.Models.Account", "ToAccount")
+                    b.HasOne("homebudget_server.Models.Account", "SourceAccount")
                         .WithMany()
-                        .HasForeignKey("ToAccountId");
+                        .HasForeignKey("SourceAccountId");
 
-                    b.Navigation("FromAccount");
+                    b.Navigation("DestinationAccount");
 
-                    b.Navigation("ToAccount");
+                    b.Navigation("SourceAccount");
                 });
 
             modelBuilder.Entity("homebudget_server.Models.TransactionLine", b =>

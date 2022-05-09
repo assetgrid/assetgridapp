@@ -20,7 +20,7 @@ interface State
     accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
     duplicateIdentifiers: Set<string> | "fetching";
 
-    currentTab: "parse-csv" | "map-columns" | "missing-accounts" | "duplicate-transactions" | "invalid-transactions" | "process";
+    currentTab: "parse-csv" | "map-columns" | "missing-accounts" | "process";
 }
 
 /*
@@ -80,9 +80,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     <ul>
                         <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
                         <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
-                        <li className={this.state.currentTab === "invalid-transactions" ? "is-active" : ""}><a>Invalid transactions</a></li>
                         <li className={this.state.currentTab === "missing-accounts" ? "is-active" : ""}><a>Missing accounts</a></li>
-                        <li className={this.state.currentTab === "duplicate-transactions" ? "is-active" : ""}><a>Duplicates</a></li>
                         <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
                     </ul>
                 </div>
@@ -145,8 +143,18 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     </div>
                 </>;
             case "process":
+                // TODO: Don't show the button on the previous page, while fetching
+                if (Object.keys(this.state.accountsBy).some(identifier =>
+                    Object.keys(this.state.accountsBy[identifier]).some(value =>
+                        this.state.accountsBy[identifier][value] === "fetching"))) {
+                    return "Please wait while fetching accounts";
+                }
+                
                 return <>
-                    <Import transactions={this.state.transactions} />
+                    <Import
+                        transactions={this.state.transactions}
+                        accountsBy={this.state.accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
+                        batchSize={10} />
                     <div className="buttons">
                         <InputButton onClick={() => this.setState({ currentTab: "missing-accounts" })}>Back</InputButton>
                     </div>
@@ -186,21 +194,21 @@ export default class PageImportCsv extends React.Component<{}, State> {
         for (let i = 0; i < transactions.length; i++) {
             let transaction = transactions[i];
 
-            if (transaction.from !== null) {
-                if (newAccountsBy[transaction.from.identifier] === undefined) {
-                    newAccountsBy[transaction.from.identifier] = {};
+            if (transaction.source !== null) {
+                if (newAccountsBy[transaction.source.identifier] === undefined) {
+                    newAccountsBy[transaction.source.identifier] = {};
                 }
-                if (newAccountsBy[transaction.from.identifier][transaction.from.value] === undefined) {
-                    newAccountsBy[transaction.from.identifier][transaction.from.value] = "fetching";
+                if (newAccountsBy[transaction.source.identifier][transaction.source.value] === undefined) {
+                    newAccountsBy[transaction.source.identifier][transaction.source.value] = "fetching";
                 }
             }
 
-            if (transaction.to !== null) {
-                if (newAccountsBy[transaction.to.identifier] === undefined) {
-                    newAccountsBy[transaction.to.identifier] = {};
+            if (transaction.destination !== null) {
+                if (newAccountsBy[transaction.destination.identifier] === undefined) {
+                    newAccountsBy[transaction.destination.identifier] = {};
                 }
-                if (newAccountsBy[transaction.to.identifier][transaction.to.value] === undefined) {
-                    newAccountsBy[transaction.to.identifier][transaction.to.value] = "fetching";
+                if (newAccountsBy[transaction.destination.identifier][transaction.destination.value] === undefined) {
+                    newAccountsBy[transaction.destination.identifier][transaction.destination.value] = "fetching";
                 }
             }
         }
@@ -212,8 +220,8 @@ export default class PageImportCsv extends React.Component<{}, State> {
 
         // Find every unique account reference in the transactions that has not been loaded
         let uniqueAccountReferences = [
-            ...transactions.map(transaction => transaction.from),
-            ...transactions.map(transaction => transaction.to)
+            ...transactions.map(transaction => transaction.source),
+            ...transactions.map(transaction => transaction.destination)
         ].filter(account => account != null)
             .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
             .filter(account => this.state.accountsBy[account.identifier] === undefined
@@ -261,15 +269,15 @@ export default class PageImportCsv extends React.Component<{}, State> {
             for (let i = 0; i < transactions.length; i++) {
                 let transaction = transactions[i];
     
-                if (transaction.from !== null) {
-                    if (newAccountsBy[transaction.from.identifier][transaction.from.value] === "fetching") {
-                        newAccountsBy[transaction.from.identifier][transaction.from.value] = null;
+                if (transaction.source !== null) {
+                    if (newAccountsBy[transaction.source.identifier][transaction.source.value] === "fetching") {
+                        newAccountsBy[transaction.source.identifier][transaction.source.value] = null;
                     }
                 }
     
-                if (transaction.to !== null) {
-                    if (newAccountsBy[transaction.to.identifier][transaction.to.value] === "fetching") {
-                        newAccountsBy[transaction.to.identifier][transaction.to.value] = null;
+                if (transaction.destination !== null) {
+                    if (newAccountsBy[transaction.destination.identifier][transaction.destination.value] === "fetching") {
+                        newAccountsBy[transaction.destination.identifier][transaction.destination.value] = null;
                     }
                 }
             }

@@ -228,14 +228,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     }</td>
                     <td>
                         <Tooltip content={transaction.dateText}>
-                            {transaction.date.toFormat("yyyy-MM-dd")}
+                            {transaction.dateTime.toFormat("yyyy-MM-dd")}
                         </Tooltip>
                     </td>
                     <td>
-                        {this.printAccount(transaction.from)}
+                        {this.printAccount(transaction.source)}
                     </td>
                     <td>
-                        {this.printAccount(transaction.to)}
+                        {this.printAccount(transaction.destination)}
                     </td>
                     <td>{transaction.description}</td>
                     <td style={{ textAlign: "right" }}>{transaction.amount}</td>
@@ -380,23 +380,21 @@ export default class MapCsvFields extends React.Component<Props, State> {
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
-                    from: isNullOrWhitespace(row[column]) ? null : {
+                    source: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: row[column],
-                        account: "fetching" as "fetching"
-                    }
-                }))
+                    } as AccountReference
+                } as CsvCreateTransaction))
             ];
         } else {
             newTransactions = [
                 ...this.props.data.map((row, i) => ({
                     ...this.props.transactions[i],
-                    to: isNullOrWhitespace(row[column]) ? null : {
+                    destination: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: row[column],
-                        account: "fetching" as "fetching"
-                    }
-                }))
+                    } as AccountReference
+                } as CsvCreateTransaction))
             ];
         }
 
@@ -426,18 +424,16 @@ export default class MapCsvFields extends React.Component<Props, State> {
             return {
                 rowNumber: i,
                 dateText: dateText,
-                date: DateTime.fromFormat(dateText, this.props.options.dateFormat),
+                dateTime: DateTime.fromFormat(dateText, this.props.options.dateFormat),
                 description: row[this.props.options.descriptionColumn],
-                from: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
+                source: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
                     identifier: this.props.options.sourceAccountIdentifier,
                     value: row[this.props.options.sourceAccountColumn],
-                    account: "fetching" as "fetching"
-                },
-                to: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
+                } as AccountReference,
+                destination: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
                     identifier: this.props.options.destinationAccountIdentifier,
                     value: row[this.props.options.destinationAccountColumn],
-                    account: "fetching" as "fetching"
-                },
+                } as AccountReference,
                 identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
                 amount: this.getAmount(row[this.props.options.amountColumn]),
             } as CsvCreateTransaction

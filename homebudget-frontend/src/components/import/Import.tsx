@@ -1,13 +1,16 @@
 import axios from "axios";
 import * as React from "react";
+import { Account } from "../../models/account";
 import { CreateTransaction } from "../../models/transaction";
 import Table from "../common/Table";
 import InputButton from "../form/InputButton";
-import { CsvCreateTransaction } from "./ImportModels";
+import { AccountReference, CsvCreateTransaction } from "./ImportModels";
 import MissingAccounts from "./MissingAccounts";
 
 interface Props {
     transactions: CsvCreateTransaction[];
+    accountsBy: { [identifier: string]: { [value: string]: Account } };
+    batchSize: number;
 }
 
 interface State {
@@ -16,6 +19,7 @@ interface State {
     duplicate: CreateTransaction[],
 
     state: "waiting" | "importing" | "imported";
+    progress: number;
 }
 
 /*
@@ -29,7 +33,8 @@ export default class ImportCsv extends React.Component<Props, State> {
             failed: [],
             duplicate: [],
 
-            state: "waiting"
+            state: "waiting",
+            progress: 0,
         };
     }
 
@@ -41,7 +46,8 @@ export default class ImportCsv extends React.Component<Props, State> {
                 </>;
             case "importing":
                 return <>
-                    <p>Please wait while you transactions are being imported</p>
+                    <p>{this.state.progress} of {this.props.transactions.length} transactions have been imported.</p>
+                    <p>Please wait while the import is completed</p>
                 </>;
             case "imported":
                 return <>
@@ -63,10 +69,10 @@ export default class ImportCsv extends React.Component<Props, State> {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifier}</td>
-                <td>{transaction.created}</td>
+                <td>{transaction.dateTime}</td>
                 <td>{transaction.description}</td>
-                <td>#{transaction.fromId}</td>
-                <td>#{transaction.toId}</td>
+                <td>#{transaction.sourceId}</td>
+                <td>#{transaction.destinationId}</td>
             </tr>}
             headings={<tr>
                 <td>Identifier</td>
@@ -77,19 +83,18 @@ export default class ImportCsv extends React.Component<Props, State> {
             </tr>} items={transactions} />;
     }
 
-    private import() {
-        throw "Not implemented";
-        /* this.setState({ state: "importing" });
+    private async import() {
+        this.setState({
+            state: "importing",
+            progress: 0
+        });
 
-        let requestData = this.props.transactions.map(transaction => {
-            if (transaction.from?.account === "fetching") throw "Fetching account";
-            if (transaction.to?.account === "fetching") throw "Fetching account";
-
+        let createModels = this.props.transactions.map(transaction => {
             return {
-                created: new Date(),
-                description: "",
-                fromId: transaction.from?.account?.id,
-                toId: transaction.to?.account?.id,
+                dateTime: transaction.dateTime,
+                description: transaction.description,
+                sourceId: this.getAccount(transaction.source)?.id,
+                destinationId: this.getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
                 lines: [{
                     amount: transaction.amount,
@@ -97,14 +102,26 @@ export default class ImportCsv extends React.Component<Props, State> {
                 }]
             } as CreateTransaction
         });
-        axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>(`https://localhost:7262/Transaction/CreateMany`, requestData)
-            .then(res => {
+
+        for (let i = 0; i < createModels.length - 1; i += this.props.batchSize) {
+            let result = await axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>
+                (`https://localhost:7262/Transaction/CreateMany`, createModels.slice(this.state.progress, this.state.progress + this.props.batchSize))
             this.setState({
-                succeeded: res.data.succeeded,
-                failed: res.data.failed,
-                duplicate: res.data.duplicate,
-                state: "imported"
-            })
-        }); */
+                progress: this.state.progress + this.props.batchSize,
+                succeeded: [...this.state.succeeded, ...result.data.succeeded],
+                failed: [...this.state.failed, ...result.data.failed],
+                duplicate: [...this.state.duplicate, ...result.data.duplicate],
+            });
+        }
+
+        this.setState({ state: "imported" });
+    }
+
+    private getAccount(reference: AccountReference | null): Account | null {
+        if (reference === null || reference === undefined) return null;
+        if (this.props.accountsBy[reference.identifier] === undefined) return null;
+        if (this.props.accountsBy[reference.identifier][reference.value] === undefined) return null;
+
+        return this.props.accountsBy[reference.identifier][reference.value];
     }
 }

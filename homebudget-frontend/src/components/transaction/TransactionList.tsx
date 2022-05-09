@@ -48,15 +48,15 @@ export default class TransactionList extends React.Component<Props> {
             fetchItems={this.fetchItems}
             renderItem={transaction =>
                 <tr key={transaction.id}>
-                    <td>{transaction.created}</td>
+                    <td>{transaction.dateTime}</td>
                     <td style={{textAlign: "right"}}>{transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0)}</td>
                     <td>{transaction.description}</td>
-                    <td>{transaction.from != null
-                        ? <AccountTooltip account={transaction.from}>#{transaction.from.id} {transaction.from.name}</AccountTooltip>
+                    <td>{transaction.sourceAccount != null
+                        ? <AccountTooltip account={transaction.sourceAccount}>#{transaction.sourceAccount.id} {transaction.sourceAccount.name}</AccountTooltip>
                         : <></>
                     }</td>
-                    <td>{transaction.to != null
-                        ? <AccountTooltip account={transaction.to}>#{transaction.to.id} {transaction.to.name}</AccountTooltip>
+                    <td>{transaction.destinationAccount != null
+                        ? <AccountTooltip account={transaction.destinationAccount}>#{transaction.destinationAccount.id} {transaction.destinationAccount.name}</AccountTooltip>
                         : <></>
                     }</td>
                     <td></td>
