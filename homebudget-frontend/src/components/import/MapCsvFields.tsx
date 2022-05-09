@@ -16,7 +16,8 @@ type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifie
 interface Props {
     data: any[];
     transactions: CsvCreateTransaction[] | null;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching"} };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    duplicateIdentifiers: Set<string> | "fetching";
     options: MappingOptions;
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
 }
@@ -205,8 +206,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
             draw={this.state.tableDraw}
             renderItem={transaction =>
                 <tr key={transaction.rowNumber}>
-                    <td>{
-                        transaction.identifier.length < 30
+                    <td>{this.duplicateIndicator(transaction.identifier)}
+                        {transaction.identifier.length < 30
                             ? transaction.identifier
                             : <Tooltip content={transaction.identifier}>
                                 {transaction.identifier.substring(0, 30) + "…"}
@@ -226,6 +227,24 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     <td style={{ textAlign: "right" }}>{transaction.amount}</td>
                 </tr>}
         />;
+    }
+
+    private duplicateIndicator(identifier: string): React.ReactNode {
+        if (this.props.duplicateIdentifiers === "fetching") {
+            return <Tooltip content="Checking for duplicates">
+                <span className="icon">
+                    <i className="fas fa-spinner fa-pulse"></i>
+                </span>
+            </Tooltip>;
+        }
+        if (this.props.duplicateIdentifiers.has(identifier)) {
+            return <Tooltip content="Duplicate identifier">
+                <span className="icon has-text-danger">
+                    <i className="fas fa-exclamation-triangle"></i>
+                </span>
+            </Tooltip>;
+        }
+        return <></>;
     }
 
     componentDidMount(): void {
@@ -416,6 +435,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
         }
         if (account === null) {
             return <Tooltip content={"No account found with " + reference.identifier + ": " + reference.value}>
+                <span className="icon has-text-danger">
+                    <i className="fas fa-exclamation-triangle"></i>
+                </span>
                 Not found
             </Tooltip>;
         };

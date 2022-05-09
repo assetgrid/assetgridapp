@@ -17,9 +17,10 @@ interface State
     csvFile: File | null;
     csvOptions: CsvImportOptions;
     mappingOptions: MappingOptions;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching"} };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    duplicateIdentifiers: Set<string> | "fetching";
 
-    currentTab: "parse-csv" | "map-columns" | "missing-accounts" | "process";
+    currentTab: "parse-csv" | "map-columns" | "missing-accounts" | "duplicate-transactions" | "invalid-transactions" | "process";
 }
 
 /*
@@ -34,6 +35,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
             lines: [],
             currentTab: "parse-csv",
             accountsBy: {},
+            duplicateIdentifiers: new Set(),
 
             csvFile: null,
             csvOptions: {
@@ -76,7 +78,9 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     <ul>
                         <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
                         <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
+                        <li className={this.state.currentTab === "invalid-transactions" ? "is-active" : ""}><a>Invalid transactions</a></li>
                         <li className={this.state.currentTab === "missing-accounts" ? "is-active" : ""}><a>Missing accounts</a></li>
+                        <li className={this.state.currentTab === "duplicate-transactions" ? "is-active" : ""}><a>Duplicates</a></li>
                         <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
                     </ul>
                 </div>
@@ -107,6 +111,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         accountsBy={this.state.accountsBy}
                         options={this.state.mappingOptions}
                         transactions={this.state.transactions}
+                        duplicateIdentifiers={this.state.duplicateIdentifiers}
                         data={this.state.data}
                         onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
                     />}
@@ -150,6 +155,31 @@ export default class PageImportCsv extends React.Component<{}, State> {
     }
 
     private mappingsChanged(transactions: CsvCreateTransaction[], options: MappingOptions): void {
+        // Update duplicates
+        if ((this.state.transactions === null && transactions !== null)
+            || transactions.length !== this.state.transactions.length
+            || transactions.some((transaction, i) => this.state.transactions[i].identifier !== transaction.identifier)) {
+            // There has been a change in identifiers
+            let identifierCounts: { [identifier: string]: number } = {};
+            for (let i = 0; i < transactions.length; i++) {
+                let id = transactions[i].identifier;
+                identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
+            }
+            this.setState({ duplicateIdentifiers: "fetching" });
+
+            axios.post<string[]>(`https://localhost:7262/Transaction/FindDuplicates`, 
+                Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1)
+            ).then(res => {
+                this.setState({
+                    duplicateIdentifiers: new Set([
+                        ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
+                        ...res.data
+                    ])
+                });
+            });
+        }
+        
+        // Update AccountsBy
         let newAccountsBy = { ...this.state.accountsBy };
         for (let i = 0; i < transactions.length; i++) {
             let transaction = transactions[i];
