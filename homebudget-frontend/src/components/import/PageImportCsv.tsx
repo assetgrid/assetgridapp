@@ -52,6 +52,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                 destinationAccountIdentifier: "name",
                 amountColumn: null,
                 dateColumn: null,
+                descriptionColumn: null,
                 // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
                 dateFormat: "yyyy-MM-dd"
             } */
@@ -64,6 +65,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                 destinationAccountIdentifier: "name",
                 amountColumn: "Beløb",
                 dateColumn: "Dato",
+                descriptionColumn: "Tekst",
                 // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
                 dateFormat: "dd-MM-yyyy"
             }

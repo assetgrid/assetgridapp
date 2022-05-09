@@ -27,6 +27,7 @@ export interface MappingOptions {
     duplicateHandling: DuplicateHandlingOptions;
     identifierColumn: string | null;
     amountColumn: string | null;
+    descriptionColumn: string | null;
     sourceAccountColumn: string | null;
     sourceAccountIdentifier: AccountIdentifier;
     destinationAccountColumn: string | null;
@@ -185,6 +186,17 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     }
                 })} />
 
+            <InputSelect label="Description column"
+                value={this.props.options.descriptionColumn}
+                placeholder={"Select column"}
+                onChange={result => this.setDescriptionColumn(result)}
+                items={Object.keys(this.props.data[0]).map(item => {
+                    return {
+                        key: item,
+                        value: item,
+                    }
+                })} />
+
             {this.renderImportTable()}
         </>;
     }
@@ -201,6 +213,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <th>Date</th>
                 <th>Source</th>
                 <th>Destination</th>
+                <th>Description</th>
                 <th>Amount</th>
             </tr>}
             draw={this.state.tableDraw}
@@ -224,6 +237,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     <td>
                         {this.printAccount(transaction.to)}
                     </td>
+                    <td>{transaction.description}</td>
                     <td style={{ textAlign: "right" }}>{transaction.amount}</td>
                 </tr>}
         />;
@@ -260,6 +274,18 @@ export default class MapCsvFields extends React.Component<Props, State> {
         ], {
             ...this.props.options,
             amountColumn: newValue,
+        });
+    }
+
+    private setDescriptionColumn(newValue: string) {
+        this.props.onChange([
+            ...this.props.data.map((row, i) => ({
+                ...this.props.transactions[i],
+                description: (row as any)[newValue]
+            }))
+        ], {
+            ...this.props.options,
+            descriptionColumn: newValue,
         });
     }
 
@@ -401,7 +427,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 rowNumber: i,
                 dateText: dateText,
                 date: DateTime.fromFormat(dateText, this.props.options.dateFormat),
-                description: "",
+                description: row[this.props.options.descriptionColumn],
                 from: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
                     identifier: this.props.options.sourceAccountIdentifier,
                     value: row[this.props.options.sourceAccountColumn],
@@ -414,7 +440,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 },
                 identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
                 amount: this.getAmount(row[this.props.options.amountColumn]),
-            }
+            } as CsvCreateTransaction
         });
         this.props.onChange(newTransactions, this.props.options);
     }
