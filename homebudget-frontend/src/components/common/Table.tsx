@@ -113,7 +113,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
     }
 
     componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State<T>>): void {
-        if (prevProps.draw !== this.props.draw) {
+        if (prevProps.draw !== this.props.draw ||prevProps.items !== this.props.items) {
             this.fetchItems(this.state.targetPage, this.props.draw);
         }
     }

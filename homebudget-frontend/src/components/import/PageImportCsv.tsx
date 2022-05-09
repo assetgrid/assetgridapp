@@ -214,8 +214,8 @@ export default class PageImportCsv extends React.Component<{}, State> {
             }) as SearchRequest
         ).then(res => {
             let newAccountsBy = { ...this.state.accountsBy };
+            // Update the accounts found
             for (let i = 0; i < res.data.data.length; i++) {
-                // Update the accounts found
                 let account = res.data.data[i];
                 Object.keys(account).forEach(identifier => {
                     if (newAccountsBy[identifier] === undefined) {
@@ -223,21 +223,21 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     }
                     newAccountsBy[identifier][(account as any)[identifier]] = account;
                 });
+            }
 
-                // Set missing accounts as unknown as well
-                for (let i = 0; i < transactions.length; i++) {
-                    let transaction = transactions[i];
-        
-                    if (transaction.from !== null) {
-                        if (newAccountsBy[transaction.from.identifier][transaction.from.value] === "fetching") {
-                            newAccountsBy[transaction.from.identifier][transaction.from.value] = null;
-                        }
+            // Set missing accounts as unknown as well
+            for (let i = 0; i < transactions.length; i++) {
+                let transaction = transactions[i];
+    
+                if (transaction.from !== null) {
+                    if (newAccountsBy[transaction.from.identifier][transaction.from.value] === "fetching") {
+                        newAccountsBy[transaction.from.identifier][transaction.from.value] = null;
                     }
-        
-                    if (transaction.to !== null) {
-                        if (newAccountsBy[transaction.to.identifier][transaction.to.value] === "fetching") {
-                            newAccountsBy[transaction.to.identifier][transaction.to.value] = null;
-                        }
+                }
+    
+                if (transaction.to !== null) {
+                    if (newAccountsBy[transaction.to.identifier][transaction.to.value] === "fetching") {
+                        newAccountsBy[transaction.to.identifier][transaction.to.value] = null;
                     }
                 }
             }
