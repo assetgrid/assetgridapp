@@ -51,12 +51,12 @@ export default class TransactionList extends React.Component<Props> {
                     <td>{transaction.dateTime}</td>
                     <td style={{textAlign: "right"}}>{transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0)}</td>
                     <td>{transaction.description}</td>
-                    <td>{transaction.sourceAccount != null
-                        ? <AccountTooltip account={transaction.sourceAccount}>#{transaction.sourceAccount.id} {transaction.sourceAccount.name}</AccountTooltip>
+                    <td>{transaction.source != null
+                        ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
                         : <></>
                     }</td>
-                    <td>{transaction.destinationAccount != null
-                        ? <AccountTooltip account={transaction.destinationAccount}>#{transaction.destinationAccount.id} {transaction.destinationAccount.name}</AccountTooltip>
+                    <td>{transaction.destination != null
+                        ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
                         : <></>
                     }</td>
                     <td></td>

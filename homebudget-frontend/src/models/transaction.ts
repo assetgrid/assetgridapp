@@ -3,8 +3,8 @@ import { Account } from "./account";
 
 export type Transaction = {
     id: number;
-    sourceAccount: Account;
-    destinationAccount: Account;
+    source: Account;
+    destination: Account;
     dateTime: Date;
     identifier: string;
     lines: TransactionLine[];
