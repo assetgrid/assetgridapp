@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar } from "@fortawesome/free-solid-svg-icons"
+import logo from "../../assets/demopic.png";
 
 export class Sidebar extends React.Component<{}> {
     constructor(props: {}) {
@@ -10,8 +11,9 @@ export class Sidebar extends React.Component<{}> {
     }
 
     public render() {
-        return <div className="has-background-dark p-5" style={{ width: "300px", backgroundColor: "#0a3d62" }}>
-            <aside className="menu has-color-white">
+        return <div className="has-background-dark" style={{ width: "300px", backgroundColor: "#0a3d62" }}>
+            <img src={logo}></img>
+            <aside className="menu has-color-white m-5">
                 <p className="menu-label">
                     General
                 </p>

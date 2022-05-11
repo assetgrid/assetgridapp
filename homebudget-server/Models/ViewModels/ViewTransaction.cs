@@ -33,4 +33,17 @@
         public decimal Amount { get; set; }
         public string Description { get; set; } = null!;
     }
+
+    public class ViewTransactionList : ViewSearchResponse<ViewTransaction>
+    {
+        public decimal? Total { get; set; }
+    }
+
+    public class ViewTransactionListRequest
+    {
+        public int? AccountId { get; set; }
+        public int From { get; set; }
+        public int To { get; set; }
+        public bool Descending { get; set; }
+    }
 }

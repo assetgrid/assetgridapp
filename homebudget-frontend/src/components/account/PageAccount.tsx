@@ -5,28 +5,53 @@ import TransactionList from "../transaction/TransactionList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
+import { Account } from "../../models/account";
+import axios from "axios";
+import OrderedTransactionList from "../transaction/OrderedTransactionList";
 
 interface RouteProps {
-    id: string,
+    id: string;
 }
 
-export default class PageAccount extends React.Component<RouteComponentProps<RouteProps>> {
+interface State {
+    account: "fetching" | "error" | null | Account
+}
+
+export default class PageAccount extends React.Component<RouteComponentProps<RouteProps>, State> {
     constructor(props: RouteComponentProps<RouteProps>) {
         super(props);
+        this.state = {
+            account: "fetching"
+        };
     }
 
-    public render() {
+    componentDidMount(): void {
+        this.updateAccount();
+    }
+
+    public render(): React.ReactNode {
+        if (this.state.account === "fetching") {
+            return <p>Please wait</p>;
+        }
+        if (this.state.account === "error") {
+            return <p>Error</p>;
+        }
+        if (this.state.account === null) {
+            return <p>Not found</p>;
+        }
+
         return <>
             <section className="hero has-background-primary">
                 <div className="hero-body">
                     <p className="title has-text-white">
                         <span className="icon">
                             <FontAwesomeIcon icon={regular.faStar}/>
-                        </span> Studiekonto
+                        </span> {this.state.account.name}
                     </p>
-                    <p className="subtitle has-text-primary-light">
-                        Eventuel beskrivelse
-                    </p>
+                    {(this.state.account.description?.trim() ?? "") !== "" &&
+                        <p className="subtitle has-text-primary-light">
+                            {this.state.account.description}
+                        </p>}
                 </div>
             </section>
             <div className="p-3">
@@ -59,27 +84,44 @@ export default class PageAccount extends React.Component<RouteComponentProps<Rou
                             </table>
                         </Card>
                     </div>
-                    <div className="column p-0 is-flex">
+                    <div className="column p-0 is-flex is-narrow">
                         <Card title="Details">
                             <table className="table">
                                 <tbody>
                                     <tr>
                                         <td>Id</td>
-                                        <td>1</td>
+                                        <td>{this.state.account.id}</td>
                                     </tr>
                                     <tr>
                                         <td>Account Number</td>
-                                        <td>2</td>
+                                        <td>{this.state.account.accountNumber}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </Card>
                     </div>
+                    <div className="column p-0 is-flex">
+                        <Card title="Graph" style={{flexGrow: 1}}>
+                            <p>Look at this graph</p>
+                        </Card>
+                    </div>
                 </div>
                 <Card title="Transactions">
-                    <TransactionList />
+                    <OrderedTransactionList />
                 </Card>
             </div>
         </>;
+    }
+
+    private updateAccount(): void {
+        this.setState({ account: "fetching" });
+        axios.get<Account>('https://localhost:7262/account/' + Number(this.props.match.params.id))
+            .then(res => {
+                this.setState({ account: res.data });
+            })
+            .catch(e => {
+                console.log(e);
+                this.setState({ account: "error" });
+            });
     }
 }

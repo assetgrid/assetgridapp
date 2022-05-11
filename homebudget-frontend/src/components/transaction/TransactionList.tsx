@@ -1,8 +1,6 @@
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import * as React from "react";
 import { Transaction } from "../../models/transaction";
-import CreateTransaction from "./CreateTransaction";
-import InputButton from "../form/InputButton";
 import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
@@ -11,17 +9,17 @@ interface Props {
     draw?: number;
 }
 
-export default class TransactionList extends React.Component<Props> {
+export default class TransactionList extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
     }
     
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
-            axios.post<SearchRequest, AxiosResponse<SearchResponse<Transaction>>>(`https://localhost:7262/transaction/search`, {
+            axios.post<SearchResponse<Transaction>>(`https://localhost:7262/transaction/search`, {
                 from: from,
                 to: to,
-            }).then(res => {
+            } as SearchRequest).then(res => {
                 const transactions: Transaction[] = res.data.data;
                 resolve({
                     items: transactions,
@@ -34,7 +32,7 @@ export default class TransactionList extends React.Component<Props> {
     }
 
     public render() {
-        return <Table
+        return <Table<Transaction>
             headings={<tr>
                 <th>Date</th>
                 <th>Amount</th>
@@ -45,7 +43,7 @@ export default class TransactionList extends React.Component<Props> {
             </tr>}
             pageSize={20}
             draw={this.props.draw}
-            fetchItems={this.fetchItems}
+            fetchItems={this.fetchItems.bind(this)}
             renderItem={transaction => {
                 const total = transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0);
                 return <tr key={transaction.id}>

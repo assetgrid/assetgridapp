@@ -43,6 +43,23 @@ namespace homebudget_server.Controllers
             throw new Exception();
         }
 
+        [HttpGet()]
+        [Route("/[controller]/{id}")]
+        public ViewAccount? Get(int id)
+        {
+            var result = _context.Accounts
+                .Select(account => new ViewAccount
+                {
+                    Id = account.Id,
+                    Name = account.Name,
+                    AccountNumber = account.AccountNumber,
+                    Description = account.Description
+                })
+                .SingleOrDefault(account => account.Id == id);
+
+            return result;
+        }
+
         [HttpPost()]
         [Route("/[controller]/[action]")]
         public ViewSearchResponse<ViewAccount> Search(ViewSearch query)

@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Account } from "./account";
+import { SearchRequest, SearchResponse } from "./search";
 
 export type Transaction = {
     id: number;
@@ -24,3 +25,7 @@ export type TransactionLine = {
     amount: number;
     description: string;
 }
+
+export type TransactionListResponse = {
+    total: number,
+} & SearchResponse<Transaction>

@@ -47,3 +47,7 @@ function range(start: number, end: number) {
     }
     return ans;
 }
+
+export function formatNumber(number: number): string {
+    return number.toFixed(2);
+}

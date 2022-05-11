@@ -115,7 +115,71 @@ namespace homebudget_server.Controllers
             return new ViewSearchResponse<ViewTransaction>
             {
                 Data = result,
-                TotalItems = _context.Transactions.ApplySearch(query).Count()
+                TotalItems = _context.Transactions.ApplySearch(query).Count(),
+            };
+        }
+
+        [HttpPost()]
+        [Route("/[controller]/[action]")]
+        public ViewTransactionList List(ViewTransactionListRequest request)
+        {
+            var query = _context.Transactions
+                .Select(transaction => new ViewTransaction
+                {
+                    Id = transaction.Id,
+                    DateTime = transaction.DateTime,
+                    Description = transaction.Description,
+                    Source = transaction.SourceAccount != null
+                        ? new ViewAccount
+                        {
+                            Id = transaction.SourceAccount.Id,
+                            Description = transaction.SourceAccount.Description,
+                            Name = transaction.SourceAccount.Name
+                        } : null,
+                    Destination = transaction.DestinationAccount != null
+                        ? new ViewAccount
+                        {
+                            Id = transaction.DestinationAccount.Id,
+                            Description = transaction.DestinationAccount.Description,
+                            Name = transaction.DestinationAccount.Name
+                        } : null,
+                    Identifier = transaction.Identifier,
+                    Lines = transaction.TransactionLines
+                    .OrderBy(line => line.Order)
+                    .Select(line => new ViewTransactionLine
+                    {
+                        Amount = line.Amount,
+                    }).ToList()
+                });
+
+            if (request.Descending)
+            {
+                query = query.OrderByDescending(transaction => transaction.DateTime)
+                    .ThenByDescending(transaction => transaction.Id);
+            }
+            else
+            {
+                query = query.OrderBy(transaction => transaction.DateTime)
+                    .ThenBy(transaction => transaction.Id);
+            }
+
+            var result = query
+                .Skip(request.From)
+                .Take(request.To - request.From)
+                .ToList();
+            var firstTransaction = result
+                .OrderBy(transaction => transaction.DateTime)
+                .ThenBy(transaction => transaction.Id).FirstOrDefault();
+            var total = firstTransaction == null ? 0 : _context.Transactions
+                .Where(transaction => transaction.DateTime <= firstTransaction.DateTime && transaction.Id < firstTransaction.Id)
+                .SelectMany(transaction => transaction.TransactionLines.Select(line => line.Amount))
+                .Sum();
+
+            return new ViewTransactionList
+            {
+                Data = result,
+                TotalItems = _context.Transactions.Count(),
+                Total = total,
             };
         }
 
