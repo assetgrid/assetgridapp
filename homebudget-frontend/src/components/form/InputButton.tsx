@@ -1,15 +1,16 @@
 import * as React from "react";
 
-export interface InputButtonProps {
-    onClick?: React.MouseEventHandler<HTMLButtonElement>
+interface Props {
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
+    className?: string;
 }
 
-export default class InputButton extends React.Component<InputButtonProps> {
-    constructor(props: InputButtonProps) {
+export default class InputButton extends React.Component<Props> {
+    constructor(props: Props) {
         super(props);
     }
 
     public render() {
-        return <button className="button" onClick={this.props.onClick}>{this.props.children}</button>;
+        return <button className={"button " + this.props.className} onClick={this.props.onClick}>{this.props.children}</button>;
     }
 }

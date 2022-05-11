@@ -1,6 +1,8 @@
 import * as Papa from "papaparse";
 import * as React from "react";
+import { Card } from "../common/Card";
 import Table from "../common/Table";
+import InputButton from "../form/InputButton";
 import InputCheckbox from "../form/InputCheckbox";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
@@ -11,6 +13,7 @@ interface Props {
     optionsChanged: (options: CsvImportOptions) => void;
     options: CsvImportOptions;
     csvFile: File | null;
+    goToNext: () => void;
 }
 
 export interface CsvImportOptions {
@@ -60,49 +63,52 @@ export default class ImportCsv extends React.Component<Props, State> {
 
     public render() {
         return <>
-            <h3 className="subtitle is-3">Import from CSV file</h3>
-
-            <InputCheckbox label="Parse header"
-                value={this.props.options.csvParseHeader}
-                onChange={e => this.props.optionsChanged({ ...this.props.options, csvParseHeader: e.target.checked })} />
-            <InputCheckbox label="Auto-detect delimiter"
-                value={this.props.options.csvDelimiter == "auto"}
-                onChange={e => e.target.checked == true
-                    ? this.props.optionsChanged({ ...this.props.options, csvDelimiter: "auto" })
-                    : this.props.optionsChanged({ ...this.props.options, csvDelimiter: "" })}
-            />
-            {this.props.options.csvDelimiter != "auto" &&
-                <InputText label="Delimiter" value={this.props.options.csvDelimiter} onChange={e => this.props.optionsChanged({ ...this.props.options, csvDelimiter: e.target.value })} />}
-            <InputSelect label="Newline character"
-                value={this.props.options.csvNewlineCharacter}
-                onChange={result => this.props.optionsChanged({ ...this.props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
-                items={[
-                { key: "auto", value: "Detect automatically" },
-                { key: "\n", value: "\\n" },
-                { key: "\r", value: "\\r" },
-                { key: "\r\n", value: "\\r\\n" }
-            ]} />
-            <div className={"file " + (this.props.csvFile != null ? " has-name" : "")}>
-                <label className="file-label">
-                    <input className="file-input" type="file" name="resume" onChange={e => this.fileUploaded(e)}/>
-                    <span className="file-cta">
-                        <span className="file-icon">
-                            <i className="fas fa-upload"></i>
+            <Card title="Import options">
+                <InputCheckbox label="Parse header"
+                    value={this.props.options.csvParseHeader}
+                    onChange={e => this.props.optionsChanged({ ...this.props.options, csvParseHeader: e.target.checked })} />
+                <InputCheckbox label="Auto-detect delimiter"
+                    value={this.props.options.csvDelimiter == "auto"}
+                    onChange={e => e.target.checked == true
+                        ? this.props.optionsChanged({ ...this.props.options, csvDelimiter: "auto" })
+                        : this.props.optionsChanged({ ...this.props.options, csvDelimiter: "" })}
+                />
+                {this.props.options.csvDelimiter != "auto" &&
+                    <InputText label="Delimiter" value={this.props.options.csvDelimiter} onChange={e => this.props.optionsChanged({ ...this.props.options, csvDelimiter: e.target.value })} />}
+                <InputSelect label="Newline character"
+                    value={this.props.options.csvNewlineCharacter}
+                    onChange={result => this.props.optionsChanged({ ...this.props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
+                    items={[
+                        { key: "auto", value: "Detect automatically" },
+                        { key: "\n", value: "\\n" },
+                        { key: "\r", value: "\\r" },
+                        { key: "\r\n", value: "\\r\\n" }
+                    ]} />
+                <div className={"file " + (this.props.csvFile != null ? " has-name" : "")}>
+                    <label className="file-label">
+                        <input className="file-input" type="file" name="resume" onChange={e => this.fileUploaded(e)} />
+                        <span className="file-cta">
+                            <span className="file-icon">
+                                <i className="fas fa-upload"></i>
+                            </span>
+                            <span className="file-label">
+                                Choose a file…
+                            </span>
                         </span>
-                        <span className="file-label">
-                            Choose a file…
-                        </span>
-                    </span>
-                    {this.props.csvFile != null && <span className="file-name">
-                        {this.props.csvFile.name}
-                    </span>}
-                </label>
-            </div>
+                        {this.props.csvFile != null && <span className="file-name">
+                            {this.props.csvFile.name}
+                        </span>}
+                    </label>
+                </div>
+            </Card>
 
-            {this.props.csvFile != null && <>
-                <h3 className="title is-4">CSV data</h3>
+            {this.props.csvFile != null && <Card title="CSV data">
                 {this.renderCsvTable()}
-            </>}
+
+                <div className="buttons">
+                    <InputButton className="is-primary" onClick={this.props.goToNext}>Continue</InputButton>
+                </div>
+            </Card>}
         </>;
     }
 

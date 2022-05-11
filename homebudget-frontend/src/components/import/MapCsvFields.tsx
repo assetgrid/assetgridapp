@@ -5,8 +5,10 @@ import { Account } from "../../models/account";
 import { SearchGroupType, SearchRequest, SearchResponse } from "../../models/search";
 import { Transaction } from "../../models/transaction";
 import AccountTooltip from "../account/AccountTooltip";
+import { Card } from "../common/Card";
 import Table from "../common/Table";
 import Tooltip from "../common/Tooltip";
+import InputButton from "../form/InputButton";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
 import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
@@ -20,6 +22,8 @@ interface Props {
     duplicateIdentifiers: Set<string> | "fetching";
     options: MappingOptions;
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
+    goToNext: () => void;
+    goToPrevious: () => void;
 }
 
 export interface MappingOptions {
@@ -59,145 +63,153 @@ export default class MapCsvFields extends React.Component<Props, State> {
 
     public render() {
         return <>
-            <h3 className="title is-5">Map CSV columns</h3>
-            <div className="columns">
-                <div className="column">
-                    <InputSelect label="Duplicate handling"
-                        value={this.props.options.duplicateHandling}
-                        onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
-                        items={[
-                            { key: "identifier", value: "Colum" },
-                            { key: "identifier-rownumber", value: "Column and count" },
-                            { key: "rownumber", value: "Row number" },
-                            { key: "none", value: "Allow duplicates" }
-                        ]} />
+            <Card title="Mapping options">
+                <div className="columns">
+                    <div className="column">
+                        <InputSelect label="Duplicate handling"
+                            value={this.props.options.duplicateHandling}
+                            onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
+                            items={[
+                                { key: "identifier", value: "Colum" },
+                                { key: "identifier-rownumber", value: "Column and count" },
+                                { key: "rownumber", value: "Row number" },
+                                { key: "none", value: "Allow duplicates" }
+                            ]} />
+                    </div>
+                    <div className="column">
+                        {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
+                            <InputSelect label="Identifier column"
+                                value={this.props.options.identifierColumn}
+                                placeholder={"Select column"}
+                                onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
+                                items={Object.keys(this.props.data[0]).map(item => {
+                                    return {
+                                        key: item,
+                                        value: item,
+                                    }
+                                })} />
+                        }
+                    </div>
                 </div>
-                <div className="column">
-                    {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
-                        <InputSelect label="Identifier column"
-                            value={this.props.options.identifierColumn}
+            
+                <div className="content">
+                    <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
+                        This value will be compared during import and transactions with the same identifier will be ignored</p>
+                    <ul>
+                        <li><b>Column:</b> Use a column as a unique identifier.</li>
+                        <li><b>Column and count:</b> Use a column as a unique identifier, but append a number for each occurence of the same column value in the CSV-file.
+                            Useful with dates. If you have 3 transactions with value 2020-01-01, their identifier will be 2020-01-01.1, 2020-01-01.2, 2020-01-01.3
+                            based on the order they appear in the file</li>
+                        <li><b>Row number:</b> The row number is the unique identifier.</li>
+                        <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
+                    </ul>
+                </div>
+
+                <div className="columns">
+                    <div className="column">
+                        <InputSelect label="Date column"
+                            value={this.props.options.dateColumn}
                             placeholder={"Select column"}
-                            onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
+                            onChange={result => this.updateDateHandling(result, this.props.options.dateFormat)}
                             items={Object.keys(this.props.data[0]).map(item => {
                                 return {
                                     key: item,
                                     value: item,
                                 }
                             })} />
-                    }
+                    </div>
+                    {this.props.options.dateColumn !== null && <div className="column">
+                        <InputText label="Date format"
+                            value={this.props.options.dateFormat}
+                            onChange={e => this.updateDateHandling(this.props.options.dateColumn, e.target.value)}
+                        />
+                        <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
+                    </div>}
                 </div>
-            </div>
-            
-            <div className="content">
-                <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
-                    This value will be compared during import and transactions with the same identifier will be ignored</p>
-                <ul>
-                    <li><b>Column:</b> Use a column as a unique identifier.</li>
-                    <li><b>Column and count:</b> Use a column as a unique identifier, but append a number for each occurence of the same column value in the CSV-file.
-                        Useful with dates. If you have 3 transactions with value 2020-01-01, their identifier will be 2020-01-01.1, 2020-01-01.2, 2020-01-01.3
-                        based on the order they appear in the file</li>
-                    <li><b>Row number:</b> The row number is the unique identifier.</li>
-                    <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
-                </ul>
-            </div>
 
-            <div className="columns">
-                <div className="column">
-                    <InputSelect label="Date column"
-                        value={this.props.options.dateColumn}
-                        placeholder={"Select column"}
-                        onChange={result => this.updateDateHandling(result, this.props.options.dateFormat)}
-                        items={Object.keys(this.props.data[0]).map(item => {
-                            return {
-                                key: item,
-                                value: item,
-                            }
-                        })} />
+                <div className="columns">
+                    <div className="column is-half">
+                        <InputSelect label="Source account identifier"
+                            value={this.props.options.sourceAccountIdentifier}
+                            placeholder={"Select variable"}
+                            onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn)}
+                            items={[
+                                { key: "name", value: "Name" },
+                                { key: "id", value: "Id" },
+                                { key: "accountNumber", value: "Account Number" },
+                            ]} />
+                    </div>
+                    <div className="column is-half">
+                        <InputSelect label="Source account column"
+                            value={this.props.options.sourceAccountColumn}
+                            placeholder={"Select column"}
+                            onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result)}
+                            items={Object.keys(this.props.data[0]).map(item => {
+                                return {
+                                    key: item,
+                                    value: item,
+                                }
+                            })} />
+                    </div>
                 </div>
-                {this.props.options.dateColumn !== null && <div className="column">
-                    <InputText label="Date format"
-                        value={this.props.options.dateFormat}
-                        onChange={e => this.updateDateHandling(this.props.options.dateColumn, e.target.value)}
-                    />
-                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
-                </div>}
-            </div>
 
-            <div className="columns">
-                <div className="column is-half">
-                    <InputSelect label="Source account identifier"
-                        value={this.props.options.sourceAccountIdentifier}
-                        placeholder={"Select variable"}
-                        onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn)}
-                        items={[
-                            { key: "name", value: "Name" },
-                            { key: "id", value: "Id" },
-                            { key: "accountNumber", value: "Account Number" },
-                        ]} />
+                <div className="columns">
+                    <div className="column is-half">
+                        <InputSelect label="Destination account identifier"
+                            value={this.props.options.destinationAccountIdentifier}
+                            placeholder={"Select variable"}
+                            onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn)}
+                            items={[
+                                { key: "name", value: "Name" },
+                                { key: "id", value: "Id" },
+                                { key: "accountNumber", value: "Account Number" },
+                            ]} />
+                    </div>
+                    <div className="column is-half">
+                        <InputSelect label="Destination account column"
+                            value={this.props.options.destinationAccountColumn}
+                            placeholder={"Select column"}
+                            onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result)}
+                            items={Object.keys(this.props.data[0]).map(item => {
+                                return {
+                                    key: item,
+                                    value: item,
+                                }
+                            })} />
+                    </div>
                 </div>
-                <div className="column is-half">
-                    <InputSelect label="Source account column"
-                        value={this.props.options.sourceAccountColumn}
-                        placeholder={"Select column"}
-                        onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result)}
-                        items={Object.keys(this.props.data[0]).map(item => {
-                            return {
-                                key: item,
-                                value: item,
-                            }
-                        })} />
+
+                <InputSelect label="Amount column"
+                    value={this.props.options.amountColumn}
+                    placeholder={"Select column"}
+                    onChange={result => this.setAmountColumn(result)}
+                    items={Object.keys(this.props.data[0]).map(item => {
+                        return {
+                            key: item,
+                            value: item,
+                        }
+                    })} />
+
+                <InputSelect label="Description column"
+                    value={this.props.options.descriptionColumn}
+                    placeholder={"Select column"}
+                    onChange={result => this.setDescriptionColumn(result)}
+                    items={Object.keys(this.props.data[0]).map(item => {
+                        return {
+                            key: item,
+                            value: item,
+                        }
+                    })} />
+            </Card>
+
+            <Card title="Import preview">
+                {this.renderImportTable()}
+
+                <div className="buttons">
+                    <InputButton onClick={this.props.goToPrevious}>Back</InputButton>
+                    <InputButton className="is-primary" onClick={this.props.goToNext}>Continue</InputButton>
                 </div>
-            </div>
-
-            <div className="columns">
-                <div className="column is-half">
-                    <InputSelect label="Destination account identifier"
-                        value={this.props.options.destinationAccountIdentifier}
-                        placeholder={"Select variable"}
-                        onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn)}
-                        items={[
-                            { key: "name", value: "Name" },
-                            { key: "id", value: "Id" },
-                            { key: "accountNumber", value: "Account Number" },
-                        ]} />
-                </div>
-                <div className="column is-half">
-                    <InputSelect label="Destination account column"
-                        value={this.props.options.destinationAccountColumn}
-                        placeholder={"Select column"}
-                        onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result)}
-                        items={Object.keys(this.props.data[0]).map(item => {
-                            return {
-                                key: item,
-                                value: item,
-                            }
-                        })} />
-                </div>
-            </div>
-
-            <InputSelect label="Amount column"
-                value={this.props.options.amountColumn}
-                placeholder={"Select column"}
-                onChange={result => this.setAmountColumn(result)}
-                items={Object.keys(this.props.data[0]).map(item => {
-                    return {
-                        key: item,
-                        value: item,
-                    }
-                })} />
-
-            <InputSelect label="Description column"
-                value={this.props.options.descriptionColumn}
-                placeholder={"Select column"}
-                onChange={result => this.setDescriptionColumn(result)}
-                items={Object.keys(this.props.data[0]).map(item => {
-                    return {
-                        key: item,
-                        value: item,
-                    }
-                })} />
-
-            {this.renderImportTable()}
+            </Card>
         </>;
     }
 

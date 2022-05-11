@@ -4,12 +4,12 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
 
 // Set your brand colors
-$primary: #7ca55b;
+$primary: rgb(56, 103, 214);
 $info: #ef7d36;
-$link: #2199e8;
+$link: rgb(56, 103, 214);
 $warning: #FFAF40;
 $danger: #E23600;
-$dark: #242325;
+$dark: rgb(6, 30, 47);
 $success: #7ca55b;
 
 // Update Bulma's global variables
@@ -49,6 +49,7 @@ $transition-short: 0.2s;
 @import "../node_modules/bulma/sass/components/message.sass";
 @import "../node_modules/bulma/sass/components/modal.sass";
 @import "../node_modules/bulma/sass/components/dropdown.sass";
+@import "../node_modules/bulma/sass/components/menu.sass";
 @import "../node_modules/bulma/sass/components/navbar.sass";
 @import "../node_modules/bulma/sass/components/card.sass";
 @import "../node_modules/bulma/sass/components/tabs.sass";

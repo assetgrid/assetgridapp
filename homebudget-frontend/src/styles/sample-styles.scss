@@ -38,3 +38,29 @@
     margin-bottom: $block-spacing;
     align-items: center;
 }
+
+// Full size
+html, body {
+    height: 100%;
+}
+#app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.has-background-dark {
+    .menu-label {
+        color: #648195;
+        font-weight: bold;
+        margin-bottom: 0;
+        font-size: 1em;
+    }
+    .menu-list a:not(:hover) {
+        color: white;
+    }
+}
+
+.has-text-primary-light {
+    color: #a2beff !important;
+}

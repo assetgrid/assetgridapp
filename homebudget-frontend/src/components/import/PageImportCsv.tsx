@@ -73,21 +73,24 @@ export default class PageImportCsv extends React.Component<{}, State> {
     }
 
     public render() {
-        return <section className="section container">
-            <div className="box">
-                <h2 className="title is-2">Import from CSV file</h2>
-                <div className="tabs">
-                    <ul>
-                        <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
-                        <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
-                        <li className={this.state.currentTab === "missing-accounts" ? "is-active" : ""}><a>Missing accounts</a></li>
-                        <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
-                    </ul>
+        return <>
+            <section className="hero has-background-primary">
+                <div className="hero-body">
+                    <p className="title has-text-white">
+                        Import from CSV
+                    </p>
                 </div>
-                
-                {this.renderSections()}
+            </section>
+            <div className="tabs has-background-white px-5">
+                <ul>
+                    <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
+                    <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
+                    <li className={this.state.currentTab === "missing-accounts" ? "is-active" : ""}><a>Missing accounts</a></li>
+                    <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
+                </ul>
             </div>
-        </section>;
+            {this.renderSections()}
+        </>;
     }
 
     private renderSections(): React.ReactNode {
@@ -100,26 +103,20 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         optionsChanged={options => this.setState({ csvOptions: options })}
                         fileChanged={file => this.setState({ csvFile: file })}
                         options={this.state.csvOptions}
+                        goToNext={() => this.setState({ currentTab: "map-columns" })}
                     />
-                    <div className="buttons">
-                        <InputButton onClick={() => this.setState({ currentTab: "map-columns" })}>Continue</InputButton>
-                    </div>
                 </>;
             case "map-columns":
-                return <>
-                    {this.state.data != null && <MapCsvFields
+                return this.state.data != null && <MapCsvFields
                         accountsBy={this.state.accountsBy}
                         options={this.state.mappingOptions}
                         transactions={this.state.transactions}
                         duplicateIdentifiers={this.state.duplicateIdentifiers}
                         data={this.state.data}
                         onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
-                    />}
-                    <div className="buttons">
-                        <InputButton onClick={() => this.setState({ currentTab: "parse-csv" })}>Back</InputButton>
-                        <InputButton onClick={() => this.setState({ currentTab: "missing-accounts" })}>Continue</InputButton>
-                    </div>
-                </>;
+                        goToPrevious={() => this.setState({ currentTab: "parse-csv" })}
+                        goToNext={() => this.setState({ currentTab: "missing-accounts" })}
+                    />;
             case "missing-accounts":
                 if (Object.keys(this.state.accountsBy).some(identifier =>
                     Object.keys(this.state.accountsBy[identifier]).some(value =>
