@@ -89,7 +89,9 @@ export default class PageImportCsv extends React.Component<{}, State> {
                     <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
                 </ul>
             </div>
-            {this.renderSections()}
+            <div className="p-3">
+                {this.renderSections()}
+            </div>
         </>;
     }
 

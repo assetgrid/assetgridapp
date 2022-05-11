@@ -2,6 +2,8 @@ import axios from "axios";
 import * as React from "react";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/search";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 
 export interface InputAccountProps {
     label: string,
@@ -92,7 +94,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                     <button className="button" aria-haspopup="true" onClick={e => this.setState({ open: true }) }>
                         <span>{value}</span>
                         <span className="icon is-small">
-                            <i className="fas fa-angle-down" aria-hidden="true"></i>
+                            <FontAwesomeIcon icon={faAngleDown} />
                         </span>
                     </button>
                 </div>

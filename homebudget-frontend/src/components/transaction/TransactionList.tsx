@@ -46,21 +46,24 @@ export default class TransactionList extends React.Component<Props> {
             pageSize={20}
             draw={this.props.draw}
             fetchItems={this.fetchItems}
-            renderItem={transaction =>
-                <tr key={transaction.id}>
-                    <td>{transaction.dateTime}</td>
-                    <td style={{textAlign: "right"}}>{transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0)}</td>
-                    <td>{transaction.description}</td>
-                    <td>{transaction.source != null
-                        ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
-                        : <></>
-                    }</td>
-                    <td>{transaction.destination != null
-                        ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
-                        : <></>
-                    }</td>
-                    <td></td>
-                </tr>}
+            renderItem={transaction => {
+                const total = transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0);
+                return <tr key={transaction.id}>
+                        <td>{transaction.dateTime}</td>
+                        <td className={"number-total " + (total > 0 ? "positive" : (total < 0 ? "negative" : ""))}>{total}</td>
+                        <td>{transaction.description}</td>
+                        <td>{transaction.source != null
+                            ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
+                            : <></>
+                        }</td>
+                        <td>{transaction.destination != null
+                            ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
+                            : <></>
+                        }</td>
+                        <td></td>
+                    </tr>
+                }
+            }
             />;
     }
 }

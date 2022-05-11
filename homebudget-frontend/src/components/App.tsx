@@ -2,7 +2,6 @@ import * as React from "react";
 import { Route, Switch  } from "react-router";
 import { routes } from "../lib/routes";
 import PageTransactions from "./transaction/PageTransactions";
-import SiteHeader from "./SiteHeader";
 import PageCreateTransaction from "./transaction/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
 import PageImportCsv from "./import/PageImportCsv";
@@ -16,7 +15,6 @@ export default class FairFitPortalApp extends React.Component {
 
     public render() {
         return <>
-            <SiteHeader />
             <div style={{display: "flex", flexGrow: 1}}>
                 <Sidebar />
                 <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>

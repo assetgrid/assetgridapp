@@ -1,4 +1,6 @@
 import * as React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
 export interface Props<T> {
     pageSize: number;
@@ -78,7 +80,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                         <li>
                             <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page - 1)}>
                                 <span className="icon">
-                                    <i className="fas fa-angle-left"></i>
+                                    <FontAwesomeIcon icon={faAngleLeft} />
                                 </span>
                             </a>
                         </li>
@@ -102,7 +104,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                         <li>
                             <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page + 1)}>
                                 <span className="icon">
-                                    <i className="fas fa-angle-right"></i>
+                                    <FontAwesomeIcon icon={faAngleRight} />
                                 </span>
                             </a>
                         </li>

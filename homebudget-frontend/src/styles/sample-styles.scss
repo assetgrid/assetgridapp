@@ -64,3 +64,15 @@ html, body {
 .has-text-primary-light {
     color: #a2beff !important;
 }
+
+.number-total, table td.number-total {
+    font-weight: bold;
+    text-align: right;
+    color: black;
+    &.positive {
+        color: #27ae60;
+    }
+    &.negative {
+        color: #e74c3c;
+    }
+}

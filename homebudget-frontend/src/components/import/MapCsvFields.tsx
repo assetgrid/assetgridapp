@@ -12,6 +12,8 @@ import InputButton from "../form/InputButton";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
 import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -259,14 +261,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (this.props.duplicateIdentifiers === "fetching") {
             return <Tooltip content="Checking for duplicates">
                 <span className="icon">
-                    <i className="fas fa-spinner fa-pulse"></i>
+                    <FontAwesomeIcon icon={faSpinner} pulse />
                 </span>
             </Tooltip>;
         }
         if (this.props.duplicateIdentifiers.has(identifier)) {
             return <Tooltip content="Duplicate identifier">
                 <span className="icon has-text-danger">
-                    <i className="fas fa-exclamation-triangle"></i>
+                    <FontAwesomeIcon icon={faExclamationTriangle} />
                 </span>
             </Tooltip>;
         }
@@ -470,7 +472,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (account === null) {
             return <Tooltip content={"No account found with " + reference.identifier + ": " + reference.value}>
                 <span className="icon has-text-danger">
-                    <i className="fas fa-exclamation-triangle"></i>
+                    <FontAwesomeIcon icon={faExclamationTriangle} />
                 </span>
                 Not found
             </Tooltip>;

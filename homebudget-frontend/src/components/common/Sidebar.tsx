@@ -1,6 +1,8 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar } from "@fortawesome/free-solid-svg-icons"
 
 export class Sidebar extends React.Component<{}> {
     constructor(props: {}) {
@@ -24,13 +26,13 @@ export class Sidebar extends React.Component<{}> {
                     <li><Link to={routes.dashboard()}>Manage Accounts</Link></li>
                     <li><Link to={routes.account("1")}>
                         <span className="icon">
-                            <i className="fas fa-star" style={{color: "#648195"}}></i>
+                            <FontAwesomeIcon icon={faStar} style={{color: "#648195"}}/>
                         </span>
                         Studiekonto
                     </Link></li>
                     <li><Link to={routes.account("2")}>
                         <span className="icon">
-                            <i className="fas fa-star" style={{color: "#648195"}}></i>
+                            <FontAwesomeIcon icon={faStar} style={{color: "#648195"}}/>
                         </span>
                         Budgetkonto
                     </Link></li>

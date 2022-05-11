@@ -6,6 +6,8 @@ import InputButton from "../form/InputButton";
 import InputCheckbox from "../form/InputCheckbox";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
@@ -89,7 +91,7 @@ export default class ImportCsv extends React.Component<Props, State> {
                         <input className="file-input" type="file" name="resume" onChange={e => this.fileUploaded(e)} />
                         <span className="file-cta">
                             <span className="file-icon">
-                                <i className="fas fa-upload"></i>
+                                <FontAwesomeIcon icon={faUpload} />
                             </span>
                             <span className="file-label">
                                 Choose a file…
