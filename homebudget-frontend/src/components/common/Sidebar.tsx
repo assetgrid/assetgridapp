@@ -46,7 +46,7 @@ export class Sidebar extends React.Component<Props> {
                     Manage
                 </p>
                 <ul className="menu-list">
-                    <li><a>Settings</a></li>
+                    <li><Link to={routes.preferences()}>Preferences</Link></li>
                     <li><Link to={routes.importCsv()}>Import</Link></li>
                 </ul>
             </aside>

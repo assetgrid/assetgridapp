@@ -42,7 +42,7 @@ namespace homebudget_server.Controllers
             {
                 _context.UserPreferences.Add(preferences);
             }
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             return new ViewPreferences
             {
@@ -74,8 +74,8 @@ namespace homebudget_server.Controllers
                 {
                     Id = 0,
                     DecimalDigits = 2,
-                    DecimalSeparator = ",",
-                    ThousandsSeparator = ".",
+                    DecimalSeparator = ".",
+                    ThousandsSeparator = ",",
                 };
 
             preferences.FavoriteAccounts = favoriteAccounts;

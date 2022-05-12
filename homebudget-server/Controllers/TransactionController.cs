@@ -24,6 +24,11 @@ namespace homebudget_server.Controllers
         [HttpPost(Name = "CreateTransaction")]
         public ViewTransaction Create(ViewCreateTransaction model)
         {
+            if (string.IsNullOrWhiteSpace(model.Identifier))
+            {
+                model.Identifier = null;
+            }
+
             if (ModelState.IsValid)
             {
                 using (var transaction = _context.Database.BeginTransaction())

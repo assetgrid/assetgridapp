@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as React from "react";
-import { Transaction, TransactionLine } from "../../models/transaction";
+import { Transaction, TransactionLine, CreateTransaction as CreateTransactionModel } from "../../models/transaction";
 import InputAccount from "../form/account/InputAccount";
 import InputButton from "../form/InputButton";
 import InputNumber from "../form/InputNumber";
@@ -139,12 +139,12 @@ export default class CreateTransaction extends React.Component<{}, State> {
     private create() {
         this.setState({ creating: true });
         axios.post(`https://localhost:7262/Transaction`, {
-            fromId: this.state.sourceId,
-            toId: this.state.destinationId,
+            sourceId: this.state.sourceId,
+            destinationId: this.state.destinationId,
             description: this.state.description,
             identifier: this.state.identifier,
             lines: this.state.lines
-        })
+        } as CreateTransactionModel)
         .then(res => {
             this.setState(defaultState);
         })

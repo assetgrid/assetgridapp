@@ -9,6 +9,7 @@ import PageAccount from "./account/PageAccount";
 import { Sidebar } from "./common/Sidebar";
 import { Preferences } from "../models/preferences";
 import axios from "axios";
+import PagePreferences from "./pages/PagePreferences";
 
 interface State {
     preferences: Preferences | "fetching";
@@ -38,6 +39,8 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
                         <Route exact path={routes.createTransaction()} component={PageCreateTransaction}/>
                         <Route exact path={routes.account(":id")} render={history =>
                             <PageAccount {...history as any} preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
+                        <Route exact path={routes.preferences()} render={history =>
+                            <PagePreferences {...history as any} preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
                     </Switch>
                 </div>
             </div>

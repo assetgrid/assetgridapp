@@ -37,6 +37,12 @@ export default class PageAccount extends React.Component<Props, State> {
         this.updateAccount();
     }
 
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
+        if (this.props.match.params.id != prevProps.match.params.id) {
+            this.updateAccount();
+        }
+    }
+
     public render(): React.ReactNode {
         if (this.state.account === "fetching") {
             return <p>Please wait</p>;

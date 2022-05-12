@@ -67,6 +67,12 @@ export default class AccountTransactionList extends React.Component<Props, State
     }
 
     public render() {
+        const prefs = this.props.preferences !== "fetching" ? this.props.preferences : {
+            decimalDigits: 2,
+            decimalSeparator: ".",
+            thousandsSeparator: ","
+        } as Preferences;
+
         return <Table<TableLine>
             headings={<tr>
                 <th>Date</th>
@@ -84,8 +90,8 @@ export default class AccountTransactionList extends React.Component<Props, State
                 return <tr key={line.transaction.id}>
                         <td>{line.transaction.dateTime}</td>
                         <td>{line.transaction.description}</td>
-                        <td className={"number-total " + (total > 0 ? "positive" : (total < 0 ? "negative" : ""))}>{formatNumber(total)}</td>
-                        <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumber(line.balance)}</td>
+                        <td className={"number-total " + (total > 0 ? "positive" : (total < 0 ? "negative" : ""))}>{formatNumber(total, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
+                        <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumber(line.balance, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
                         <td>{line.transaction.destination != null
                             ? <AccountTooltip account={line.transaction.destination}>#{line.transaction.destination.id} {line.transaction.destination.name}</AccountTooltip>
                             : <></>

@@ -136,7 +136,7 @@ namespace homebudget_server.Controllers
             return new ViewTransactionList
             {
                 Data = result,
-                TotalItems = _context.Transactions.Count(),
+                TotalItems = query.Count(),
                 Total = total,
             };
         }
