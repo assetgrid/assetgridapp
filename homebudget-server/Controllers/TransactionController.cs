@@ -1,4 +1,5 @@
 using homebudget_server.Data;
+using homebudget_server.Models;
 using homebudget_server.Models.ViewModels;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,7 @@ namespace homebudget_server.Controllers
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
                         Identifier = model.Identifier,
+                        Total = model.Lines.Select(line => line.Amount).Sum(),
                         TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
                         {
                             Amount = line.Amount,
@@ -83,103 +85,13 @@ namespace homebudget_server.Controllers
                 .ApplySearch(query)
                 .Skip(query.From)
                 .Take(query.To - query.From)
-                .Select(transaction => new ViewTransaction
-                {
-                    Id = transaction.Id,
-                    DateTime = transaction.DateTime,
-                    Description = transaction.Description,
-                    Source = transaction.SourceAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.SourceAccount.Id,
-                            Description = transaction.SourceAccount.Description,
-                            Name = transaction.SourceAccount.Name
-                        } : null,
-                    Destination = transaction.DestinationAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.DestinationAccount.Id,
-                            Description = transaction.DestinationAccount.Description,
-                            Name = transaction.DestinationAccount.Name
-                        } : null,
-                    Identifier = transaction.Identifier,
-                    Lines = transaction.TransactionLines
-                    .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine
-                    {
-                        Amount = line.Amount,
-                    }).ToList()
-                })
+                .SelectView()
                 .ToList();
 
             return new ViewSearchResponse<ViewTransaction>
             {
                 Data = result,
                 TotalItems = _context.Transactions.ApplySearch(query).Count(),
-            };
-        }
-
-        [HttpPost()]
-        [Route("/[controller]/[action]")]
-        public ViewTransactionList List(ViewTransactionListRequest request)
-        {
-            var query = _context.Transactions
-                .Select(transaction => new ViewTransaction
-                {
-                    Id = transaction.Id,
-                    DateTime = transaction.DateTime,
-                    Description = transaction.Description,
-                    Source = transaction.SourceAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.SourceAccount.Id,
-                            Description = transaction.SourceAccount.Description,
-                            Name = transaction.SourceAccount.Name
-                        } : null,
-                    Destination = transaction.DestinationAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.DestinationAccount.Id,
-                            Description = transaction.DestinationAccount.Description,
-                            Name = transaction.DestinationAccount.Name
-                        } : null,
-                    Identifier = transaction.Identifier,
-                    Lines = transaction.TransactionLines
-                    .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine
-                    {
-                        Amount = line.Amount,
-                    }).ToList()
-                });
-
-            if (request.Descending)
-            {
-                query = query.OrderByDescending(transaction => transaction.DateTime)
-                    .ThenByDescending(transaction => transaction.Id);
-            }
-            else
-            {
-                query = query.OrderBy(transaction => transaction.DateTime)
-                    .ThenBy(transaction => transaction.Id);
-            }
-
-            var result = query
-                .Skip(request.From)
-                .Take(request.To - request.From)
-                .ToList();
-            var firstTransaction = result
-                .OrderBy(transaction => transaction.DateTime)
-                .ThenBy(transaction => transaction.Id).FirstOrDefault();
-            var total = firstTransaction == null ? 0 : _context.Transactions
-                .Where(transaction => transaction.DateTime <= firstTransaction.DateTime && transaction.Id < firstTransaction.Id)
-                .SelectMany(transaction => transaction.TransactionLines.Select(line => line.Amount))
-                .Sum();
-
-            return new ViewTransactionList
-            {
-                Data = result,
-                TotalItems = _context.Transactions.Count(),
-                Total = total,
             };
         }
 
@@ -218,6 +130,7 @@ namespace homebudget_server.Controllers
                             Description = transaction.Description,
                             DestinationAccountId = transaction.DestinationId,
                             Identifier = transaction.Identifier,
+                            Total = transaction.Lines.Select(line => line.Amount).Sum(),
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {
                                 Amount = line.Amount,

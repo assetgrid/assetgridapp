@@ -7,9 +7,12 @@ import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 import { formatNumber } from "../../lib/Utils";
+import { Preferences } from "../../models/preferences";
 
 interface Props {
     draw?: number;
+    accountId: number;
+    preferences: Preferences | "fetching";
 }
 
 interface State {
@@ -22,7 +25,7 @@ interface TableLine {
     transaction: Transaction;
 }
 
-export default class OrderedTransactionList extends React.Component<Props, State> {
+export default class AccountTransactionList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -33,7 +36,7 @@ export default class OrderedTransactionList extends React.Component<Props, State
     
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
-            axios.post<TransactionListResponse>(`https://localhost:7262/transaction/list`, {
+            axios.post<TransactionListResponse>("https://localhost:7262/account/" + this.props.accountId + "/transactions", {
                 from: from,
                 to: to,
                 descending: this.state.descending

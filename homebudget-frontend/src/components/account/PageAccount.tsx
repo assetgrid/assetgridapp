@@ -7,21 +7,29 @@ import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
 import { Account } from "../../models/account";
 import axios from "axios";
-import OrderedTransactionList from "../transaction/OrderedTransactionList";
+import AccountTransactionList from "../transaction/AccountTransactionList";
+import { Preferences } from "../../models/preferences";
 
 interface RouteProps {
     id: string;
 }
 
-interface State {
-    account: "fetching" | "error" | null | Account
+interface Props extends RouteComponentProps<RouteProps> {
+    preferences: Preferences | "fetching";
+    updatePreferences: () => void;
 }
 
-export default class PageAccount extends React.Component<RouteComponentProps<RouteProps>, State> {
-    constructor(props: RouteComponentProps<RouteProps>) {
+interface State {
+    account: "fetching" | "error" | null | Account;
+    updatingFavorite: boolean;
+}
+
+export default class PageAccount extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.state = {
-            account: "fetching"
+            account: "fetching",
+            updatingFavorite: false,
         };
     }
 
@@ -44,9 +52,13 @@ export default class PageAccount extends React.Component<RouteComponentProps<Rou
             <section className="hero has-background-primary">
                 <div className="hero-body">
                     <p className="title has-text-white">
-                        <span className="icon">
-                            <FontAwesomeIcon icon={regular.faStar}/>
-                        </span> {this.state.account.name}
+                        {this.state.updatingFavorite
+                            ? <span className="icon">
+                                <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                            </span>
+                            : <span className="icon" onClick={() => this.toggleFavorite()}>
+                                {this.state.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                            </span>} {this.state.account.name}
                     </p>
                     {(this.state.account.description?.trim() ?? "") !== "" &&
                         <p className="subtitle has-text-primary-light">
@@ -107,7 +119,7 @@ export default class PageAccount extends React.Component<RouteComponentProps<Rou
                     </div>
                 </div>
                 <Card title="Transactions">
-                    <OrderedTransactionList />
+                    <AccountTransactionList accountId={Number(this.props.match.params.id)} preferences={this.props.preferences}/>
                 </Card>
             </div>
         </>;
@@ -118,6 +130,26 @@ export default class PageAccount extends React.Component<RouteComponentProps<Rou
         axios.get<Account>('https://localhost:7262/account/' + Number(this.props.match.params.id))
             .then(res => {
                 this.setState({ account: res.data });
+            })
+            .catch(e => {
+                console.log(e);
+                this.setState({ account: "error" });
+            });
+    }
+
+    private toggleFavorite(): void {
+        if (this.state.account === "error" || this.state.account === "fetching") {
+            throw "error";
+        }
+
+        let favorite = !this.state.account.favorite;
+        let newAccount = { ...this.state.account, favorite: favorite };
+        this.setState({ updatingFavorite: true });
+
+        axios.put<Account>('https://localhost:7262/account/' + Number(this.props.match.params.id), newAccount)
+            .then(res => {
+                this.setState({ account: res.data, updatingFavorite: false });
+                this.props.updatePreferences();
             })
             .catch(e => {
                 console.log(e);

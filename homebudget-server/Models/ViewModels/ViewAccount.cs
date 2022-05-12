@@ -6,6 +6,7 @@
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? AccountNumber { get; set; }
+        public bool Favorite { get; set; }
     }
 
     public class CreateViewAccount

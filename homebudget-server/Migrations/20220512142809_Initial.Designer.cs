@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220509163638_Initial")]
+    [Migration("20220512142809_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,9 @@ namespace homebudget_server.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("Favorite")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -64,6 +67,9 @@ namespace homebudget_server.Migrations
 
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
 
@@ -101,6 +107,28 @@ namespace homebudget_server.Migrations
                     b.HasIndex("TransactionId");
 
                     b.ToTable("TransactionLines");
+                });
+
+            modelBuilder.Entity("homebudget_server.Models.UserPreferences", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("DecimalDigits")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DecimalSeparator")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ThousandsSeparator")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserPreferences");
                 });
 
             modelBuilder.Entity("homebudget_server.Models.Transaction", b =>

@@ -124,6 +124,10 @@ namespace homebudget_server.Data
                     }
 
                 case ViewSearchGroupType.And:
+                    if (group.Children == null)
+                    {
+                        throw new Exception("Children must not be null with operator 'and'");
+                    }
                     foreach (var child in group.Children)
                     {
                         if (result == null)
@@ -142,6 +146,10 @@ namespace homebudget_server.Data
                     return result;
 
                 case ViewSearchGroupType.Or:
+                    if (group.Children == null)
+                    {
+                        throw new Exception("Children must not be null with operator 'or'");
+                    }
                     foreach (var child in group.Children)
                     {
                         if (result == null)

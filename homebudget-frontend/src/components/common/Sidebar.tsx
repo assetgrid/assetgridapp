@@ -4,9 +4,14 @@ import { routes } from "../../lib/routes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar } from "@fortawesome/free-solid-svg-icons"
 import logo from "../../assets/demopic.png";
+import { Preferences } from "../../models/preferences";
 
-export class Sidebar extends React.Component<{}> {
-    constructor(props: {}) {
+interface Props {
+    preferences: Preferences | "fetching";
+}
+
+export class Sidebar extends React.Component<Props> {
+    constructor(props: Props) {
         super(props);
     }
 
@@ -26,18 +31,16 @@ export class Sidebar extends React.Component<{}> {
                 </p>
                 <ul className="menu-list">
                     <li><Link to={routes.dashboard()}>Manage Accounts</Link></li>
-                    <li><Link to={routes.account("1")}>
-                        <span className="icon">
-                            <FontAwesomeIcon icon={faStar} style={{color: "#648195"}}/>
-                        </span>
-                        Studiekonto
-                    </Link></li>
-                    <li><Link to={routes.account("2")}>
-                        <span className="icon">
-                            <FontAwesomeIcon icon={faStar} style={{color: "#648195"}}/>
-                        </span>
-                        Budgetkonto
-                    </Link></li>
+                    {this.props.preferences === "fetching"
+                        ? <li>Please wait</li>
+                        : this.props.preferences.favoriteAccounts.map(account =>
+                            <li key={account.id}><Link to={routes.account(account.id.toString())}>
+                                <span className="icon">
+                                    <FontAwesomeIcon icon={faStar} style={{ color: "#648195" }} />
+                                </span>
+                                { account.name }
+                            </Link></li>
+                        )}
                 </ul>
                 <p className="menu-label">
                     Manage
