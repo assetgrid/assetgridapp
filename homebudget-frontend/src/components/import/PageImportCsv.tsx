@@ -7,7 +7,6 @@ import Import from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
 import { capitalize, CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields";
-import MissingAccounts from "./MissingAccounts";
 
 interface State
 {
@@ -20,7 +19,7 @@ interface State
     accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
     duplicateIdentifiers: Set<string> | "fetching";
 
-    currentTab: "parse-csv" | "map-columns" | "missing-accounts" | "process";
+    currentTab: "parse-csv" | "map-columns" | "process";
 }
 
 /*
@@ -85,7 +84,6 @@ export default class PageImportCsv extends React.Component<{}, State> {
                 <ul>
                     <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
                     <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
-                    <li className={this.state.currentTab === "missing-accounts" ? "is-active" : ""}><a>Missing accounts</a></li>
                     <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
                 </ul>
             </div>
@@ -125,30 +123,8 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         data={this.state.data}
                         onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
                         goToPrevious={() => this.setState({ currentTab: "parse-csv" })}
-                        goToNext={() => this.setState({ currentTab: "missing-accounts" })}
+                        goToNext={() => this.setState({ currentTab: "process" })}
                     />;
-            case "missing-accounts":
-                if (Object.keys(this.state.accountsBy).some(identifier =>
-                    Object.keys(this.state.accountsBy[identifier]).some(value =>
-                        this.state.accountsBy[identifier][value] === "fetching"))) {
-                    return "Please wait while fetching accounts";
-                }
-                
-                return <>
-                    {this.state.transactions != null && <MissingAccounts
-                        accountsBy={this.state.accountsBy as { [identifier: string]: { [value: string]: Account } }}
-                        transactions={this.state.transactions}
-                        accountCreated={account => {
-                            const newAccountsBy = { ...this.state.accountsBy };
-                            Object.keys(account).forEach(identifier => newAccountsBy[identifier][(account as any)[identifier]] = account);
-                            this.setState({ accountsBy: newAccountsBy });
-                        }}
-                    />}
-                    <div className="buttons">
-                        <InputButton onClick={() => this.setState({ currentTab: "map-columns" })}>Back</InputButton>
-                        <InputButton onClick={() => this.setState({ currentTab: "process" })}>Continue</InputButton>
-                    </div>
-                </>;
             case "process":
                 // TODO: Don't show the button on the previous page, while fetching
                 if (Object.keys(this.state.accountsBy).some(identifier =>
@@ -163,7 +139,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         accountsBy={this.state.accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
                         batchSize={10} />
                     <div className="buttons">
-                        <InputButton onClick={() => this.setState({ currentTab: "missing-accounts" })}>Back</InputButton>
+                        <InputButton onClick={() => this.setState({ currentTab: "map-columns" })}>Back</InputButton>
                     </div>
                 </>;
             default:
