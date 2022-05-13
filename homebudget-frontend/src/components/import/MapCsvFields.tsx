@@ -13,7 +13,7 @@ import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "./Imp
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../common/Modal";
-import CreateAccount from "../form/account/CreateAccount";
+import { CreateAccountModal } from "../form/account/CreateAccountModal";
 import { parseWithOptions, ParseOptions } from "./ParseOptions";
 import { InputParseOptions, InputParseOptionsModal } from "../form/InputParsingOptions";
 
@@ -59,9 +59,6 @@ export interface MappingOptions {
 interface State {
     rowOffset: number;
     tableDraw: number;
-
-    accountBeingCreated: CreateAccountModel | null;
-
     modal: React.ReactElement | null;
 }
 
@@ -78,27 +75,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.state = {
             rowOffset: 0,
             tableDraw: 0,
-
-            accountBeingCreated: null,
             modal: null,
         };
     }
 
     public render() {
         return <>
-            {this.state.accountBeingCreated !== null && <Modal
-                title="Create Account"
-                active={true}
-                close={() => this.setState({ accountBeingCreated: null })}
-                footer={<>
-                    <button className="button is-success">Create Account</button>
-                    <button className="button" onClick={() => this.setState({accountBeingCreated: null})}>Cancel</button>
-                </>}>
-                <CreateAccount value={this.state.accountBeingCreated}
-                    onChange={account => this.setState({ accountBeingCreated: account })}
-                    onCreated={account => this.accountCreated(account)}/>
-            </Modal>}
-
             {this.state.modal !== null && this.state.modal}
 
             <Card title="Mapping options">
@@ -629,11 +611,15 @@ export default class MapCsvFields extends React.Component<Props, State> {
             accountNumber: "",
         };
         (account as any)[accountReference.identifier] = accountReference.value;
-        this.setState({ accountBeingCreated: account });
+        this.setState({
+            modal: <CreateAccountModal value={account}
+                close={() => this.setState({ modal: null })}
+                created={account => this.accountCreated(account)} />
+        });
     }
 
     private accountCreated(account: Account): void {
         this.props.accountCreated(account);
-        this.setState({ accountBeingCreated: null });
+        this.setState({ modal: null });
     }
 }

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import AccountList from "../account/AccountList";
-import CreateAccount from "../form/account/CreateAccount";
+import { CreateAccountModal } from "../form/account/CreateAccountModal";
 import CreateTransaction from "../transaction/CreateTransaction";
 import TransactionList from "../transaction/TransactionList";
 
@@ -33,7 +33,6 @@ export default class PageDashboard extends React.Component<Props, State> {
     public render() {
         return <section className="section container">
             <AccountList />
-            <CreateAccount />
             
             <TransactionList />
             <CreateTransaction />
