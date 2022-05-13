@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
+import { Preferences } from "../../models/preferences";
 import AccountList from "../account/AccountList";
 import { CreateAccountModal } from "../form/account/CreateAccountModal";
 import CreateTransaction from "../transaction/CreateTransaction";
@@ -10,12 +11,13 @@ import TransactionList from "../transaction/TransactionList";
  * Custom props and state
  */
 interface Props {
-    ownProp: string,
+    ownProp: string;
+    preferences: Preferences | "fetching";
 }
 
 interface State {
-    parameter: string,
-    postalCode: string,
+    parameter: string;
+    postalCode: string;
 }
 
 /*
@@ -34,7 +36,7 @@ export default class PageDashboard extends React.Component<Props, State> {
         return <section className="section container">
             <AccountList />
             
-            <TransactionList />
+            <TransactionList preferences={this.props.preferences} />
             <CreateTransaction />
 
             <h1 className="title is-2">This is an example</h1>

@@ -62,7 +62,7 @@ export default class PageAccount extends React.Component<Props, State> {
                             ? <span className="icon">
                                 <FontAwesomeIcon icon={solid.faSpinner} pulse />
                             </span>
-                            : <span className="icon" onClick={() => this.toggleFavorite()}>
+                            : <span className="icon" onClick={() => this.toggleFavorite()} style={{ cursor: "pointer" }}>
                                 {this.state.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
                             </span>} {this.state.account.name}
                     </p>

@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import * as React from "react";
+import { Link } from "react-router-dom";
+import { routes } from "../../lib/routes";
 import { Account } from "../../models/account";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import Table from "../common/Table";
@@ -44,7 +46,7 @@ export default class AccountList extends React.Component<Props> {
             renderItem={account =>
                 <tr key={account.id}>
                     <td>{account.id}</td>
-                    <td>{account.name}</td>
+                    <td><Link to={routes.account(account.id.toString())}>{account.name}</Link></td>
                     <td>{account.description}</td>
                     <td>{account.accountNumber}</td>
                 </tr>}

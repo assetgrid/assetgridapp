@@ -4,9 +4,12 @@ import { Transaction } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
+import { Preferences } from "../../models/preferences";
+import { formatNumber } from "../../lib/Utils";
 
 interface Props {
     draw?: number;
+    preferences: Preferences | "fetching";
 }
 
 export default class TransactionList extends React.Component<Props, {}> {
@@ -32,6 +35,12 @@ export default class TransactionList extends React.Component<Props, {}> {
     }
 
     public render() {
+        const prefs = this.props.preferences !== "fetching" ? this.props.preferences :  {
+            decimalDigits: 2,
+            decimalSeparator: ".",
+            thousandsSeparator: ","
+        } as Preferences;
+
         return <Table<Transaction>
             headings={<tr>
                 <th>Date</th>
@@ -47,20 +56,21 @@ export default class TransactionList extends React.Component<Props, {}> {
             renderItem={transaction => {
                 const total = transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0);
                 return <tr key={transaction.id}>
-                        <td>{transaction.dateTime}</td>
-                        <td className={"number-total " + (total > 0 ? "positive" : (total < 0 ? "negative" : ""))}>{total}</td>
-                        <td>{transaction.description}</td>
-                        <td>{transaction.source != null
-                            ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
-                            : <></>
-                        }</td>
-                        <td>{transaction.destination != null
-                            ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
-                            : <></>
-                        }</td>
-                        <td></td>
-                    </tr>
-                }
+                    <td>{transaction.dateTime}</td>
+                    <td className={"number-total"}>
+                        {formatNumber(total, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}
+                    </td>
+                    <td>{transaction.description}</td>
+                    <td>{transaction.source != null
+                        ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
+                        : <></>
+                    }</td>
+                    <td>{transaction.destination != null
+                        ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
+                        : <></>
+                    }</td>
+                    <td></td>
+                </tr> }
             }
             />;
     }

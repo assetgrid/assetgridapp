@@ -59,6 +59,10 @@ html, body {
     .menu-list a:not(:hover) {
         color: white;
     }
+    .menu-list p {
+        padding: 0.5em 0.75em;
+        color: #465b71;
+    }
 }
 
 .has-text-primary-light {

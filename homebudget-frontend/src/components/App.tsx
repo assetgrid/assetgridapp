@@ -10,6 +10,7 @@ import { Sidebar } from "./common/Sidebar";
 import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
+import PageAccountOverview from "./account/PageAccountOverview";
 
 interface State {
     preferences: Preferences | "fetching";
@@ -33,10 +34,13 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
                 <Sidebar preferences={this.state.preferences}/>
                 <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                     <Switch>
-                        <Route exact path={routes.dashboard()} component={PageDashboard} />
+                        <Route exact path={routes.dashboard()} render={history =>
+                            <PageDashboard {...history as any} preferences={this.state.preferences} />} />
                         <Route exact path={routes.importCsv()} component={PageImportCsv} />
-                        <Route exact path={routes.transactions()} component={PageTransactions}/>
-                        <Route exact path={routes.createTransaction()} component={PageCreateTransaction}/>
+                        <Route exact path={routes.transactions()} render={history =>
+                            <PageTransactions {...history as any} preferences={this.state.preferences} />}/>
+                        <Route exact path={routes.createTransaction()} component={PageCreateTransaction} />
+                        <Route exact path={routes.accounts()} component={PageAccountOverview} />
                         <Route exact path={routes.account(":id")} render={history =>
                             <PageAccount {...history as any} preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
                         <Route exact path={routes.preferences()} render={history =>

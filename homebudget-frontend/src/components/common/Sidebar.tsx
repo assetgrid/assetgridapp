@@ -24,15 +24,15 @@ export class Sidebar extends React.Component<Props> {
                 </p>
                 <ul className="menu-list">
                     <li><Link to={routes.dashboard()}>Dashboard</Link></li>
-                    <li><Link to={routes.dashboard()}>Transactions</Link></li>
+                    <li><Link to={routes.transactions()}>Transactions</Link></li>
                 </ul>
                 <p className="menu-label">
                     Accounts
                 </p>
                 <ul className="menu-list">
-                    <li><Link to={routes.dashboard()}>Manage Accounts</Link></li>
+                    <li><Link to={routes.accounts()}>Manage Accounts</Link></li>
                     {this.props.preferences === "fetching"
-                        ? <li>Please wait</li>
+                        ? <li><p>Please wait&hellip;</p></li>
                         : this.props.preferences.favoriteAccounts.map(account =>
                             <li key={account.id}><Link to={routes.account(account.id.toString())}>
                                 <span className="icon">

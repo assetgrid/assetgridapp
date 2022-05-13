@@ -43,7 +43,7 @@ export default class PagePreferences extends React.Component<Props, State> {
             return "Please wait";
         }
 
-        return <div className="section container">
+        return <>
             <section className="hero has-background-primary">
                 <div className="hero-body">
                     <p className="title has-text-white">
@@ -52,52 +52,54 @@ export default class PagePreferences extends React.Component<Props, State> {
                 </div>
             </section>
 
-            <Card title="Number formatting">
-                <div className="columns">
-                    <div className="column">
-                    <InputText value={this.state.preferences.decimalSeparator}
-                        label="Decimal Separator"
-                        onChange={(event => this.setState({
-                            preferences: {
-                                ...this.state.preferences as Preferences,
-                                decimalSeparator: event.target.value
-                            }
-                        }))} />
-                    </div>
-                    <div className="column">
-                    <InputText value={this.state.preferences.thousandsSeparator}
-                        label="Thousands Separator"
-                        onChange={(event => this.setState({
-                            preferences: {
-                                ...this.state.preferences as Preferences,
-                                thousandsSeparator: event.target.value
-                            }
-                        }))} />
-                    </div>
-                    <div className="column">
-                        <InputNumber value={this.state.preferences.decimalDigits}
-                            label="Digits after decimal point"
+            <div className="p-3">
+                <Card title="Number formatting">
+                    <div className="columns">
+                        <div className="column">
+                        <InputText value={this.state.preferences.decimalSeparator}
+                            label="Decimal Separator"
                             onChange={(event => this.setState({
                                 preferences: {
                                     ...this.state.preferences as Preferences,
-                                    decimalDigits: event.target.valueAsNumber
+                                    decimalSeparator: event.target.value
                                 }
                             }))} />
+                        </div>
+                        <div className="column">
+                        <InputText value={this.state.preferences.thousandsSeparator}
+                            label="Thousands Separator"
+                            onChange={(event => this.setState({
+                                preferences: {
+                                    ...this.state.preferences as Preferences,
+                                    thousandsSeparator: event.target.value
+                                }
+                            }))} />
+                        </div>
+                        <div className="column">
+                            <InputNumber value={this.state.preferences.decimalDigits}
+                                label="Digits after decimal point"
+                                onChange={(event => this.setState({
+                                    preferences: {
+                                        ...this.state.preferences as Preferences,
+                                        decimalDigits: event.target.valueAsNumber
+                                    }
+                                }))} />
+                        </div>
                     </div>
-                </div>
-                
-                <p>Example: {
-                    formatNumber(123456789.123456789,
-                        this.state.preferences.decimalDigits,
-                        this.state.preferences.decimalSeparator,
-                        this.state.preferences.thousandsSeparator)}
-                </p>
-                
-                <InputButton className="is-primary" onClick={this.SaveChanges.bind(this)}>
-                    Save changes
-                </InputButton>
-            </Card>
-        </div>;
+                    
+                    <p>Example: {
+                        formatNumber(123456789.123456789,
+                            this.state.preferences.decimalDigits,
+                            this.state.preferences.decimalSeparator,
+                            this.state.preferences.thousandsSeparator)}
+                    </p>
+                    
+                    <InputButton className="is-primary" onClick={this.SaveChanges.bind(this)}>
+                        Save changes
+                    </InputButton>
+                </Card>
+            </div>
+        </>;
     }
 
     private SaveChanges() {
