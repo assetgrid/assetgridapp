@@ -7,6 +7,7 @@ import Import from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
 import { capitalize, CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields";
+import { ParseOptions } from "./ParseOptions";
 
 interface State
 {
@@ -28,6 +29,13 @@ interface State
 export default class PageImportCsv extends React.Component<{}, State> {
     constructor(props: {}) {
         super(props);
+
+        const defaultParseOptions = {
+            trimWhitespace: true,
+            regex: null,
+            pattern: "{0}"
+        } as ParseOptions;
+
         this.state = {
             data: null,
             transactions: null,
@@ -58,15 +66,21 @@ export default class PageImportCsv extends React.Component<{}, State> {
             mappingOptions: {
                 duplicateHandling: "identifier-rownumber",
                 identifierColumn: "Dato",
+                identifierParseOptions: defaultParseOptions,
                 sourceAccountColumn: null,
                 sourceAccountIdentifier: "accountNumber",
+                sourceAccountParseOptions: defaultParseOptions,
                 destinationAccountColumn: "Exportkonto",
                 destinationAccountIdentifier: "accountNumber",
+                destinationAccountParseOptions: defaultParseOptions,
                 amountColumn: "Beløb",
+                amountParseOptions: defaultParseOptions,
                 dateColumn: "Dato",
-                descriptionColumn: "Tekst",
+                dateParseOptions: defaultParseOptions,
                 // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
-                dateFormat: "dd-MM-yyyy"
+                dateFormat: "dd-MM-yyyy",
+                descriptionColumn: "Tekst",
+                descriptionParseOptions: defaultParseOptions,
             }
         };
     }

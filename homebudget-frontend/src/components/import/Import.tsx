@@ -5,7 +5,6 @@ import { CreateTransaction } from "../../models/transaction";
 import Table from "../common/Table";
 import InputButton from "../form/InputButton";
 import { AccountReference, CsvCreateTransaction } from "./ImportModels";
-import MissingAccounts from "./MissingAccounts";
 
 interface Props {
     transactions: CsvCreateTransaction[];

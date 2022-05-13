@@ -3,6 +3,7 @@ import * as React from "react";
 interface Props {
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
     className?: string;
+    disabled?: boolean;
 }
 
 export default class InputButton extends React.Component<Props> {

@@ -14,6 +14,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../common/Modal";
 import CreateAccount from "../form/account/CreateAccount";
+import { parseWithOptions, ParseOptions } from "./ParseOptions";
+import { InputParseOptions, InputParseOptionsModal } from "../form/InputParsingOptions";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -33,14 +35,25 @@ export interface MappingOptions {
     // Mapping options
     duplicateHandling: DuplicateHandlingOptions;
     identifierColumn: string | null;
+    identifierParseOptions: ParseOptions;
+
     amountColumn: string | null;
+    amountParseOptions: ParseOptions;
+
     descriptionColumn: string | null;
+    descriptionParseOptions: ParseOptions;
+
     sourceAccountColumn: string | null;
     sourceAccountIdentifier: AccountIdentifier;
+    sourceAccountParseOptions: ParseOptions;
+
     destinationAccountColumn: string | null;
     destinationAccountIdentifier: AccountIdentifier;
+    destinationAccountParseOptions: ParseOptions;
+
     dateColumn: string | null;
     dateFormat: string;
+    dateParseOptions: ParseOptions;
 };
 
 interface State {
@@ -48,6 +61,8 @@ interface State {
     tableDraw: number;
 
     accountBeingCreated: CreateAccountModel | null;
+
+    modal: React.ReactElement | null;
 }
 
 function isNullOrWhitespace(input: string) {
@@ -65,6 +80,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
             tableDraw: 0,
 
             accountBeingCreated: null,
+            modal: null,
         };
     }
 
@@ -83,12 +99,14 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     onCreated={account => this.accountCreated(account)}/>
             </Modal>}
 
+            {this.state.modal !== null && this.state.modal}
+
             <Card title="Mapping options">
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Duplicate handling"
                             value={this.props.options.duplicateHandling}
-                            onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn)}
+                            onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn, this.props.options.identifierParseOptions)}
                             items={[
                                 { key: "identifier", value: "Colum" },
                                 { key: "identifier-rownumber", value: "Column and count" },
@@ -101,7 +119,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                             <InputSelect label="Identifier column"
                                 value={this.props.options.identifierColumn}
                                 placeholder={"Select column"}
-                                onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result)}
+                                onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result, this.props.options.identifierParseOptions)}
                                 items={Object.keys(this.props.data[0]).map(item => {
                                     return {
                                         key: item,
@@ -109,6 +127,18 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     }
                                 })} />
                         }
+                    </div>
+                    <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                value={this.props.options.identifierParseOptions}
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.identifierColumn))}
+                                onChange={options => this.updateDuplicateHandling(this.props.options.duplicateHandling, this.props.options.identifierColumn, options)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
                     </div>
                 </div>
             
@@ -130,7 +160,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         <InputSelect label="Date column"
                             value={this.props.options.dateColumn}
                             placeholder={"Select column"}
-                            onChange={result => this.updateDateHandling(result, this.props.options.dateFormat)}
+                            onChange={result => this.updateDateHandling(result, this.props.options.dateFormat, this.props.options.dateParseOptions)}
                             items={Object.keys(this.props.data[0]).map(item => {
                                 return {
                                     key: item,
@@ -141,55 +171,79 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     {this.props.options.dateColumn !== null && <div className="column">
                         <InputText label="Date format"
                             value={this.props.options.dateFormat}
-                            onChange={e => this.updateDateHandling(this.props.options.dateColumn, e.target.value)}
+                            onChange={e => this.updateDateHandling(this.props.options.dateColumn, e.target.value, this.props.options.dateParseOptions)}
                         />
                         <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
+                    </div>}
+                    {this.props.options.dateColumn !== null && <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                value={this.props.options.dateParseOptions}
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.dateColumn))}
+                                onChange={regex => this.updateDateHandling(this.props.options.dateColumn, this.props.options.dateFormat, regex)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
                     </div>}
                 </div>
 
                 <div className="columns">
-                    <div className="column is-half">
+                    <div className="column">
                         <InputSelect label="Source account identifier"
                             value={this.props.options.sourceAccountIdentifier}
                             placeholder={"Select variable"}
-                            onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn)}
+                            onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn, this.props.options.sourceAccountParseOptions)}
                             items={[
                                 { key: "name", value: "Name" },
                                 { key: "id", value: "Id" },
                                 { key: "accountNumber", value: "Account Number" },
                             ]} />
                     </div>
-                    <div className="column is-half">
+                    <div className="column">
                         <InputSelect label="Source account column"
                             value={this.props.options.sourceAccountColumn}
                             placeholder={"Select column"}
-                            onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result)}
+                            onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result, this.props.options.sourceAccountParseOptions)}
                             items={Object.keys(this.props.data[0]).map(item => {
                                 return {
                                     key: item,
                                     value: item,
                                 }
                             })} />
+                    </div>
+                    <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                value={this.props.options.sourceAccountParseOptions}
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.sourceAccountColumn))}
+                                onChange={options => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, this.props.options.sourceAccountColumn, options)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
                     </div>
                 </div>
 
                 <div className="columns">
-                    <div className="column is-half">
+                    <div className="column">
                         <InputSelect label="Destination account identifier"
                             value={this.props.options.destinationAccountIdentifier}
                             placeholder={"Select variable"}
-                            onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn)}
+                            onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn, this.props.options.destinationAccountParseOptions)}
                             items={[
                                 { key: "name", value: "Name" },
                                 { key: "id", value: "Id" },
                                 { key: "accountNumber", value: "Account Number" },
                             ]} />
                     </div>
-                    <div className="column is-half">
+                    <div className="column">
                         <InputSelect label="Destination account column"
                             value={this.props.options.destinationAccountColumn}
                             placeholder={"Select column"}
-                            onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result)}
+                            onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result, this.props.options.destinationAccountParseOptions)}
                             items={Object.keys(this.props.data[0]).map(item => {
                                 return {
                                     key: item,
@@ -197,29 +251,73 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                 }
                             })} />
                     </div>
+                    <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                value={this.props.options.destinationAccountParseOptions}
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.destinationAccountColumn))}
+                                onChange={regex => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, this.props.options.destinationAccountColumn, regex)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
+                    </div>
                 </div>
 
-                <InputSelect label="Amount column"
-                    value={this.props.options.amountColumn}
-                    placeholder={"Select column"}
-                    onChange={result => this.setAmountColumn(result)}
-                    items={Object.keys(this.props.data[0]).map(item => {
-                        return {
-                            key: item,
-                            value: item,
-                        }
-                    })} />
+                <div className="columns">
+                    <div className="column">
+                        <InputSelect label="Amount column"
+                            value={this.props.options.amountColumn}
+                            placeholder={"Select column"}
+                            onChange={result => this.setAmountColumn(result, this.props.options.amountParseOptions)}
+                            items={Object.keys(this.props.data[0]).map(item => {
+                                return {
+                                    key: item,
+                                    value: item,
+                                }
+                            })} />
+                    </div>
+                    <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.amountColumn))}
+                                value={this.props.options.amountParseOptions}
+                                onChange={options => this.setAmountColumn(this.props.options.amountColumn, options)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
+                    </div>
+                </div>
 
-                <InputSelect label="Description column"
-                    value={this.props.options.descriptionColumn}
-                    placeholder={"Select column"}
-                    onChange={result => this.setDescriptionColumn(result)}
-                    items={Object.keys(this.props.data[0]).map(item => {
-                        return {
-                            key: item,
-                            value: item,
-                        }
-                    })} />
+                <div className="columns">
+                    <div className="column">
+                        <InputSelect label="Description column"
+                            value={this.props.options.descriptionColumn}
+                            placeholder={"Select column"}
+                            onChange={result => this.setDescriptionColumn(result, this.props.options.descriptionParseOptions)}
+                            items={Object.keys(this.props.data[0]).map(item => {
+                                return {
+                                    key: item,
+                                    value: item,
+                                }
+                            })} />
+                    </div>
+                    <div className="column">
+                        <label className="label">&nbsp;</label>
+                        <InputButton onClick={() => this.setState({
+                            modal: <InputParseOptionsModal
+                                value={this.props.options.descriptionParseOptions}
+                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.descriptionColumn))}
+                                onChange={options => this.setDescriptionColumn(this.props.options.descriptionColumn, options)}
+                                close={() => this.setState({ modal: null })}
+                                closeOnChange={true}
+                            />
+                        })}>Parse Options</InputButton>
+                    </div>
+                </div>
             </Card>
 
             <Card title="Import preview">
@@ -297,34 +395,36 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.updateTransactions();
     }
 
-    private setAmountColumn(newValue: string) {
+    private setAmountColumn(newValue: string, parseOptions: ParseOptions) {
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
-                amount: this.getAmount((row as any)[newValue])
+                amount: this.getAmount(this.getValue(row, newValue), parseOptions)
             }))
         ], {
             ...this.props.options,
             amountColumn: newValue,
+            amountParseOptions: parseOptions,
         });
     }
 
-    private setDescriptionColumn(newValue: string) {
+    private setDescriptionColumn(newValue: string, parseOptions: ParseOptions) {
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
-                description: (row as any)[newValue]
+                description: parseWithOptions(this.getValue(row, newValue), parseOptions)
             }))
         ], {
             ...this.props.options,
             descriptionColumn: newValue,
+            descriptionParseOptions: parseOptions,
         });
     }
 
-    private updateDateHandling(dateColumn: string, dateFormat: string) {
+    private updateDateHandling(dateColumn: string, dateFormat: string, parseOptions: ParseOptions) {
         this.props.onChange([
             ...this.props.data.map((row, i) => {
-                const dateText = (row as any)[dateColumn] ?? "";
+                const dateText = parseWithOptions((row as any)[dateColumn] ?? "", parseOptions);
                 return {
                     ...this.props.transactions[i],
                     date: DateTime.fromFormat(dateText, dateFormat),
@@ -334,11 +434,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
         ], {
             ...this.props.options,
             dateColumn: dateColumn,
-            dateFormat: dateFormat
+            dateFormat: dateFormat,
+            dateParseOptions: parseOptions,
         });
     }
 
-    private updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string) {
+    private updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, parseOptions: ParseOptions) {
         if (this.props.transactions === null) {
             return;
         }
@@ -346,16 +447,22 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.props.onChange([
             ...this.props.data.map((row, i) => ({
                 ...this.props.transactions[i],
-                identifier: this.getIdentifier(duplicateHandling, identifierColumn, i, row)
+                identifier: this.getIdentifier(duplicateHandling, identifierColumn, parseOptions, i, row)
             }))
         ], {
             ...this.props.options,
             duplicateHandling: duplicateHandling,
             identifierColumn: identifierColumn,
+            identifierParseOptions: parseOptions,
         });
     }
 
-    private getIdentifier(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, rowNumber: number, row: string[] | { [key: string]: string }): string {
+    private getIdentifier(duplicateHandling: DuplicateHandlingOptions,
+        identifierColumn: string,
+        parseOptions: ParseOptions,
+        rowNumber: number,
+        row: string[] | { [key: string]: string }): string {
+        
         switch (duplicateHandling)
         {
             case "none":
@@ -366,13 +473,13 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 if (identifierColumn == null) {
                     return "";
                 } else {
-                    return (row as any)[identifierColumn];
+                    return parseWithOptions(this.getValue(row, identifierColumn), parseOptions);
                 }
             case "identifier-rownumber":
                 if (identifierColumn == null) {
                     return "";
                 } else {
-                    const value = (row as any)[identifierColumn]
+                    const value = parseWithOptions(this.getValue(row, identifierColumn), parseOptions);
                     let number = this.props.data
                         .map((row, index) => [row, index])
                         .filter(row => row[1] <= rowNumber && row[0][identifierColumn] == value)
@@ -382,7 +489,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
         }
     }
 
-    private getAmount(value: string): number {
+    private getValue(row: any, columnName: string) {
+        return row[columnName];
+    }
+
+    private getAmount(value: string, parseOptions: ParseOptions): number {
         const decimalSeparator = ",";
 
         function escapeRegExp(string: string) {
@@ -392,6 +503,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (value === undefined || value === null) {
             value = "";
         }
+
+        value = parseWithOptions(value, parseOptions);
 
         // Remove everything except numbers and the decimal separator
         value = value.replace(new RegExp("[^" + escapeRegExp(decimalSeparator) + "\\-\\d]", 'g'), "");
@@ -406,7 +519,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         }
     }
 
-    private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string) {
+    private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string, parseOptions: ParseOptions) {
         let newTransactions: CsvCreateTransaction[];
         if (type == "source") {
             newTransactions = [
@@ -414,7 +527,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     ...this.props.transactions[i],
                     source: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
-                        value: row[column],
+                        value: parseWithOptions(row[column], parseOptions),
                     } as AccountReference
                 } as CsvCreateTransaction))
             ];
@@ -424,7 +537,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     ...this.props.transactions[i],
                     destination: isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
-                        value: row[column],
+                        value: parseWithOptions(row[column], parseOptions),
                     } as AccountReference
                 } as CsvCreateTransaction))
             ];
@@ -434,9 +547,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (type === "source") {
             newOptions.sourceAccountIdentifier = identifier;
             newOptions.sourceAccountColumn = column
+            newOptions.sourceAccountParseOptions = parseOptions;
         } else {
             newOptions.destinationAccountIdentifier = identifier;
             newOptions.destinationAccountColumn = column
+            newOptions.destinationAccountParseOptions = parseOptions;
         }
         this.props.onChange(newTransactions, newOptions);
     }
@@ -452,22 +567,22 @@ export default class MapCsvFields extends React.Component<Props, State> {
 
     private updateTransactions() {
         let newTransactions = this.props.data.map((row, i) => {
-            const dateText = (row as any)[this.props.options.dateColumn] ?? "";
+            const dateText = parseWithOptions(this.getValue(row, this.props.options.dateColumn) ?? "", this.props.options.dateParseOptions);
             return {
                 rowNumber: i,
                 dateText: dateText,
                 dateTime: DateTime.fromFormat(dateText, this.props.options.dateFormat),
-                description: row[this.props.options.descriptionColumn],
+                description: parseWithOptions(row[this.props.options.descriptionColumn], this.props.options.descriptionParseOptions),
                 source: isNullOrWhitespace(row[this.props.options.sourceAccountColumn]) ? null : {
                     identifier: this.props.options.sourceAccountIdentifier,
-                    value: row[this.props.options.sourceAccountColumn],
+                    value: parseWithOptions(row[this.props.options.sourceAccountColumn], this.props.options.sourceAccountParseOptions),
                 } as AccountReference,
                 destination: isNullOrWhitespace(row[this.props.options.destinationAccountColumn]) ? null : {
                     identifier: this.props.options.destinationAccountIdentifier,
-                    value: row[this.props.options.destinationAccountColumn],
+                    value: parseWithOptions(row[this.props.options.destinationAccountColumn], this.props.options.destinationAccountParseOptions),
                 } as AccountReference,
-                identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, i, row),
-                amount: this.getAmount(row[this.props.options.amountColumn]),
+                identifier: this.getIdentifier(this.props.options.duplicateHandling, this.props.options.identifierColumn, this.props.options.identifierParseOptions, i, row),
+                amount: this.getAmount(row[this.props.options.amountColumn], this.props.options.amountParseOptions),
             } as CsvCreateTransaction
         });
         this.props.onChange(newTransactions, this.props.options);
