@@ -482,7 +482,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     const value = parseWithOptions(this.getValue(row, identifierColumn), parseOptions);
                     let number = this.props.data
                         .map((row, index) => [row, index])
-                        .filter(row => row[1] <= rowNumber && row[0][identifierColumn] == value)
+                        .filter(row => row[1] <= rowNumber && parseWithOptions(this.getValue(row[0], identifierColumn), parseOptions) == value)
                         .length;
                     return value + "." + number;
                 }
