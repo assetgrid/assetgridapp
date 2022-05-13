@@ -1,9 +1,7 @@
 import axios from "axios";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Account } from "../../models/account";
-import { SearchGroupType, SearchRequest, SearchResponse } from "../../models/search";
-import { Transaction } from "../../models/transaction";
+import { Account, CreateAccount as CreateAccountModel } from "../../models/account";
 import AccountTooltip from "../account/AccountTooltip";
 import { Card } from "../common/Card";
 import Table from "../common/Table";
@@ -11,9 +9,11 @@ import Tooltip from "../common/Tooltip";
 import InputButton from "../form/InputButton";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
-import { AccountIdentifier, AccountReference, capitalize, castFieldValue, CsvCreateTransaction } from "./ImportModels";
+import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "./ImportModels";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+import Modal from "../common/Modal";
+import CreateAccount from "../form/account/CreateAccount";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -26,6 +26,7 @@ interface Props {
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
     goToNext: () => void;
     goToPrevious: () => void;
+    accountCreated: (account: Account) => void;
 }
 
 export interface MappingOptions {
@@ -45,6 +46,8 @@ export interface MappingOptions {
 interface State {
     rowOffset: number;
     tableDraw: number;
+
+    accountBeingCreated: CreateAccountModel | null;
 }
 
 function isNullOrWhitespace(input: string) {
@@ -60,11 +63,26 @@ export default class MapCsvFields extends React.Component<Props, State> {
         this.state = {
             rowOffset: 0,
             tableDraw: 0,
+
+            accountBeingCreated: null,
         };
     }
 
     public render() {
         return <>
+            {this.state.accountBeingCreated !== null && <Modal
+                title="Create Account"
+                active={true}
+                close={() => this.setState({ accountBeingCreated: null })}
+                footer={<>
+                    <button className="button is-success">Create Account</button>
+                    <button className="button" onClick={() => this.setState({accountBeingCreated: null})}>Cancel</button>
+                </>}>
+                <CreateAccount value={this.state.accountBeingCreated}
+                    onChange={account => this.setState({ accountBeingCreated: account })}
+                    onCreated={account => this.accountCreated(account)}/>
+            </Modal>}
+
             <Card title="Mapping options">
                 <div className="columns">
                     <div className="column">
@@ -470,7 +488,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
             </Tooltip>;
         }
         if (account === null) {
-            return <Tooltip content={"No account found with " + reference.identifier + ": " + reference.value}>
+            return <Tooltip content={<>
+                    No account found with {reference.identifier}: {reference.value}
+                    <InputButton onClick={() => this.beginCreatingAccount(reference)}>
+                        Create Account
+                    </InputButton>
+                </>}>
                 <span className="icon has-text-danger">
                     <FontAwesomeIcon icon={faExclamationTriangle} />
                 </span>
@@ -481,5 +504,21 @@ export default class MapCsvFields extends React.Component<Props, State> {
         return <AccountTooltip account={account}>
             {"#" + account.id + " " + account.name}
         </AccountTooltip>;
+    }
+
+    private beginCreatingAccount(accountReference: AccountReference): void
+    {
+        let account: CreateAccountModel = {
+            name: "",
+            description: "",
+            accountNumber: "",
+        };
+        (account as any)[accountReference.identifier] = accountReference.value;
+        this.setState({ accountBeingCreated: account });
+    }
+
+    private accountCreated(account: Account): void {
+        this.props.accountCreated(account);
+        this.setState({ accountBeingCreated: null });
     }
 }

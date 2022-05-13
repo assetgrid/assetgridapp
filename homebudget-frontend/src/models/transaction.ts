@@ -10,6 +10,7 @@ export type Transaction = {
     identifier: string;
     lines: TransactionLine[];
     description: string;
+    total: number;
 }
 
 export type CreateTransaction = {

@@ -59,10 +59,10 @@ export default class PageImportCsv extends React.Component<{}, State> {
             mappingOptions: {
                 duplicateHandling: "identifier-rownumber",
                 identifierColumn: "Dato",
-                sourceAccountColumn: "Exportkonto",
+                sourceAccountColumn: null,
                 sourceAccountIdentifier: "accountNumber",
-                destinationAccountColumn: null,
-                destinationAccountIdentifier: "name",
+                destinationAccountColumn: "Exportkonto",
+                destinationAccountIdentifier: "accountNumber",
                 amountColumn: "Beløb",
                 dateColumn: "Dato",
                 descriptionColumn: "Tekst",
@@ -114,6 +114,14 @@ export default class PageImportCsv extends React.Component<{}, State> {
                         options={this.state.mappingOptions}
                         transactions={this.state.transactions}
                         duplicateIdentifiers={this.state.duplicateIdentifiers}
+                        accountCreated={account => {
+                            const newAccountsBy = { ...this.state.accountsBy };
+                            Object.keys(account).forEach(identifier => {
+                                if (newAccountsBy[identifier] === undefined) newAccountsBy[identifier] = {};
+                                newAccountsBy[identifier][(account as any)[identifier]] = account;
+                            });
+                            this.setState({ accountsBy: newAccountsBy });
+                        }}
                         data={this.state.data}
                         onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
                         goToPrevious={() => this.setState({ currentTab: "parse-csv" })}

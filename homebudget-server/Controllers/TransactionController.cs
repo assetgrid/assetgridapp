@@ -48,6 +48,17 @@ namespace homebudget_server.Controllers
                             Order = i + 1,
                         }).ToList(),
                     };
+
+                    // Always store transactions in a format where the total is positive
+                    if (result.Total < 0)
+                    {
+                        result.Total = -result.Total;
+                        var sourceId = result.SourceAccountId;
+                        result.SourceAccountId = result.DestinationAccountId;
+                        result.DestinationAccountId = sourceId;
+                        result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                    }
+
                     _context.Transactions.Add(result);
                     transaction.Commit();
                     _context.SaveChanges();
@@ -143,6 +154,17 @@ namespace homebudget_server.Controllers
                                 Order = i + 1,
                             }).ToList(),
                         };
+
+                        // Always store transactions in a format where the total is positive
+                        if (result.Total < 0)
+                        {
+                            result.Total = -result.Total;
+                            var sourceId = result.SourceAccountId;
+                            result.SourceAccountId = result.DestinationAccountId;
+                            result.DestinationAccountId = sourceId;
+                            result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                        }
+
                         _context.Transactions.Add(result);
                         _context.SaveChanges();
                         success.Add(transaction);

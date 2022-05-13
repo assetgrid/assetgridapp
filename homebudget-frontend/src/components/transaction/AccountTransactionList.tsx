@@ -8,6 +8,7 @@ import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 import { formatNumber } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
+import { Account } from "../../models/account";
 
 interface Props {
     draw?: number;
@@ -22,6 +23,8 @@ interface State {
 
 interface TableLine {
     balance: number;
+    amount: number;
+    offsetAccount: Account;
     transaction: Transaction;
 }
 
@@ -46,18 +49,23 @@ export default class AccountTransactionList extends React.Component<Props, State
                 if (this.state.descending) {
                     for (let i = 0; i < transactions.length; i++) {
                         balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? res.data.total) + transactions[transactions.length - 1 - i]
-                            .lines.map(line => line.amount).reduce((a, b) => a + b, 0)
+                            .total
                     }
                 } else {
                     for (let i = 0; i < transactions.length; i++) {
                         balances[i] = (balances[i - 1] ?? res.data.total) + transactions[i]
-                            .lines.map(line => line.amount).reduce((a, b) => a + b, 0)
+                            .total
                     }
                 }
 
                 this.setState({ total: res.data.total }, () =>
                     resolve({
-                        items: transactions.map((t, i) => ({ balance: balances[i], transaction: t })),
+                        items: transactions.map((t, i) => ({ 
+                            balance: balances[i],
+                            transaction: t,
+                            offsetAccount: t.destination?.id === this.props.accountId ? t.destination : t.source,
+                            amount: t.destination?.id === this.props.accountId ? t.total : -t.total,
+                        })),
                         draw: draw,
                         offset: from,
                         totalItems: res.data.totalItems
@@ -86,16 +94,14 @@ export default class AccountTransactionList extends React.Component<Props, State
             draw={this.props.draw}
             fetchItems={this.fetchItems.bind(this)}
             renderItem={line => {
-                const total = line.transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0);
                 return <tr key={line.transaction.id}>
                         <td>{line.transaction.dateTime}</td>
                         <td>{line.transaction.description}</td>
-                        <td className={"number-total " + (total > 0 ? "positive" : (total < 0 ? "negative" : ""))}>{formatNumber(total, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
+                        <td className={"number-total " + (line.amount > 0 ? "positive" : (line.amount < 0 ? "negative" : ""))}>{formatNumber(line.amount, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
                         <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumber(line.balance, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
-                        <td>{line.transaction.destination != null
-                            ? <AccountTooltip account={line.transaction.destination}>#{line.transaction.destination.id} {line.transaction.destination.name}</AccountTooltip>
-                            : <></>
-                        }</td>
+                        <td>
+                            <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>
+                        </td>
                         <td></td>
                     </tr>
                 }

@@ -48,7 +48,8 @@ namespace homebudget_server.Models
                     .Select(line => new ViewTransactionLine
                     {
                         Amount = line.Amount,
-                    }).ToList()
+                    }).ToList(),
+                Total = transaction.TransactionLines.Select(line => line.Amount).Sum()
             });
         }
     }
