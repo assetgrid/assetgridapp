@@ -48,13 +48,11 @@ export default class AccountTransactionList extends React.Component<Props, State
                 let balances: number[] = [];
                 if (this.state.descending) {
                     for (let i = 0; i < transactions.length; i++) {
-                        balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? res.data.total) + transactions[transactions.length - 1 - i]
-                            .total
+                        balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? res.data.total) + transactions[transactions.length - 1 - i].total * (transactions[transactions.length - 1 - i].destination?.id === this.props.accountId ? 1 : -1)
                     }
                 } else {
                     for (let i = 0; i < transactions.length; i++) {
-                        balances[i] = (balances[i - 1] ?? res.data.total) + transactions[i]
-                            .total
+                        balances[i] = (balances[i - 1] ?? res.data.total) + transactions[i].total * (transactions[i].destination?.id === this.props.accountId ? 1 : -1)
                     }
                 }
 
@@ -63,7 +61,7 @@ export default class AccountTransactionList extends React.Component<Props, State
                         items: transactions.map((t, i) => ({ 
                             balance: balances[i],
                             transaction: t,
-                            offsetAccount: t.destination?.id === this.props.accountId ? t.destination : t.source,
+                            offsetAccount: t.destination?.id === this.props.accountId ? t.source : t.destination,
                             amount: t.destination?.id === this.props.accountId ? t.total : -t.total,
                         })),
                         draw: draw,
@@ -95,15 +93,15 @@ export default class AccountTransactionList extends React.Component<Props, State
             fetchItems={this.fetchItems.bind(this)}
             renderItem={line => {
                 return <tr key={line.transaction.id}>
-                        <td>{line.transaction.dateTime}</td>
-                        <td>{line.transaction.description}</td>
-                        <td className={"number-total " + (line.amount > 0 ? "positive" : (line.amount < 0 ? "negative" : ""))}>{formatNumber(line.amount, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
-                        <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumber(line.balance, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
-                        <td>
-                            <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>
-                        </td>
-                        <td></td>
-                    </tr>
+                    <td>{line.transaction.dateTime}</td>
+                    <td>{line.transaction.description}</td>
+                    <td className={"number-total " + (line.amount > 0 ? "positive" : (line.amount < 0 ? "negative" : ""))}>{formatNumber(line.amount, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
+                    <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumber(line.balance, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}</td>
+                    <td>
+                        {line.offsetAccount !== null && <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>}
+                    </td>
+                    <td></td>
+                </tr>
                 }
             }
             />;

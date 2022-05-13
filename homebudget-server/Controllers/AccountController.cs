@@ -130,7 +130,7 @@ namespace homebudget_server.Controllers
                 .ThenBy(transaction => transaction.Id).FirstOrDefault();
             var total = firstTransaction == null ? 0 : query
                 .Where(transaction => transaction.DateTime <= firstTransaction.DateTime && transaction.Id < firstTransaction.Id)
-                .SelectMany(transaction => transaction.TransactionLines.Select(line => line.Amount))
+                .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
                 .Sum();
 
             return new ViewTransactionList
