@@ -10,6 +10,7 @@ import axios from "axios";
 import AccountTransactionList from "../transaction/AccountTransactionList";
 import { Preferences } from "../../models/preferences";
 import { Api } from "../../lib/ApiClient";
+import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 
 interface RouteProps {
     id: string;
@@ -81,7 +82,7 @@ export default class PageAccount extends React.Component<Props, State> {
                                 <tbody>
                                     <tr>
                                         <td>Balance</td>
-                                        <td className="number-total">143 000,50</td>
+                                        <td className="number-total">{formatNumberWithPrefs(this.state.account.balance!, this.props.preferences)}</td>
                                         <td></td>
                                     </tr>
                                     <tr>

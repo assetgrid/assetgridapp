@@ -73,6 +73,9 @@ const Account = {
         return new Promise<AccountModel>((resolve, reject) => {
             axios.get<AccountModel>(rootUrl + '/account/' + Number(id))
                 .then(result => {
+                    const data = result.data as AccountModel & { balanceString: string };
+                    data.balance = new Decimal(data.balanceString).div(new Decimal(10000))
+                    delete data.balanceString;
                     resolve(result.data);
                 })
                 .catch(e => {

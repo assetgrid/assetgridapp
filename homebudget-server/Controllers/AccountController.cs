@@ -52,6 +52,15 @@ namespace homebudget_server.Controllers
                 .SelectView()
                 .SingleOrDefault(account => account.Id == id);
 
+            if (result == null) return null;
+
+            var balance = _context.Transactions
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
+                .Sum();
+
+            result.Balance = balance;
+
             return result;
         }
 
