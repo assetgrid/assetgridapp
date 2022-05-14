@@ -1,8 +1,10 @@
 import axios from "axios";
+import Decimal from "decimal.js";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { Api } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { formatNumber } from "../../lib/Utils";
+import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { Card } from "../common/Card";
 import InputButton from "../form/InputButton";
@@ -76,22 +78,19 @@ export default class PagePreferences extends React.Component<Props, State> {
                             }))} />
                         </div>
                         <div className="column">
-                            <InputNumber value={this.state.preferences.decimalDigits}
+                            <InputNumber value={new Decimal(this.state.preferences.decimalDigits)}
                                 label="Digits after decimal point"
                                 onChange={(event => this.setState({
                                     preferences: {
                                         ...this.state.preferences as Preferences,
-                                        decimalDigits: event.target.valueAsNumber
+                                        decimalDigits: Math.max(0, Math.min(Number.isNaN(event.target.valueAsNumber) ? 0 : event.target.valueAsNumber, 4))
                                     }
                                 }))} />
                         </div>
                     </div>
                     
                     <p>Example: {
-                        formatNumber(123456789.123456789,
-                            this.state.preferences.decimalDigits,
-                            this.state.preferences.decimalSeparator,
-                            this.state.preferences.thousandsSeparator)}
+                        formatNumberWithPrefs(new Decimal("123456789.123456789"), this.state.preferences)}
                     </p>
                     
                     <InputButton className="is-primary" onClick={this.SaveChanges.bind(this)}>
@@ -109,9 +108,9 @@ export default class PagePreferences extends React.Component<Props, State> {
         let preferences = this.state.preferences;
 
         this.setState({ preferences: "fetching" }, () => {
-            axios.put<Preferences>('https://localhost:7262/user/preferences', preferences)
-                .then(res => {
-                    this.setState({ preferences: res.data });
+            Api.Preferences.update(preferences)
+                .then(result => {
+                    this.setState({ preferences: result });
                     this.props.updatePreferences();
                 })
                 .catch(e => {

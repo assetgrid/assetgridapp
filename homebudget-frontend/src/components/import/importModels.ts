@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "../../models/account";
 import { TransactionLine } from "../../models/transaction";
@@ -23,7 +24,7 @@ export type CsvCreateTransaction = {
     identifier: string | null;
 
     amountText: string;
-    amount: number;
+    amount: Decimal | "invalid";
 }
 
 export type AccountReference = {

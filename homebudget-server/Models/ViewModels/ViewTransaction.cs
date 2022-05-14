@@ -18,7 +18,8 @@
         public DateTime DateTime { get; set; }
         public string Description { get; set; } = null!;
         public string? Identifier { get; set; }
-        public decimal Total { get; set; }
+        public long Total { get; set; }
+        public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
     }
 
@@ -31,13 +32,15 @@
 
     public class ViewTransactionLine
     {
-        public decimal Amount { get; set; }
+        public long Amount { get; set; }
+        public string AmountString { get => Amount.ToString(); set => Amount = long.Parse(value); }
         public string Description { get; set; } = null!;
     }
 
     public class ViewTransactionList : ViewSearchResponse<ViewTransaction>
     {
-        public decimal? Total { get; set; }
+        public long? Total { get; set; }
+        public string? TotalString { get => Total.ToString(); set => Total = value != null ? long.Parse(value) : null; }
     }
 
     public class ViewTransactionListRequest

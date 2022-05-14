@@ -1,5 +1,7 @@
 import axios from "axios";
+import Decimal from "decimal.js";
 import * as React from "react";
+import { Api } from "../../lib/ApiClient";
 import { Transaction, TransactionLine, CreateTransaction as CreateTransactionModel } from "../../models/transaction";
 import InputAccount from "../form/account/InputAccount";
 import InputButton from "../form/InputButton";
@@ -78,7 +80,7 @@ export default class CreateTransaction extends React.Component<{}, State> {
                         value={line.amount}
                         onChange={e => this.updateLine(i, {
                             ...this.state.lines[i],
-                            amount: e.target.valueAsNumber
+                            amount: new Decimal(e.target.value)
                         })}
                         disabled={this.state.creating} />
                 </div>
@@ -121,7 +123,7 @@ export default class CreateTransaction extends React.Component<{}, State> {
             lines: [
                 ...this.state.lines,
                 {
-                    amount: 0,
+                    amount: new Decimal(0),
                     description: ""
                 }
             ]
@@ -138,14 +140,14 @@ export default class CreateTransaction extends React.Component<{}, State> {
 
     private create() {
         this.setState({ creating: true });
-        axios.post(`https://localhost:7262/Transaction`, {
+        Api.Transaction.create({
             sourceId: this.state.sourceId,
             destinationId: this.state.destinationId,
             description: this.state.description,
             identifier: this.state.identifier,
             lines: this.state.lines
         } as CreateTransactionModel)
-        .then(res => {
+        .then(result => {
             this.setState(defaultState);
         })
     }

@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import * as React from "react";
+import { Api } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import { Transaction } from "../../../models/transaction";
 import Modal from "../../common/Modal";
@@ -43,12 +44,12 @@ export class CreateAccountModal extends React.Component<Props, State> {
 
     private create() {
         this.setState({ creating: true });
-        axios.post<CreateAccountModal, AxiosResponse<Account>>(`https://localhost:7262/account`, {
+        Api.Account.create({
             name: this.state.account.name,
             description: this.state.account.description,
             accountNumber: this.state.account.accountNumber
         })
-        .then(res => {
+        .then(result => {
             const newAccount = {
                 name: "",
                 description: "",
@@ -59,7 +60,7 @@ export class CreateAccountModal extends React.Component<Props, State> {
                 creating: false
             });
             if (this.props.created !== undefined) {
-                this.props.created(res.data);
+                this.props.created(result);
             }
             if (this.props.closeOnChange) {
                 this.props.close();

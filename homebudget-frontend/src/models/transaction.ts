@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "./account";
 import { SearchRequest, SearchResponse } from "./search";
@@ -10,7 +11,8 @@ export type Transaction = {
     identifier: string;
     lines: TransactionLine[];
     description: string;
-    total: number;
+
+    total: Decimal;
 }
 
 export type CreateTransaction = {
@@ -23,10 +25,10 @@ export type CreateTransaction = {
 }
 
 export type TransactionLine = {
-    amount: number;
+    amount: Decimal;
     description: string;
 }
 
 export type TransactionListResponse = {
-    total: number,
+    total: Decimal;
 } & SearchResponse<Transaction>

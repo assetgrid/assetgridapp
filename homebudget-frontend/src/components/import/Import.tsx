@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as React from "react";
+import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
 import { CreateTransaction } from "../../models/transaction";
 import Table from "../common/Table";
@@ -103,13 +104,12 @@ export default class ImportCsv extends React.Component<Props, State> {
         });
 
         while (this.state.progress < createModels.length - 1) {
-            let result = await axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>
-                (`https://localhost:7262/Transaction/CreateMany`, createModels.slice(this.state.progress, this.state.progress + this.props.batchSize))
+            let result = await Api.Transaction.createMany(createModels.slice(this.state.progress, this.state.progress + this.props.batchSize));
             await new Promise<void>(resolve => this.setState({
                 progress: this.state.progress + this.props.batchSize,
-                succeeded: [...this.state.succeeded, ...result.data.succeeded],
-                failed: [...this.state.failed, ...result.data.failed],
-                duplicate: [...this.state.duplicate, ...result.data.duplicate],
+                succeeded: [...this.state.succeeded, ...result.succeeded],
+                failed: [...this.state.failed, ...result.failed],
+                duplicate: [...this.state.duplicate, ...result.duplicate],
             }, () => resolve()));
         }
 

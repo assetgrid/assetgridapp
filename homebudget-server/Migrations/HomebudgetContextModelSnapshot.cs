@@ -66,8 +66,8 @@ namespace homebudget_server.Migrations
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<long>("Total")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -87,8 +87,8 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Description")
                         .IsRequired()

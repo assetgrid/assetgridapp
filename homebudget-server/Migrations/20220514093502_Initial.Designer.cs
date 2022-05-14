@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220512142809_Initial")]
+    [Migration("20220514093502_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,8 +68,8 @@ namespace homebudget_server.Migrations
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<long>("Total")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -89,8 +89,8 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Description")
                         .IsRequired()

@@ -1,6 +1,8 @@
 import axios from "axios";
 import * as React from "react";
+import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
+import { Preferences } from "../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
 import InputButton from "../form/InputButton";
 import Import from "./Import";
@@ -9,8 +11,11 @@ import { capitalize, CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields";
 import { ParseOptions } from "./ParseOptions";
 
-interface State
-{
+interface Props {
+    preferences: Preferences | "fetching";
+}
+
+interface State {
     data: any[] | null;
     lines: string[];
     transactions: CsvCreateTransaction[] | null;
@@ -26,8 +31,8 @@ interface State
 /*
  * React object class
  */
-export default class PageImportCsv extends React.Component<{}, State> {
-    constructor(props: {}) {
+export default class PageImportCsv extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
 
         const defaultParseOptions = {
@@ -134,6 +139,7 @@ export default class PageImportCsv extends React.Component<{}, State> {
                             });
                             this.setState({ accountsBy: newAccountsBy });
                         }}
+                        preferences={this.props.preferences}
                         data={this.state.data}
                         onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
                         goToPrevious={() => this.setState({ currentTab: "parse-csv" })}
@@ -174,16 +180,15 @@ export default class PageImportCsv extends React.Component<{}, State> {
             }
             this.setState({ duplicateIdentifiers: "fetching" });
 
-            axios.post<string[]>(`https://localhost:7262/Transaction/FindDuplicates`, 
-                Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1)
-            ).then(res => {
-                this.setState({
-                    duplicateIdentifiers: new Set([
-                        ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
-                        ...res.data
-                    ])
+            Api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1))
+                .then(result => {
+                    this.setState({
+                        duplicateIdentifiers: new Set([
+                            ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
+                            ...result
+                        ])
+                    });
                 });
-            });
         }
         
         // Update AccountsBy
@@ -230,30 +235,28 @@ export default class PageImportCsv extends React.Component<{}, State> {
             .map(account => account.identifier)
             .filter((a, index, array) => array.findIndex(b => a == b) == index);
         
-        axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, 
-            ({
-                from: 0,
-                to: uniqueAccountReferences.length,
-                query: {
-                    type: SearchGroupType.Or,
-                    children: uniqueIdentifiers.map(identifier => ({
-                        type: SearchGroupType.Query,
-                        query: {
-                            column: capitalize(identifier),
-                            operator: SearchOperator.Contains,
-                            value: uniqueAccountReferences
-                                .filter(reference => reference.identifier === identifier)
-                                .map(reference => reference.value)
-                                .filter((a, index, array) => array.findIndex(b => a == b) == index)
-                        }
-                    })),
-                }
-            }) as SearchRequest
-        ).then(res => {
+        Api.Account.search({
+            from: 0,
+            to: uniqueAccountReferences.length,
+            query: {
+                type: SearchGroupType.Or,
+                children: uniqueIdentifiers.map(identifier => ({
+                    type: SearchGroupType.Query,
+                    query: {
+                        column: capitalize(identifier),
+                        operator: SearchOperator.Contains,
+                        value: uniqueAccountReferences
+                            .filter(reference => reference.identifier === identifier)
+                            .map(reference => reference.value)
+                            .filter((a, index, array) => array.findIndex(b => a == b) == index)
+                    }
+                })),
+            }
+        } as SearchRequest).then(result => {
             let newAccountsBy = { ...this.state.accountsBy };
             // Update the accounts found
-            for (let i = 0; i < res.data.data.length; i++) {
-                let account = res.data.data[i];
+            for (let i = 0; i < result.data.length; i++) {
+                let account = result.data[i];
                 Object.keys(account).forEach(identifier => {
                     if (newAccountsBy[identifier] === undefined) {
                         newAccountsBy[identifier] = {};

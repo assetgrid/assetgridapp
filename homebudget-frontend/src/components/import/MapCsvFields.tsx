@@ -16,6 +16,9 @@ import Modal from "../common/Modal";
 import { CreateAccountModal } from "../form/account/CreateAccountModal";
 import { parseWithOptions, ParseOptions } from "./ParseOptions";
 import { InputParseOptions, InputParseOptionsModal } from "../form/InputParsingOptions";
+import Decimal from "decimal.js";
+import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import { Preferences } from "../../models/preferences";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -29,6 +32,7 @@ interface Props {
     goToNext: () => void;
     goToPrevious: () => void;
     accountCreated: (account: Account) => void;
+    preferences: Preferences | "fetching";
 }
 
 export interface MappingOptions {
@@ -350,7 +354,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         {this.printAccount(transaction.destination)}
                     </td>
                     <td>{transaction.description}</td>
-                    <td style={{ textAlign: "right" }}>{transaction.amount}</td>
+                    <td style={{ textAlign: "right" }}>
+                        {transaction.amount === "invalid" ? "invalid amount" : formatNumberWithPrefs(transaction.amount, this.props.preferences)}
+                    </td>
                 </tr>}
         />;
     }
@@ -475,7 +481,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         return row[columnName];
     }
 
-    private getAmount(value: string, parseOptions: ParseOptions): number {
+    private getAmount(value: string, parseOptions: ParseOptions): Decimal | "invalid" {
         const decimalSeparator = ",";
 
         function escapeRegExp(string: string) {
@@ -493,12 +499,13 @@ export default class MapCsvFields extends React.Component<Props, State> {
         // Change decimal separator to period
         value = value.replace(new RegExp(escapeRegExp(decimalSeparator), 'g'), ".");
         
-        let result = Number(value);
-        if (isNaN(result)) {
-            return 0;
-        } else {
-            return result;
+        let result: Decimal | "invalid" = "invalid";
+        try {
+            result = new Decimal(value);
+        } catch (error) {
+            result = "invalid";
         }
+        return result;
     }
 
     private accountReferenceChanged(type: "source" | "destination", identifier: AccountIdentifier, column: string, parseOptions: ParseOptions) {

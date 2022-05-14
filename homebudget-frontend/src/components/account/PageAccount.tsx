@@ -9,6 +9,7 @@ import { Account } from "../../models/account";
 import axios from "axios";
 import AccountTransactionList from "../transaction/AccountTransactionList";
 import { Preferences } from "../../models/preferences";
+import { Api } from "../../lib/ApiClient";
 
 interface RouteProps {
     id: string;
@@ -132,15 +133,16 @@ export default class PageAccount extends React.Component<Props, State> {
     }
 
     private updateAccount(): void {
-        this.setState({ account: "fetching" });
-        axios.get<Account>('https://localhost:7262/account/' + Number(this.props.match.params.id))
-            .then(res => {
-                this.setState({ account: res.data });
-            })
-            .catch(e => {
-                console.log(e);
-                this.setState({ account: "error" });
-            });
+        this.setState({ account: "fetching" }, () =>
+            Api.Account.get(Number(this.props.match.params.id))
+                .then(result => {
+                    this.setState({ account: result });
+                })
+                .catch(e => {
+                    console.log(e);
+                    this.setState({ account: "error" });
+                })
+        );
     }
 
     private toggleFavorite(): void {
@@ -152,13 +154,12 @@ export default class PageAccount extends React.Component<Props, State> {
         let newAccount = { ...this.state.account, favorite: favorite };
         this.setState({ updatingFavorite: true });
 
-        axios.put<Account>('https://localhost:7262/account/' + Number(this.props.match.params.id), newAccount)
-            .then(res => {
-                this.setState({ account: res.data, updatingFavorite: false });
+        Api.Account.update(Number(this.props.match.params.id), newAccount)
+            .then(result => {
+                this.setState({ account: result, updatingFavorite: false });
                 this.props.updatePreferences();
             })
             .catch(e => {
-                console.log(e);
                 this.setState({ account: "error" });
             });
     }

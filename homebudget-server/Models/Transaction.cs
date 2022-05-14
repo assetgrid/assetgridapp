@@ -12,7 +12,7 @@ namespace homebudget_server.Models
         public DateTime DateTime { get; set; }
         public string? Identifier { get; set; }
         public string Description { get; set; } = null!;
-        public decimal Total { get; set; }
+        public long Total { get; set; }
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
     }

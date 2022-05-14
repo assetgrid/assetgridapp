@@ -1,3 +1,6 @@
+import Decimal from "decimal.js";
+import { Preferences } from "../models/preferences";
+
 const Utils = {
     arrayToObject,
     groupBy,
@@ -48,7 +51,20 @@ function range(start: number, end: number) {
     return ans;
 }
 
-export function formatNumber(number: number, decimals: number, decimalSeparator: string, thousandsSeparator: string) {
+export function formatNumberWithPrefs(number: Decimal, preferences: Preferences | "fetching"): string {
+    let decimalDigits: number = 2;
+    let decimalSeparator: string = ".";
+    let thousandsSeparator: string = ",";
+    if (preferences !== "fetching") {
+        decimalDigits = preferences.decimalDigits;
+        decimalSeparator = preferences.decimalSeparator;
+        thousandsSeparator = preferences.thousandsSeparator;
+    }
+
+    return formatNumber(number, decimalDigits, decimalSeparator, thousandsSeparator);
+}
+
+export function formatNumber(number: Decimal, decimals: number, decimalSeparator: string, thousandsSeparator: string): string {
     // http://kevin.vanzonneveld.net
     // +   original by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
     // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -69,6 +85,7 @@ export function formatNumber(number: number, decimals: number, decimalSeparator:
     // +     bugfix by: Brett Zamir (http://brett-zamir.me)
     // +   improved by: Theriault
     // +   improved by: Drew Noakes
+    // +   improved by: Alexander (to work with decimaljs)
     // *     example 1: number_format(1234.56);
     // *     returns 1: '1,235'
     // *     example 2: number_format(1234.56, 2, ',', ' ');
@@ -93,22 +110,13 @@ export function formatNumber(number: number, decimals: number, decimalSeparator:
     // *    returns 11: '1.2000'
     // *    example 12: number_format('1.2000', 3);
     // *    returns 12: '1.200'
-    var n = !isFinite(+number) ? 0 : +number, 
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-        sep = thousandsSeparator,
-        dec = decimalSeparator,
-        toFixedFix = function (n:number, prec:number) {
-            // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-            var k = Math.pow(10, prec);
-            return Math.round(n * k) / k;
-        },
-        s = (prec ? toFixedFix(n, prec) : Math.round(n)).toString().split('.');
+    let s = number.toFixed(decimals).split('.');
     if (s[0].length > 3) {
-        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousandsSeparator);
     }
-    if ((s[1] || '').length < prec) {
+    if ((s[1] || '').length < decimals) {
         s[1] = s[1] || '';
-        s[1] += new Array(prec - s[1].length + 1).join('0');
+        s[1] += new Array(decimals - s[1].length + 1).join('0');
     }
-    return s.join(dec);
+    return s.join(decimalSeparator);
 }

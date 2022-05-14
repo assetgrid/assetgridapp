@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { Api } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
 import { Account } from "../../models/account";
 import { SearchRequest, SearchResponse } from "../../models/search";
@@ -17,18 +18,17 @@ export default class AccountList extends React.Component<Props> {
 
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: Account[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
-            axios.post<SearchRequest, AxiosResponse<SearchResponse<Account>>>(`https://localhost:7262/Account/Search`, {
+            Api.Account.search({
                 from: from,
-                to: to,
-            }).then(res => {
-                const accounts: Account[] = res.data.data;
+                to: to
+            }).then(result => {
                 resolve({
-                    items: accounts,
+                    items: result.data,
                     offset: from,
-                    totalItems: res.data.totalItems,
+                    totalItems: result.totalItems,
                     draw: draw
                 });
-            })
+            });
         });
     }
 

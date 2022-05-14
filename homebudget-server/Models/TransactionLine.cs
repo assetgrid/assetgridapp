@@ -6,7 +6,7 @@
         public int TransactionId { get; set; }
         public int Order { get; set; }
         public virtual Transaction Transaction { get; set; } = null!;
-        public decimal Amount { get; set; }
+        public long Amount { get; set; }
         public string Description { get; set; } = null!;
     }
 }

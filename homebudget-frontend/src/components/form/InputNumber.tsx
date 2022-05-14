@@ -1,8 +1,9 @@
+import Decimal from "decimal.js";
 import * as React from "react";
 
 export interface InputNumberProps {
     label?: string,
-    value: number,
+    value: Decimal,
     disabled?: boolean
     onChange: React.ChangeEventHandler<HTMLInputElement>,
 }
@@ -21,7 +22,7 @@ export default class InputNumber extends React.Component<InputNumberProps> {
                         className="input"
                         type="number"
                         placeholder={this.props.label}
-                        value={this.props.value}
+                        value={this.props.value.toString()}
                         disabled={this.props.disabled}
                         onChange={event => this.props.onChange(event)}
                     />

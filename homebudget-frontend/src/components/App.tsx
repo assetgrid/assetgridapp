@@ -11,6 +11,7 @@ import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./account/PageAccountOverview";
+import { Api } from "../lib/ApiClient";
 
 interface State {
     preferences: Preferences | "fetching";
@@ -36,7 +37,8 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
                     <Switch>
                         <Route exact path={routes.dashboard()} render={history =>
                             <PageDashboard {...history as any} preferences={this.state.preferences} />} />
-                        <Route exact path={routes.importCsv()} component={PageImportCsv} />
+                        <Route exact path={routes.importCsv()} render={history =>
+                            <PageImportCsv {...history as any} preferences={this.state.preferences} />}/>
                         <Route exact path={routes.transactions()} render={history =>
                             <PageTransactions {...history as any} preferences={this.state.preferences} />}/>
                         <Route exact path={routes.createTransaction()} component={PageCreateTransaction} />
@@ -52,14 +54,14 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
     }
 
     private updatePreferences() {
-        this.setState({ preferences: "fetching" });
-        axios.get<Preferences>('https://localhost:7262/user/preferences')
-            .then(res => {
-                this.setState({ preferences: res.data });
+        this.setState({ preferences: "fetching" }, () => Api.Preferences.get()
+            .then(result => {
+                this.setState({ preferences: result });
             })
             .catch(e => {
                 console.log(e);
                 this.setState({ preferences: "fetching" });
-            });
+            })
+        );
     }
 }

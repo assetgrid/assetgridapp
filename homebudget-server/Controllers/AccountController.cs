@@ -21,7 +21,7 @@ namespace homebudget_server.Controllers
         }
 
         [HttpPost()]
-        public ViewAccount Create(CreateViewAccount model)
+        public ViewAccount Create(ViewCreateAccount model)
         {
             if (ModelState.IsValid)
             {

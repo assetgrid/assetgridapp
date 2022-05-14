@@ -4,6 +4,7 @@ import { Account } from "../../../models/account";
 import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import { Api } from "../../../lib/ApiClient";
 
 export interface InputAccountProps {
     label: string,
@@ -49,7 +50,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
         if (this.props.value != null && this.state.value == null)
         {
             // Fetch the selected item
-            axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, {
+            Api.Account.search({
                 from: 0,
                 to: 1,
                 query: {
@@ -60,15 +61,15 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         value: this.props.value.toString(),
                     }
                 },
-            } as SearchRequest).then(res => {
-                if (res.data.totalItems == 0)
+            } as SearchRequest).then(result => {
+                if (result.totalItems == 0)
                 {
                     this.props.onChange(null);
                 }
                 else
                 {
                     this.setState({
-                        value: res.data.data[0]
+                        value: result.data[0]
                     });
                 }
             })
@@ -148,13 +149,13 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                     }
                 ]
             } as SearchGroup;
-        axios.post<SearchResponse<Account>>(`https://localhost:7262/Account/Search`, {
+        Api.Account.search({
             from: 0,
             to: 5,
             query: query
-        } as SearchRequest).then(res => {
+        } as SearchRequest).then(result => {
             this.setState({
-                dropdownOptions: res.data.data
+                dropdownOptions: result.data
             });
         })
     }

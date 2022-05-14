@@ -6,6 +6,8 @@ import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 import { Preferences } from "../../models/preferences";
 import { formatNumber } from "../../lib/Utils";
+import Decimal from "decimal.js";
+import { Api } from "../../lib/ApiClient";
 
 interface Props {
     draw?: number;
@@ -19,16 +21,16 @@ export default class TransactionList extends React.Component<Props, {}> {
     
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
-            axios.post<SearchResponse<Transaction>>(`https://localhost:7262/transaction/search`, {
+            Api.Transaction.search({
                 from: from,
                 to: to,
-            } as SearchRequest).then(res => {
-                const transactions: Transaction[] = res.data.data;
+            } as SearchRequest).then(result => {
+                const transactions: Transaction[] = result.data;
                 resolve({
                     items: transactions,
                     draw: draw,
                     offset: from,
-                    totalItems: res.data.totalItems
+                    totalItems: result.totalItems
                 });
             })
         });
@@ -54,7 +56,7 @@ export default class TransactionList extends React.Component<Props, {}> {
             draw={this.props.draw}
             fetchItems={this.fetchItems.bind(this)}
             renderItem={transaction => {
-                const total = transaction.lines.map(line => line.amount).reduce((a, b) => a + b, 0);
+                const total = transaction.lines.map(line => line.amount).reduce((a, b) => a.add(b), new Decimal(0));
                 return <tr key={transaction.id}>
                     <td>{transaction.dateTime}</td>
                     <td className={"number-total"}>
