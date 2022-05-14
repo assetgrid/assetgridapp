@@ -86,29 +86,6 @@ export default class PageAccount extends React.Component<Props, State> {
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td>Past week</td>
-                                        <td className="number-total positive">+150,00</td>
-                                        <td className="number-total negative">-250,00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Past month</td>
-                                        <td className="number-total positive">+150,00</td>
-                                        <td className="number-total negative">-250,00</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Past year</td>
-                                        <td className="number-total positive">+150,00</td>
-                                        <td className="number-total negative">-250,00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </Card>
-                    </div>
-                    <div className="column p-0 is-flex is-narrow">
-                        <Card title="Details">
-                            <table className="table">
-                                <tbody>
-                                    <tr>
                                         <td>Id</td>
                                         <td>{this.state.account.id}</td>
                                     </tr>
@@ -121,8 +98,15 @@ export default class PageAccount extends React.Component<Props, State> {
                         </Card>
                     </div>
                     <div className="column p-0 is-flex">
-                        <Card title="Graph" style={{flexGrow: 1}}>
-                            <p>Look at this graph</p>
+                        <Card title="Categories" style={{flexGrow: 1}}>
+                            <p>Graph showing expenses stratified by categories the past month</p>
+                            <p>Buttons to change month</p>
+                        </Card>
+                    </div>
+                    <div className="column p-0 is-flex">
+                        <Card title="Balance" style={{flexGrow: 1}}>
+                            <p>Graph showing balance over time. Hovering shows revenue and expenses for a given timepoint.</p>
+                            <p>Buttons to switch between past month (daily resolution), past year (monthly resolution), all time (yearly resolution).</p>
                         </Card>
                     </div>
                 </div>
