@@ -3,6 +3,7 @@ using homebudget_server.Models;
 using homebudget_server.Models.ViewModels;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace homebudget_server.Controllers
 {
@@ -42,6 +43,87 @@ namespace homebudget_server.Controllers
                 };
             }
             throw new Exception();
+        }
+
+        struct AccountMovementGroup
+        {
+            public DateTime TimePoint { get; set; }
+            public string Type { get; set; }
+            public long Total { get; set; }
+        }
+
+        [HttpPost()]
+        [Route("/[controller]/{id}/Movements")]
+        public ViewGetMovementResponse GetMovement(int id, ViewGetMovementRequest request)
+        {
+            var initialBalance = request.From == null ? 0 :
+                _context.Transactions
+                    .Where(transaction => transaction.DateTime < request.From)
+                    .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                    .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
+                    .Sum();
+
+            var statsRequest = _context.Transactions
+                .Where(transaction => request.From == null || transaction.DateTime >= request.From)
+                .Where(transaction => request.To == null || transaction.DateTime <= request.To)
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
+
+            List<AccountMovementGroup> result;
+            switch (request.Resolution)
+            {
+                case AccountMovementResolution.Daily:
+                    result = statsRequest.GroupBy(transaction => new
+                    {
+                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
+                        timepoint = transaction.DateTime.Year.ToString() + "-" + transaction.DateTime.Month.ToString() + "-" + transaction.DateTime.Day.ToString()
+                    }).Select(group => new AccountMovementGroup { 
+                        Type = group.Key.type,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint, "yyyy-M-d", CultureInfo.InvariantCulture),
+                        Total = group.Select(transaction => transaction.Total).Sum(),
+                    }).ToList();
+                    break;
+                case AccountMovementResolution.Monthly:
+                    result = statsRequest.GroupBy(transaction => new
+                    {
+                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
+                        timepoint = transaction.DateTime.Year.ToString() + "-" + transaction.DateTime.Month.ToString()
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01", "yyyy-M-dd", CultureInfo.InvariantCulture),
+                        Total = group.Select(transaction => transaction.Total).Sum(),
+                    }).ToList();
+                    break;
+                case AccountMovementResolution.Yearly:
+                    result = statsRequest.GroupBy(transaction => new
+                    {
+                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
+                        timepoint = transaction.DateTime.Year.ToString()
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Total = group.Select(transaction => transaction.Total).Sum(),
+                    }).ToList();
+                    break;
+                default:
+                    throw new Exception($"Unknown resolution {request.Resolution}");
+            }
+
+            return new ViewGetMovementResponse
+            {
+                InitialBalance = initialBalance,
+                Items = result.Where(item => item.Type == "revenue")
+                    .Join(result.Where(item => item.Type == "expense"),
+                        result => result.TimePoint,
+                        result => result.TimePoint,
+                        (a, b) => new ViewAccountMovementItem
+                        {
+                            DateTime = a.TimePoint,
+                            Revenue = a.Total,
+                            Expenses = b.Total,
+                        }).ToList()
+            };
         }
 
         [HttpGet()]
