@@ -5,7 +5,7 @@ import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 import { Preferences } from "../../models/preferences";
-import { formatNumber } from "../../lib/Utils";
+import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 
@@ -37,12 +37,6 @@ export default class TransactionList extends React.Component<Props, {}> {
     }
 
     public render() {
-        const prefs = this.props.preferences !== "fetching" ? this.props.preferences :  {
-            decimalDigits: 2,
-            decimalSeparator: ".",
-            thousandsSeparator: ","
-        } as Preferences;
-
         return <Table<Transaction>
             headings={<tr>
                 <th>Date</th>
@@ -60,7 +54,7 @@ export default class TransactionList extends React.Component<Props, {}> {
                 return <tr key={transaction.id}>
                     <td>{transaction.dateTime}</td>
                     <td className={"number-total"}>
-                        {formatNumber(total, prefs.decimalDigits, prefs.decimalSeparator, prefs.thousandsSeparator)}
+                        {formatNumberWithPrefs(total, this.props.preferences)}
                     </td>
                     <td>{transaction.description}</td>
                     <td>{transaction.source != null
