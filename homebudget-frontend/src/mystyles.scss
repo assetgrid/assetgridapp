@@ -4,9 +4,9 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
 
 // Set your brand colors
-$primary: rgb(56, 103, 214);
+$primary: #4db09b;
 $info: #ef7d36;
-$link: rgb(56, 103, 214);
+$link: #558eb3;
 $warning: #FFAF40;
 $danger: #E23600;
 $dark: rgb(6, 30, 47);
@@ -59,3 +59,12 @@ $transition-short: 0.2s;
 @import "./styles/sample-styles.scss";
 
 // General SCSS can be placed here
+.card {
+    border: 2px solid #DDD;
+    box-shadow: none;
+
+    .card-header {
+        border-bottom: 0;
+        box-shadow: none;
+    }
+}

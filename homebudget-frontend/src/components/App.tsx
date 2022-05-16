@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, Switch  } from "react-router";
+import { Route, Routes  } from "react-router";
 import { routes } from "../lib/routes";
 import PageTransactions from "./transaction/PageTransactions";
 import PageCreateTransaction from "./transaction/PageCreateTransaction";
@@ -34,20 +34,15 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
             <div style={{display: "flex", flexGrow: 1}}>
                 <Sidebar preferences={this.state.preferences}/>
                 <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
-                    <Switch>
-                        <Route exact path={routes.dashboard()} render={history =>
-                            <PageDashboard {...history as any} preferences={this.state.preferences} />} />
-                        <Route exact path={routes.importCsv()} render={history =>
-                            <PageImportCsv {...history as any} preferences={this.state.preferences} />}/>
-                        <Route exact path={routes.transactions()} render={history =>
-                            <PageTransactions {...history as any} preferences={this.state.preferences} />}/>
-                        <Route exact path={routes.createTransaction()} component={PageCreateTransaction} />
-                        <Route exact path={routes.accounts()} component={PageAccountOverview} />
-                        <Route exact path={routes.account(":id")} render={history =>
-                            <PageAccount {...history as any} preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
-                        <Route exact path={routes.preferences()} render={history =>
-                            <PagePreferences {...history as any} preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
-                    </Switch>
+                    <Routes>
+                        <Route path={routes.dashboard()} element={<PageDashboard preferences={this.state.preferences} />} />
+                        <Route path={routes.importCsv()} element={<PageImportCsv preferences={this.state.preferences} />}/>
+                        <Route path={routes.transactions()} element={<PageTransactions preferences={this.state.preferences} />}/>
+                        <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
+                        <Route path={routes.accounts()} element={<PageAccountOverview />} />
+                        <Route path={routes.account(":id")} element={<PageAccount preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
+                        <Route path={routes.preferences()} element={<PagePreferences preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
+                    </Routes>
                 </div>
             </div>
         </>;

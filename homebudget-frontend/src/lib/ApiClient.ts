@@ -1,6 +1,7 @@
 import axios from "axios";
 import Decimal from "decimal.js";
-import { Account as AccountModel, CreateAccount } from "../models/account";
+import { DateTime } from "luxon";
+import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
@@ -122,6 +123,14 @@ const Account = {
         });
     },
 
+    /**
+     * List transactions for the specified account
+     * @param id Account id
+     * @param from Return transactions numbered from...to
+     * @param to Return transactions numbered from...to
+     * @param descending Whether to return newest transactions first
+     * @returns An object with information about the transaction for this account
+     */
     listTransactions: function (id: number, from: number, to: number, descending: boolean): Promise<TransactionListResponse> {
         return new Promise<TransactionListResponse>((resolve, reject) => {
             axios.post<TransactionListResponse>(rootUrl + "/account/" + id + "/transactions", {
@@ -138,6 +147,27 @@ const Account = {
                         ...line,
                         amount: new Decimal(amountString).div(new Decimal(10000)),
                     }))
+                }))
+            })).catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    getMovements: function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
+        return new Promise<GetMovementResponse>((resolve, reject) => {
+            axios.post<GetMovementResponse>(rootUrl + "/account/" + accountId + "/movements", {
+                from: from,
+                to: to,
+                resolution: resolution
+            }).then(result => resolve({
+                ...result.data,
+                initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
+                items: (result.data.items as (MovementItem & { revenueString: string, expensesString: string })[]).map(({ revenueString, expensesString, ...item }) => ({
+                    ...item,
+                    expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                    revenue: new Decimal(revenueString).div(new Decimal(10000)),
                 }))
             })).catch(error => {
                     console.log(error);

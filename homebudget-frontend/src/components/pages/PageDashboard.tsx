@@ -11,7 +11,6 @@ import TransactionList from "../transaction/TransactionList";
  * Custom props and state
  */
 interface Props {
-    ownProp: string;
     preferences: Preferences | "fetching";
 }
 

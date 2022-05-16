@@ -2,6 +2,7 @@ import * as React from "react";
 
 export interface Props {
     content: React.ReactNode;
+    children: React.ReactNode;
 }
 
 export default class Tooltip extends React.Component<Props> {

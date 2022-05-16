@@ -52,7 +52,7 @@ export default class TransactionList extends React.Component<Props, {}> {
             renderItem={transaction => {
                 const total = transaction.lines.map(line => line.amount).reduce((a, b) => a.add(b), new Decimal(0));
                 return <tr key={transaction.id}>
-                    <td>{transaction.dateTime}</td>
+                    <td>{transaction.dateTime.toString()}</td>
                     <td className={"number-total"}>
                         {formatNumberWithPrefs(total, this.props.preferences)}
                     </td>

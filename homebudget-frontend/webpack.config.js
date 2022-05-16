@@ -1,4 +1,5 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const path = require("path");
 
 module.exports = {
     entry: "./src/index.tsx",
@@ -19,11 +20,16 @@ module.exports = {
     plugins: [new MiniCssExtractPlugin()],
 
     devServer: {
-        inline: false,
-        disableHostCheck: true,
-        publicPath: '/dist/',
+        allowedHosts: 'all',
+        devMiddleware: {
+            publicPath: '/dist/',
+        },
+        static: {
+            directory: path.join(__dirname, 'dist'),
+        },
         historyApiFallback: true,
-        watchContentBase: true
+        watchFiles: "/dist",
+        hot: true
     },
 
     module: {
@@ -79,7 +85,7 @@ module.exports = {
 
             // Load files that should just be copied over
             {
-                test: /\.(png|jpe?g|gif)$/i,
+                test: /\.(png|jpe?g|gif|svg|html)$/i,
                 use: [
                     {
                     loader: 'file-loader',

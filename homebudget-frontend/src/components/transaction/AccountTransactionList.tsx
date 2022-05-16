@@ -87,7 +87,7 @@ export default class AccountTransactionList extends React.Component<Props, State
             fetchItems={this.fetchItems.bind(this)}
             renderItem={line => {
                 return <tr key={line.transaction.id}>
-                    <td>{line.transaction.dateTime}</td>
+                    <td>{line.transaction.dateTime.toString()}</td>
                     <td>{line.transaction.description}</td>
                     <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>{formatNumberWithPrefs(line.amount, this.props.preferences)}</td>
                     <td className={"number-total"} style={{fontWeight: "normal"}}>{formatNumberWithPrefs(line.balance, this.props.preferences)}</td>

@@ -4,6 +4,7 @@ interface Props {
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
     className?: string;
     disabled?: boolean;
+    children: React.ReactNode;
 }
 
 export default class InputButton extends React.Component<Props> {

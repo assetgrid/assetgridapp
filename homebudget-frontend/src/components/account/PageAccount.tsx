@@ -1,5 +1,4 @@
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
 import { Card } from "../common/Card";
 import TransactionList from "../transaction/TransactionList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,12 +10,10 @@ import AccountTransactionList from "../transaction/AccountTransactionList";
 import { Preferences } from "../../models/preferences";
 import { Api } from "../../lib/ApiClient";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import AccountBalanceChart from "./AccountBalanceChart";
+import { useParams } from "react-router";
 
-interface RouteProps {
-    id: string;
-}
-
-interface Props extends RouteComponentProps<RouteProps> {
+interface Props {
     preferences: Preferences | "fetching";
     updatePreferences: () => void;
 }
@@ -26,8 +23,8 @@ interface State {
     updatingFavorite: boolean;
 }
 
-export default class PageAccount extends React.Component<Props, State> {
-    constructor(props: Props) {
+class PageAccount extends React.Component<Props & { id: number }, State> {
+    constructor(props: Props & { id: number }) {
         super(props);
         this.state = {
             account: "fetching",
@@ -39,8 +36,8 @@ export default class PageAccount extends React.Component<Props, State> {
         this.updateAccount();
     }
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
-        if (this.props.match.params.id != prevProps.match.params.id) {
+    componentDidUpdate(prevProps: Readonly<Props & { id: number }>, prevState: Readonly<State>): void {
+        if (this.props.id != prevProps.id) {
             this.updateAccount();
         }
     }
@@ -66,7 +63,7 @@ export default class PageAccount extends React.Component<Props, State> {
                             </span>
                             : <span className="icon" onClick={() => this.toggleFavorite()} style={{ cursor: "pointer" }}>
                                 {this.state.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
-                            </span>} {this.state.account.name}
+                            </span>} #{this.state.account.id} {this.state.account.name}
                     </p>
                     {(this.state.account.description?.trim() ?? "") !== "" &&
                         <p className="subtitle has-text-primary-light">
@@ -82,16 +79,12 @@ export default class PageAccount extends React.Component<Props, State> {
                                 <tbody>
                                     <tr>
                                         <td>Balance</td>
-                                        <td className="number-total">{formatNumberWithPrefs(this.state.account.balance!, this.props.preferences)}</td>
+                                        <td className="has-text-right">{formatNumberWithPrefs(this.state.account.balance!, this.props.preferences)}</td>
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td>Id</td>
-                                        <td>{this.state.account.id}</td>
-                                    </tr>
-                                    <tr>
                                         <td>Account Number</td>
-                                        <td>{this.state.account.accountNumber}</td>
+                                        <td className="has-text-right">{this.state.account.accountNumber}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -104,14 +97,15 @@ export default class PageAccount extends React.Component<Props, State> {
                         </Card>
                     </div>
                     <div className="column p-0 is-flex">
-                        <Card title="Balance" style={{flexGrow: 1}}>
+                        <Card title="Balance" style={{ flexGrow: 1 }}>
+                            <AccountBalanceChart id={Number(this.props.id)} />
                             <p>Graph showing balance over time. Hovering shows revenue and expenses for a given timepoint.</p>
                             <p>Buttons to switch between past month (daily resolution), past year (monthly resolution), all time (yearly resolution).</p>
                         </Card>
                     </div>
                 </div>
                 <Card title="Transactions">
-                    <AccountTransactionList accountId={Number(this.props.match.params.id)} preferences={this.props.preferences}/>
+                    <AccountTransactionList accountId={Number(this.props.id)} preferences={this.props.preferences}/>
                 </Card>
             </div>
         </>;
@@ -119,7 +113,7 @@ export default class PageAccount extends React.Component<Props, State> {
 
     private updateAccount(): void {
         this.setState({ account: "fetching" }, () =>
-            Api.Account.get(Number(this.props.match.params.id))
+            Api.Account.get(Number(this.props.id))
                 .then(result => {
                     this.setState({ account: result });
                 })
@@ -139,7 +133,7 @@ export default class PageAccount extends React.Component<Props, State> {
         let newAccount = { ...this.state.account, favorite: favorite };
         this.setState({ updatingFavorite: true });
 
-        Api.Account.update(Number(this.props.match.params.id), newAccount)
+        Api.Account.update(Number(this.props.id), newAccount)
             .then(result => {
                 this.setState({ account: result, updatingFavorite: false });
                 this.props.updatePreferences();
@@ -148,4 +142,9 @@ export default class PageAccount extends React.Component<Props, State> {
                 this.setState({ account: "error" });
             });
     }
+}
+
+export default function (props: Props) {
+    let { id } = useParams();
+    return <PageAccount id={Number(id)} {...props} />
 }

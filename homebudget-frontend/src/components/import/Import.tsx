@@ -69,7 +69,7 @@ export default class ImportCsv extends React.Component<Props, State> {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifier}</td>
-                <td>{transaction.dateTime}</td>
+                <td>{transaction.dateTime.toString()}</td>
                 <td>{transaction.description}</td>
                 <td>#{transaction.sourceId}</td>
                 <td>#{transaction.destinationId}</td>

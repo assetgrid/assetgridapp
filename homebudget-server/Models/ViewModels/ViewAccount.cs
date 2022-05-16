@@ -27,6 +27,7 @@
     public enum AccountMovementResolution
     {
         Daily,
+        Weekly,
         Monthly,
         Yearly,
     }

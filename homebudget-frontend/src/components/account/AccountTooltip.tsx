@@ -5,6 +5,7 @@ import { AccountReference } from "../import/ImportModels";
 
 export interface Props {
     account: Account;
+    children: React.ReactNode;
 }
 
 export default class AccountTooltip extends React.Component<Props> {

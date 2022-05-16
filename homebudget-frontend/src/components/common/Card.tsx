@@ -4,6 +4,7 @@ interface Props {
     title: string;
     margin?: number;
     style?: React.CSSProperties;
+    children: React.ReactNode;
 }
 
 export class Card extends React.Component<Props> {

@@ -5,6 +5,7 @@ export interface Props {
     close?: () => void;
     footer?: React.ReactNode;
     title: string;
+    children: React.ReactNode;
 }
 
 export default class Modal extends React.Component<Props> {

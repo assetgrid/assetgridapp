@@ -8,9 +8,9 @@ export interface Props<T> {
     draw?: number;
     items?: T[];
     fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
-    renderItem: (item: T, index: number) => JSX.IntrinsicElements["tr"];
+    renderItem: (item: T, index: number) => React.ReactNode;
 
-    headings: JSX.IntrinsicElements["tr"];
+    headings: React.ReactNode;
 }
 
 interface FetchItemsResult<T> {

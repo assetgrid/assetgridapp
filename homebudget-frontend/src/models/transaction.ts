@@ -7,7 +7,7 @@ export type Transaction = {
     id: number;
     source: Account;
     destination: Account;
-    dateTime: Date;
+    dateTime: DateTime;
     identifier: string;
     lines: TransactionLine[];
     description: string;
