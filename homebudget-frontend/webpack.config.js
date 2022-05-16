@@ -40,13 +40,13 @@ module.exports = {
                 use: [{
                     loader: 'ts-loader',
                     options: {
-                        configFile: "tsconfig.json"
-                    }
+                        configFile: "tsconfig.json",
+                    },
                 }],
                 exclude: /node_modules/,
             },
 
-            // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+            /*// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             {
                 enforce: "pre",
                 test: /\.js$/,
@@ -55,7 +55,7 @@ module.exports = {
                     // These modules have broken source maps
                     /react-rte/,
                 ],
-            },
+            },*/
 
             // Compile scss files
             {
@@ -71,7 +71,7 @@ module.exports = {
             },
 
             // Load plain css
-            {
+            /*{
                 test: /\.css$/,
                 use: [
                     {
@@ -81,7 +81,7 @@ module.exports = {
                         loader: "css-loader",
                     },
                 ],
-            },
+            },*/
 
             // Load files that should just be copied over
             {

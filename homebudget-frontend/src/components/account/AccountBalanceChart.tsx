@@ -1,6 +1,7 @@
 import * as React from "react";
 import { LineChart, Line } from "recharts";
 import { GetMovementResponse } from "../../models/account";
+import ResizeObserver from 'react-resize-detector';
 
 interface Props {
     id: number;
@@ -24,9 +25,7 @@ export default class AccountBalanceChart extends React.Component<Props, State> {
         }
 
         return <div>
-            {/*<LineChart data={this.state.data.items} width={20} height={300}>
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
-    </LineChart> */ }
+            {<LineChart data={this.state.data.items} width={20} height={300}></LineChart>}
         </div>;
     }
 }
