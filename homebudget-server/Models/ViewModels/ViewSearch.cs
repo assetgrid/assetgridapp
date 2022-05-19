@@ -39,5 +39,7 @@
     {
         Equals,
         Contains,
+        GreaterThan,
+        GreaterThanOrEqual,
     }
 }

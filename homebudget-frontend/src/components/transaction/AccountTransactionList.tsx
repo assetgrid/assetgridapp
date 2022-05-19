@@ -4,23 +4,28 @@ import { Transaction, TransactionListResponse } from "../../models/transaction";
 import CreateTransaction from "./CreateTransaction";
 import InputButton from "../form/InputButton";
 import Table from "../common/Table";
-import { SearchRequest, SearchResponse } from "../../models/search";
+import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
 import AccountTooltip from "../account/AccountTooltip";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { Account } from "../../models/account";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
+import { Period, PeriodFunctions } from "../../models/period";
 
 interface Props {
     draw?: number;
     accountId: number;
     preferences: Preferences | "fetching";
+    period: Period;
+    decrementPeriod?: () => void;
+    incrementPeriod?: () => void;
 }
 
 interface State {
     total: Decimal | null;
     descending: boolean;
+    draw: number;
 }
 
 interface TableLine {
@@ -36,12 +41,36 @@ export default class AccountTransactionList extends React.Component<Props, State
         this.state = {
             total: null,
             descending: true,
+            draw: 0,
         };
     }
     
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
+        console.log(draw);
+        console.log(this.state.draw);
+        let [start, end] = PeriodFunctions.getRange(this.props.period);
+        let query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [ {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true
+                }
+            }]
+        };
         return new Promise(resolve => {
-            Api.Account.listTransactions(this.props.accountId, from, to, this.state.descending).then(result => {
+            Api.Account.listTransactions(this.props.accountId, from, to, this.state.descending, query).then(result => {
                 const transactions: Transaction[] = result.data;
                 let balances: Decimal[] = [];
                 if (this.state.descending) {
@@ -72,6 +101,12 @@ export default class AccountTransactionList extends React.Component<Props, State
         });
     }
 
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
+        if (prevProps.period !== this.props.period) {
+            this.setState({ draw: this.state.draw + 1 });
+        }
+    }
+
     public render() {
         return <Table<TableLine>
             headings={<tr>
@@ -82,8 +117,10 @@ export default class AccountTransactionList extends React.Component<Props, State
                 <th>Destination</th>
                 <th>Category</th>
             </tr>}
+            decrement={this.props.decrementPeriod}
+            increment={() => { this.props.incrementPeriod(); }}
             pageSize={20}
-            draw={this.props.draw}
+            draw={(this.props.draw ?? 0) + this.state.draw}
             fetchItems={this.fetchItems.bind(this)}
             renderItem={line => {
                 return <tr key={line.transaction.id}>

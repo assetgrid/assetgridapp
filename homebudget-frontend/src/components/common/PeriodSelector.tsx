@@ -76,6 +76,9 @@ export default class PeriodSelector extends React.Component<Props, State> {
     private renderDropdown() {
         return <div className="dropdown">
             <ul className="sidebar">
+                <li onClick={() => this.props.onChange({ type: "custom", start: DateTime.now().startOf("day"), end: DateTime.now().endOf("day") })}>
+                    Today
+                </li>
                 <li
                     className={this.props.period.type === "month" ? "active" : ""}
                     onClick={() => this.props.onChange({ type: "month", start: this.props.period.start.startOf("month") })}>

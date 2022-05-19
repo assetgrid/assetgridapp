@@ -24,9 +24,9 @@ namespace homebudget_server.Data
             return items;
         }
 
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup? query)
         {
-            if (query.Query == null)
+            if (query == null)
             {
                 return items;
             }
@@ -37,9 +37,10 @@ namespace homebudget_server.Data
                 ("ToAccountId", typeof(int)),
                 ("Identifier", typeof(string)),
                 ("Description", typeof(string)),
+                ("DateTime", typeof(DateTime)),
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
-            var expression = SearchGroupToExpression(query.Query, columns, parameter);
+            var expression = SearchGroupToExpression(query, columns, parameter);
             if (expression != null)
             {
                 items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
@@ -110,6 +111,20 @@ namespace homebudget_server.Data
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' does not accept type {columnValue.GetType()}");
                             }
+                        case ViewSearchOperator.GreaterThan:
+                            if (columnValue.GetType() != column.type)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
+                            }
+                            result = Expression.GreaterThan(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
+                            break;
+                        case ViewSearchOperator.GreaterThanOrEqual:
+                            if (columnValue.GetType() != column.type)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
+                            }
+                            result = Expression.GreaterThanOrEqual(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
+                            break;
                         default:
                             throw new Exception($"Unknown search operator '{group.Query.Operator}'");
                     }
@@ -174,7 +189,15 @@ namespace homebudget_server.Data
 
         private static object CastJsonElement(JsonElement element, Type preferType)
         {
-            if (element.ValueKind == JsonValueKind.String) return element.GetString()!;
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                if (preferType == typeof(DateTime))
+                {
+                    return element.GetDateTime();
+                }
+
+                return element.GetString()!;
+            }
             if (element.ValueKind == JsonValueKind.Number)
             {
                 if (preferType == typeof(int))

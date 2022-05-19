@@ -113,8 +113,13 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                         </Card>
                     </div>
                 </div>
-                <Card title="Transactions">
-                    <AccountTransactionList accountId={Number(this.props.id)} preferences={this.props.preferences}/>
+                <Card title={"Transactions (" + PeriodFunctions.print(this.state.period) + ")"}>
+                    <AccountTransactionList
+                        accountId={Number(this.props.id)}
+                        preferences={this.props.preferences} period={this.state.period}
+                        decrementPeriod={() => this.setState({ period: PeriodFunctions.decrement(this.state.period)})}
+                        incrementPeriod={() => this.setState({ period: PeriodFunctions.increment(this.state.period)})}
+                    />
                 </Card>
             </div>
         </>;

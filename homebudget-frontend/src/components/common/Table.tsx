@@ -1,6 +1,6 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
 export interface Props<T> {
     pageSize: number;
@@ -11,6 +11,9 @@ export interface Props<T> {
     renderItem: (item: T, index: number) => React.ReactNode;
 
     headings: React.ReactNode;
+
+    decrement?: () => void;
+    increment?: () => void;
 }
 
 interface FetchItemsResult<T> {
@@ -78,11 +81,17 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
-                            <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page - 1)}>
-                                <span className="icon">
-                                    <FontAwesomeIcon icon={faAngleLeft} />
-                                </span>
-                            </a>
+                            {page === 1 && this.props.decrement
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => this.props.decrement()}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleDoubleLeft} />
+                                    </span>
+                                </a>
+                                : <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page - 1)}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleLeft} />
+                                    </span>
+                                </a>}
                         </li>
                         <li>
                             <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
@@ -102,11 +111,17 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                                 aria-label={"Goto page " + lastPage} onClick={() => this.goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         <li>
-                            <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page + 1)}>
-                                <span className="icon">
-                                    <FontAwesomeIcon icon={faAngleRight} />
-                                </span>
-                            </a>
+                            {page === lastPage && this.props.increment
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToPage(1) }}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleDoubleRight} />
+                                    </span>
+                                </a>
+                                : <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page + 1)}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleRight} />
+                                    </span>
+                                </a>}
                         </li>
                     </ul>
                 </nav>

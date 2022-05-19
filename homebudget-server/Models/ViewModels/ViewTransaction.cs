@@ -49,5 +49,7 @@
         public int From { get; set; }
         public int To { get; set; }
         public bool Descending { get; set; }
+
+        public ViewSearchGroup? Query { get; set; }
     }
 }

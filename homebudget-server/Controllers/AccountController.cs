@@ -214,6 +214,11 @@ namespace homebudget_server.Controllers
             var query = _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
 
+            if (request.Query != null)
+            {
+                query = query.ApplySearch(request.Query);
+            }
+
             if (request.Descending)
             {
                 query = query.OrderByDescending(transaction => transaction.DateTime)

@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
-import { SearchRequest, SearchResponse } from "../models/search";
+import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
 
 const rootUrl = 'https://localhost:7262';
@@ -131,12 +131,13 @@ const Account = {
      * @param descending Whether to return newest transactions first
      * @returns An object with information about the transaction for this account
      */
-    listTransactions: function (id: number, from: number, to: number, descending: boolean): Promise<TransactionListResponse> {
+    listTransactions: function (id: number, from: number, to: number, descending: boolean, query?: SearchGroup): Promise<TransactionListResponse> {
         return new Promise<TransactionListResponse>((resolve, reject) => {
             axios.post<TransactionListResponse>(rootUrl + "/account/" + id + "/transactions", {
                 from: from,
                 to: to,
-                descending: descending
+                descending: descending,
+                query: query,
             }).then(result => resolve({
                 ...result.data,
                 total: new Decimal((result.data as any).totalString).div(new Decimal(10000)),

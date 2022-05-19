@@ -7,7 +7,7 @@ export type SearchRequest = {
 export type SearchGroup = {
     type: SearchGroupType.Query;
     query: SearchQuery;
-} & {
+} | {
     type: SearchGroupType.And | SearchGroupType.Or;
     children: SearchGroup[];
 }
@@ -22,6 +22,8 @@ export type SearchQuery = {
 export enum SearchOperator {
     Equals = 0,
     Contains = 1,
+    GreaterThan = 2,
+    GreaterThanOrEqual = 3,
 }
 
 export enum SearchGroupType {
