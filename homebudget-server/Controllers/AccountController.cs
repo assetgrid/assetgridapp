@@ -3,6 +3,7 @@ using homebudget_server.Models;
 using homebudget_server.Models.ViewModels;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
 namespace homebudget_server.Controllers
@@ -68,7 +69,7 @@ namespace homebudget_server.Controllers
                 .Where(transaction => request.To == null || transaction.DateTime <= request.To)
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
 
-            List<AccountMovementGroup> result;
+            List <AccountMovementGroup> result;
             switch (request.Resolution)
             {
                 case AccountMovementResolution.Daily:
@@ -82,6 +83,8 @@ namespace homebudget_server.Controllers
                         Total = group.Select(transaction => transaction.Total).Sum(),
                     }).ToList();
                     break;
+                case AccountMovementResolution.Weekly:
+                    throw new NotImplementedException();
                 case AccountMovementResolution.Monthly:
                     result = statsRequest.GroupBy(transaction => new
                     {
@@ -110,19 +113,30 @@ namespace homebudget_server.Controllers
                     throw new Exception($"Unknown resolution {request.Resolution}");
             }
 
+            var revenue = result.Where(item => item.Type == "revenue").ToDictionary(item => item.TimePoint, item => item.Total);
+            var expenses = result.Where(item => item.Type == "expense").ToDictionary(item => item.TimePoint, item => item.Total);
+            foreach (var key in revenue.Keys)
+            {
+                if (!expenses.ContainsKey(key)) expenses[key] = 0;
+            }
+            foreach (var key in expenses.Keys)
+            {
+                if (!revenue.ContainsKey(key)) revenue[key] = 0;
+            }
+
             return new ViewGetMovementResponse
             {
                 InitialBalance = initialBalance,
-                Items = result.Where(item => item.Type == "revenue")
-                    .Join(result.Where(item => item.Type == "expense"),
-                        result => result.TimePoint,
-                        result => result.TimePoint,
+                Items = expenses.Join(revenue,
+                        result => result.Key,
+                        result => result.Key,
                         (a, b) => new ViewAccountMovementItem
                         {
-                            DateTime = a.TimePoint,
-                            Revenue = a.Total,
-                            Expenses = b.Total,
-                        }).ToList()
+                            DateTime = a.Key,
+                            Expenses = a.Value,
+                            Revenue = b.Value,
+                        })
+                    .OrderBy(item => item.DateTime).ToList()
             };
         }
 

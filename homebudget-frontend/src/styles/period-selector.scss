@@ -1,0 +1,50 @@
+.period-selector {
+    position: relative;
+    .dropdown {
+        z-index: 10;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+
+        border: 1px solid;
+        border-color: $button-border-color;
+        border-radius: $radius-small;
+
+        .sidebar {
+            border-right: 1px solid;
+            border-color: inherit;
+
+            li {
+                width: 200px;
+                border-bottom: 1px solid;
+                border-color: $button-border-color;
+                padding: $control-padding-vertical $control-padding-horizontal;
+                cursor: pointer;
+
+                &:last-child() {
+                    border-bottom: 0;
+                }
+                &:hover {
+                    background-color: #EEE;
+                }
+                &.active {
+                    font-weight: bold;
+                    background-color: white;
+                    cursor: initial;
+                }
+            }
+        }
+
+        .details {
+            & p {
+                @extend %control;
+                display: block;
+            }
+
+            .rdrCalendarWrapper {
+                display: block;
+            }
+        }
+    }
+}

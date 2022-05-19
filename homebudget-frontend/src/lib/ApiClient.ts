@@ -32,7 +32,7 @@ const Preferences = {
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    update: function (preferences: PreferencesModel): Promise<PreferencesModel> { 
+    update: function (preferences: PreferencesModel): Promise<PreferencesModel> {
         return new Promise<PreferencesModel>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + '/user/preferences', preferences)
                 .then(result => {
@@ -166,6 +166,7 @@ const Account = {
                 initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
                 items: (result.data.items as (MovementItem & { revenueString: string, expensesString: string })[]).map(({ revenueString, expensesString, ...item }) => ({
                     ...item,
+                    dateTime: DateTime.fromISO(item.dateTime as any as string),
                     expenses: new Decimal(expensesString).div(new Decimal(10000)),
                     revenue: new Decimal(revenueString).div(new Decimal(10000)),
                 }))

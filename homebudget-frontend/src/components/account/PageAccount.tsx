@@ -12,6 +12,9 @@ import { Api } from "../../lib/ApiClient";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import AccountBalanceChart from "./AccountBalanceChart";
 import { useParams } from "react-router";
+import PeriodSelector from "../common/PeriodSelector";
+import { DateTime } from "luxon";
+import { Period } from "../../models/period";
 
 interface Props {
     preferences: Preferences | "fetching";
@@ -21,6 +24,7 @@ interface Props {
 interface State {
     account: "fetching" | "error" | null | Account;
     updatingFavorite: boolean;
+    period: Period;
 }
 
 class PageAccount extends React.Component<Props & { id: number }, State> {
@@ -29,6 +33,10 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
         this.state = {
             account: "fetching",
             updatingFavorite: false,
+            period: {
+                type: "month",
+                start: DateTime.now().startOf("month"),
+            }
         };
     }
 
@@ -71,6 +79,7 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                         </p>}
                 </div>
             </section>
+            <PeriodSelector period={this.state.period} onChange={period => this.setState({ period: period }) } />
             <div className="p-3">
                 <div className="columns m-0">
                     <div className="column p-0 is-narrow is-flex">
@@ -98,9 +107,7 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                     </div>
                     <div className="column p-0 is-flex">
                         <Card title="Balance" style={{ flexGrow: 1 }}>
-                            <AccountBalanceChart id={Number(this.props.id)} />
-                            <p>Graph showing balance over time. Hovering shows revenue and expenses for a given timepoint.</p>
-                            <p>Buttons to switch between past month (daily resolution), past year (monthly resolution), all time (yearly resolution).</p>
+                            <AccountBalanceChart id={Number(this.props.id)} preferences={this.props.preferences} period={this.state.period} />
                         </Card>
                     </div>
                 </div>
@@ -130,7 +137,9 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
         }
 
         let favorite = !this.state.account.favorite;
-        let newAccount = { ...this.state.account, favorite: favorite };
+        let { balance, id, ...newAccount } = this.state.account;
+        newAccount.favorite = favorite;
+
         this.setState({ updatingFavorite: true });
 
         Api.Account.update(Number(this.props.id), newAccount)

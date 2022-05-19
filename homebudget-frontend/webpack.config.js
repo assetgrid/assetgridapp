@@ -15,7 +15,7 @@ module.exports = {
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".d.ts", ".tsx", ".js", ".json"],
+        extensions: [".ts", ".tsx", ".js", ".json"],
     },
     plugins: [new MiniCssExtractPlugin()],
 
@@ -28,7 +28,7 @@ module.exports = {
             directory: path.join(__dirname, 'dist'),
         },
         historyApiFallback: true,
-        watchFiles: "/dist",
+        // watchFiles: "/dist",
         hot: true
     },
 
@@ -71,7 +71,7 @@ module.exports = {
             },
 
             // Load plain css
-            /*{
+            {
                 test: /\.css$/,
                 use: [
                     {
@@ -81,7 +81,7 @@ module.exports = {
                         loader: "css-loader",
                     },
                 ],
-            },*/
+            },
 
             // Load files that should just be copied over
             {

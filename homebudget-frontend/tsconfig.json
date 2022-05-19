@@ -6,6 +6,7 @@
         "target": "es6",
         "jsx": "react",
         "sourceMap": true,
+        "declaration": true,
         "allowJs": true,
         "moduleResolution": "node",
     },

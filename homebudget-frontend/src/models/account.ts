@@ -19,7 +19,7 @@ export type CreateAccount = {
 export type MovementItem = {
     revenue: Decimal;
     expenses: Decimal;
-    datetime: DateTime;
+    dateTime: DateTime;
 }
 
 export type GetMovementResponse = {
@@ -28,8 +28,8 @@ export type GetMovementResponse = {
 }
 
 export enum TimeResolution {
-    Daily = 1,
-    Weekly = 2,
-    Monthly = 3,
-    Yearly = 4
+    Daily = 0,
+    Weekly = 1,
+    Monthly = 2,
+    Yearly = 3
 }
