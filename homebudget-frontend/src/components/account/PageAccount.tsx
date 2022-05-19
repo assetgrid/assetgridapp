@@ -14,7 +14,7 @@ import AccountBalanceChart from "./AccountBalanceChart";
 import { useParams } from "react-router";
 import PeriodSelector from "../common/PeriodSelector";
 import { DateTime } from "luxon";
-import { Period } from "../../models/period";
+import { Period, PeriodFunctions } from "../../models/period";
 
 interface Props {
     preferences: Preferences | "fetching";
@@ -62,7 +62,7 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
         }
 
         return <>
-            <section className="hero has-background-primary">
+            <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
                 <div className="hero-body">
                     <p className="title has-text-white">
                         {this.state.updatingFavorite
@@ -75,11 +75,13 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                     </p>
                     {(this.state.account.description?.trim() ?? "") !== "" &&
                         <p className="subtitle has-text-primary-light">
-                            {this.state.account.description}
+                            {this.state.account.description} {PeriodFunctions.print(this.state.period)}
                         </p>}
                 </div>
+                <div>
+                    <PeriodSelector period={this.state.period} onChange={period => this.setState({ period: period }) } />
+                </div>
             </section>
-            <PeriodSelector period={this.state.period} onChange={period => this.setState({ period: period }) } />
             <div className="p-3">
                 <div className="columns m-0">
                     <div className="column p-0 is-narrow is-flex">

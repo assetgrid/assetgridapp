@@ -1,15 +1,25 @@
 .period-selector {
     position: relative;
+    display: inline-block;
+    margin-right: $size-5;
+
+    .button {
+        background-color: transparent;
+        border-color: $primary-light;
+        color: white;
+    }
+
     .dropdown {
         z-index: 10;
         position: absolute;
-        top: 100%;
-        left: 0;
+        top: calc(100% + $size-7);
+        right: 0;
         background: white;
 
         border: 1px solid;
         border-color: $button-border-color;
-        border-radius: $radius-small;
+        border-radius: $radius;
+        box-shadow: $shadow;
 
         .sidebar {
             border-right: 1px solid;
@@ -30,7 +40,7 @@
                 }
                 &.active {
                     font-weight: bold;
-                    background-color: white;
+                    background-color: transparent;
                     cursor: initial;
                 }
             }

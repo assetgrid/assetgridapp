@@ -23,31 +23,34 @@ export default class PeriodSelector extends React.Component<Props, State> {
     }
 
     public render() {
-        return <div className="field has-addons period-selector" style={{position: "relative"}}>
+        return <div className="field has-addons period-selector" style={{ position: "relative" }}>
             <p className="control">
                 <button className="button" onClick={() => this.props.onChange(PeriodFunctions.decrement(this.props.period))}>
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={solid.faArrowLeft} />
                     </span>
                 </button>
-                </p>
-                <p className="control">
-                <button className="button" onClick={() => this.state.down ? this.up() : this.down() }>
-                    <span>{PeriodFunctions.print(this.props.period)}</span>
+            </p>
+            <p className="control">
+                <button className="button" onClick={() => this.state.down ? this.up() : this.down()}>
+                    <span className="icon is-small">
+                        <FontAwesomeIcon icon={solid.faCalendarAlt} />
+                    </span>
+                    {PeriodFunctions.print(this.props.period)}
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={this.state.down ? solid.faAngleUp : solid.faAngleDown} />
                     </span>
                 </button>
-                </p>
-                <p className="control">
+            </p>
+            <p className="control">
                 <button className="button" onClick={() => this.props.onChange(PeriodFunctions.increment(this.props.period))}>
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={solid.faArrowRight} />
                     </span>
                 </button>
             </p>
-            { this.state.down && this.renderDropdown() }
-        </div>
+            {this.state.down && this.renderDropdown()}
+        </div>;
     }
  
 
