@@ -100,7 +100,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         </span>
                     </button>
                     {this.props.allowNull && !this.props.disabled && this.props.value !== null && <button className="button"
-                        onClick={e => this.props.onChange(null)}
+                        onClick={e => { this.setState({ value: null, open: false, searchQuery: "" }); this.props.onChange(null) }}
                         disabled={this.props.disabled}>
                         <span className="icon is-small">
                             <FontAwesomeIcon icon={faXmark} />
