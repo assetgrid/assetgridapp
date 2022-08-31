@@ -229,9 +229,9 @@ const Transaction = {
      */
      update: function (transaction: UpdateTransaction): Promise<Transaction> {
         return new Promise<Transaction>((resolve, reject) => {
-            axios.post<Transaction>(rootUrl + "/transaction/update/" + transaction.id,
-                transaction
-            ).then(result => resolve(result.data))
+            axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
+                ...transaction,
+            }).then(result => resolve(result.data))
                 .catch(e => {
                     console.log(e);
                     reject();

@@ -3,13 +3,14 @@ import * as React from "react";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
 
 export interface InputAccountProps {
     label?: string,
     value: number | null,
     disabled: boolean,
+    allowNull: boolean,
     onChange: (account: Account | null) => void;
 }
 
@@ -98,6 +99,13 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                             <FontAwesomeIcon icon={faAngleDown} />
                         </span>
                     </button>
+                    {this.props.allowNull && !this.props.disabled && this.props.value !== null && <button className="button"
+                        onClick={e => this.props.onChange(null)}
+                        disabled={this.props.disabled}>
+                        <span className="icon is-small">
+                            <FontAwesomeIcon icon={faXmark} />
+                        </span>
+                    </button>}
                 </div>
                 <div className={"dropdown-menu"} role="menu">
                     <div className="dropdown-content">

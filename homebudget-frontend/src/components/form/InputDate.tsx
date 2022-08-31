@@ -16,7 +16,7 @@ interface State {
     open: boolean
 }
 
-export default class InputAccount extends React.Component<Props, State> {
+export default class InputDate extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {

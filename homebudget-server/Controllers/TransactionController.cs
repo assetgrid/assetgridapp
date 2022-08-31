@@ -21,7 +21,7 @@ namespace homebudget_server.Controllers
             _context = context;
         }
 
-        [HttpPost(Name = "CreateTransaction")]
+        [HttpPost()]
         public ViewTransaction Create(ViewCreateTransaction model)
         {
             if (string.IsNullOrWhiteSpace(model.Identifier))
@@ -93,8 +93,8 @@ namespace homebudget_server.Controllers
             throw new Exception();
         }
 
-        [HttpPost(Name = "Update")]
-        [Route("/[controller]/[action]/{id}")]
+        [HttpPut()]
+        [Route("/[controller]/{id}")]
         public ViewTransaction Update(int id, ViewUpdateTransaction model)
         {
             if (id != model.Id)
@@ -122,11 +122,16 @@ namespace homebudget_server.Controllers
                     }
                     if (model.DestinationId != null)
                     {
-                        dbObject.DestinationAccountId = model.DestinationId;
+                        dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;
                     }
                     if (model.SourceId != null)
                     {
-                        dbObject.SourceAccountId = model.SourceId;
+                        dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
+                    }
+
+                    if (model.SourceId == null && model.DestinationId == null)
+                    {
+                        throw new Exception("At least one account must be associated with this transaction");
                     }
 
                     transaction.Commit();

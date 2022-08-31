@@ -55,12 +55,14 @@ export default class CreateTransaction extends React.Component<{}, State> {
                             <InputAccount label="From"
                                 value={this.state.sourceId}
                                 disabled={this.state.creating}
+                                allowNull={true}
                                 onChange={account => this.setState({ sourceId: account?.id ?? null})} />
                         </div>
                         <div className="column is-6">
                             <InputAccount label="To"
                                 value={this.state.destinationId}
                                 disabled={this.state.creating}
+                                allowNull={true}
                                 onChange={account => this.setState({ destinationId: account?.id ?? null})} />
                         </div>
                     </div>

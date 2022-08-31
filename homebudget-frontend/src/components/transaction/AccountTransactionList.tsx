@@ -186,8 +186,9 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                 <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(line.balance, this.props.preferences)}</td>
                 <td>
                     <InputAccount 
-                        value={model.offsetAccount?.id}
+                        value={model.offsetAccount?.id ?? null}
                         disabled={this.state.disabled}
+                        allowNull={true}
                         onChange={account => this.setState({ editingModel: { ...this.state.editingModel, offsetAccount: account } })} />
                 </td>
                 <td></td>
@@ -243,8 +244,8 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
             return;
         }
 
-        let source = this.props.type === "deposit" ? model.offsetAccount?.id : null;
-        let destination = this.props.type === "deposit" ? null : model.offsetAccount?.id;
+        let source = this.props.type === "deposit" ? model.offsetAccount?.id ?? -1 : null;
+        let destination = this.props.type === "deposit" ? null : model.offsetAccount?.id ?? -1;
         Api.Transaction.update({
             id: this.props.data.transaction.id,
             dateTime: model.dateTime,
