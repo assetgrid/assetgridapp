@@ -7,7 +7,7 @@ import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
 
 export interface InputAccountProps {
-    label: string,
+    label?: string,
     value: number | null,
     disabled: boolean,
     onChange: (account: Account | null) => void;
@@ -58,7 +58,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                     query: {
                         column: "Id",
                         operator: 0,
-                        value: this.props.value.toString(),
+                        value: this.props.value,
                     }
                 },
             } as SearchRequest).then(result => {
@@ -89,10 +89,10 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
         return <div className="field" tabIndex={0}
             onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && this.setState({ open: false })}
             >
-            <label className="label">{this.props.label}</label>
-            <div className={"dropdown is-fullwidth" + (this.state.open ? " is-active" : "")}>
+            {this.props.label !== undefined && <label className="label">{this.props.label}</label>}
+            <div className={"dropdown is-fullwidth" + (this.state.open && ! this.props.disabled  ? " is-active" : "")}>
                 <div className="dropdown-trigger">
-                    <button className="button" aria-haspopup="true" onClick={e => this.setState({ open: true }) }>
+                    <button className="button" aria-haspopup="true" onClick={e => this.setState({ open: true }) } disabled={this.props.disabled}>
                         <span>{value}</span>
                         <span className="icon is-small">
                             <FontAwesomeIcon icon={faAngleDown} />

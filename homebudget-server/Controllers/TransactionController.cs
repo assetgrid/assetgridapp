@@ -93,6 +93,77 @@ namespace homebudget_server.Controllers
             throw new Exception();
         }
 
+        [HttpPost(Name = "Update")]
+        [Route("/[controller]/[action]/{id}")]
+        public ViewTransaction Update(int id, ViewUpdateTransaction model)
+        {
+            if (id != model.Id)
+            {
+                throw new Exception();
+            }
+
+            if (ModelState.IsValid)
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    var dbObject = _context.Transactions
+                        .Include(t => t.SourceAccount)
+                        .Include(t => t.DestinationAccount)
+                        .Include(t => t.TransactionLines)
+                        .Single(t => t.Id == model.Id);
+                    
+                    if (model.DateTime != null)
+                    {
+                        dbObject.DateTime = model.DateTime.Value;
+                    }
+                    if (model.Description != null)
+                    {
+                        dbObject.Description = model.Description;
+                    }
+                    if (model.DestinationId != null)
+                    {
+                        dbObject.DestinationAccountId = model.DestinationId;
+                    }
+                    if (model.SourceId != null)
+                    {
+                        dbObject.SourceAccountId = model.SourceId;
+                    }
+
+                    transaction.Commit();
+                    _context.SaveChanges();
+
+                    return new ViewTransaction
+                    {
+                        Id = dbObject.Id,
+                        Identifier = dbObject.Identifier,
+                        DateTime = dbObject.DateTime,
+                        Description = dbObject.Description,
+                        Source = dbObject.SourceAccount != null
+                            ? new ViewAccount
+                            {
+                                Id = dbObject.SourceAccount.Id,
+                                Name = dbObject.SourceAccount.Name,
+                                Description = dbObject.SourceAccount.Description,
+                            } : null,
+                        Destination = dbObject.DestinationAccount != null
+                            ? new ViewAccount
+                            {
+                                Id = dbObject.DestinationAccount.Id,
+                                Name = dbObject.DestinationAccount.Name,
+                                Description = dbObject.DestinationAccount.Description,
+                            } : null,
+                        Lines = dbObject.TransactionLines
+                            .OrderBy(line => line.Order)
+                            .Select(line => new ViewTransactionLine
+                            {
+                                Amount = line.Amount,
+                            }).ToList(),
+                    };
+                }
+            }
+            throw new Exception();
+        }
+
         [HttpPost()]
         [Route("/[controller]/[action]")]
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)

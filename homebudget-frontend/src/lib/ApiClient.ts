@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
-import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
+import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, Transaction, UpdateTransaction } from "../models/transaction";
 
 const rootUrl = 'https://localhost:7262';
 
@@ -144,6 +144,7 @@ const Account = {
                 data: (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
                     ...transaction,
                     total: new Decimal(totalString).div(new Decimal(10000)),
+                    dateTime: DateTime.fromISO(transaction.dateTime as any as string),
                     lines: (transaction.lines as (TransactionLine & { amountString: string})[]).map(({ amountString, ...line }) => ({
                         ...line,
                         amount: new Decimal(amountString).div(new Decimal(10000)),
@@ -213,6 +214,23 @@ const Transaction = {
                     ...transaction,
                     lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
                 }))
+            ).then(result => resolve(result.data))
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                })
+        });
+    },
+
+    /**
+     * Updates a transaction
+     * @param transaction The transactions to be created
+     * @returns The updated transaction
+     */
+     update: function (transaction: UpdateTransaction): Promise<Transaction> {
+        return new Promise<Transaction>((resolve, reject) => {
+            axios.post<Transaction>(rootUrl + "/transaction/update/" + transaction.id,
+                transaction
             ).then(result => resolve(result.data))
                 .catch(e => {
                     console.log(e);

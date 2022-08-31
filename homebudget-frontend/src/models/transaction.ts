@@ -24,6 +24,14 @@ export type CreateTransaction = {
     lines: TransactionLine[];
 }
 
+export type UpdateTransaction = {
+    id: number;
+    sourceId?: number;
+    destinationId?: number;
+    dateTime?: DateTime;
+    description?: string;
+}
+
 export type TransactionLine = {
     amount: Decimal;
     description: string;

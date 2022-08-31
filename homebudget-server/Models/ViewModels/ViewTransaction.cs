@@ -10,6 +10,14 @@
         public List<ViewTransactionLine> Lines { get; set; } = null!;
     }
 
+    public class ViewUpdateTransaction
+    {
+        public int Id { get; set; }
+        public int? SourceId { get; set; }
+        public int? DestinationId { get; set; }
+        public DateTime? DateTime { get; set; }
+        public string? Description { get; set; }
+    }
     public class ViewTransaction
     {
         public int Id { get; set; }
