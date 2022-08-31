@@ -54,8 +54,6 @@ export default class AccountTransactionList extends React.Component<Props, State
     }
     
     private fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
-        console.log(draw);
-        console.log(this.state.draw);
         let [start, end] = PeriodFunctions.getRange(this.props.period);
         let query: SearchGroup = {
             type: SearchGroupType.And,
