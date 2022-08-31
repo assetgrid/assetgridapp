@@ -173,7 +173,7 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
         if (this.state.editingModel !== null) {
             const model = this.state.editingModel;
             console.log(model);
-            return <tr key={line.transaction.id}>
+            return <tr key={line.transaction.id} className="editing">
                 <td>
                     <InputDate value={model.dateTime}
                         onChange={e => this.setState({ editingModel: { ...this.state.editingModel, dateTime: e } })}
@@ -194,11 +194,11 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                 <td></td>
                 <td>
                     {! this.state.disabled && <>
-                        <span className="icon">
-                            <FontAwesomeIcon icon={solid.faCheck} onClick={() => this.saveChanges()} />
+                        <span className="icon button" onClick={() => this.saveChanges()}>
+                            <FontAwesomeIcon icon={solid.faCheck} />
                         </span>
-                        <span className="icon">
-                            <FontAwesomeIcon icon={solid.faXmark} onClick={() => this.setState({ editingModel: null })} />
+                        <span className="icon button" onClick={() => this.setState({ editingModel: null })}>
+                            <FontAwesomeIcon icon={solid.faXmark} />
                         </span>
                     </>}
                 </td>
@@ -207,17 +207,21 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
             return <tr key={line.transaction.id}>
                 <td>{line.transaction.dateTime.toString()}</td>
                 <td>{line.transaction.description}</td>
-                <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>{formatNumberWithPrefs(line.amount, this.props.preferences)}</td>
-                <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(line.balance, this.props.preferences)}</td>
+                <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>
+                    {formatNumberWithPrefs(line.amount, this.props.preferences)}
+                </td>
+                <td className={"number-total"} style={{ fontWeight: "normal" }}>
+                    {formatNumberWithPrefs(line.balance, this.props.preferences)}
+                </td>
                 <td>
                     {line.offsetAccount !== null && <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>}
                 </td>
                 <td></td>
                 <td>
-                    <span className="icon" onClick={() => this.beginEdit()}>
+                    <span className="icon button" onClick={() => this.beginEdit()}>
                         <FontAwesomeIcon icon={solid.faPen} />
                     </span>
-                    <span className="icon">
+                    <span className="icon button">
                         <FontAwesomeIcon icon={solid.faTrashCan} />
                     </span>
                 </td>

@@ -97,3 +97,15 @@ html, body {
         color: #e74c3c;
     }
 }
+
+table tr.editing td {
+    vertical-align: middle;
+}
+.icon.button {
+    border: 0;
+    background-color: transparent;
+    color: $dark;
+    &:hover {
+        color: $link;
+    }
+}
