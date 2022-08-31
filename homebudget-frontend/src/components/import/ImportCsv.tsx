@@ -179,6 +179,6 @@ export default class ImportCsv extends React.Component<Props, State> {
             console.log(event);
             this.setState({ csvData: "error" });
         }
-        reader.readAsText(file);
+        reader.readAsText(file, "UTF-8");
     }
 }
