@@ -5,6 +5,7 @@ import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from
 export interface Props<T> {
     pageSize: number;
     paginationSize?: number;
+    reversePagination?: boolean;
 
     draw?: number;
     items?: T[];
@@ -47,16 +48,8 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
     }
 
     public render() {
-        const page = this.state.targetPage;
         let paginatedItems = this.state.items
-            .map((item, index) => ({ item: item, index: index + (page - 1) * this.props.pageSize }));
-        const lastPage = Math.max(1, Math.ceil(this.state.totalItems / this.props.pageSize));
-        const pagesBesideCurrent = ((this.props.paginationSize ?? 9) - 3) / 2;
-        let paginationFrom = Math.max(2, page - pagesBesideCurrent);
-        const paginationTo = Math.min(paginationFrom + 1 + pagesBesideCurrent * 2, lastPage);
-        if (paginationTo - paginationFrom < pagesBesideCurrent * 2 + 1) {
-            paginationFrom = Math.max(2, paginationTo - pagesBesideCurrent * 2 - 1);
-        }
+            .map((item, index) => ({ item: item, index: index + (this.state.targetPage - 1) * this.props.pageSize }));
 
         return <>
             <table className="table is-fullwidth is-hoverable" style={{marginBottom: 0}}>
@@ -72,7 +65,81 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                     )}
                 </tbody>
             </table>
-            <div className="pagination-container">
+            {this.renderPagination()}
+        </>;
+    }
+
+    private renderPagination() {
+        const page = this.state.targetPage;
+        const lastPage = Math.max(1, Math.ceil(this.state.totalItems / this.props.pageSize));
+        const pagesBesideCurrent = ((this.props.paginationSize ?? 9) - 3) / 2;
+        let paginationFrom = Math.max(2, page - pagesBesideCurrent);
+        const paginationTo = Math.min(paginationFrom + 1 + pagesBesideCurrent * 2, lastPage);
+        if (paginationTo - paginationFrom < pagesBesideCurrent * 2 + 1) {
+            paginationFrom = Math.max(2, paginationTo - pagesBesideCurrent * 2 - 1);
+        }
+        const reverse = this.props.reversePagination ?? false;
+
+        if (reverse) {
+            // Reverse pagination
+            return <div className="pagination-container">
+                <p className="pagination-position">
+                    Displaying items {Math.min(this.props.pageSize * (page - 1) + 1, this.state.totalItems)}&nbsp;
+                    to {Math.min(this.props.pageSize * (page), this.state.totalItems)}&nbsp;
+                    of {this.state.totalItems}
+                </p>
+                
+                <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
+                    <ul className="pagination-list">
+                        <li>
+                            {page === 1 && this.props.decrement
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => this.props.decrement()}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleDoubleLeft} />
+                                    </span>
+                                </a>
+                                : <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page + 1)}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleLeft} />
+                                    </span>
+                                </a>}
+                        </li>
+                        {lastPage !== 1 && <li>
+                            <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
+                                aria-label={"Goto page " + lastPage} onClick={() => this.goToPage(lastPage)}>{lastPage}</a>
+                        </li>}
+                        {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
+                            .map(page => paginationTo - page - 1)
+                            .map(p =>
+                                (p === paginationFrom && p > 2) ||
+                                    (p === paginationTo - 1 && p < lastPage - 1)
+                                    ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
+                                    : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
+                                        onClick={() => this.goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
+                        )}
+                        <li>
+                            <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
+                                aria-label="Goto page 1" onClick={() => this.goToPage(1)}>1</a>
+                        </li>
+                        <li>
+                            {page === lastPage && this.props.increment
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToPage(1) }}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleDoubleRight} />
+                                    </span>
+                                </a>
+                                : <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page - 1)}>
+                                    <span className="icon">
+                                        <FontAwesomeIcon icon={faAngleRight} />
+                                    </span>
+                                </a>}
+                        </li>
+                    </ul>
+                </nav>
+            </div>;
+        } else {
+            // Ordinary pagination
+            return <div className="pagination-container">
                 <p className="pagination-position">
                     Displaying items {Math.min(this.props.pageSize * (page - 1) + 1, this.state.totalItems)}&nbsp;
                     to {Math.min(this.props.pageSize * (page), this.state.totalItems)}&nbsp;
@@ -102,7 +169,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                             .map(page => page + paginationFrom)
                             .map(p =>
                                 (p === paginationFrom && p > 2) ||
-                                (p === paginationTo - 1 && p < lastPage - 1)
+                                    (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
                                         onClick={() => this.goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
@@ -126,8 +193,8 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                         </li>
                     </ul>
                 </nav>
-            </div>
-        </>;
+            </div>;
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State<T>>): void {

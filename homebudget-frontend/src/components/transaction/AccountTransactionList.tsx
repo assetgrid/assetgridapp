@@ -130,6 +130,7 @@ export default class AccountTransactionList extends React.Component<Props, State
             pageSize={20}
             draw={(this.props.draw ?? 0) + this.state.draw}
             fetchItems={this.fetchItems.bind(this)}
+            reversePagination={true}
             renderItem={line =>
                 <AccountTransactionListItem preferences={this.props.preferences}
                     data={line}
