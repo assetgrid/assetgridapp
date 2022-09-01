@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220514093502_Initial")]
+    [Migration("20220901122833_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,10 @@ namespace homebudget_server.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");

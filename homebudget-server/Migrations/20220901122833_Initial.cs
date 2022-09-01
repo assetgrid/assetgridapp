@@ -64,7 +64,9 @@ namespace homebudget_server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Total = table.Column<long>(type: "bigint", nullable: false)
+                    Total = table.Column<long>(type: "bigint", nullable: false),
+                    Category = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {

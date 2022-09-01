@@ -67,6 +67,7 @@ namespace homebudget_server.Controllers
                         Identifier = result.Identifier,
                         DateTime = result.DateTime,
                         Description = result.Description,
+                        Category = result.Category,
                         Source = result.SourceAccount != null
                             ? new ViewAccount
                             {
@@ -143,6 +144,7 @@ namespace homebudget_server.Controllers
                         Identifier = dbObject.Identifier,
                         DateTime = dbObject.DateTime,
                         Description = dbObject.Description,
+                        Category = dbObject.Category,
                         Source = dbObject.SourceAccount != null
                             ? new ViewAccount
                             {

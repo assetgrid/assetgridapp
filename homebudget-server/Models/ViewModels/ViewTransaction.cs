@@ -27,6 +27,8 @@
         public string Description { get; set; } = null!;
         public string? Identifier { get; set; }
         public long Total { get; set; }
+
+        public string Category { get; set; } = null!;
         public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
     }

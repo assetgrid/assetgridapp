@@ -50,6 +50,10 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
 
