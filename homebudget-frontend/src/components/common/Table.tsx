@@ -47,6 +47,8 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         this.fetchItems(this.state.targetPage, this.props.draw);
     }
 
+    private goToLastPageAfterFetch: boolean = false;
+
     public render() {
         let paginatedItems = this.state.items
             .map((item, index) => ({ item: item, index: index + (this.state.targetPage - 1) * this.props.pageSize }));
@@ -92,8 +94,8 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
-                            {page === 1 && this.props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => this.props.decrement()}>
+                            {page === lastPage && this.props.decrement
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { this.props.decrement(); this.goToPage(1) }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
@@ -122,8 +124,8 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                                 aria-label="Goto page 1" onClick={() => this.goToPage(1)}>1</a>
                         </li>
                         <li>
-                            {page === lastPage && this.props.increment
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToPage(1) }}>
+                            {page === 1 && this.props.increment
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToLastPageAfterFetch = true; }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
@@ -150,7 +152,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                     <ul className="pagination-list">
                         <li>
                             {page === 1 && this.props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => this.props.decrement()}>
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { this.props.decrement(); this.goToLastPageAfterFetch = true; }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
@@ -225,7 +227,16 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
             ? this.props.fetchItems(from, to, draw)
             : this.defaultFetchItems(from, to, draw))
             .then(result => {
-                if (result.offset === (this.state.targetPage - 1) * this.props.pageSize
+                if (this.goToLastPageAfterFetch && (this.props.draw === undefined || result.draw === this.props.draw)) {
+                    this.goToLastPageAfterFetch = false;
+                    const lastPage = Math.max(1, Math.ceil(result.totalItems / this.props.pageSize));
+                    this.setState({
+                        items: result.items,
+                        totalItems: result.totalItems,
+                        displayingPage: lastPage,
+                        targetPage: lastPage
+                    });
+                } else if (result.offset === (this.state.targetPage - 1) * this.props.pageSize
                     && (this.props.draw === undefined || result.draw === this.props.draw)) {
                     this.setState({
                         items: result.items,
