@@ -4,6 +4,7 @@ import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from
 
 export interface Props<T> {
     pageSize: number;
+    paginationSize?: number;
 
     draw?: number;
     items?: T[];
@@ -50,7 +51,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         let paginatedItems = this.state.items
             .map((item, index) => ({ item: item, index: index + (page - 1) * this.props.pageSize }));
         const lastPage = Math.max(1, Math.ceil(this.state.totalItems / this.props.pageSize));
-        const pagesBesideCurrent = 3;
+        const pagesBesideCurrent = ((this.props.paginationSize ?? 9) - 3) / 2;
         let paginationFrom = Math.max(2, page - pagesBesideCurrent);
         const paginationTo = Math.min(paginationFrom + 1 + pagesBesideCurrent * 2, lastPage);
         if (paginationTo - paginationFrom < pagesBesideCurrent * 2 + 1) {
