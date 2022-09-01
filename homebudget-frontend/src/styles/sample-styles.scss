@@ -11,12 +11,12 @@
     }
 
     .dropdown-trigger .button {
-        width: 100%;
         text-align: left;
         justify-content: space-between;
 
         &:first-child {
             flex-shrink: 0;
+            flex-grow: 1;
         }
         &:not(:last-child) {
             border-bottom-right-radius: 0;

@@ -227,11 +227,27 @@ const Transaction = {
      * @param transaction The transactions to be created
      * @returns The updated transaction
      */
-     update: function (transaction: UpdateTransaction): Promise<Transaction> {
+    update: function (transaction: UpdateTransaction): Promise<Transaction> {
         return new Promise<Transaction>((resolve, reject) => {
             axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
                 ...transaction,
             }).then(result => resolve(result.data))
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                })
+        });
+    },
+     
+    /**
+     * Deletes a transaction
+     * @param transaction The transactions to be created
+     * @returns The updated transaction
+     */
+    delete: function (id: number): Promise<Transaction> {
+        return new Promise<Transaction>((resolve, reject) => {
+            axios.delete<Transaction>(rootUrl + "/transaction/" + id)
+                .then(result => resolve(result.data))
                 .catch(e => {
                     console.log(e);
                     reject();

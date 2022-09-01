@@ -169,6 +169,25 @@ namespace homebudget_server.Controllers
             throw new Exception();
         }
 
+        [HttpDelete()]
+        [Route("/[controller]/{id}")]
+        public void Delete(int id)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                var dbObject = _context.Transactions
+                    .Single(t => t.Id == id);
+
+                _context.Transactions.Remove(dbObject);
+
+                transaction.Commit();
+                _context.SaveChanges();
+
+                return;
+            }
+            throw new Exception();
+        }
+
         [HttpPost()]
         [Route("/[controller]/[action]")]
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)

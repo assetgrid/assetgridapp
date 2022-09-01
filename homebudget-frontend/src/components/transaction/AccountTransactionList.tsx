@@ -20,6 +20,7 @@ import InputText from "../form/InputText";
 import InputAccount from "../form/account/InputAccount";
 import { Calendar } from "react-date-range";
 import InputDate from "../form/InputDate";
+import Modal from "../common/Modal";
 
 interface Props {
     draw?: number;
@@ -154,6 +155,7 @@ interface IAccountTransactionListItemState {
         dateTime: DateTime,
         offsetAccount: Account
     };
+    deleting: boolean;
 }
 
 class AccountTransactionListItem extends React.Component<IAccountTransactionListItemProps, IAccountTransactionListItemState> {
@@ -162,12 +164,13 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
         this.state = {
             disabled: false,
             editingModel: null,
+            deleting: false
         };
     }
 
     public render() {
         const line = this.props.data;
-        
+
         if (this.state.editingModel !== null) {
             const model = this.state.editingModel;
             console.log(model);
@@ -216,12 +219,26 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                 </td>
                 <td></td>
                 <td>
-                    <span className="icon button" onClick={() => this.beginEdit()}>
-                        <FontAwesomeIcon icon={solid.faPen} />
-                    </span>
-                    <span className="icon button">
-                        <FontAwesomeIcon icon={solid.faTrashCan} />
-                    </span>
+                    {! this.state.disabled && <>
+                        <span className="icon button" onClick={() => this.beginEdit()}>
+                            <FontAwesomeIcon icon={solid.faPen} />
+                        </span>
+                        <span className="icon button" onClick={() => this.setState({ deleting: true })}>
+                            <FontAwesomeIcon icon={solid.faTrashCan} />
+                        </span>
+                    </>}
+                    
+                    {/* Deletion modal */}
+                    {this.state.deleting && <Modal
+                        active={true}
+                        title={"Delete transaction"}
+                        close={() => this.setState({ deleting: false })}
+                        footer={<>
+                            <button className="button is-danger" onClick={() => this.delete()}>Delete transaction</button>
+                            <button className="button" onClick={() => this.setState({ deleting: false })}>Cancel</button>
+                        </>}>
+                        Are you sure you want to delete transaction "#{line.transaction.id} {line.transaction.description}"?
+                    </Modal>}
                 </td>
             </tr>;
         }
@@ -239,7 +256,7 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
     }
 
     private saveChanges() {
-        this.setState({ disabled: true });
+        this.setState({ disabled: true, deleting: false });
 
         const model = this.state.editingModel;
         if (model === null) {
@@ -256,6 +273,15 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
             destinationId: destination
         }).then(result => {
             this.setState({ disabled: false, editingModel: null });
+            this.props.updateItem(result);
+        })
+    }
+
+    private delete() {
+        this.setState({ disabled: true, deleting: false });
+
+        Api.Transaction.delete(this.props.data.transaction.id).then(result => {
+            this.setState({ disabled: false });
             this.props.updateItem(result);
         })
     }
