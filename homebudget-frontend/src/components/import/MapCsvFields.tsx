@@ -341,8 +341,8 @@ export default class MapCsvFields extends React.Component<Props, State> {
             <Card title="Import preview">
                 {this.state.tableFilter !== "all" && <Message title="Filter is active" type="link">
                     Some transactions are hidden!{" "}
-                    {this.state.tableFilter === "reference-to-missing-account" && <>Currently only transaction that reference a missing source or destination account are shown.{" "}</>}
-                    {this.state.tableFilter === "no-account" && <>Currently only transaction that have no source or destination account are shown.{" "}</>}
+                    {this.state.tableFilter === "reference-to-missing-account" && <>Currently only transactions that reference a missing source or destination account are shown.{" "}</>}
+                    {this.state.tableFilter === "no-account" && <>Currently only transactions that have no source or destination account are shown.{" "}</>}
                     {this.state.tableFilter === "duplicate" && <>Currently only duplicate transactions are shown.{" "}</>}
                     {this.state.tableFilter === "error" && <>Currently only transactions with parsing errors are shown.{" "}</>}
                     <a className="has-text-link" onClick={() => this.setState({tableFilter: "all", tableDraw: this.state.tableDraw + 1})}>Show all transactions</a>
