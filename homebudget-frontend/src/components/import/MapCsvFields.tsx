@@ -91,6 +91,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Duplicate handling"
+                            isFullwidth={true}
                             value={this.props.options.duplicateHandling}
                             onChange={result => this.updateDuplicateHandling(result as DuplicateHandlingOptions, this.props.options.identifierColumn, this.props.options.identifierParseOptions)}
                             items={[
@@ -103,6 +104,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     <div className="column">
                         {["identifier", "identifier-rownumber"].indexOf(this.props.options.duplicateHandling) > -1 &&
                             <InputSelect label="Identifier column"
+                                isFullwidth={true}
                                 value={this.props.options.identifierColumn}
                                 placeholder={"Select column"}
                                 onChange={result => this.updateDuplicateHandling(this.props.options.duplicateHandling, result, this.props.options.identifierParseOptions)}
@@ -111,20 +113,23 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                         key: item,
                                         value: item,
                                     }
-                                })} />
+                                })}
+                                addOnAfter={
+                                    this.props.options.identifierColumn && <div className="control">
+                                        <a className="button is-primary" onClick={() => this.setState({
+                                                modal: <InputParseOptionsModal
+                                                value={this.props.options.identifierParseOptions}
+                                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.identifierColumn))}
+                                                onChange={options => this.updateDuplicateHandling(this.props.options.duplicateHandling, this.props.options.identifierColumn, options)}
+                                                close={() => this.setState({ modal: null })}
+                                                closeOnChange={true}
+                                            />
+                                            })}>
+                                            Parse Options
+                                        </a>
+                                    </div>
+                                } />
                         }
-                    </div>
-                    <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                value={this.props.options.identifierParseOptions}
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.identifierColumn))}
-                                onChange={options => this.updateDuplicateHandling(this.props.options.duplicateHandling, this.props.options.identifierColumn, options)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
                     </div>
                 </div>
             
@@ -144,6 +149,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Date column"
+                            isFullwidth={true}
                             value={this.props.options.dateColumn}
                             placeholder={"Select column"}
                             onChange={result => this.updateDateHandling(result, this.props.options.dateFormat, this.props.options.dateParseOptions)}
@@ -152,7 +158,22 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     key: item,
                                     value: item,
                                 }
-                            })} />
+                            })}
+                            addOnAfter={
+                                this.props.options.dateColumn && <div className="control">
+                                    <a className="button is-primary" onClick={() => this.setState({
+                                            modal: <InputParseOptionsModal
+                                                value={this.props.options.dateParseOptions}
+                                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.dateColumn))}
+                                                onChange={regex => this.updateDateHandling(this.props.options.dateColumn, this.props.options.dateFormat, regex)}
+                                                close={() => this.setState({ modal: null })}
+                                                closeOnChange={true}
+                                            />
+                                        })}>
+                                        Parse Options
+                                    </a>
+                                </div>
+                            } />
                     </div>
                     {this.props.options.dateColumn !== null && <div className="column">
                         <InputText label="Date format"
@@ -161,23 +182,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
                         />
                         <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
                     </div>}
-                    {this.props.options.dateColumn !== null && <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                value={this.props.options.dateParseOptions}
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.dateColumn))}
-                                onChange={regex => this.updateDateHandling(this.props.options.dateColumn, this.props.options.dateFormat, regex)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
-                    </div>}
                 </div>
 
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Source account identifier"
+                            isFullwidth={true}
                             value={this.props.options.sourceAccountIdentifier}
                             placeholder={"Select variable"}
                             onChange={result => this.accountReferenceChanged("source", result as AccountIdentifier, this.props.options.sourceAccountColumn, this.props.options.sourceAccountParseOptions)}
@@ -189,6 +199,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     </div>
                     <div className="column">
                         <InputSelect label="Source account column"
+                            isFullwidth={true}
                             value={this.props.options.sourceAccountColumn}
                             placeholder={"Select column"}
                             onChange={result => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, result, this.props.options.sourceAccountParseOptions)}
@@ -197,25 +208,29 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     key: item,
                                     value: item,
                                 }
-                            })} />
-                    </div>
-                    <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                value={this.props.options.sourceAccountParseOptions}
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.sourceAccountColumn))}
-                                onChange={options => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, this.props.options.sourceAccountColumn, options)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
+                            })}
+                            addOnAfter={
+                                this.props.options.sourceAccountColumn && <div className="control">
+                                    <a className="button is-primary" onClick={() => this.setState({
+                                        modal: <InputParseOptionsModal
+                                            value={this.props.options.sourceAccountParseOptions}
+                                            previewData={this.props.data.map(row => this.getValue(row, this.props.options.sourceAccountColumn))}
+                                            onChange={options => this.accountReferenceChanged("source", this.props.options.sourceAccountIdentifier, this.props.options.sourceAccountColumn, options)}
+                                            close={() => this.setState({ modal: null })}
+                                            closeOnChange={true}
+                                        />
+                                    })}>
+                                    Parse Options
+                                </a>
+                            </div>
+                            } />
                     </div>
                 </div>
 
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Destination account identifier"
+                            isFullwidth={true}
                             value={this.props.options.destinationAccountIdentifier}
                             placeholder={"Select variable"}
                             onChange={result => this.accountReferenceChanged("destination", result as AccountIdentifier, this.props.options.destinationAccountColumn, this.props.options.destinationAccountParseOptions)}
@@ -227,6 +242,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     </div>
                     <div className="column">
                         <InputSelect label="Destination account column"
+                            isFullwidth={true}
                             value={this.props.options.destinationAccountColumn}
                             placeholder={"Select column"}
                             onChange={result => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, result, this.props.options.destinationAccountParseOptions)}
@@ -235,25 +251,29 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     key: item,
                                     value: item,
                                 }
-                            })} />
-                    </div>
-                    <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                value={this.props.options.destinationAccountParseOptions}
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.destinationAccountColumn))}
-                                onChange={regex => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, this.props.options.destinationAccountColumn, regex)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
+                            })}
+                            addOnAfter={
+                                this.props.options.destinationAccountColumn && <div className="control">
+                                    <a className="button is-primary" onClick={() => this.setState({
+                                            modal: <InputParseOptionsModal
+                                                value={this.props.options.destinationAccountParseOptions}
+                                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.destinationAccountColumn))}
+                                                onChange={regex => this.accountReferenceChanged("destination", this.props.options.destinationAccountIdentifier, this.props.options.destinationAccountColumn, regex)}
+                                                close={() => this.setState({ modal: null })}
+                                                closeOnChange={true}
+                                            />
+                                        })}>
+                                        Parse Options
+                                    </a>
+                                </div>
+                            } />
                     </div>
                 </div>
 
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Amount column"
+                            isFullwidth={true}
                             value={this.props.options.amountColumn}
                             placeholder={"Select column"}
                             onChange={result => this.setAmountColumn(result, this.props.options.amountParseOptions)}
@@ -262,25 +282,30 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     key: item,
                                     value: item,
                                 }
-                            })} />
+                            })}
+                            addOnAfter={
+                                this.props.options.amountColumn && <div className="control">
+                                    <a className="button is-primary" onClick={() => this.setState({
+                                            modal: <InputParseOptionsModal
+                                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.amountColumn))}
+                                                value={this.props.options.amountParseOptions}
+                                                onChange={options => this.setAmountColumn(this.props.options.amountColumn, options)}
+                                                close={() => this.setState({ modal: null })}
+                                                closeOnChange={true}
+                                            />
+                                        })}>
+                                        Parse Options
+                                    </a>
+                                </div>
+                            } />
                     </div>
-                    <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.amountColumn))}
-                                value={this.props.options.amountParseOptions}
-                                onChange={options => this.setAmountColumn(this.props.options.amountColumn, options)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
-                    </div>
+                    <div className="column"></div>
                 </div>
 
                 <div className="columns">
                     <div className="column">
                         <InputSelect label="Description column"
+                            isFullwidth={true}
                             value={this.props.options.descriptionColumn}
                             placeholder={"Select column"}
                             onChange={result => this.setDescriptionColumn(result, this.props.options.descriptionParseOptions)}
@@ -289,20 +314,24 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                     key: item,
                                     value: item,
                                 }
-                            })} />
+                            })}
+                            addOnAfter={
+                                this.props.options.descriptionColumn && <div className="control">
+                                        <a className="button is-primary" onClick={() => this.setState({
+                                            modal: <InputParseOptionsModal
+                                                value={this.props.options.descriptionParseOptions}
+                                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.descriptionColumn))}
+                                                onChange={options => this.setDescriptionColumn(this.props.options.descriptionColumn, options)}
+                                                close={() => this.setState({ modal: null })}
+                                                closeOnChange={true}
+                                            />
+                                        })}>
+                                        Parse Options
+                                    </a>
+                                </div>
+                            } />
                     </div>
-                    <div className="column">
-                        <label className="label">&nbsp;</label>
-                        <InputButton onClick={() => this.setState({
-                            modal: <InputParseOptionsModal
-                                value={this.props.options.descriptionParseOptions}
-                                previewData={this.props.data.map(row => this.getValue(row, this.props.options.descriptionColumn))}
-                                onChange={options => this.setDescriptionColumn(this.props.options.descriptionColumn, options)}
-                                close={() => this.setState({ modal: null })}
-                                closeOnChange={true}
-                            />
-                        })}>Parse Options</InputButton>
-                    </div>
+                    <div className="column"></div>
                 </div>
             </Card>
 
@@ -415,7 +444,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 const dateText = parseWithOptions((row as any)[dateColumn] ?? "", parseOptions);
                 return {
                     ...this.props.transactions[i],
-                    date: DateTime.fromFormat(dateText, dateFormat),
+                    dateTime: DateTime.fromFormat(dateText, dateFormat),
                     dateText: dateText
                 }
             })

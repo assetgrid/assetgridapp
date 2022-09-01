@@ -5,6 +5,7 @@ export interface InputTextProps {
     value: string,
     disabled?: boolean,
     error?: string,
+    addOnAfter?: React.ReactElement,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
 }
 
@@ -30,6 +31,7 @@ export default class InputText extends React.Component<InputTextProps> {
                         {this.props.error}
                     </p>}
                 </div>
+                {this.props.addOnAfter && this.props.addOnAfter}
             </div>
         </div>;
     }
