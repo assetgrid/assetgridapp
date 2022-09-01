@@ -19,6 +19,7 @@ import { InputParseOptions, InputParseOptionsModal } from "../form/InputParsingO
 import Decimal from "decimal.js";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
+import { Message } from "../common/Message";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -64,6 +65,7 @@ interface State {
     rowOffset: number;
     tableDraw: number;
     modal: React.ReactElement | null;
+    tableFilter: "all" | "reference-to-missing-account" | "no-account" | "duplicate" | "error";
 }
 
 function isNullOrWhitespace(input: string) {
@@ -80,6 +82,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
             rowOffset: 0,
             tableDraw: 0,
             modal: null,
+            tableFilter: "all",
         };
     }
 
@@ -336,13 +339,81 @@ export default class MapCsvFields extends React.Component<Props, State> {
             </Card>
 
             <Card title="Import preview">
+                {this.state.tableFilter !== "all" && <Message title="Filter is active" type="link">
+                    Some transactions are hidden!{" "}
+                    {this.state.tableFilter === "reference-to-missing-account" && <>Currently only transaction that reference a missing source or destination account are shown.{" "}</>}
+                    {this.state.tableFilter === "no-account" && <>Currently only transaction that have no source or destination account are shown.{" "}</>}
+                    {this.state.tableFilter === "duplicate" && <>Currently only duplicate transactions are shown.{" "}</>}
+                    {this.state.tableFilter === "error" && <>Currently only transactions with parsing errors are shown.{" "}</>}
+                    <a className="has-text-link" onClick={() => this.setState({tableFilter: "all", tableDraw: this.state.tableDraw + 1})}>Show all transactions</a>
+                </Message>}
                 {this.renderImportTable()}
-
-                <div className="buttons">
-                    <InputButton onClick={this.props.goToPrevious}>Back</InputButton>
-                    <InputButton className="is-primary" onClick={this.props.goToNext}>Continue</InputButton>
-                </div>
             </Card>
+
+            <Card title="Continue">
+                {this.renderIssues()}
+            </Card>
+        </>;
+    }
+
+    private renderIssues() {
+        // Waiting for a server call before the issues can be shown
+        const fetching = this.props.transactions === null ||
+            this.props.transactions.some(t =>
+                (t.source && this.props.accountsBy[t.source.identifier] && this.props.accountsBy[t.source.identifier][t.source.value] === "fetching") ||
+                (t.destination && this.props.accountsBy[t.destination.identifier] && this.props.accountsBy[t.destination.identifier][t.destination.value] === "fetching")
+            ) ||
+            this.props.duplicateIdentifiers === "fetching";
+
+        if (fetching) {
+            return <>Processing&hellip; Please wait.</>;
+        }
+
+        const referenceToMissingAccountCount = this.props.transactions.filter(t => 
+            (t.source && this.props.accountsBy[t.source.identifier][t.source.value] === null) ||
+            (t.destination && this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
+        ).length;
+        const noAccountCount = this.props.transactions.filter(t =>
+            (t.source === null || this.props.accountsBy[t.source.identifier][t.source.value] === null) &&
+            (t.destination === null || this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
+        ).length;
+        const duplicateCount = this.props.transactions.filter(t => (this.props.duplicateIdentifiers as Set<string>).has(t.identifier)).length;
+        const errorCount = this.props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid).length;
+        const allCount = referenceToMissingAccountCount + noAccountCount + duplicateCount + errorCount;
+        
+        return <>
+            {allCount == 0
+                ? <p className="mb-3">No issues detected</p>
+                : <>
+                    <Message title="Problems detected" type="danger">
+                        The following issues were detected:
+                        <div className="content">
+                            <ul>
+                                {referenceToMissingAccountCount > 0 && <li>
+                                    {referenceToMissingAccountCount} transactions reference a source or destination account that doesn't exist. They will be created without this account.{" "}
+                                    <a className="has-text-link" onClick={() => this.setState({tableFilter: "reference-to-missing-account", tableDraw: this.state.tableDraw + 1})}>Show transactions</a>
+                                </li>}
+                                {noAccountCount > 0 && <li>
+                                    {noAccountCount} transactions do not have a source nor destination. They will not be created{" "}
+                                    <a className="has-text-link" onClick={() => this.setState({tableFilter: "no-account", tableDraw: this.state.tableDraw + 1})}>Show transactions</a>
+                                </li>}
+                                {duplicateCount > 0 && <li>
+                                    {duplicateCount} transactions have duplicate identifiers. Only one transaction can exist for each identifier.{" "}
+                                    <a className="has-text-link" onClick={() => this.setState({tableFilter: "duplicate", tableDraw: this.state.tableDraw + 1})}>Show transactions</a>
+                                </li>}
+                                {errorCount > 0 && <li>
+                                    {errorCount} transactions have errors. They will not be created{" "}
+                                    <a className="has-text-link" onClick={() => this.setState({ tableFilter: "error", tableDraw: this.state.tableDraw + 1 })}>Show transactions</a>
+                                </li>}
+                            </ul>
+                        </div>
+                    </Message>
+                    <div className="buttons">
+                        <InputButton onClick={this.props.goToPrevious}>Back</InputButton>
+                        <InputButton className="is-primary" onClick={this.props.goToNext}>Continue</InputButton>
+                    </div>
+                </>
+            }
         </>;
     }
 
@@ -351,8 +422,41 @@ export default class MapCsvFields extends React.Component<Props, State> {
             return <p>Loading</p>;
         }
 
+        let items = this.props.transactions;
+        if (this.state.tableFilter !== "all") {
+            const fetching = this.props.transactions === null ||
+                this.props.transactions.some(t =>
+                    (t.source && this.props.accountsBy[t.source.identifier] && this.props.accountsBy[t.source.identifier][t.source.value] === "fetching") ||
+                    (t.destination && this.props.accountsBy[t.destination.identifier] && this.props.accountsBy[t.destination.identifier][t.destination.value] === "fetching")
+                ) ||
+                this.props.duplicateIdentifiers === "fetching";
+            
+            if (fetching) return <p>Loading</p>;
+
+            switch (this.state.tableFilter) {
+                case "reference-to-missing-account":
+                    items = this.props.transactions.filter(t =>
+                        (t.source && this.props.accountsBy[t.source.identifier][t.source.value] === null) ||
+                        (t.destination && this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
+                    );
+                    break;
+                case "no-account":
+                    items = this.props.transactions.filter(t =>
+                        (t.source === null || this.props.accountsBy[t.source.identifier][t.source.value] === null) &&
+                        (t.destination === null || this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
+                    );
+                    break;
+                case "duplicate":
+                    items = this.props.transactions.filter(t => (this.props.duplicateIdentifiers as Set<string>).has(t.identifier));
+                    break;
+                case "error":
+                    items = this.props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid);
+                    break;
+            }
+        }
+
         return <Table pageSize={20}
-            items={this.props.transactions}
+            items={items}
             headings={<tr>
                 <th>Identifier</th>
                 <th>Date</th>
