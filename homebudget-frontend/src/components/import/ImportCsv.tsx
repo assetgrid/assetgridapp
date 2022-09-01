@@ -7,7 +7,7 @@ import InputCheckbox from "../form/InputCheckbox";
 import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
@@ -126,21 +126,40 @@ export default class ImportCsv extends React.Component<Props, State> {
             return <p>No lines could be parsed</p>;
         }
 
+        const columnCount = Object.keys(this.state.csvData.data[0]).length;
         const columns = Object.keys(this.state.csvData.data[0])
             .map((column, i) => { return { columnName: column, index: i } })
             .slice(this.state.columnOffset * columnPageSize, (this.state.columnOffset + 1) * columnPageSize);
-        return <Table
-            headings={<tr>
-                {columns.map((column, i) => <th key={i}>{column.columnName}</th>)}
-            </tr>}
-            pageSize={20}
-            items={this.state.csvData.data}
-            renderItem={(row, i) => <tr key={i}>
-                {columns.map(column =>
-                    <td key={column.index}>{(row as any)[column.columnName]}</td>
-                )}
-            </tr>}
-        />;
+        return <>
+            <p>Displaying columns {(this.state.columnOffset) * columnPageSize + 1} to&nbsp;
+                {Math.min((this.state.columnOffset + 1) * columnPageSize, columnCount)} of {columnCount}</p>
+            <Table
+                headings={<tr>
+                    {this.state.columnOffset !== 0 && <th style={{width: "1px"}}>
+                        <span className="icon button" onClick={() => this.setState({columnOffset: Math.max(0, this.state.columnOffset - 1)})}>
+                            <FontAwesomeIcon icon={faChevronLeft} />
+                        </span>
+                    </th>}
+                    {columns.map((column, i) => <th key={i}>
+                        {column.columnName}
+                    </th>)}
+                    {(this.state.columnOffset + 1) * columnPageSize < columnCount && <th style={{width: "1px"}}>
+                        <span className="icon button" onClick={() => this.setState({ columnOffset: this.state.columnOffset + 1 })}>
+                            <FontAwesomeIcon icon={faChevronRight} />
+                        </span>
+                    </th>}
+                </tr>}
+                pageSize={pageSize}
+                items={this.state.csvData.data}
+                renderItem={(row, i) => <tr key={i}>
+                    {this.state.columnOffset !== 0 && <td></td>}
+                    {columns.map(column =>
+                        <td key={column.index}>{(row as any)[column.columnName]}</td>
+                    )}
+                    {(this.state.columnOffset + 1) * columnPageSize < columnCount && <td></td>}
+                </tr>}
+            />
+        </>;
     }
 
     private fileUploaded(e: React.ChangeEvent<HTMLInputElement>)
