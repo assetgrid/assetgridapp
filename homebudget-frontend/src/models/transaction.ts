@@ -10,17 +10,19 @@ export type Transaction = {
     dateTime: DateTime;
     identifier: string;
     lines: TransactionLine[];
+    category: string;
     description: string;
 
     total: Decimal;
 }
 
 export type CreateTransaction = {
-    sourceId: number;
-    destinationId: number;
+    sourceId: number | null;
+    destinationId: number | null;
     dateTime: DateTime;
     description: string;
     identifier: string | null;
+    category: string;
     lines: TransactionLine[];
 }
 

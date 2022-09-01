@@ -15,6 +15,7 @@ namespace homebudget_server.Data
 
             builder.Entity<Transaction>(entity => {
                 entity.HasIndex(e => e.Identifier).IsUnique();
+                entity.HasIndex(e => e.Category).HasFilter("[Category] != ''");
             });
         }
 

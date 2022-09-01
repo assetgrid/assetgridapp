@@ -157,10 +157,8 @@ export default class PageImportCsv extends React.Component<Props, State> {
                     <Import
                         transactions={this.state.transactions}
                         accountsBy={this.state.accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
-                        batchSize={10} />
-                    <div className="buttons">
-                        <InputButton onClick={() => this.setState({ currentTab: "map-columns" })}>Back</InputButton>
-                    </div>
+                        batchSize={10}
+                        goToPrevious={() => this.setState({ currentTab: "map-columns" })}/>
                 </>;
             default:
                 throw "Unknown state";

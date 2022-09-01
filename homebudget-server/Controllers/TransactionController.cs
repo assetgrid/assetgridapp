@@ -41,6 +41,7 @@ namespace homebudget_server.Controllers
                         DestinationAccountId = model.DestinationId,
                         Identifier = model.Identifier,
                         Total = model.Lines.Select(line => line.Amount).Sum(),
+                        Category = model.Category,
                         TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
                         {
                             Amount = line.Amount,
@@ -244,6 +245,7 @@ namespace homebudget_server.Controllers
                             DestinationAccountId = transaction.DestinationId,
                             Identifier = transaction.Identifier,
                             Total = transaction.Lines.Select(line => line.Amount).Sum(),
+                            Category = transaction.Category,
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {
                                 Amount = line.Amount,
@@ -251,6 +253,11 @@ namespace homebudget_server.Controllers
                                 Order = i + 1,
                             }).ToList(),
                         };
+
+                        if (result.SourceAccountId == null && result.DestinationAccountId == null)
+                        {
+                            throw new Exception("At least one account must be defined");
+                        }
 
                         // Always store transactions in a format where the total is positive
                         if (result.Total < 0)
