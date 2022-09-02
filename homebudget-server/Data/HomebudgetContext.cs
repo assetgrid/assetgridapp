@@ -15,13 +15,17 @@ namespace homebudget_server.Data
 
             builder.Entity<Transaction>(entity => {
                 entity.HasIndex(e => e.Identifier).IsUnique();
-                entity.HasIndex(e => e.Category).HasFilter("[Category] != ''");
+            });
+            builder.Entity<Category>(entity =>
+            {
+                entity.HasIndex(e => e.NormalizedName).IsUnique();
             });
         }
 
         public DbSet<Account> Accounts { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionLine> TransactionLines { get; set; } = null!;
+        public DbSet<Category> Categories { get; set; } = null!;
 
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
     }

@@ -292,10 +292,31 @@ const Transaction = {
     }
 };
 
+const Taxonomy = {
+    /**
+     * Search for accounts
+     * @param request Search request specifying which accounts to return
+     * @returns A response object with the accounts matching the query
+     */
+    categoryAutocomplete: function (prefix: string): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+            axios.get<string[]>(rootUrl + "/taxonomy/categoryautocomplete/" + prefix)
+                .then(result => {
+                    resolve(result.data);
+                })
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                });
+        });
+    }
+}
+
 const Api = {
     Preferences,
     Account,
-    Transaction
+    Transaction,
+    Taxonomy,
 };
 
 export { Api };

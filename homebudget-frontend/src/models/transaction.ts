@@ -32,6 +32,7 @@ export type UpdateTransaction = {
     destinationId?: number;
     dateTime?: DateTime;
     description?: string;
+    category?: string;
 }
 
 export type TransactionLine = {

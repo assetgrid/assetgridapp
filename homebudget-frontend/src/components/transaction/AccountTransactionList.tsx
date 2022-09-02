@@ -21,6 +21,7 @@ import InputAccount from "../form/account/InputAccount";
 import { Calendar } from "react-date-range";
 import InputDate from "../form/InputDate";
 import Modal from "../common/Modal";
+import InputCategory from "../form/InputCategory";
 
 interface Props {
     draw?: number;
@@ -42,6 +43,7 @@ interface TableLine {
     amount: Decimal;
     offsetAccount: Account;
     transaction: Transaction;
+    category: string;
 }
 
 export default class AccountTransactionList extends React.Component<Props, State> {
@@ -99,6 +101,7 @@ export default class AccountTransactionList extends React.Component<Props, State
                             transaction: t,
                             offsetAccount: t.destination?.id === this.props.accountId ? t.source : t.destination,
                             amount: t.destination?.id === this.props.accountId ? t.total : t.total.neg(),
+                            category: t.category
                         })),
                         draw: draw,
                         offset: from,
@@ -154,7 +157,8 @@ interface IAccountTransactionListItemState {
         amount: Decimal,
         description: string,
         dateTime: DateTime,
-        offsetAccount: Account
+        offsetAccount: Account,
+        category: string,
     };
     deleting: boolean;
 }
@@ -174,7 +178,6 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
 
         if (this.state.editingModel !== null) {
             const model = this.state.editingModel;
-            console.log(model);
             return <tr key={line.transaction.id} className="editing">
                 <td>
                     <InputDate value={model.dateTime}
@@ -193,7 +196,12 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                         allowNull={true}
                         onChange={account => this.setState({ editingModel: { ...this.state.editingModel, offsetAccount: account } })} />
                 </td>
-                <td></td>
+                <td>
+                    <InputCategory
+                        value={model.category}
+                        disabled={this.state.disabled}
+                        onChange={category => this.setState({editingModel: { ...this.state.editingModel, category: category }})} />
+                </td>
                 <td>
                     {! this.state.disabled && <>
                         <span className="icon button" onClick={() => this.saveChanges()}>
@@ -218,7 +226,7 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                 <td>
                     {line.offsetAccount !== null && <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>}
                 </td>
-                <td></td>
+                <td>{line.category}</td>
                 <td>
                     {! this.state.disabled && <>
                         <span className="icon button" onClick={() => this.beginEdit()}>
@@ -252,6 +260,7 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                 dateTime: this.props.data.transaction.dateTime,
                 description: this.props.data.transaction.description,
                 offsetAccount: this.props.data.offsetAccount,
+                category: this.props.data.category,
             }
         });
     }
@@ -271,7 +280,8 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
             dateTime: model.dateTime,
             description: model.description,
             sourceId: source,
-            destinationId: destination
+            destinationId: destination,
+            category: model.category
         }).then(result => {
             this.setState({ disabled: false, editingModel: null });
             this.props.updateItem(result);

@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220901122833_Initial")]
+    [Migration("20220902125203_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,15 +46,36 @@ namespace homebudget_server.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("homebudget_server.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("Categories");
+                });
+
             modelBuilder.Entity("homebudget_server.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
@@ -76,6 +97,8 @@ namespace homebudget_server.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("DestinationAccountId");
 
@@ -137,6 +160,10 @@ namespace homebudget_server.Migrations
 
             modelBuilder.Entity("homebudget_server.Models.Transaction", b =>
                 {
+                    b.HasOne("homebudget_server.Models.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId");
+
                     b.HasOne("homebudget_server.Models.Account", "DestinationAccount")
                         .WithMany()
                         .HasForeignKey("DestinationAccountId");
@@ -144,6 +171,8 @@ namespace homebudget_server.Migrations
                     b.HasOne("homebudget_server.Models.Account", "SourceAccount")
                         .WithMany()
                         .HasForeignKey("SourceAccountId");
+
+                    b.Navigation("Category");
 
                     b.Navigation("DestinationAccount");
 

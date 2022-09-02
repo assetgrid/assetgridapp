@@ -33,6 +33,21 @@ namespace homebudget_server.Controllers
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
+                    // Set category
+                    Category? category = null;
+                    if (Category.Normalize(model.Category) != "")
+                    {
+                        category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
+                        if (category == null)
+                        {
+                            category = new Category
+                            {
+                                Name = model.Category,
+                                NormalizedName = Category.Normalize(model.Category),
+                            };
+                        }
+                    }
+
                     var result = new Models.Transaction
                     {
                         DateTime = model.DateTime,
@@ -41,7 +56,7 @@ namespace homebudget_server.Controllers
                         DestinationAccountId = model.DestinationId,
                         Identifier = model.Identifier,
                         Total = model.Lines.Select(line => line.Amount).Sum(),
-                        Category = model.Category,
+                        Category = category,
                         TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
                         {
                             Amount = line.Amount,
@@ -68,7 +83,7 @@ namespace homebudget_server.Controllers
                         Identifier = result.Identifier,
                         DateTime = result.DateTime,
                         Description = result.Description,
-                        Category = result.Category,
+                        Category = result.Category?.Name ?? "",
                         Source = result.SourceAccount != null
                             ? new ViewAccount
                             {
@@ -130,6 +145,25 @@ namespace homebudget_server.Controllers
                     {
                         dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
                     }
+                    if (model.Category != null)
+                    {
+                        if (Category.Normalize(model.Category) != "")
+                        {
+                            dbObject.Category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
+                            if (dbObject.Category == null)
+                            {
+                                dbObject.Category = new Category
+                                {
+                                    Name = model.Category,
+                                    NormalizedName = Category.Normalize(model.Category),
+                                };
+                            }
+                        }
+                        else
+                        {
+                            dbObject.Category = null;
+                        }
+                    }
 
                     ModelState.Clear();
                     if (TryValidateModel(dbObject))
@@ -144,7 +178,7 @@ namespace homebudget_server.Controllers
                             Identifier = dbObject.Identifier,
                             DateTime = dbObject.DateTime,
                             Description = dbObject.Description,
-                            Category = dbObject.Category,
+                            Category = dbObject.Category?.Name ?? "",
                             Source = dbObject.SourceAccount != null
                                 ? new ViewAccount
                                 {
@@ -237,6 +271,21 @@ namespace homebudget_server.Controllers
                 {
                     try
                     {
+                        // Set category
+                        Category? category = null;
+                        if (Category.Normalize(transaction.Category) != "")
+                        {
+                            category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(transaction.Category));
+                            if (category == null)
+                            {
+                                category = new Category
+                                {
+                                    Name = transaction.Category,
+                                    NormalizedName = Category.Normalize(transaction.Category),
+                                };
+                            }
+                        }
+
                         var result = new Models.Transaction
                         {
                             DateTime = transaction.DateTime,
@@ -245,7 +294,7 @@ namespace homebudget_server.Controllers
                             DestinationAccountId = transaction.DestinationId,
                             Identifier = transaction.Identifier,
                             Total = transaction.Lines.Select(line => line.Amount).Sum(),
-                            Category = transaction.Category,
+                            Category = category,
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {
                                 Amount = line.Amount,

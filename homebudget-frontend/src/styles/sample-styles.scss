@@ -10,12 +10,11 @@
         display: flex;
     }
 
-    .dropdown-trigger .button {
+    .dropdown-trigger .button, .dropdown-trigger .input {
         text-align: left;
         justify-content: space-between;
 
         &:first-child {
-            flex-shrink: 0;
             flex-grow: 1;
         }
         &:not(:last-child) {

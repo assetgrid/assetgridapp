@@ -36,6 +36,7 @@ namespace homebudget_server.Models.ViewModels
         public int? DestinationId { get; set; }
         public DateTime? DateTime { get; set; }
         public string? Description { get; set; }
+        public string? Category { get; set; }
     }
     public class ViewTransaction
     {

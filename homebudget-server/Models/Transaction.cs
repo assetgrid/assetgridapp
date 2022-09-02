@@ -14,7 +14,8 @@ namespace homebudget_server.Models
         public string? Identifier { get; set; }
         public string Description { get; set; } = null!;
         public long Total { get; set; }
-        public string Category { get; set; } = null!;
+        public int? CategoryId { get; set; }
+        public virtual Category? Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
 
@@ -61,7 +62,7 @@ namespace homebudget_server.Models
                             AccountNumber = transaction.DestinationAccount.AccountNumber
                         } : null,
                 Identifier = transaction.Identifier,
-                Category = transaction.Category,
+                Category = transaction.Category == null ? "" : transaction.Category.Name,
                 Lines = transaction.TransactionLines
                     .OrderBy(line => line.Order)
                     .Select(line => new ViewTransactionLine
