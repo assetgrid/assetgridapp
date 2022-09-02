@@ -48,6 +48,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
     }
 
     private goToLastPageAfterFetch: boolean = false;
+    private hasMounted: boolean = false;
 
     public render() {
         let paginatedItems = this.state.items
@@ -205,6 +206,10 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         }
     }
 
+    componentDidMount(): void {
+        this.hasMounted = true;
+    }
+
     private defaultFetchItems(from: number, to: number, draw: number): Promise<FetchItemsResult<T>> {
         if (this.props.items === null) {
             throw "Error";
@@ -223,6 +228,16 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         const from = (page - 1) * this.props.pageSize;
         const to = page * this.props.pageSize;
 
+        const self: Table<T> = this;
+        const setState = function (state: Partial<State<T>>) {
+            // Use setstate or just override state depending on whether the component has yet been mounted
+            if (self.hasMounted) {
+                self.setState(state as State<T>);
+            } else {
+                self.state = state as State<T>;
+            }
+        };
+
         (this.props.fetchItems !== undefined
             ? this.props.fetchItems(from, to, draw)
             : this.defaultFetchItems(from, to, draw))
@@ -230,7 +245,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                 if (this.goToLastPageAfterFetch && (this.props.draw === undefined || result.draw === this.props.draw)) {
                     this.goToLastPageAfterFetch = false;
                     const lastPage = Math.max(1, Math.ceil(result.totalItems / this.props.pageSize));
-                    this.setState({
+                    setState({
                         items: result.items,
                         totalItems: result.totalItems,
                         displayingPage: lastPage,
@@ -238,7 +253,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                     });
                 } else if (result.offset === (this.state.targetPage - 1) * this.props.pageSize
                     && (this.props.draw === undefined || result.draw === this.props.draw)) {
-                    this.setState({
+                    setState({
                         items: result.items,
                         totalItems: result.totalItems,
                         displayingPage: this.state.targetPage

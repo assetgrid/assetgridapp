@@ -30,7 +30,7 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
     }
 
     public render() {
-        return <>
+        return <React.StrictMode>
             <div style={{display: "flex", flexGrow: 1}}>
                 <Sidebar preferences={this.state.preferences}/>
                 <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
@@ -45,7 +45,7 @@ export default class FairFitPortalApp extends React.Component<{}, State> {
                     </Routes>
                 </div>
             </div>
-        </>;
+        </React.StrictMode>;
     }
 
     private updatePreferences() {

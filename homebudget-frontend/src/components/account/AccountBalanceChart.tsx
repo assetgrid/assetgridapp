@@ -134,7 +134,6 @@ export default class AccountBalanceChart extends React.Component<Props, State> {
 
         Api.Account.getMovements(this.props.id, start, end, resolution)
             .then(result => {
-                console.log(result);
                 this.setState({ data: result });
             });
     }

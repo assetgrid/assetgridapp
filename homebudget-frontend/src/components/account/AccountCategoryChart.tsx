@@ -47,8 +47,6 @@ export default class AccountCategoryChart extends React.Component<Props, State> 
 
         // Generate colors by selecting evenly spaced hues on the color wheel
         let colors = Array.from(Array(data.length).keys()).map((_, i) => "hsl(" + (i / data.length * 360) + ", 70%, 70%)");
-        console.log(colors);
-
         return <>
             <div style={{ height: 400 }}>
                 <ResponsiveContainer>
