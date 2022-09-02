@@ -83,9 +83,61 @@ function getRange(period: Period): [DateTime, DateTime] {
     }
 }
 
+function serialize(period: Period): string {
+    switch (period.type) {
+        case "month":
+            return "m" + period.start.toFormat("yyyy-LL-dd");
+        case "year":
+            return "y" + period.start.toFormat("yyyy-LL-dd");
+        case "custom":
+            return "c" + period.start.toFormat("yyyy-LL-dd") + "_" + period.end.toFormat("yyyy-LL-dd")
+    }
+}
+
+function parse(period: string): Period | null {
+    if (period.length === 0) {
+        return null;
+    }
+
+    const firstChar = period.charAt(0);
+    if (firstChar === "c") {
+        if (period.length < "cyyyy-LL-dd_yyyy-LL-dd".length) {
+            return null;
+        }
+
+        const start = DateTime.fromFormat(period.substring(1, "_yyyy-LL-dd".length), "yyyy-LL-dd");
+        const end = DateTime.fromFormat(period.substring("_yyyy-LL-dd_".length, "_yyyy-LL-dd_yyyy-LL-dd".length), "yyyy-LL-dd");
+
+        if (! start.isValid || ! end.isValid) {
+            return null;
+        }
+        return {
+            type: "custom",
+            start: start,
+            end: end
+        }
+    } else {
+        if (period.length < "_yyyy-LL-dd".length) {
+            return null;
+        }
+
+        const start = DateTime.fromFormat(period.substring(1, "_yyyy-LL-dd".length), "yyyy-LL-dd");
+
+        if (! start.isValid) {
+            return null;
+        }
+        return {
+            type: firstChar === "y" ? "year" : "month",
+            start: start
+        }
+    }
+}
+
 export let PeriodFunctions = {
     print,
     increment,
     decrement,
-    getRange
+    getRange,
+    serialize,
+    parse,
 }

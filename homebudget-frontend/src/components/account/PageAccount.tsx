@@ -43,6 +43,15 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
 
     componentDidMount(): void {
         this.updateAccount();
+
+        if (window.history.state.period) {
+            try {
+                const period = PeriodFunctions.parse(window.history.state.period);
+                if (period) {
+                    this.setState({ period });
+                }
+            } catch { }
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props & { id: number }>, prevState: Readonly<State>): void {
@@ -80,7 +89,7 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                         </p>}
                 </div>
                 <div>
-                    <PeriodSelector period={this.state.period} onChange={period => this.setState({ period: period }) } />
+                    <PeriodSelector period={this.state.period} onChange={period => this.setPeriod( period ) } />
                 </div>
             </section>
             <div className="p-3">
@@ -117,8 +126,8 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                     <AccountTransactionList
                         accountId={Number(this.props.id)}
                         preferences={this.props.preferences} period={this.state.period}
-                        decrementPeriod={() => this.setState({ period: PeriodFunctions.decrement(this.state.period)})}
-                        incrementPeriod={() => this.setState({ period: PeriodFunctions.increment(this.state.period)})}
+                        decrementPeriod={() => this.setPeriod(PeriodFunctions.decrement(this.state.period))}
+                        incrementPeriod={() => this.setPeriod(PeriodFunctions.increment(this.state.period))}
                     />
                 </Card>
             </div>
@@ -136,6 +145,11 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                     this.setState({ account: "error" });
                 })
         );
+    }
+
+    private setPeriod(period: Period): void {
+        window.history.replaceState({ ...window.history.state, period: PeriodFunctions.serialize(period) }, "");
+        this.setState({ period: period });
     }
 
     private toggleFavorite(): void {
