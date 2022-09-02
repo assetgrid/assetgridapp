@@ -1,8 +1,9 @@
 ﻿using homebudget_server.Models.ViewModels;
+using System.ComponentModel.DataAnnotations;
 
 namespace homebudget_server.Models
 {
-    public class Transaction
+    public class Transaction : IValidatableObject
     {
         public int Id { get; set; }
         public int? SourceAccountId { get; set; }
@@ -16,6 +17,22 @@ namespace homebudget_server.Models
         public string Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
+
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (SourceAccountId == null && DestinationAccountId == null)
+            {
+                yield return new ValidationResult(
+                    $"Either source or destination id must be set.",
+                    new[] { nameof(SourceAccountId), nameof(DestinationAccountId) });
+            }
+            if (SourceAccountId == DestinationAccountId)
+            {
+                yield return new ValidationResult(
+                    $"Source and destination must be different.",
+                    new[] { nameof(SourceAccountId), nameof(DestinationAccountId) });
+            }
+        }
     }
 
     public static class TransactionQueryableExtensions

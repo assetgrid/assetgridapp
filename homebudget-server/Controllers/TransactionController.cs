@@ -131,37 +131,42 @@ namespace homebudget_server.Controllers
                         dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
                     }
 
-                    transaction.Commit();
-                    _context.SaveChanges();
-
-                    return new ViewTransaction
+                    ModelState.Clear();
+                    if (TryValidateModel(dbObject))
                     {
-                        Id = dbObject.Id,
-                        Identifier = dbObject.Identifier,
-                        DateTime = dbObject.DateTime,
-                        Description = dbObject.Description,
-                        Category = dbObject.Category,
-                        Source = dbObject.SourceAccount != null
-                            ? new ViewAccount
-                            {
-                                Id = dbObject.SourceAccount.Id,
-                                Name = dbObject.SourceAccount.Name,
-                                Description = dbObject.SourceAccount.Description,
-                            } : null,
-                        Destination = dbObject.DestinationAccount != null
-                            ? new ViewAccount
-                            {
-                                Id = dbObject.DestinationAccount.Id,
-                                Name = dbObject.DestinationAccount.Name,
-                                Description = dbObject.DestinationAccount.Description,
-                            } : null,
-                        Lines = dbObject.TransactionLines
-                            .OrderBy(line => line.Order)
-                            .Select(line => new ViewTransactionLine
-                            {
-                                Amount = line.Amount,
-                            }).ToList(),
-                    };
+
+                        transaction.Commit();
+                        _context.SaveChanges();
+
+                        return new ViewTransaction
+                        {
+                            Id = dbObject.Id,
+                            Identifier = dbObject.Identifier,
+                            DateTime = dbObject.DateTime,
+                            Description = dbObject.Description,
+                            Category = dbObject.Category,
+                            Source = dbObject.SourceAccount != null
+                                ? new ViewAccount
+                                {
+                                    Id = dbObject.SourceAccount.Id,
+                                    Name = dbObject.SourceAccount.Name,
+                                    Description = dbObject.SourceAccount.Description,
+                                } : null,
+                            Destination = dbObject.DestinationAccount != null
+                                ? new ViewAccount
+                                {
+                                    Id = dbObject.DestinationAccount.Id,
+                                    Name = dbObject.DestinationAccount.Name,
+                                    Description = dbObject.DestinationAccount.Description,
+                                } : null,
+                            Lines = dbObject.TransactionLines
+                                .OrderBy(line => line.Order)
+                                .Select(line => new ViewTransactionLine
+                                {
+                                    Amount = line.Amount,
+                                }).ToList(),
+                        };
+                    }
                 }
             }
             throw new Exception();

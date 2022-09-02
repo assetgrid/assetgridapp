@@ -19,13 +19,13 @@ interface State
     creating: boolean
 }
 
-const defaultState: any = {
-    fromId: null,
-    toId: null,
+const defaultState = {
+    sourceId: null as number | null,
+    destinationId: null as number | null,
     description: "",
     identifier: "",
     lines: [{
-        amount: 0,
+        amount: new Decimal(0),
         description: "",
     }],
     creating: false
