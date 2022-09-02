@@ -131,11 +131,6 @@ namespace homebudget_server.Controllers
                         dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
                     }
 
-                    if (model.SourceId == null && model.DestinationId == null)
-                    {
-                        throw new Exception("At least one account must be associated with this transaction");
-                    }
-
                     transaction.Commit();
                     _context.SaveChanges();
 
@@ -253,11 +248,6 @@ namespace homebudget_server.Controllers
                                 Order = i + 1,
                             }).ToList(),
                         };
-
-                        if (result.SourceAccountId == null && result.DestinationAccountId == null)
-                        {
-                            throw new Exception("At least one account must be defined");
-                        }
 
                         // Always store transactions in a format where the total is positive
                         if (result.Total < 0)

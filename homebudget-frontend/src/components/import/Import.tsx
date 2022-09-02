@@ -100,7 +100,11 @@ export default class Import extends React.Component<Props, State> {
         });
 
         // Don't send transactions with obvious errors to the server
-        let errors = this.props.transactions.map(transaction => transaction.amount === "invalid" || !transaction.dateTime.isValid);
+        let errors = this.props.transactions.map(t =>
+            t.amount === "invalid" ||
+            !t.dateTime.isValid ||
+            (t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value)
+        );
         let invalidTransactions = this.props.transactions.filter((_, i) => errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),

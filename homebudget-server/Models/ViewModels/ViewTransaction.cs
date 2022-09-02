@@ -1,6 +1,8 @@
-﻿namespace homebudget_server.Models.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace homebudget_server.Models.ViewModels
 {
-    public class ViewCreateTransaction
+    public class ViewCreateTransaction : IValidatableObject
     {
         public int? SourceId { get; set; }
         public int? DestinationId { get; set; }
@@ -9,15 +11,47 @@
         public string? Identifier { get; set; }
         public string Category { get; set; } = null!;
         public List<ViewTransactionLine> Lines { get; set; } = null!;
+
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (SourceId == null && DestinationId == null)
+            {
+                yield return new ValidationResult(
+                    $"Either source or destination id must be set.",
+                    new[] { nameof(SourceId), nameof(DestinationId) });
+            }
+            if (SourceId == DestinationId)
+            {
+                yield return new ValidationResult(
+                    $"Source and destination must be different.",
+                    new[] { nameof(SourceId), nameof(DestinationId) });
+            }
+        }
     }
 
-    public class ViewUpdateTransaction
+    public class ViewUpdateTransaction : IValidatableObject
     {
         public int Id { get; set; }
         public int? SourceId { get; set; }
         public int? DestinationId { get; set; }
         public DateTime? DateTime { get; set; }
         public string? Description { get; set; }
+
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (SourceId == null && DestinationId == null)
+            {
+                yield return new ValidationResult(
+                    $"Either source or destination id must be set.",
+                    new[] { nameof(SourceId), nameof(DestinationId) });
+            }
+            if (SourceId == DestinationId)
+            {
+                yield return new ValidationResult(
+                    $"Source and destination must be different.",
+                    new[] { nameof(SourceId), nameof(DestinationId) });
+            }
+        }
     }
     public class ViewTransaction
     {

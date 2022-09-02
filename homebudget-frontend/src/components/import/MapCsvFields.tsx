@@ -65,7 +65,7 @@ interface State {
     rowOffset: number;
     tableDraw: number;
     modal: React.ReactElement | null;
-    tableFilter: "all" | "reference-to-missing-account" | "no-account" | "duplicate" | "error";
+    tableFilter: "all" | "reference-to-missing-account" | "no-account" | "same-account" | "duplicate" | "error";
 }
 
 function isNullOrWhitespace(input: string) {
@@ -343,6 +343,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     Some transactions are hidden!{" "}
                     {this.state.tableFilter === "reference-to-missing-account" && <>Currently only transactions that reference a missing source or destination account are shown.{" "}</>}
                     {this.state.tableFilter === "no-account" && <>Currently only transactions that have no source or destination account are shown.{" "}</>}
+                    {this.state.tableFilter === "same-account" && <>Currently only transactions that have the same source and destination account are shown.{" "}</>}
                     {this.state.tableFilter === "duplicate" && <>Currently only duplicate transactions are shown.{" "}</>}
                     {this.state.tableFilter === "error" && <>Currently only transactions with parsing errors are shown.{" "}</>}
                     <a className="has-text-link" onClick={() => this.setState({tableFilter: "all", tableDraw: this.state.tableDraw + 1})}>Show all transactions</a>
@@ -377,6 +378,9 @@ export default class MapCsvFields extends React.Component<Props, State> {
             (t.source === null || this.props.accountsBy[t.source.identifier][t.source.value] === null) &&
             (t.destination === null || this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
         ).length;
+        const sameSourceDestinationCount = this.props.transactions.filter(t =>
+            t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value
+        ).length;
         const duplicateCount = this.props.transactions.filter(t => (this.props.duplicateIdentifiers as Set<string>).has(t.identifier)).length;
         const errorCount = this.props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid).length;
         const allCount = referenceToMissingAccountCount + noAccountCount + duplicateCount + errorCount;
@@ -396,6 +400,10 @@ export default class MapCsvFields extends React.Component<Props, State> {
                                 {noAccountCount > 0 && <li>
                                     {noAccountCount} transactions do not have a source nor destination. They will not be created{" "}
                                     <a className="has-text-link" onClick={() => this.setState({tableFilter: "no-account", tableDraw: this.state.tableDraw + 1})}>Show transactions</a>
+                                </li>}
+                                {sameSourceDestinationCount > 0 && <li>
+                                    {sameSourceDestinationCount} transactions have the same source and destination. They will not be created{" "}
+                                    <a className="has-text-link" onClick={() => this.setState({tableFilter: "same-account", tableDraw: this.state.tableDraw + 1})}>Show transactions</a>
                                 </li>}
                                 {duplicateCount > 0 && <li>
                                     {duplicateCount} transactions have duplicate identifiers. Only one transaction can exist for each identifier.{" "}
@@ -444,6 +452,11 @@ export default class MapCsvFields extends React.Component<Props, State> {
                     items = this.props.transactions.filter(t =>
                         (t.source === null || this.props.accountsBy[t.source.identifier][t.source.value] === null) &&
                         (t.destination === null || this.props.accountsBy[t.destination.identifier][t.destination.value] === null)
+                    );
+                    break;
+                case "same-account":
+                    items = this.props.transactions.filter(t =>
+                        t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value
                     );
                     break;
                 case "duplicate":

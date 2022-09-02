@@ -13,7 +13,7 @@ namespace homebudget_server.Models
         public string? Identifier { get; set; }
         public string Description { get; set; } = null!;
         public long Total { get; set; }
-        public string Category { get; set; }
+        public string Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
     }
