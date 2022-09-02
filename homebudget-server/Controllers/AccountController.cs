@@ -238,8 +238,9 @@ namespace homebudget_server.Controllers
             var firstTransaction = result
                 .OrderBy(transaction => transaction.DateTime)
                 .ThenBy(transaction => transaction.Id).FirstOrDefault();
-            var total = firstTransaction == null ? 0 : query
-                .Where(transaction => transaction.DateTime <= firstTransaction.DateTime && transaction.Id < firstTransaction.Id)
+            var total = firstTransaction == null ? 0 : _context.Transactions
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .Where(transaction => transaction.DateTime < firstTransaction.DateTime || (transaction.DateTime == firstTransaction.DateTime && transaction.Id < firstTransaction.Id))
                 .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
                 .Sum();
 
