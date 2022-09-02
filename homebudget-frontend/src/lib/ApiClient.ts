@@ -157,6 +157,35 @@ const Account = {
         });
     },
 
+    /**
+     * Get summary of expenses and revenues stratified on categories
+     * @param accountId The account
+     * @param query A query to subset the transactions to include in the summary
+     * @returns A dictionary with the category as the key and the revenue and expenses the value in a tuple in that order
+     */
+    getCategorySummary: function (accountId: number, query: SearchGroup): Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]> {
+        return new Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]>((resolve, reject) => {
+            axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/account/" + accountId + "/categorysummary", query)
+            .then(result => resolve(result.data.map(obj => ({
+                category: obj.category,
+                revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
+                expenses: new Decimal(obj.expenses).div(new Decimal(10000))
+            }))))
+            .catch(error => {
+                console.log(error);
+                reject(error);
+            });
+        });
+    },
+
+    /**
+     * Calculate development in account balance, revenue and expenses over time
+     * @param accountId The account
+     * @param from Start of period
+     * @param to End of period
+     * @param resolution The time resolution at which to aggregate the results
+     * @returns An object containing information about account movements
+     */
     getMovements: function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
         return new Promise<GetMovementResponse>((resolve, reject) => {
             axios.post<GetMovementResponse>(rootUrl + "/account/" + accountId + "/movements", {

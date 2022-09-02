@@ -140,6 +140,23 @@ namespace homebudget_server.Controllers
             };
         }
 
+        [HttpPost()]
+        [Route("/[controller]/{id}/[action]")]
+        public List<object> CategorySummary(int id, ViewSearchGroup query)
+        {
+            return _context.Transactions
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .ApplySearch(query)
+                .GroupBy(transaction => transaction.Category != null ? transaction.Category.Name : "")
+                .Select(group => (object)new
+                {
+                    category = group.Key,
+                    revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
+                    expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
+                })
+                .ToList();
+        }
+
         [HttpGet()]
         [Route("/[controller]/{id}")]
         public ViewAccount? Get(int id)

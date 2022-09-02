@@ -15,6 +15,7 @@ import { useParams } from "react-router";
 import PeriodSelector from "../common/PeriodSelector";
 import { DateTime } from "luxon";
 import { Period, PeriodFunctions } from "../../models/period";
+import AccountCategoryChart from "./AccountCategoryChart";
 
 interface Props {
     preferences: Preferences | "fetching";
@@ -103,8 +104,7 @@ class PageAccount extends React.Component<Props & { id: number }, State> {
                     </div>
                     <div className="column p-0 is-flex">
                         <Card title="Categories" style={{flexGrow: 1}}>
-                            <p>Graph showing expenses stratified by categories the past month</p>
-                            <p>Buttons to change month</p>
+                            <AccountCategoryChart id={Number(this.props.id)} preferences={this.props.preferences} period={this.state.period} />
                         </Card>
                     </div>
                     <div className="column p-0 is-flex">

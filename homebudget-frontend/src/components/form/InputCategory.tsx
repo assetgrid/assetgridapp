@@ -49,7 +49,10 @@ export default class InputCategory extends React.Component<Props, State> {
             {this.props.label !== undefined && <label className="label">{this.props.label}</label>}
             <div className={"dropdown is-fullwidth" + (this.state.open && ! this.props.disabled  ? " is-active" : "")}>
                 <div className="dropdown-trigger">
-                    <input className="input" value={this.props.value} onChange={e => { this.setState({ open: true }); this.props.onChange(e.target.value) }} />
+                    <input className="input"
+                        value={this.props.value}
+                        disabled={this.props.disabled}
+                        onChange={e => { this.setState({ open: true }); this.props.onChange(e.target.value) }} />
                     {!this.props.disabled && this.props.value !== "" && <button className="button"
                         onClick={() => this.setState({ open: false }, () => this.props.onChange(""))}
                         disabled={this.props.disabled}>
