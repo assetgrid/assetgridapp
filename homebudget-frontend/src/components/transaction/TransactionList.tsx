@@ -3,11 +3,13 @@ import * as React from "react";
 import { Transaction } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchRequest, SearchResponse } from "../../models/search";
-import AccountTooltip from "../account/AccountTooltip";
 import { Preferences } from "../../models/preferences";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
+import { Link } from "react-router-dom";
+import { routes } from "../../lib/routes";
+import AccountLink from "../account/AccountLink";
 
 interface Props {
     draw?: number;
@@ -58,11 +60,11 @@ export default class TransactionList extends React.Component<Props, {}> {
                     </td>
                     <td>{transaction.description}</td>
                     <td>{transaction.source != null
-                        ? <AccountTooltip account={transaction.source}>#{transaction.source.id} {transaction.source.name}</AccountTooltip>
+                        ? <AccountLink account={transaction.source} />
                         : <></>
                     }</td>
                     <td>{transaction.destination != null
-                        ? <AccountTooltip account={transaction.destination}>#{transaction.destination.id} {transaction.destination.name}</AccountTooltip>
+                        ? <AccountLink account={transaction.destination} />
                         : <></>
                     }</td>
                     <td></td>

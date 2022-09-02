@@ -2,7 +2,6 @@ import axios from "axios";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Account, CreateAccount as CreateAccountModel } from "../../models/account";
-import AccountTooltip from "../account/AccountTooltip";
 import { Card } from "../common/Card";
 import Table from "../common/Table";
 import Tooltip from "../common/Tooltip";
@@ -20,6 +19,7 @@ import Decimal from "decimal.js";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { Message } from "../common/Message";
+import AccountLink from "../account/AccountLink";
 
 type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
 
@@ -751,9 +751,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
             </Tooltip>;
         };
 
-        return <AccountTooltip account={account}>
-            {"#" + account.id + " " + account.name}
-        </AccountTooltip>;
+        return <AccountLink account={account} targetBlank={true} />;
     }
 
     private beginCreatingAccount(accountReference: AccountReference): void

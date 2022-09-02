@@ -5,7 +5,6 @@ import CreateTransaction from "./CreateTransaction";
 import InputButton from "../form/InputButton";
 import Table from "../common/Table";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
-import AccountTooltip from "../account/AccountTooltip";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { Account } from "../../models/account";
@@ -22,6 +21,9 @@ import { Calendar } from "react-date-range";
 import InputDate from "../form/InputDate";
 import Modal from "../common/Modal";
 import InputCategory from "../form/InputCategory";
+import { Link } from "react-router-dom";
+import { routes } from "../../lib/routes";
+import AccountLink from "../account/AccountLink";
 
 interface Props {
     draw?: number;
@@ -224,7 +226,7 @@ class AccountTransactionListItem extends React.Component<IAccountTransactionList
                     {formatNumberWithPrefs(line.balance, this.props.preferences)}
                 </td>
                 <td>
-                    {line.offsetAccount !== null && <AccountTooltip account={line.offsetAccount}>#{line.offsetAccount.id} {line.offsetAccount.name}</AccountTooltip>}
+                    {line.offsetAccount !== null && <AccountLink account={line.offsetAccount} />}
                 </td>
                 <td>{line.category}</td>
                 <td>

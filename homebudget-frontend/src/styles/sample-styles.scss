@@ -108,3 +108,12 @@ table tr.editing td {
         color: $link;
     }
 }
+
+.account-link {
+    & > span {
+        color: #999;
+    }
+    &:hover > span {
+        color: $dark;
+    }
+}
