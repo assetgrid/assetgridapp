@@ -78,11 +78,11 @@ export default class Import extends React.Component<Props, State> {
     private transactionTable(transactions: CreateTransaction[]) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
-                <td>{transaction.identifier}</td>
-                <td>{transaction.dateTime.toString()}</td>
-                <td>{transaction.description}</td>
-                <td>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</td>
-                <td>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</td>
+                <th>{transaction.identifier}</th>
+                <th>{transaction.dateTime.toString()}</th>
+                <th>{transaction.description}</th>
+                <th>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</th>
+                <th>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</th>
             </tr>}
             headings={<tr>
                 <td>Identifier</td>
