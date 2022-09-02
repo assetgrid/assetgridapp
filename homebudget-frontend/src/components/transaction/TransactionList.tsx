@@ -67,7 +67,7 @@ export default class TransactionList extends React.Component<Props, {}> {
                         ? <AccountLink account={transaction.destination} />
                         : <></>
                     }</td>
-                    <td></td>
+                    <td>{transaction.category}</td>
                 </tr> }
             }
             />;
