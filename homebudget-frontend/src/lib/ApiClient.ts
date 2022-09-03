@@ -70,14 +70,18 @@ const Account = {
      * @param id Account id
      * @returns The account with the specified id
      */
-    get: function (id: number): Promise<AccountModel> {
-        return new Promise<AccountModel>((resolve, reject) => {
+    get: function (id: number): Promise<AccountModel | null> {
+        return new Promise<AccountModel | null>((resolve, reject) => {
             axios.get<AccountModel>(rootUrl + '/account/' + Number(id))
                 .then(result => {
                     const data = result.data as AccountModel & { balanceString: string };
-                    data.balance = new Decimal(data.balanceString).div(new Decimal(10000))
-                    delete data.balanceString;
-                    resolve(result.data);
+                    if (data) {
+                        data.balance = new Decimal(data.balanceString).div(new Decimal(10000))
+                        delete data.balanceString;
+                        resolve(result.data);
+                    } else {
+                        resolve(null);
+                    }
                 })
                 .catch(e => {
                     console.log(e);

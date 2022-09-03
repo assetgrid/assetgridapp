@@ -55,6 +55,7 @@ export default function (props: Props) {
         Api.Account.update(Number(id), newAccount)
             .then(result => {
                 setUpdatingFavorite(false);
+                result.balance = account.balance;
                 setAccount(result);
                 props.updatePreferences();
             })
