@@ -147,8 +147,8 @@ export default function (props: Props) {
                 <AccountTransactionList
                     accountId={Number(id)}
                     preferences={props.preferences} period={period}
-                    decrementPeriod={() => setPeriod(PeriodFunctions.decrement(period))}
-                    incrementPeriod={() => setPeriod(PeriodFunctions.increment(period))}
+                    decrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.decrement(period)); resolve(); })}
+                    incrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.increment(period)); resolve(); })}
                 />
             </Card>
         </div>

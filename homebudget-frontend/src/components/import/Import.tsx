@@ -84,6 +84,7 @@ export default class Import extends React.Component<Props, State> {
                 <th>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</th>
                 <th>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</th>
             </tr>}
+            type="sync"
             headings={<tr>
                 <td>Identifier</td>
                 <td>Created</td>

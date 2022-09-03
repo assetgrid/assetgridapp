@@ -151,6 +151,7 @@ export default class ImportCsv extends React.Component<Props, State> {
                 </tr>}
                 pageSize={pageSize}
                 items={this.state.csvData.data}
+                type="sync"
                 renderItem={(row, i) => <tr key={i}>
                     {this.state.columnOffset !== 0 && <td></td>}
                     {columns.map(column =>

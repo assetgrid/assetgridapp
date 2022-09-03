@@ -162,6 +162,22 @@ const Account = {
     },
 
     /**
+     * Counts transactions matching a query for the specified account
+     * @param id Account id
+     * @param query Query to filter transactions
+     * @returns The transaction count
+     */
+     countTransactions: function (id: number, query?: SearchGroup): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            axios.post<number>(rootUrl + "/account/" + id + "/counttransactions", query).then(result => resolve(result.data))
+                .catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
      * Get summary of expenses and revenues stratified on categories
      * @param accountId The account
      * @param query A query to subset the transactions to include in the summary

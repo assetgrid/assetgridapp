@@ -268,5 +268,24 @@ namespace homebudget_server.Controllers
                 Total = total,
             };
         }
+
+        /// <summary>
+        /// Same as the method to search transactions, but only returns the count.
+        /// Used to figure out which page is the last without requesting any page
+        /// </summary>
+        [HttpPost()]
+        [Route("/[controller]/{id}/[action]")]
+        public int CountTransactions(int id, ViewSearchGroup? requestQuery)
+        {
+            var query = _context.Transactions
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
+
+            if (requestQuery != null)
+            {
+                query = query.ApplySearch(requestQuery);
+            }
+
+            return query.Count();
+        }
     }
 }

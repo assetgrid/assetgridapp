@@ -37,6 +37,7 @@ export default function AccountList(props: Props) {
         </tr>}
         pageSize={20}
         draw={props.draw}
+        type="async"
         fetchItems={fetchItems}
         renderItem={account =>
             <tr key={account.id}>

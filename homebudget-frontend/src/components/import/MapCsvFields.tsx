@@ -479,6 +479,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
                 <th>Amount</th>
             </tr>}
             draw={this.state.tableDraw}
+            type="sync"
             renderItem={transaction =>
                 <tr key={transaction.rowNumber}>
                     <td>{this.duplicateIndicator(transaction.identifier)}

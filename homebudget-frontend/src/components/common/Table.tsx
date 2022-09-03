@@ -2,21 +2,30 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
-export interface Props<T> {
+export type Props<T> = {
     pageSize: number;
     paginationSize?: number;
     reversePagination?: boolean;
-
-    draw?: number;
-    items?: T[];
-    fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
-    renderItem: (item: T, index: number) => React.ReactNode;
-
     headings: React.ReactNode;
+    renderItem: (item: T, index: number) => React.ReactNode;
 
     decrement?: () => void;
     increment?: () => void;
-}
+    draw?: number;
+} & (
+    {
+        type: "sync";
+        items: T[];
+    } | {
+        type: "async";
+        fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+    } | {
+        type: "async-increment";
+        page: number,
+        goToPage: (page: number) => void
+        fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+    }
+)
 
 interface FetchItemsResult<T> {
     items: T[];
@@ -25,83 +34,89 @@ interface FetchItemsResult<T> {
     draw: number;
 }
 
-interface State<T> {
-    targetPage: number;
+export default function Table<T>(props: Props<T>) {
+    const [items, setItems] = React.useState<T[]>([]);
 
-    items: T[];
-    displayingPage: number;
-    totalItems: number;
-}
+    let targetPage: number;
+    let setTargetPage: React.Dispatch<number> | null = null;
+    if (props.type !== "async-increment") {
+        [targetPage, setTargetPage] = React.useState<number>(1);
+    } else {
+        targetPage = props.page;
+    }
 
-export default class Table<T> extends React.Component<Props<T>, State<T>> {
-    constructor(props: Props<T>) {
-        super(props);
-        this.state = {
-            targetPage: 1,
-            displayingPage: 1,
+    const [displayingPage, setDisplayingPage] = React.useState<number>(1);
+    const [totalItems, setTotalItems] = React.useState<number>(0);
 
-            items: [],
-            totalItems: 0
+    let paginatedItems = items
+        .map((item, index) => ({ item: item, index: index + (targetPage - 1) * props.pageSize }));
+    
+    function goToPage(page: number): void {
+        page = Math.max(1, Math.min(page, Math.ceil(totalItems / props.pageSize)));
+        if (props.type === "async-increment") {
+            props.goToPage(page);
+        } else {
+            setTargetPage(page);
         }
-
-        this.fetchItems(this.state.targetPage, this.props.draw);
     }
 
-    private goToLastPageAfterFetch: boolean = false;
-    private hasMounted: boolean = false;
-
-    public render() {
-        let paginatedItems = this.state.items
-            .map((item, index) => ({ item: item, index: index + (this.state.targetPage - 1) * this.props.pageSize }));
-
-        return <>
-            <table className="table is-fullwidth is-hoverable" style={{marginBottom: 0}}>
-                <thead>
-                    {this.props.headings}
-                </thead>
-                <tfoot>
-                    {this.props.headings}
-                </tfoot>
-                <tbody>
-                    {paginatedItems.map(item => 
-                        this.props.renderItem(item.item, item.index)
-                    )}
-                </tbody>
-            </table>
-            {this.renderPagination()}
-        </>;
+    if (props.type === "async-increment") {
+        React.useEffect(() => {
+            fetchItems(targetPage, props.draw);
+        }, [props.draw]);
+    } else {
+        React.useEffect(() => {
+            fetchItems(targetPage, props.draw);
+        }, [targetPage, props.draw]);
     }
 
-    private renderPagination() {
-        const page = this.state.targetPage;
-        const lastPage = Math.max(1, Math.ceil(this.state.totalItems / this.props.pageSize));
-        const pagesBesideCurrent = ((this.props.paginationSize ?? 9) - 3) / 2;
+    return <>
+        <table className="table is-fullwidth is-hoverable" style={{ marginBottom: 0 }}>
+            <thead>
+                {props.headings}
+            </thead>
+            <tfoot>
+                {props.headings}
+            </tfoot>
+            <tbody>
+                {paginatedItems.map(item =>
+                    props.renderItem(item.item, item.index)
+                )}
+            </tbody>
+        </table>
+        {renderPagination()}
+    </>;
+
+    function renderPagination<T>() {
+        const page = targetPage;
+        const lastPage = Math.max(1, Math.ceil(totalItems / props.pageSize));
+        const pagesBesideCurrent = ((props.paginationSize ?? 9) - 3) / 2;
         let paginationFrom = Math.max(2, page - pagesBesideCurrent);
         const paginationTo = Math.min(paginationFrom + 1 + pagesBesideCurrent * 2, lastPage);
         if (paginationTo - paginationFrom < pagesBesideCurrent * 2 + 1) {
             paginationFrom = Math.max(2, paginationTo - pagesBesideCurrent * 2 - 1);
         }
-        const reverse = this.props.reversePagination ?? false;
+        const reverse = props.reversePagination ?? false;
 
         if (reverse) {
             // Reverse pagination
             return <div className="pagination-container">
                 <p className="pagination-position">
-                    Displaying items {Math.min(this.props.pageSize * (page - 1) + 1, this.state.totalItems)}&nbsp;
-                    to {Math.min(this.props.pageSize * (page), this.state.totalItems)}&nbsp;
-                    of {this.state.totalItems}
+                    Displaying items {Math.min(props.pageSize * (page - 1) + 1, totalItems)}&nbsp;
+                    to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
+                    of {totalItems}
                 </p>
                 
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
-                            {page === lastPage && this.props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { this.props.decrement(); this.goToPage(1) }}>
+                            {page === lastPage && props.decrement
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page + 1)}>
+                                : <a className="pagination-link" aria-label="Previous page" onClick={() => goToPage(page + 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleLeft} />
                                     </span>
@@ -109,7 +124,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                         </li>
                         {lastPage !== 1 && <li>
                             <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
-                                aria-label={"Goto page " + lastPage} onClick={() => this.goToPage(lastPage)}>{lastPage}</a>
+                                aria-label={"Goto page " + lastPage} onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => paginationTo - page - 1)
@@ -118,20 +133,20 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => this.goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
-                        )}
+                                        onClick={() => goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
+                            )}
                         <li>
                             <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
-                                aria-label="Goto page 1" onClick={() => this.goToPage(1)}>1</a>
+                                aria-label="Goto page 1" onClick={() => goToPage(1)}>1</a>
                         </li>
                         <li>
-                            {page === 1 && this.props.increment
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToLastPageAfterFetch = true; }}>
+                            {page === 1 && props.increment
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page - 1)}>
+                                : <a className="pagination-link" aria-label="Next page" onClick={() => goToPage(page - 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleRight} />
                                     </span>
@@ -144,21 +159,21 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
             // Ordinary pagination
             return <div className="pagination-container">
                 <p className="pagination-position">
-                    Displaying items {Math.min(this.props.pageSize * (page - 1) + 1, this.state.totalItems)}&nbsp;
-                    to {Math.min(this.props.pageSize * (page), this.state.totalItems)}&nbsp;
-                    of {this.state.totalItems}
+                    Displaying items {Math.min(props.pageSize * (page - 1) + 1, totalItems)}&nbsp;
+                    to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
+                    of {totalItems}
                 </p>
                 
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
-                            {page === 1 && this.props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { this.props.decrement(); this.goToLastPageAfterFetch = true; }}>
+                            {page === 1 && props.decrement
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Previous page" onClick={() => this.goToPage(page - 1)}>
+                                : <a className="pagination-link" aria-label="Previous page" onClick={() => goToPage(page - 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleLeft} />
                                     </span>
@@ -166,7 +181,7 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                         </li>
                         <li>
                             <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
-                                aria-label="Goto page 1" onClick={() => this.goToPage(1)}>1</a>
+                                aria-label="Goto page 1" onClick={() => goToPage(1)}>1</a>
                         </li>
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => page + paginationFrom)
@@ -175,20 +190,20 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => this.goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
+                                        onClick={() => goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
                             )}
                         {lastPage !== 1 && <li>
                             <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
-                                aria-label={"Goto page " + lastPage} onClick={() => this.goToPage(lastPage)}>{lastPage}</a>
+                                aria-label={"Goto page " + lastPage} onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         <li>
-                            {page === lastPage && this.props.increment
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { this.props.increment(); this.goToPage(1) }}>
+                            {page === lastPage && props.increment
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Next page" onClick={() => this.goToPage(page + 1)}>
+                                : <a className="pagination-link" aria-label="Next page" onClick={() => goToPage(page + 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleRight} />
                                     </span>
@@ -200,71 +215,23 @@ export default class Table<T> extends React.Component<Props<T>, State<T>> {
         }
     }
 
-    componentDidUpdate(prevProps: Readonly<Props<T>>, prevState: Readonly<State<T>>): void {
-        if (prevProps.draw !== this.props.draw ||prevProps.items !== this.props.items) {
-            this.fetchItems(this.state.targetPage, this.props.draw);
+    async function fetchItems<T>(page: number, draw?: number): Promise<void> {
+        const from = (page - 1) * props.pageSize;
+        const to = page * props.pageSize;
+
+        if (props.type === "sync") {
+            setItems(props.items.slice(from, to));
+            setTotalItems(props.items.length);
+            setDisplayingPage(targetPage);
+        } else {
+            props.fetchItems(from, to, draw)
+                .then(result => {
+                    if (result.draw === props.draw) {
+                        setItems(result.items);
+                        setTotalItems(result.totalItems);
+                        setDisplayingPage(targetPage);
+                    }
+                });
         }
-    }
-
-    componentDidMount(): void {
-        this.hasMounted = true;
-    }
-
-    private defaultFetchItems(from: number, to: number, draw: number): Promise<FetchItemsResult<T>> {
-        if (this.props.items === null) {
-            throw "Error";
-        }
-        return new Promise<FetchItemsResult<T>>(resolve => {
-            resolve({
-                items: this.props.items.slice(from, to),
-                totalItems: this.props.items.length,
-                offset: from,
-                draw: draw,
-            })
-        });
-    }
-
-    private fetchItems(page: number, draw?: number): void {
-        const from = (page - 1) * this.props.pageSize;
-        const to = page * this.props.pageSize;
-
-        const self: Table<T> = this;
-        const setState = function (state: Partial<State<T>>) {
-            // Use setstate or just override state depending on whether the component has yet been mounted
-            if (self.hasMounted) {
-                self.setState(state as State<T>);
-            } else {
-                self.state = state as State<T>;
-            }
-        };
-
-        (this.props.fetchItems !== undefined
-            ? this.props.fetchItems(from, to, draw)
-            : this.defaultFetchItems(from, to, draw))
-            .then(result => {
-                if (this.goToLastPageAfterFetch && (this.props.draw === undefined || result.draw === this.props.draw)) {
-                    this.goToLastPageAfterFetch = false;
-                    const lastPage = Math.max(1, Math.ceil(result.totalItems / this.props.pageSize));
-                    setState({
-                        items: result.items,
-                        totalItems: result.totalItems,
-                        displayingPage: lastPage,
-                        targetPage: lastPage
-                    });
-                } else if (result.offset === (this.state.targetPage - 1) * this.props.pageSize
-                    && (this.props.draw === undefined || result.draw === this.props.draw)) {
-                    setState({
-                        items: result.items,
-                        totalItems: result.totalItems,
-                        displayingPage: this.state.targetPage
-                    })
-                }
-            });
-    }
-
-    private goToPage(page: number): void {
-        page = Math.max(1, Math.min(page, Math.ceil(this.state.totalItems / this.props.pageSize)));
-        this.setState({ targetPage: page });
-        this.fetchItems(page, this.props.draw);
     }
 }

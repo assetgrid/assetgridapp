@@ -50,6 +50,7 @@ export default class TransactionList extends React.Component<Props, {}> {
             </tr>}
             pageSize={20}
             draw={this.props.draw}
+            type="async"
             fetchItems={this.fetchItems.bind(this)}
             renderItem={transaction => {
                 const total = transaction.lines.map(line => line.amount).reduce((a, b) => a.add(b), new Decimal(0));

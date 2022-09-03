@@ -30,14 +30,15 @@ interface Props {
     accountId: number;
     preferences: Preferences | "fetching";
     period: Period;
-    decrementPeriod?: () => void;
-    incrementPeriod?: () => void;
+    decrementPeriod?: () => Promise<void>;
+    incrementPeriod?: () => Promise<void>;
 }
 
 interface State {
     total: Decimal | null;
     descending: boolean;
     draw: number;
+    page: number;
 }
 
 interface TableLine {
@@ -48,6 +49,8 @@ interface TableLine {
     category: string;
 }
 
+const pageSize = 20;
+
 export default class AccountTransactionList extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -55,6 +58,7 @@ export default class AccountTransactionList extends React.Component<Props, State
             total: null,
             descending: true,
             draw: 0,
+            page: 1,
         };
     }
     
@@ -113,10 +117,50 @@ export default class AccountTransactionList extends React.Component<Props, State
         });
     }
 
+    private countItems(): Promise<number> {
+        let [start, end] = PeriodFunctions.getRange(this.props.period);
+        let query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [ {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true
+                }
+            }]
+        };
+        return new Promise(resolve => {
+            Api.Account.countTransactions(this.props.accountId, query)
+                .then(result => resolve(result));
+        });
+    }
+
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
         if (prevProps.period !== this.props.period) {
-            this.setState({ draw: this.state.draw + 1 });
+            this.setState({ draw: this.state.draw + 1, page: 1 });
         }
+    }
+
+    private decrement() {
+        this.setState({ page: 1 });
+        this.props.decrementPeriod();
+    }
+
+    private async increment() {
+        await this.props.incrementPeriod();
+        const count = await this.countItems();
+        const lastPage = Math.max(1, Math.ceil(count / pageSize));
+        this.setState({ page: lastPage });
     }
 
     public render() {
@@ -130,11 +174,14 @@ export default class AccountTransactionList extends React.Component<Props, State
                 <th>Category</th>
                 <th>Actions</th>
             </tr>}
-            decrement={this.props.decrementPeriod}
-            increment={() => { this.props.incrementPeriod(); }}
-            pageSize={20}
+            decrement={() => this.decrement()}
+            increment={() => this.increment()}
+            pageSize={pageSize}
             draw={(this.props.draw ?? 0) + this.state.draw}
+            type="async-increment"
             fetchItems={this.fetchItems.bind(this)}
+            page={this.state.page}
+            goToPage={page => this.setState({ page: page, draw: this.state.draw + 1 })}
             reversePagination={true}
             renderItem={line =>
                 <AccountTransactionListItem preferences={this.props.preferences}
