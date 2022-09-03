@@ -22,159 +22,134 @@ interface Props {
     updatePreferences: () => void;
 }
 
-interface State {
-    account: "fetching" | "error" | null | Account;
-    updatingFavorite: boolean;
-    period: Period;
-}
-
-class PageAccount extends React.Component<Props & { id: number }, State> {
-    constructor(props: Props & { id: number }) {
-        super(props);
-        this.state = {
-            account: "fetching",
-            updatingFavorite: false,
-            period: {
-                type: "month",
-                start: DateTime.now().startOf("month"),
+export default function (props: Props) {
+    const { id } = useParams();
+    const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching")
+    const [updatingFavorite, setUpdatingFavorite] = React.useState<boolean>(false);
+    
+    let defaultPeriod: Period = {
+        type: "month",
+        start: DateTime.now().startOf("month"),
+    };
+    if (window.history.state.period) {
+        try {
+            const period = PeriodFunctions.parse(window.history.state.period);
+            if (period) {
+                defaultPeriod = period;
             }
-        };
+        } catch { }
     }
+    const [period, setPeriod] = React.useState<Period>(defaultPeriod);
 
-    componentDidMount(): void {
-        this.updateAccount();
-
-        if (window.history.state.period) {
-            try {
-                const period = PeriodFunctions.parse(window.history.state.period);
-                if (period) {
-                    this.setState({ period });
-                }
-            } catch { }
-        }
-    }
-
-    componentDidUpdate(prevProps: Readonly<Props & { id: number }>, prevState: Readonly<State>): void {
-        if (this.props.id != prevProps.id) {
-            this.updateAccount();
-        }
-    }
-
-    public render(): React.ReactNode {
-        if (this.state.account === "fetching") {
-            return <p>Please wait</p>;
-        }
-        if (this.state.account === "error") {
-            return <p>Error</p>;
-        }
-        if (this.state.account === null) {
-            return <p>Not found</p>;
-        }
-
-        return <>
-            <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
-                <div className="hero-body">
-                    <p className="title has-text-white">
-                        {this.state.updatingFavorite
-                            ? <span className="icon">
-                                <FontAwesomeIcon icon={solid.faSpinner} pulse />
-                            </span>
-                            : <span className="icon" onClick={() => this.toggleFavorite()} style={{ cursor: "pointer" }}>
-                                {this.state.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
-                            </span>} #{this.state.account.id} {this.state.account.name}
-                    </p>
-                    {(this.state.account.description?.trim() ?? "") !== "" &&
-                        <p className="subtitle has-text-primary-light">
-                            {this.state.account.description} {PeriodFunctions.print(this.state.period)}
-                        </p>}
-                </div>
-                <div>
-                    <PeriodSelector period={this.state.period} onChange={period => this.setPeriod( period ) } />
-                </div>
-            </section>
-            <div className="p-3">
-                <div className="columns m-0">
-                    <div className="column p-0 is-narrow is-flex">
-                        <Card title="Account Overview">
-                            <table className="table">
-                                <tbody>
-                                    <tr>
-                                        <td>Balance</td>
-                                        <td className="has-text-right">{formatNumberWithPrefs(this.state.account.balance!, this.props.preferences)}</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Account Number</td>
-                                        <td className="has-text-right">{this.state.account.accountNumber}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </Card>
-                    </div>
-                    <div className="column p-0 is-flex">
-                        <Card title="Categories" style={{flexGrow: 1}}>
-                            <AccountCategoryChart id={Number(this.props.id)} preferences={this.props.preferences} period={this.state.period} />
-                        </Card>
-                    </div>
-                    <div className="column p-0 is-flex">
-                        <Card title="Balance" style={{ flexGrow: 1 }}>
-                            <AccountBalanceChart id={Number(this.props.id)} preferences={this.props.preferences} period={this.state.period} />
-                        </Card>
-                    </div>
-                </div>
-                <Card title={"Transactions (" + PeriodFunctions.print(this.state.period) + ")"}>
-                    <AccountTransactionList
-                        accountId={Number(this.props.id)}
-                        preferences={this.props.preferences} period={this.state.period}
-                        decrementPeriod={() => this.setPeriod(PeriodFunctions.decrement(this.state.period))}
-                        incrementPeriod={() => this.setPeriod(PeriodFunctions.increment(this.state.period))}
-                    />
-                </Card>
-            </div>
-        </>;
-    }
-
-    private updateAccount(): void {
-        this.setState({ account: "fetching" }, () =>
-            Api.Account.get(Number(this.props.id))
-                .then(result => {
-                    this.setState({ account: result });
-                })
-                .catch(e => {
-                    console.log(e);
-                    this.setState({ account: "error" });
-                })
-        );
-    }
-
-    private setPeriod(period: Period): void {
-        window.history.replaceState({ ...window.history.state, period: PeriodFunctions.serialize(period) }, "");
-        this.setState({ period: period });
-    }
-
-    private toggleFavorite(): void {
-        if (this.state.account === "error" || this.state.account === "fetching") {
+    function toggleFavorite() {
+        if (account === "error" || account === "fetching") {
             throw "error";
         }
 
-        let favorite = !this.state.account.favorite;
-        let { balance, id, ...newAccount } = this.state.account;
+        let favorite = ! account.favorite;
+        let { balance, id, ...newAccount } = account;
         newAccount.favorite = favorite;
 
-        this.setState({ updatingFavorite: true });
+        setUpdatingFavorite(true);
 
-        Api.Account.update(Number(this.props.id), newAccount)
+        Api.Account.update(Number(id), newAccount)
             .then(result => {
-                this.setState({ account: result, updatingFavorite: false });
-                this.props.updatePreferences();
+                setUpdatingFavorite(false);
+                setAccount(result);
+                props.updatePreferences();
             })
             .catch(e => {
-                this.setState({ account: "error" });
+                setAccount("error");
             });
     }
-}
 
-export default function (props: Props) {
-    let { id } = useParams();
-    return <PageAccount id={Number(id)} {...props} />
+    // Update history when period is changed
+    React.useEffect(() => {
+        window.history.replaceState({ ...window.history.state, period: PeriodFunctions.serialize(period) }, "");
+    }, [period]);
+
+    // Update account when id is changed
+    React.useEffect(() => {
+        setAccount("fetching");
+        Api.Account.get(Number(id))
+            .then(result => {
+                setAccount(result);
+            })
+            .catch(e => {
+                console.log(e);
+                setAccount("error");
+            })
+    }, [id])
+
+    if (account === "fetching") {
+        return <p>Please wait</p>;
+    }
+    if (account === "error") {
+        return <p>Error</p>;
+    }
+    if (account === null) {
+        return <p>Not found</p>;
+    }
+
+    return <>
+        <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
+            <div className="hero-body">
+                <p className="title has-text-white">
+                    {updatingFavorite
+                        ? <span className="icon">
+                            <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                        </span>
+                        : <span className="icon" onClick={() => toggleFavorite()} style={{ cursor: "pointer" }}>
+                            {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                        </span>} #{account.id} {account.name}
+                </p>
+                {(account.description?.trim() ?? "") !== "" &&
+                    <p className="subtitle has-text-primary-light">
+                        {account.description} {PeriodFunctions.print(period)}
+                    </p>}
+            </div>
+            <div>
+                <PeriodSelector period={period} onChange={period => setPeriod(period) } />
+            </div>
+        </section>
+        <div className="p-3">
+            <div className="columns m-0">
+                <div className="column p-0 is-narrow is-flex">
+                    <Card title="Account Overview">
+                        <table className="table">
+                            <tbody>
+                                <tr>
+                                    <td>Balance</td>
+                                    <td className="has-text-right">{formatNumberWithPrefs(account.balance!, props.preferences)}</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Account Number</td>
+                                    <td className="has-text-right">{account.accountNumber}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </Card>
+                </div>
+                <div className="column p-0 is-flex">
+                    <Card title="Categories" style={{flexGrow: 1}}>
+                        <AccountCategoryChart id={Number(id)} preferences={props.preferences} period={period} />
+                    </Card>
+                </div>
+                <div className="column p-0 is-flex">
+                    <Card title="Balance" style={{ flexGrow: 1 }}>
+                        <AccountBalanceChart id={Number(id)} preferences={props.preferences} period={period} />
+                    </Card>
+                </div>
+            </div>
+            <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
+                <AccountTransactionList
+                    accountId={Number(id)}
+                    preferences={props.preferences} period={period}
+                    decrementPeriod={() => setPeriod(PeriodFunctions.decrement(period))}
+                    incrementPeriod={() => setPeriod(PeriodFunctions.increment(period))}
+                />
+            </Card>
+        </div>
+    </>;
 }
