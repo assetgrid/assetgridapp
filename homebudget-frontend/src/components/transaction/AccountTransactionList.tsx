@@ -200,149 +200,136 @@ interface IAccountTransactionListItemProps {
     updateItem: (item: Transaction) => void;
     type: "deposit" | "withdrawal";
 }
-interface IAccountTransactionListItemState {
-    disabled: boolean;
-    editingModel: null | {
-        amount: Decimal,
-        description: string,
-        dateTime: DateTime,
-        offsetAccount: Account,
-        category: string,
-    };
-    deleting: boolean;
-}
+interface TransactionEditingModel {
+    amount: Decimal;
+    description: string;
+    dateTime: DateTime;
+    offsetAccount: Account;
+    category: string;
+};
 
-class AccountTransactionListItem extends React.Component<IAccountTransactionListItemProps, IAccountTransactionListItemState> {
-    constructor(props: IAccountTransactionListItemProps) {
-        super(props);
-        this.state = {
-            disabled: false,
-            editingModel: null,
-            deleting: false
-        };
+function AccountTransactionListItem(props: IAccountTransactionListItemProps) {
+    const [disabled, setDisabled] = React.useState(false);
+    const [deleting, setDeleting] = React.useState(false);
+    const [model, setModel] = React.useState<TransactionEditingModel | null>(null);
+    const line = props.data;
+
+    if (model !== null) {
+        return <tr key={line.transaction.id} className="editing">
+            <td>
+                <InputDate value={model.dateTime}
+                    onChange={e => setModel({ ...model, dateTime: e })}
+                    disabled={disabled} /></td>
+            <td>
+                <InputText value={model.description}
+                    onChange={(e) => setModel({ ...model, description: e.target.value })}
+                    disabled={disabled} /></td>
+            <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>{formatNumberWithPrefs(line.amount, props.preferences)}</td>
+            <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(line.balance, props.preferences)}</td>
+            <td>
+                <InputAccount 
+                    value={model.offsetAccount?.id ?? null}
+                    disabled={disabled}
+                    allowNull={true}
+                    onChange={account => setModel({ ...model, offsetAccount: account })} />
+            </td>
+            <td>
+                <InputCategory
+                    value={model.category}
+                    disabled={disabled}
+                    onChange={category => setModel({ ...model, category: category })} />
+            </td>
+            <td>
+                {! disabled && <>
+                    <span className="icon button" onClick={() => saveChanges()}>
+                        <FontAwesomeIcon icon={solid.faCheck} />
+                    </span>
+                    <span className="icon button" onClick={() => setModel(null)}>
+                        <FontAwesomeIcon icon={solid.faXmark} />
+                    </span>
+                </>}
+            </td>
+        </tr>;
+    } else {
+        return <tr key={line.transaction.id}>
+            <td>{line.transaction.dateTime.toString()}</td>
+            <td>{line.transaction.description}</td>
+            <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>
+                {formatNumberWithPrefs(line.amount, props.preferences)}
+            </td>
+            <td className={"number-total"} style={{ fontWeight: "normal" }}>
+                {formatNumberWithPrefs(line.balance, props.preferences)}
+            </td>
+            <td>
+                {line.offsetAccount !== null && <AccountLink account={line.offsetAccount} />}
+            </td>
+            <td>{line.category}</td>
+            <td>
+                {! disabled && <>
+                    <span className="icon button" onClick={() => beginEdit()}>
+                        <FontAwesomeIcon icon={solid.faPen} />
+                    </span>
+                    <span className="icon button" onClick={() => setDeleting(true)}>
+                        <FontAwesomeIcon icon={solid.faTrashCan} />
+                    </span>
+                </>}
+                
+                {/* Deletion modal */}
+                {deleting && <Modal
+                    active={true}
+                    title={"Delete transaction"}
+                    close={() => setDeleting(false)}
+                    footer={<>
+                        <button className="button is-danger" onClick={() => deleteTransaction()}>Delete transaction</button>
+                        <button className="button" onClick={() => setDeleting(false)}>Cancel</button>
+                    </>}>
+                    Are you sure you want to delete transaction "#{line.transaction.id} {line.transaction.description}"?
+                </Modal>}
+            </td>
+        </tr>;
     }
 
-    public render() {
-        const line = this.props.data;
-
-        if (this.state.editingModel !== null) {
-            const model = this.state.editingModel;
-            return <tr key={line.transaction.id} className="editing">
-                <td>
-                    <InputDate value={model.dateTime}
-                        onChange={e => this.setState({ editingModel: { ...this.state.editingModel, dateTime: e } })}
-                        disabled={this.state.disabled} /></td>
-                <td>
-                    <InputText value={model.description}
-                        onChange={(e) => this.setState({ editingModel: { ...this.state.editingModel, description: e.target.value } })}
-                        disabled={this.state.disabled} /></td>
-                <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>{formatNumberWithPrefs(line.amount, this.props.preferences)}</td>
-                <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(line.balance, this.props.preferences)}</td>
-                <td>
-                    <InputAccount 
-                        value={model.offsetAccount?.id ?? null}
-                        disabled={this.state.disabled}
-                        allowNull={true}
-                        onChange={account => this.setState({ editingModel: { ...this.state.editingModel, offsetAccount: account } })} />
-                </td>
-                <td>
-                    <InputCategory
-                        value={model.category}
-                        disabled={this.state.disabled}
-                        onChange={category => this.setState({editingModel: { ...this.state.editingModel, category: category }})} />
-                </td>
-                <td>
-                    {! this.state.disabled && <>
-                        <span className="icon button" onClick={() => this.saveChanges()}>
-                            <FontAwesomeIcon icon={solid.faCheck} />
-                        </span>
-                        <span className="icon button" onClick={() => this.setState({ editingModel: null })}>
-                            <FontAwesomeIcon icon={solid.faXmark} />
-                        </span>
-                    </>}
-                </td>
-            </tr>;
-        } else {
-            return <tr key={line.transaction.id}>
-                <td>{line.transaction.dateTime.toString()}</td>
-                <td>{line.transaction.description}</td>
-                <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>
-                    {formatNumberWithPrefs(line.amount, this.props.preferences)}
-                </td>
-                <td className={"number-total"} style={{ fontWeight: "normal" }}>
-                    {formatNumberWithPrefs(line.balance, this.props.preferences)}
-                </td>
-                <td>
-                    {line.offsetAccount !== null && <AccountLink account={line.offsetAccount} />}
-                </td>
-                <td>{line.category}</td>
-                <td>
-                    {! this.state.disabled && <>
-                        <span className="icon button" onClick={() => this.beginEdit()}>
-                            <FontAwesomeIcon icon={solid.faPen} />
-                        </span>
-                        <span className="icon button" onClick={() => this.setState({ deleting: true })}>
-                            <FontAwesomeIcon icon={solid.faTrashCan} />
-                        </span>
-                    </>}
-                    
-                    {/* Deletion modal */}
-                    {this.state.deleting && <Modal
-                        active={true}
-                        title={"Delete transaction"}
-                        close={() => this.setState({ deleting: false })}
-                        footer={<>
-                            <button className="button is-danger" onClick={() => this.delete()}>Delete transaction</button>
-                            <button className="button" onClick={() => this.setState({ deleting: false })}>Cancel</button>
-                        </>}>
-                        Are you sure you want to delete transaction "#{line.transaction.id} {line.transaction.description}"?
-                    </Modal>}
-                </td>
-            </tr>;
-        }
-    }
-
-    private beginEdit() {
-        this.setState({
-            editingModel: {
-                amount: this.props.data.amount,
-                dateTime: this.props.data.transaction.dateTime,
-                description: this.props.data.transaction.description,
-                offsetAccount: this.props.data.offsetAccount,
-                category: this.props.data.category,
-            }
+    function beginEdit() {
+        setModel({
+            amount: props.data.amount,
+            dateTime: props.data.transaction.dateTime,
+            description: props.data.transaction.description,
+            offsetAccount: props.data.offsetAccount,
+            category: props.data.category,
         });
     }
 
-    private saveChanges() {
-        this.setState({ disabled: true, deleting: false });
+    function saveChanges() {
+        setDisabled(true);
+        setDeleting(false);
 
-        const model = this.state.editingModel;
         if (model === null) {
             return;
         }
 
-        let source = this.props.type === "deposit" ? model.offsetAccount?.id ?? -1 : null;
-        let destination = this.props.type === "deposit" ? null : model.offsetAccount?.id ?? -1;
+        let source = props.type === "deposit" ? model.offsetAccount?.id ?? -1 : null;
+        let destination = props.type === "deposit" ? null : model.offsetAccount?.id ?? -1;
         Api.Transaction.update({
-            id: this.props.data.transaction.id,
+            id: props.data.transaction.id,
             dateTime: model.dateTime,
             description: model.description,
             sourceId: source,
             destinationId: destination,
             category: model.category
         }).then(result => {
-            this.setState({ disabled: false, editingModel: null });
-            this.props.updateItem(result);
-        })
+            setDisabled(false);
+            setModel(null);
+            props.updateItem(result);
+        });
     }
 
-    private delete() {
-        this.setState({ disabled: true, deleting: false });
+    function deleteTransaction() {
+        setDisabled(true);
+        setDeleting(false);
 
-        Api.Transaction.delete(this.props.data.transaction.id).then(result => {
-            this.setState({ disabled: false });
-            this.props.updateItem(result);
+        Api.Transaction.delete(props.data.transaction.id).then(result => {
+            setDisabled(false);
+            props.updateItem(result);
         })
     }
 }
