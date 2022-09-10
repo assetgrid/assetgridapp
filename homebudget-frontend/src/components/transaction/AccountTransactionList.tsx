@@ -51,74 +51,75 @@ interface TableLine {
 
 const pageSize = 20;
 
-export default class AccountTransactionList extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            total: null,
-            descending: true,
-            draw: 0,
-            page: 1,
-        };
-    }
+export default function AccountTransactionList(props: Props) {
+    const [total, setTotal] = React.useState<Decimal | null>(null);
+    const [descending, setDescending] = React.useState(true);
+    const [draw, setDraw] = React.useState(0);
+    const [page, setPage] = React.useState(1);
+
+    const [targetPage, setTargetPage] = React.useState<number | "last" | null>(null);
+
+    React.useEffect(() => {
+        if (targetPage === "last") {
+            countTransactions().then(count => {
+                const lastPage = Math.max(1, Math.ceil(count / pageSize));
+                setPage(lastPage);
+                setDraw(draw => draw + 1);
+                setTargetPage(null);
+            });
+            return;
+        } else if (targetPage !== null) {
+            setPage(targetPage);
+            setTargetPage(null);
+        }
+        setDraw(draw => draw + 1);
+    }, [props.period])
+
+    return <Table<TableLine>
+        headings={<tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th className="has-text-right">Amount</th>
+            <th className="has-text-right">Balance</th>
+            <th>Destination</th>
+            <th>Category</th>
+            <th>Actions</th>
+        </tr>}
+        decrement={() => decrementPeriod()}
+        increment={() => incrementPeriod()}
+        pageSize={pageSize}
+        draw={(props.draw ?? 0) + draw}
+        type="async-increment"
+        fetchItems={fetchItems}
+        page={page}
+        goToPage={page => goToPage(page)}
+        reversePagination={true}
+        renderItem={line =>
+            <AccountTransactionListItem preferences={props.preferences}
+                data={line}
+                key={line.transaction.id}
+                type={line.transaction.source?.id === props.accountId ? "withdrawal" : "deposit"}
+                updateItem={() => setDraw(draw => draw + 1) } />
+        }
+    />;
     
-    private fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
-        let [start, end] = PeriodFunctions.getRange(this.props.period);
-        let query: SearchGroup = {
-            type: SearchGroupType.And,
-            children: [ {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "DateTime",
-                    value: start.toISO(),
-                    operator: SearchOperator.GreaterThanOrEqual,
-                    not: false
-                }
-            }, {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "DateTime",
-                    value: end.toISO(),
-                    operator: SearchOperator.GreaterThan,
-                    not: true
-                }
-            }]
-        };
-        return new Promise(resolve => {
-            Api.Account.listTransactions(this.props.accountId, from, to, this.state.descending, query).then(result => {
-                const transactions: Transaction[] = result.data;
-                let balances: Decimal[] = [];
-                if (this.state.descending) {
-                    for (let i = 0; i < transactions.length; i++) {
-                        balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? new Decimal(result.total))
-                            .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === this.props.accountId ? 1 : -1))
-                    }
-                } else {
-                    for (let i = 0; i < transactions.length; i++) {
-                        balances[i] = (balances[i - 1] ?? new Decimal(result.total))
-                            .add(transactions[i].total.mul(transactions[i].destination?.id === this.props.accountId ? 1 : -1))
-                    }
-                }
-
-                this.setState({ total: result.total }, () =>
-                    resolve({
-                        items: transactions.map((t, i) => ({ 
-                            balance: balances[i],
-                            transaction: t,
-                            offsetAccount: t.destination?.id === this.props.accountId ? t.source : t.destination,
-                            amount: t.destination?.id === this.props.accountId ? t.total : t.total.neg(),
-                            category: t.category
-                        })),
-                        draw: draw,
-                        offset: from,
-                        totalItems: result.totalItems
-                    }));
-            })
-        });
+    function goToPage(page: number) {
+        setPage(page);
+        setDraw(draw => draw + 1);
     }
 
-    private countItems(): Promise<number> {
-        let [start, end] = PeriodFunctions.getRange(this.props.period);
+    function decrementPeriod() {
+        setTargetPage(1);
+        props.decrementPeriod();
+    }
+
+    async function incrementPeriod() {
+        setTargetPage("last");
+        props.incrementPeriod();
+    }
+
+    function countTransactions(): Promise<number> {
+        let [start, end] = PeriodFunctions.getRange(props.period);
         let query: SearchGroup = {
             type: SearchGroupType.And,
             children: [ {
@@ -140,57 +141,64 @@ export default class AccountTransactionList extends React.Component<Props, State
             }]
         };
         return new Promise(resolve => {
-            Api.Account.countTransactions(this.props.accountId, query)
+            Api.Account.countTransactions(props.accountId, query)
                 .then(result => resolve(result));
         });
     }
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
-        if (prevProps.period !== this.props.period) {
-            this.setState({ draw: this.state.draw + 1, page: 1 });
-        }
-    }
+    function fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
+        let [start, end] = PeriodFunctions.getRange(props.period);
+        let query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [ {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true
+                }
+            }]
+        };
+        return new Promise(resolve => {
+            Api.Account.listTransactions(props.accountId, from, to, descending, query).then(result => {
+                const transactions: Transaction[] = result.data;
+                let balances: Decimal[] = [];
+                if (descending) {
+                    for (let i = 0; i < transactions.length; i++) {
+                        balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? new Decimal(result.total))
+                            .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === props.accountId ? 1 : -1))
+                    }
+                } else {
+                    for (let i = 0; i < transactions.length; i++) {
+                        balances[i] = (balances[i - 1] ?? new Decimal(result.total))
+                            .add(transactions[i].total.mul(transactions[i].destination?.id === props.accountId ? 1 : -1))
+                    }
+                }
 
-    private decrement() {
-        this.setState({ page: 1 });
-        this.props.decrementPeriod();
-    }
-
-    private async increment() {
-        await this.props.incrementPeriod();
-        const count = await this.countItems();
-        const lastPage = Math.max(1, Math.ceil(count / pageSize));
-        this.setState({ page: lastPage });
-    }
-
-    public render() {
-        return <Table<TableLine>
-            headings={<tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th className="has-text-right">Amount</th>
-                <th className="has-text-right">Balance</th>
-                <th>Destination</th>
-                <th>Category</th>
-                <th>Actions</th>
-            </tr>}
-            decrement={() => this.decrement()}
-            increment={() => this.increment()}
-            pageSize={pageSize}
-            draw={(this.props.draw ?? 0) + this.state.draw}
-            type="async-increment"
-            fetchItems={this.fetchItems.bind(this)}
-            page={this.state.page}
-            goToPage={page => this.setState({ page: page, draw: this.state.draw + 1 })}
-            reversePagination={true}
-            renderItem={line =>
-                <AccountTransactionListItem preferences={this.props.preferences}
-                    data={line}
-                    key={line.transaction.id}
-                    type={line.transaction.source?.id === this.props.accountId ? "withdrawal" : "deposit"}
-                    updateItem={() => this.setState({ draw: this.state.draw + 1 }) } />
-            }
-            />;
+                setTotal(result.total);
+                resolve({
+                    items: transactions.map((t, i) => ({ 
+                        balance: balances[i],
+                        transaction: t,
+                        offsetAccount: t.destination?.id === props.accountId ? t.source : t.destination,
+                        amount: t.destination?.id === props.accountId ? t.total : t.total.neg(),
+                        category: t.category
+                    })),
+                    draw: draw,
+                    offset: from,
+                    totalItems: result.totalItems
+                });
+            })
+        });
     }
 }
 
