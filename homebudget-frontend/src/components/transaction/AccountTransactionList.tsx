@@ -1,30 +1,13 @@
-import axios, { AxiosResponse } from "axios";
 import * as React from "react";
 import { Transaction, TransactionListResponse } from "../../models/transaction";
-import CreateTransaction from "./CreateTransaction";
-import InputButton from "../form/InputButton";
 import Table from "../common/Table";
-import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
-import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import { Preferences } from "../../models/preferences";
 import { Account } from "../../models/account";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as regular from "@fortawesome/free-regular-svg-icons"
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import { DateTime } from "luxon";
-import InputText from "../form/InputText";
-import InputAccount from "../form/account/InputAccount";
-import { Calendar } from "react-date-range";
-import InputDate from "../form/InputDate";
-import Modal from "../common/Modal";
-import InputCategory from "../form/InputCategory";
-import { Link } from "react-router-dom";
-import { routes } from "../../lib/routes";
-import AccountLink from "../account/AccountLink";
-import TransactionLink from "./TransactionLink";
+import TransactionTableLine from "./TransactionTableLine";
 
 interface Props {
     draw?: number;
@@ -44,10 +27,7 @@ interface State {
 
 interface TableLine {
     balance: Decimal;
-    amount: Decimal;
-    offsetAccount: Account;
     transaction: Transaction;
-    category: string;
 }
 
 const pageSize = 20;
@@ -97,10 +77,11 @@ export default function AccountTransactionList(props: Props) {
         goToPage={page => goToPage(page)}
         reversePagination={true}
         renderItem={line =>
-            <AccountTransactionListItem preferences={props.preferences}
-                data={line}
+            <TransactionTableLine preferences={props.preferences}
+                accountId={props.accountId}
+                transaction={line.transaction}
+                balance={line.balance}
                 key={line.transaction.id}
-                type={line.transaction.source?.id === props.accountId ? "withdrawal" : "deposit"}
                 updateItem={() => setDraw(draw => draw + 1) } />
         }
     />;
@@ -191,9 +172,6 @@ export default function AccountTransactionList(props: Props) {
                     items: transactions.map((t, i) => ({ 
                         balance: balances[i],
                         transaction: t,
-                        offsetAccount: t.destination?.id === props.accountId ? t.source : t.destination,
-                        amount: t.destination?.id === props.accountId ? t.total : t.total.neg(),
-                        category: t.category
                     })),
                     draw: draw,
                     offset: from,
@@ -201,147 +179,5 @@ export default function AccountTransactionList(props: Props) {
                 });
             })
         });
-    }
-}
-
-interface IAccountTransactionListItemProps {
-    data: TableLine;
-    preferences: Preferences | "fetching";
-    updateItem: (item: Transaction) => void;
-    type: "deposit" | "withdrawal";
-}
-interface TransactionEditingModel {
-    amount: Decimal;
-    description: string;
-    dateTime: DateTime;
-    offsetAccount: Account;
-    category: string;
-};
-
-function AccountTransactionListItem(props: IAccountTransactionListItemProps) {
-    const [disabled, setDisabled] = React.useState(false);
-    const [deleting, setDeleting] = React.useState(false);
-    const [model, setModel] = React.useState<TransactionEditingModel | null>(null);
-    const line = props.data;
-
-    if (model !== null) {
-        return <tr key={line.transaction.id} className="editing">
-            <td><TransactionLink transaction={line.transaction} /></td>
-            <td>
-                <InputDate value={model.dateTime}
-                    onChange={e => setModel({ ...model, dateTime: e })}
-                    disabled={disabled} /></td>
-            <td>
-                <InputText value={model.description}
-                    onChange={(e) => setModel({ ...model, description: e.target.value })}
-                    disabled={disabled} /></td>
-            <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>{formatNumberWithPrefs(line.amount, props.preferences)}</td>
-            <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(line.balance, props.preferences)}</td>
-            <td>
-                <InputAccount 
-                    value={model.offsetAccount?.id ?? null}
-                    disabled={disabled}
-                    allowNull={true}
-                    onChange={account => setModel({ ...model, offsetAccount: account })} />
-            </td>
-            <td>
-                <InputCategory
-                    value={model.category}
-                    disabled={disabled}
-                    onChange={category => setModel({ ...model, category: category })} />
-            </td>
-            <td>
-                {! disabled && <>
-                    <span className="icon button" onClick={() => saveChanges()}>
-                        <FontAwesomeIcon icon={solid.faCheck} />
-                    </span>
-                    <span className="icon button" onClick={() => setModel(null)}>
-                        <FontAwesomeIcon icon={solid.faXmark} />
-                    </span>
-                </>}
-            </td>
-        </tr>;
-    } else {
-        return <tr key={line.transaction.id}>
-            <td><TransactionLink transaction={line.transaction} /></td>
-            <td>{line.transaction.dateTime.toString()}</td>
-            <td>{line.transaction.description}</td>
-            <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>
-                {formatNumberWithPrefs(line.amount, props.preferences)}
-            </td>
-            <td className={"number-total"} style={{ fontWeight: "normal" }}>
-                {formatNumberWithPrefs(line.balance, props.preferences)}
-            </td>
-            <td>
-                {line.offsetAccount !== null && <AccountLink account={line.offsetAccount} />}
-            </td>
-            <td>{line.category}</td>
-            <td>
-                {! disabled && <>
-                    <span className="icon button" onClick={() => beginEdit()}>
-                        <FontAwesomeIcon icon={solid.faPen} />
-                    </span>
-                    <span className="icon button" onClick={() => setDeleting(true)}>
-                        <FontAwesomeIcon icon={solid.faTrashCan} />
-                    </span>
-                </>}
-                
-                {/* Deletion modal */}
-                {deleting && <Modal
-                    active={true}
-                    title={"Delete transaction"}
-                    close={() => setDeleting(false)}
-                    footer={<>
-                        <button className="button is-danger" onClick={() => deleteTransaction()}>Delete transaction</button>
-                        <button className="button" onClick={() => setDeleting(false)}>Cancel</button>
-                    </>}>
-                    Are you sure you want to delete transaction "#{line.transaction.id} {line.transaction.description}"?
-                </Modal>}
-            </td>
-        </tr>;
-    }
-
-    function beginEdit() {
-        setModel({
-            amount: props.data.amount,
-            dateTime: props.data.transaction.dateTime,
-            description: props.data.transaction.description,
-            offsetAccount: props.data.offsetAccount,
-            category: props.data.category,
-        });
-    }
-
-    function saveChanges() {
-        setDisabled(true);
-        setDeleting(false);
-
-        if (model === null) {
-            return;
-        }
-
-        let source = props.type === "deposit" ? model.offsetAccount?.id ?? -1 : null;
-        let destination = props.type === "deposit" ? null : model.offsetAccount?.id ?? -1;
-        Api.Transaction.update({
-            id: props.data.transaction.id,
-            dateTime: model.dateTime,
-            description: model.description,
-            sourceId: source,
-            destinationId: destination,
-            category: model.category
-        }).then(result => {
-            setDisabled(false);
-            setModel(null);
-            props.updateItem(result);
-        });
-    }
-
-    function deleteTransaction() {
-        setDisabled(true);
-        setDeleting(false);
-
-        Api.Transaction.delete(props.data.transaction.id).then(result => {
-            setDisabled(false);
-            props.updateItem(result);
-        })
     }
 }

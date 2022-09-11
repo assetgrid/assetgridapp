@@ -55,9 +55,9 @@ html, body {
 }
 
 .number-total, table td.number-total {
-    font-weight: bold;
     text-align: right;
-    color: black;
+    font-weight: bold;
+    color: $dark;
     &.positive {
         color: #27ae60;
     }
