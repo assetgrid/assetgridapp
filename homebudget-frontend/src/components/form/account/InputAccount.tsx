@@ -12,6 +12,7 @@ export interface InputAccountProps {
     disabled: boolean,
     allowNull: boolean,
     onChange: (account: Account | null) => void;
+    nullSelectedText?: string;
 }
 
 interface State {
@@ -80,7 +81,11 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
     public render() {
         var value: string;
         if (this.props.value == null) {
-            value = "Select Account";
+            if (this.props.nullSelectedText) {
+                value = this.props.nullSelectedText;
+            } else {
+                value = "Select Account";
+            }
         } else if (this.state.value == null) {
             value = "#" + this.props.value + " …";
         } else {

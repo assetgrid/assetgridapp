@@ -1,7 +1,7 @@
 import * as React from "react";
 
 interface Props {
-    label: string;
+    label?: string;
     items: { key: string, value: string }[];
     value: string,
     placeholder?: string,

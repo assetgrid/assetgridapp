@@ -1,0 +1,14 @@
+.filter-group {
+    & > .filter-condition {
+        margin-left: $size-3;
+    }
+
+    & > .filter-and-or {
+        color: #999;
+    }
+
+    border: 2px solid #999;
+    border-radius: $radius;
+    padding: $size-6;
+    margin-bottom: $size-6;
+}

@@ -1,3 +1,6 @@
+import Decimal from "decimal.js";
+import { DateTime } from "luxon";
+
 export type SearchRequest = {
     from: number;
     to: number;
@@ -7,14 +10,21 @@ export type SearchRequest = {
 export type SearchGroup = {
     type: SearchGroupType.Query;
     query: SearchQuery;
-} | {
-    type: SearchGroupType.And | SearchGroupType.Or;
+} | AndSearchGroup | OrSearchGroup;
+
+export type AndSearchGroup = {
+    type: SearchGroupType.And;
+    children: SearchGroup[];
+}
+
+export type OrSearchGroup = {
+    type: SearchGroupType.Or;
     children: SearchGroup[];
 }
 
 export type SearchQuery = {
     column: string;
-    value: string | number | string[] | number;
+    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[];
     operator: SearchOperator;
     not: boolean;
 }
