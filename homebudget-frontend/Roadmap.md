@@ -1,3 +1,4 @@
+Autocomplete for filters
 Currencies
 Stocks
  - Price API integration
