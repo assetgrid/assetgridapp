@@ -9,34 +9,37 @@ import InputNumber from "../../form/InputNumber";
 import InputNumbers from "../../form/InputNumbers";
 import InputSelect from "../../form/InputSelect";
 import InputText from "../../form/InputText";
+import InputTextMultiple from "../../form/InputTextMultiple";
 
-const numericOperators = ["equals", "not-equals", "in", "not-in", "greater-than", "greater-than-or-equal", "less-than", "less-than-or-equal"] as const;
-const numericArrayOperators = ["in", "not-in"] as const;
+const arrayOperators = ["in", "not-in"] as const;
+const numericScalarOperators = ["equals", "not-equals", "greater-than", "greater-than-or-equal", "less-than", "less-than-or-equal"] as const;
+const numericOperators = [...numericScalarOperators, ...arrayOperators] as const;
 const accountOperators = ["equals", "not-equals", "in", "not-in"] as const;
 const dateTimeOperators = ["equals", "not-equals", "greater-than", "greater-than-or-equal", "less-than", "less-than-or-equal"] as const;
-const stringOperators = ["equals", "not-equals", "in", "not-in", "contains", "not-contains"] as const;
+const stringScalarOperators = ["equals", "not-equals", "contains", "not-contains"] as const;
+const stringOperators = [...stringScalarOperators, ...arrayOperators] as const;
 
 type ConditionModel = {
     column: "Id";
-    operator: typeof numericOperators[number];
+    operator: typeof numericScalarOperators[number];
     valueType: "number";
     value: number;
     onChange: (value: number) => void;
 } | {
     column: "Id";
-    operator: typeof numericArrayOperators[number];
+    operator: typeof arrayOperators[number];
     valueType: "number[]";
     value: number[];
     onChange: (value: number[]) => void;
 } | {
     column: "Total";
-    operator: typeof numericOperators[number];
+    operator: typeof numericScalarOperators[number];
     valueType: "decimal";
     value: Decimal;
     onChange: (value: Decimal) => void;
 } | {
     column: "Total";
-    operator: typeof numericArrayOperators[number];
+    operator: typeof arrayOperators[number];
     valueType: "decimal[]";
     value: Decimal[];
     onChange: (value: Decimal[]) => void;
@@ -54,10 +57,16 @@ type ConditionModel = {
     onChange: (value: DateTime) => void;
 } | {
     column: "Identifier" | "Category" | "Description";
-    operator: typeof stringOperators[number];
+    operator: typeof stringScalarOperators[number];
     valueType: "string";
     value: string;
     onChange: (value: string) => void;
+} | {
+    column: "Identifier" | "Category" | "Description";
+    operator: typeof arrayOperators[number];
+    valueType: "string[]";
+    value: string[];
+    onChange: (value: string[]) => void;
 };
 
 interface ConditionProps {
@@ -121,7 +130,7 @@ export default function Condition(props: ConditionProps) {
         switch (props.query.column as ConditionModel["column"]) {
             case "Id":
             case "Total":
-                return numericOperators.concat(numericArrayOperators);
+                return numericOperators;
             case "DateTime":
                 return dateTimeOperators;
             case "SourceAccountId":
@@ -187,7 +196,7 @@ export default function Condition(props: ConditionProps) {
         switch (newColumn) {
             case "Id":
             case "Total":
-                if (numericOperators.concat(numericArrayOperators).indexOf(newOperator as any) === -1) newOperator = "equals";
+                if (numericOperators.indexOf(newOperator as any) === -1) newOperator = "equals";
                 break;
             case "SourceAccountId":
             case "DestinationAccountId":
@@ -221,6 +230,7 @@ export default function Condition(props: ConditionProps) {
                     break;
                 case "number[]":
                 case "decimal[]":
+                case "string[]":
                     value = [];
                     break;
             }
@@ -259,7 +269,13 @@ function getValueType(column: ConditionModel['column'], operator: ConditionModel
         case "Category":
         case "Description":
         case "Identifier":
-            return "string";
+            switch (operator) {
+                case "in":
+                case "not-in":
+                    return "string[]";
+                default:
+                    return "string";
+            }
         case "SourceAccountId":
         case "DestinationAccountId":
             return "account";
@@ -333,15 +349,17 @@ function ConditionValueEditorText(props: { condition: ConditionModel }) {
             throw "Invalid column";
     }
 
-    let condition = props.condition;
     switch (props.condition.operator) {
         case "equals":
         case "not-equals":
-        case "in":
-        case "not-in":
         case "contains":
         case "not-contains":
-            return <InputText value={condition.value} onChange={e => condition.onChange(e.target.value)} />
+            let conditionScalar = props.condition;
+            return <InputText value={conditionScalar.value} onChange={e => conditionScalar.onChange(e.target.value)} />;
+        case "in":
+        case "not-in":
+            let conditionArray = props.condition;
+            return <InputTextMultiple value={conditionArray.value} onChange={value => conditionArray.onChange(value)}/>;
     }
 }
 
