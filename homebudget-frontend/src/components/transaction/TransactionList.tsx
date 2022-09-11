@@ -18,6 +18,8 @@ interface Props {
 }
 
 export default function TransactionList(props: Props) {
+    const [draw, setDraw] = React.useState(0);
+    
     return <Table<Transaction>
         headings={<tr>
             <th></th>
@@ -30,11 +32,15 @@ export default function TransactionList(props: Props) {
             <th>Actions</th>
         </tr>}
         pageSize={20}
-        draw={props.draw}
+        draw={props.draw + draw}
         type="async"
         fetchItems={fetchItems}
         renderItem={transaction => {
-            return <TransactionTableLine transaction={transaction} preferences={props.preferences} updateItem={() => 0} />
+            return <TransactionTableLine
+                key={transaction.id}
+                transaction={transaction}
+                preferences={props.preferences}
+                updateItem={() => setDraw(draw => draw + 1)} />
         }}
     />;
     

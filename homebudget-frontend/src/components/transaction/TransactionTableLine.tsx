@@ -29,7 +29,8 @@ interface TransactionEditingModel {
     total: Decimal;
     description: string;
     dateTime: DateTime;
-    offsetAccount: Account;
+    source: Account | null;
+    destination: Account | null;
     category: string;
 };
 
@@ -57,13 +58,20 @@ export default function TransactionTableLine(props: Props) {
                 {formatNumberWithPrefs(total, props.preferences)}
             </td>
             {props.balance && <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, props.preferences)}</td>}
-            <td>
-                <InputAccount 
-                    value={model.offsetAccount?.id ?? null}
+            {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <td>
+                <InputAccount
+                    value={model.source?.id ?? null}
                     disabled={disabled}
                     allowNull={true}
-                    onChange={account => setModel({ ...model, offsetAccount: account })} />
-            </td>
+                    onChange={account => setModel({ ...model, source: account })} />
+            </td>}
+            {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <td>
+                <InputAccount
+                    value={model.destination?.id ?? null}
+                    disabled={disabled}
+                    allowNull={true}
+                    onChange={account => setModel({ ...model, destination: account })} />
+            </td>}
             <td>
                 <InputCategory
                     value={model.category}
@@ -127,11 +135,13 @@ export default function TransactionTableLine(props: Props) {
     }
 
     function beginEdit() {
+        console.log(props);
         setModel({
             total: props.transaction.total,
             dateTime: props.transaction.dateTime,
             description: props.transaction.description,
-            offsetAccount: offsetAccount,
+            source: props.transaction.source,
+            destination: props.transaction.destination,
             category: props.transaction.category,
         });
     }
@@ -144,14 +154,12 @@ export default function TransactionTableLine(props: Props) {
             return;
         }
 
-        let source = (props.accountId === props.transaction.destination?.id) ? model.offsetAccount?.id ?? -1 : null;
-        let destination = (props.accountId === props.transaction.source?.id) ? null : model.offsetAccount?.id ?? -1;
         Api.Transaction.update({
             id: props.transaction.id,
             dateTime: model.dateTime,
             description: model.description,
-            sourceId: source,
-            destinationId: destination,
+            sourceId: model.source?.id ?? -1,
+            destinationId: model.destination?.id ?? -1,
             category: model.category
         }).then(result => {
             setDisabled(false);

@@ -331,6 +331,7 @@ const Transaction = {
                     result.data.data = (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
                         ...transaction,
                         total: new Decimal(totalString).div(new Decimal(10000)),
+                        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
                         lines: (transaction.lines as (TransactionLine & { amountString: string })[]).map(({ amountString, ...line }) => ({
                             ...line,
                             amount: new Decimal(amountString).div(new Decimal(10000)),
