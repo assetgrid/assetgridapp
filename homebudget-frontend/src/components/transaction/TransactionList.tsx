@@ -7,6 +7,8 @@ import { formatNumberWithPrefs } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import AccountLink from "../account/AccountLink";
+import Tooltip from "../common/Tooltip";
+import TransactionLink from "./TransactionLink";
 
 interface Props {
     draw?: number;
@@ -17,6 +19,7 @@ interface Props {
 export default function TransactionList(props: Props) {
     return <Table<Transaction>
         headings={<tr>
+            <th></th>
             <th>Date</th>
             <th>Amount</th>
             <th>Description</th>
@@ -31,6 +34,9 @@ export default function TransactionList(props: Props) {
         renderItem={transaction => {
             const total = transaction.lines.map(line => line.amount).reduce((a, b) => a.add(b), new Decimal(0));
             return <tr key={transaction.id}>
+                <td>
+                    <TransactionLink transaction={transaction} />
+                </td>
                 <td>{transaction.dateTime.toString()}</td>
                 <td className={"number-total"}>
                     {formatNumberWithPrefs(total, props.preferences)}

@@ -24,6 +24,7 @@ import InputCategory from "../form/InputCategory";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import AccountLink from "../account/AccountLink";
+import TransactionLink from "./TransactionLink";
 
 interface Props {
     draw?: number;
@@ -77,6 +78,7 @@ export default function AccountTransactionList(props: Props) {
 
     return <Table<TableLine>
         headings={<tr>
+            <th></th>
             <th>Date</th>
             <th>Description</th>
             <th className="has-text-right">Amount</th>
@@ -224,6 +226,7 @@ function AccountTransactionListItem(props: IAccountTransactionListItemProps) {
 
     if (model !== null) {
         return <tr key={line.transaction.id} className="editing">
+            <td><TransactionLink transaction={line.transaction} /></td>
             <td>
                 <InputDate value={model.dateTime}
                     onChange={e => setModel({ ...model, dateTime: e })}
@@ -260,6 +263,7 @@ function AccountTransactionListItem(props: IAccountTransactionListItemProps) {
         </tr>;
     } else {
         return <tr key={line.transaction.id}>
+            <td><TransactionLink transaction={line.transaction} /></td>
             <td>{line.transaction.dateTime.toString()}</td>
             <td>{line.transaction.description}</td>
             <td className={"number-total " + (line.amount.greaterThan(0) ? "positive" : (line.amount.lessThan(0) ? "negative" : ""))}>
