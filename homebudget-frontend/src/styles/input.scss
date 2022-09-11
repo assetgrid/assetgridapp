@@ -51,8 +51,50 @@
         flex-grow: 1;
         border: 0;
         outline: none;
+        width: 0px;
         &:focus {
             outline: none;
+            width: 3rem;
+        }
+
+        /* Remove up/down arrows for input[number] for Blink/Webkit */
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Remove up/down arrows for input[number] for Firefox */
+        &[type=number] {
+            -moz-appearance: textfield;
+        }
+    }
+
+    & > .button-add {
+        position: relative;
+        height: 20px;
+        max-height: 20px;
+        max-width: 20px;
+        min-height: 20px;
+        min-width: 20px;
+        width: 20px;
+        border: 0;
+        background: transparent;
+        margin-right: 0.5rem;
+        cursor: pointer;
+        color: #DDD;
+
+        & > * {
+            background-color: hsl(0deg, 0%, 100%);
+            display: block;
+            left: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%) scale(1.5);
+            transform-origin: center center;
+        }
+        &:hover {
+            color: #999;
         }
     }
 }

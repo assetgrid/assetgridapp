@@ -1,4 +1,6 @@
 import * as React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as solid from "@fortawesome/free-solid-svg-icons"
 
 interface Props {
     label?: string;
@@ -27,6 +29,9 @@ export default function InputTextMultiple(props: Props) {
                 onChange={input}
                 onKeyDown={keydown}
             />
+            <button className="is-small button-add" onClick={() => keydown(null)}>
+                <FontAwesomeIcon icon={solid.faPlusCircle} />
+            </button>
         </div>
     </div>;
 
@@ -34,13 +39,14 @@ export default function InputTextMultiple(props: Props) {
         setEnteringText(e.target.value);
     }
 
-    function keydown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key == "Enter") {
+    function keydown(e: React.KeyboardEvent<HTMLInputElement> | null) {
+        if ((e == null || e.key == "Enter") && enteringText.trim() != "") {
             // Append the current value to the list of values
             props.onChange([...props.value, enteringText]);
             setEnteringText("");
+            return;
         }
-        if (e.key == "Backspace" && enteringText === "" && props.value.length > 0) {
+        if (e && e.key == "Backspace" && enteringText === "" && props.value.length > 0) {
             props.onChange(props.value.slice(0, props.value.length - 1));
         }
     }

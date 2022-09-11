@@ -1,5 +1,8 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as solid from "@fortawesome/free-solid-svg-icons"
 import Decimal from "decimal.js";
 import * as React from "react";
+
 
 interface Props {
     label?: string;
@@ -29,6 +32,9 @@ export default function InputNumbers(props: Props) {
                 onChange={input}
                 onKeyDown={keydown}
             />
+            <button className="is-small button-add" onClick={() => keydown(null)}>
+                <FontAwesomeIcon icon={solid.faPlusCircle} />
+            </button>
         </div>
     </div>;
 
@@ -41,13 +47,14 @@ export default function InputNumbers(props: Props) {
         setEnteringNumber(isNaN(valueAsNumber) ? " " : valueAsNumber);
     }
 
-    function keydown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key == " " || e.key == "Enter") {
+    function keydown(e: React.KeyboardEvent<HTMLInputElement> | null) {
+        if ((e == null || e.key == " " || e.key == "Enter") && enteringNumber !== " ") {
             // Append the current value to the list of values
             props.onChange([...props.value, new Decimal(enteringNumber)]);
             setEnteringNumber(" ");
+            return;
         }
-        if (e.key == "Backspace" && enteringNumber === " " && props.value.length > 0) {
+        if (e && e.key == "Backspace" && enteringNumber === " " && props.value.length > 0) {
             props.onChange(props.value.slice(0, props.value.length - 1));
         }
     }
