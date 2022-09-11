@@ -121,6 +121,8 @@ export default function Condition(props: ConditionProps) {
 
     function getOperatorString(query: SearchQuery) {
         switch (query.operator) {
+            case SearchOperator.In:
+                return query.not ? "not-in" : "in";
             case SearchOperator.Contains:
                 return query.not ? "not-contains" : "contains";
             case SearchOperator.Equals:
@@ -136,9 +138,10 @@ export default function Condition(props: ConditionProps) {
         switch (operatorString) {
             case "contains":
             case "not-contains":
+                return SearchOperator.Contains;
             case "in":
             case "not-in":
-                return SearchOperator.Contains;
+                return SearchOperator.In;
             case "equals":
             case "not-equals":
                 return SearchOperator.Equals;

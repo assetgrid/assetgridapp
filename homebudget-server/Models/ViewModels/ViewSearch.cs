@@ -23,6 +23,8 @@
                     case ViewSearchOperator.Equals:
                         return Not ? "!=" : "==";
                     case ViewSearchOperator.Contains:
+                        return Not ? "does not contain" : "contains";
+                    case ViewSearchOperator.In:
                         return Not ? "not in" : "in";
                     case ViewSearchOperator.GreaterThan:
                         return Not ? "<=" : ">";
@@ -76,6 +78,7 @@
     {
         Equals,
         Contains,
+        In,
         GreaterThan,
         GreaterThanOrEqual,
     }

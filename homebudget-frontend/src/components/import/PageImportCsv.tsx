@@ -242,7 +242,7 @@ export default class PageImportCsv extends React.Component<Props, State> {
                     type: SearchGroupType.Query,
                     query: {
                         column: capitalize(identifier),
-                        operator: SearchOperator.Contains,
+                        operator: SearchOperator.In,
                         value: uniqueAccountReferences
                             .filter(reference => reference.identifier === identifier)
                             .map(reference => reference.value)

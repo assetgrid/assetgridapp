@@ -32,8 +32,9 @@ export type SearchQuery = {
 export enum SearchOperator {
     Equals = 0,
     Contains = 1,
-    GreaterThan = 2,
-    GreaterThanOrEqual = 3,
+    In = 2,
+    GreaterThan = 3,
+    GreaterThanOrEqual = 4,
 }
 
 export enum SearchGroupType {

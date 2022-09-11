@@ -3,6 +3,8 @@ import { AndSearchGroup, OrSearchGroup, SearchGroup, SearchGroupType, SearchOper
 import InputButton from "../../form/InputButton";
 import Condition from "./TransactionFilterConditionEditor";
 
+// Inspiration: https://www.npmjs.com/package/comet-awesome-query-builder
+
 interface Props<T1, T2> {
     query: T1;
     setQuery: (newQuery: T2) => void;

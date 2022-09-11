@@ -72,6 +72,11 @@ namespace homebudget_server.Data
 
                     var column = columns.First(column => column.name == group.Query.Column);
                     var columnValue = group.Query.Value != null ? CastJsonElement((JsonElement)group.Query.Value, column.type) : null;
+                    MemberExpression property = Expression.Property(parameter, group.Query.Column);
+                    if (column.name == "Category")
+                    {
+                        property = Expression.Property(property, "NormalizedName");
+                    }
 
                     switch (group.Query.Operator)
                     {
@@ -84,9 +89,18 @@ namespace homebudget_server.Data
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
-                            var left = Expression.Property(parameter, group.Query.Column);
-                            result = Expression.Equal(left, Expression.Constant(columnValue, left.Type));
+
+                            // Categories should be handled separately as "" means null
+                            if (column.name == "Category" && ((string?)columnValue ?? "") == "")
+                            {
+                                result = Expression.Equal(Expression.Property(parameter, "CategoryId"), Expression.Constant(null));
+                            }
+                            else
+                            {
+                                result = Expression.Equal(property, Expression.Constant(columnValue, property.Type));
+                            }
                             break;
+
                         case ViewSearchOperator.Contains:
                             if (columnValue == null)
                             {
@@ -99,15 +113,32 @@ namespace homebudget_server.Data
                                 {
                                     return Expression.Constant(false);
                                 }
+
                                 result = Expression.Call(
                                     // Call method Contains on the column with the value as the parameter
-                                    Expression.Property(parameter, group.Query.Column),
+                                    property,
                                     typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
                                     Expression.Constant(columnValue)
                                     );
+                                if (column.name == "Category" && group.Query.Not)
+                                {
+                                    // For "does not contain" queries on categories, those without a category should be included as well
+                                    result = Expression.AndAlso(Expression.NotEqual(Expression.Property(parameter, "CategoryId"), Expression.Constant(null)), result);
+                                }
                                 break;
                             }
-                            else if (columnValue.GetType().GetElementType() == column.type)
+                            else
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' does not accept type {columnValue.GetType()}");
+                            }
+
+                        case ViewSearchOperator.In:
+                            if (columnValue == null)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type null");
+                            }
+
+                            if (columnValue.GetType().IsArray && columnValue.GetType().GetElementType() == column.type)
                             {
                                 var method = typeof(Enumerable)
                                     .GetMethods()
@@ -120,7 +151,7 @@ namespace homebudget_server.Data
                                     null,
                                     method,
                                     Expression.Constant(columnValue),
-                                    Expression.Property(parameter, group.Query.Column)
+                                    property
                                     );
                                 break;
                             }
@@ -138,7 +169,7 @@ namespace homebudget_server.Data
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
-                            result = Expression.GreaterThan(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
+                            result = Expression.GreaterThan(property, Expression.Constant(columnValue));
                             break;
                         case ViewSearchOperator.GreaterThanOrEqual:
                             if (columnValue == null)
@@ -150,7 +181,7 @@ namespace homebudget_server.Data
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
-                            result = Expression.GreaterThanOrEqual(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
+                            result = Expression.GreaterThanOrEqual(property, Expression.Constant(columnValue));
                             break;
                         default:
                             throw new Exception($"Unknown search operator '{group.Query.Operator}'");
