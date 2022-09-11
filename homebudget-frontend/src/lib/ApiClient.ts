@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
-import { SearchGroup, SearchGroupType, SearchRequest, SearchResponse } from "../models/search";
+import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, Transaction, UpdateTransaction } from "../models/transaction";
 
 const rootUrl = 'https://localhost:7262';
@@ -359,7 +359,11 @@ const Transaction = {
                         }
                     };
                     if (query.query.column === "Total") {
-                        result.query.value = (result.query.value as Decimal).times(10000).toNumber();
+                        if (query.query.operator === SearchOperator.In) {
+                            result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
+                        } else {
+                            result.query.value = (result.query.value as Decimal).times(10000).toNumber();
+                        }
                     }
                     return result;
             }

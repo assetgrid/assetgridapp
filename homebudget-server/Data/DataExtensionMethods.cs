@@ -277,6 +277,10 @@ namespace homebudget_server.Data
                 {
                     return element.EnumerateArray().Select(obj => obj.GetInt32()).ToArray();
                 }
+                if (preferType == typeof(long))
+                {
+                    return element.EnumerateArray().Select(obj => obj.GetInt64()).ToArray();
+                }
                 if (preferType == typeof(string))
                 {
                     return element.EnumerateArray().Select(obj => obj.GetString()).ToArray();
