@@ -50,7 +50,6 @@ export default function TransactionList(props: Props) {
     />;
     
     function fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
-        console.log(props.query);
         return new Promise(resolve => {
             Api.Transaction.search({
                 from: from,

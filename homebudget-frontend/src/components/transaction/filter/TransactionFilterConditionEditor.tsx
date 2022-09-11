@@ -27,7 +27,7 @@ type ConditionModel = {
     value: Decimal;
     onChange: (value: Decimal) => void;
 } | {
-    column: "FromAccountId" | "ToAccountId";
+    column: "SourceAccountId" | "DestinationAccountId";
     operator: typeof accountOperators[number];
     valueType: "account";
     value: number;
@@ -57,8 +57,8 @@ export default function Condition(props: ConditionProps) {
         <div className="column">
             <InputSelect items={[
                 { key: "Id", value: "Transaction Id" },
-                { key: "FromAccountId", value: "Source Account" },
-                { key: "ToAccountId", value: "Destination Account" },
+                { key: "SourceAccountId", value: "Source Account" },
+                { key: "DestinationAccountId", value: "Destination Account" },
                 { key: "DateTime", value: "Datetime" },
                 { key: "Identifier", value: "Unique Identifier" },
                 { key: "Category", value: "Category" },
@@ -109,8 +109,8 @@ export default function Condition(props: ConditionProps) {
                 return numericOperators;
             case "DateTime":
                 return dateTimeOperators;
-            case "FromAccountId":
-            case "ToAccountId":
+            case "SourceAccountId":
+            case "DestinationAccountId":
                 return accountOperators;
             case "Identifier":
             case "Category":
@@ -171,8 +171,8 @@ export default function Condition(props: ConditionProps) {
             case "Total":
                 if (numericOperators.indexOf(newOperator as any) === -1) newOperator = "equals";
                 break;
-            case "FromAccountId":
-            case "ToAccountId":
+            case "SourceAccountId":
+            case "DestinationAccountId":
                 if (accountOperators.indexOf(newOperator as any) === -1) newOperator = "equals";
                 break;
             case "DateTime":
@@ -199,8 +199,8 @@ export default function Condition(props: ConditionProps) {
                 case "Identifier":
                     value = "";
                     break;
-                case "FromAccountId":
-                case "ToAccountId":
+                case "SourceAccountId":
+                case "DestinationAccountId":
                     value = null;
                     break;
                 case "DateTime":
@@ -229,8 +229,8 @@ function getValueType(column: ConditionModel['column'], operator: ConditionModel
         case "Description":
         case "Identifier":
             return "string";
-        case "FromAccountId":
-        case "ToAccountId":
+        case "SourceAccountId":
+        case "DestinationAccountId":
             return "account";
         case "DateTime":
             return "datetime";
@@ -246,8 +246,8 @@ function ConditionValueEditor(props: {condition: ConditionModel}) {
         case "Description":
         case "Identifier":
             return <ConditionValueEditorText condition={props.condition} />;
-        case "FromAccountId":
-        case "ToAccountId":
+        case "SourceAccountId":
+        case "DestinationAccountId":
             return <ConditionValueEditorAccount condition={{
                 ...props.condition,
                 onChange: (account: Account) => (props.condition.onChange as (id: number) => void)(account?.id ?? null)
@@ -301,8 +301,8 @@ function ConditionValueEditorText(props: { condition: ConditionModel }) {
 
 function ConditionValueEditorAccount(props: { condition: ConditionModel }) {
     switch (props.condition.column) {
-        case "FromAccountId":
-        case "ToAccountId":
+        case "SourceAccountId":
+        case "DestinationAccountId":
             break;
         default:
             throw "Invalid column";

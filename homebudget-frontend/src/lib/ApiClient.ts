@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
-import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
+import { SearchGroup, SearchGroupType, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, Transaction, UpdateTransaction } from "../models/transaction";
 
 const rootUrl = 'https://localhost:7262';
@@ -322,7 +322,11 @@ const Transaction = {
 
     search: function (query: SearchRequest): Promise<SearchResponse<TransactionModel>> {
         return new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
-            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/transaction/search", query)
+            let fixedQuery = query;
+            if (query.query) {
+                query.query = fixQuery(query.query);
+            }
+            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/transaction/search", fixedQuery)
                 .then(result => {
                     result.data.data = (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
                         ...transaction,
@@ -338,6 +342,28 @@ const Transaction = {
                     reject();
                 });
         });
+
+        function fixQuery(query: SearchGroup): SearchGroup {
+            switch (query.type) {
+                case SearchGroupType.And:
+                case SearchGroupType.Or:
+                    return {
+                        type: query.type,
+                        children: query.children.map(child => fixQuery(child))
+                    };
+                case SearchGroupType.Query:
+                    let result: SearchGroup = {
+                        type: query.type,
+                        query: {
+                            ...query.query
+                        }
+                    };
+                    if (query.query.column === "Total") {
+                        result.query.value = (result.query.value as Decimal).times(10000).toNumber();
+                    }
+                    return result;
+            }
+        }
     }
 };
 

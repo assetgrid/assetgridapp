@@ -14,7 +14,12 @@ namespace homebudget_server.Data
                 return items;
             }
 
-            var columns = new[] { ("Id", typeof(int)), ("Name", typeof(string)), ("Description", typeof(string)), ("AccountNumber", typeof(string)) };
+            var columns = new[] {
+                ("Id", typeof(int), false),
+                ("Name", typeof(string), false),
+                ("Description", typeof(string), false),
+                ("AccountNumber", typeof(string), false)
+            };
             var parameter = Expression.Parameter(typeof(Account), "account");
             var expression = SearchGroupToExpression(query.Query, columns, parameter);
             if (expression != null)
@@ -32,12 +37,14 @@ namespace homebudget_server.Data
             }
 
             var columns = new[] {
-                ("Id", typeof(int)),
-                ("FromAccountId", typeof(int)),
-                ("ToAccountId", typeof(int)),
-                ("Identifier", typeof(string)),
-                ("Description", typeof(string)),
-                ("DateTime", typeof(DateTime)),
+                ("Id", typeof(int), false),
+                ("SourceAccountId", typeof(int), true),
+                ("DestinationAccountId", typeof(int), true),
+                ("Identifier", typeof(string), false),
+                ("Description", typeof(string), false),
+                ("Category", typeof(string), false),
+                ("DateTime", typeof(DateTime), false),
+                ("Total", typeof(long), true),
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
             var expression = SearchGroupToExpression(query, columns, parameter);
@@ -48,7 +55,7 @@ namespace homebudget_server.Data
             return items;
         }
 
-        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type)[] columns, ParameterExpression parameter)
+        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type, bool allowNull)[] columns, ParameterExpression parameter)
         {
             Expression? result = null;
             switch (group.Type)
@@ -64,18 +71,28 @@ namespace homebudget_server.Data
                     }
 
                     var column = columns.First(column => column.name == group.Query.Column);
-                    var columnValue = CastJsonElement((JsonElement)group.Query.Value, column.type);
+                    var columnValue = group.Query.Value != null ? CastJsonElement((JsonElement)group.Query.Value, column.type) : null;
 
                     switch (group.Query.Operator)
                     {
                         case ViewSearchOperator.Equals:
-                            if (columnValue.GetType() != column.type)
+                            if (columnValue == null && ! column.allowNull)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type null");
+                            }
+                            if (columnValue != null && columnValue.GetType() != column.type)
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
-                            result = Expression.Equal(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
+                            var left = Expression.Property(parameter, group.Query.Column);
+                            result = Expression.Equal(left, Expression.Constant(columnValue, left.Type));
                             break;
                         case ViewSearchOperator.Contains:
+                            if (columnValue == null)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type null");
+                            }
+
                             if (columnValue.GetType() == typeof(string))
                             {
                                 if (string.IsNullOrEmpty((string)columnValue))
@@ -112,6 +129,11 @@ namespace homebudget_server.Data
                                 throw new Exception($"Operator '{group.Query.Operator}' does not accept type {columnValue.GetType()}");
                             }
                         case ViewSearchOperator.GreaterThan:
+                            if (columnValue == null)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type null");
+                            }
+
                             if (columnValue.GetType() != column.type)
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
@@ -119,6 +141,11 @@ namespace homebudget_server.Data
                             result = Expression.GreaterThan(Expression.Property(parameter, group.Query.Column), Expression.Constant(columnValue));
                             break;
                         case ViewSearchOperator.GreaterThanOrEqual:
+                            if (columnValue == null)
+                            {
+                                throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type null");
+                            }
+
                             if (columnValue.GetType() != column.type)
                             {
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
@@ -203,6 +230,10 @@ namespace homebudget_server.Data
                 if (preferType == typeof(int))
                 {
                     return element.GetInt32();
+                }
+                else if (preferType == typeof(long))
+                {
+                    return element.GetInt64();
                 }
                 else
                 {
