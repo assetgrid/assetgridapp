@@ -1,33 +1,27 @@
 import Decimal from "decimal.js";
 import * as React from "react";
 
-export interface InputNumberProps {
-    label?: string,
-    value: Decimal,
-    disabled?: boolean
-    onChange: React.ChangeEventHandler<HTMLInputElement>,
+interface Props {
+    label?: string;
+    value: Decimal;
+    disabled?: boolean;
+    onChange: React.ChangeEventHandler<HTMLInputElement>;
 }
 
-export default class InputNumber extends React.Component<InputNumberProps> {
-    constructor(props: InputNumberProps) {
-        super(props);
-    }
-
-    public render() {
-        return <div className="field">
-            {this.props.label && <label className="label">{this.props.label}</label>}
-            <div className="field has-addons">
-                <div className="control is-expanded">
-                    <input
-                        className="input"
-                        type="number"
-                        placeholder={this.props.label}
-                        value={this.props.value.toString()}
-                        disabled={this.props.disabled}
-                        onChange={event => this.props.onChange(event)}
-                    />
-                </div>
+export default function InputNumber (props: Props) {
+    return <div className="field">
+        {props.label && <label className="label">{props.label}</label>}
+        <div className="field has-addons">
+            <div className="control is-expanded">
+                <input
+                    className="input"
+                    type="number"
+                    placeholder={props.label}
+                    value={props.value.toString()}
+                    disabled={props.disabled}
+                    onChange={event => props.onChange(event)}
+                />
             </div>
-        </div>;
-    }
+        </div>
+    </div>;
 }

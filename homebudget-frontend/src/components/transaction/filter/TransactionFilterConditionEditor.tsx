@@ -6,10 +6,12 @@ import { SearchOperator, SearchQuery } from "../../../models/search";
 import InputAccount from "../../form/account/InputAccount";
 import InputButton from "../../form/InputButton";
 import InputNumber from "../../form/InputNumber";
+import InputNumbers from "../../form/InputNumbers";
 import InputSelect from "../../form/InputSelect";
 import InputText from "../../form/InputText";
 
 const numericOperators = ["equals", "not-equals", "in", "not-in", "greater-than", "greater-than-or-equal", "less-than", "less-than-or-equal"] as const;
+const numericArrayOperators = ["in", "not-in"] as const;
 const accountOperators = ["equals", "not-equals", "in", "not-in"] as const;
 const dateTimeOperators = ["equals", "not-equals", "greater-than", "greater-than-or-equal", "less-than", "less-than-or-equal"] as const;
 const stringOperators = ["equals", "not-equals", "in", "not-in", "contains", "not-contains"] as const;
@@ -21,11 +23,23 @@ type ConditionModel = {
     value: number;
     onChange: (value: number) => void;
 } | {
+    column: "Id";
+    operator: typeof numericArrayOperators[number];
+    valueType: "number[]";
+    value: number[];
+    onChange: (value: number[]) => void;
+} | {
     column: "Total";
     operator: typeof numericOperators[number];
     valueType: "decimal";
     value: Decimal;
     onChange: (value: Decimal) => void;
+} | {
+    column: "Total";
+    operator: typeof numericArrayOperators[number];
+    valueType: "decimal[]";
+    value: Decimal[];
+    onChange: (value: Decimal[]) => void;
 } | {
     column: "SourceAccountId" | "DestinationAccountId";
     operator: typeof accountOperators[number];
@@ -93,7 +107,8 @@ export default function Condition(props: ConditionProps) {
                 column: props.query.column,
                 operator: getOperatorString(props.query),
                 value: props.query.value,
-                onChange: (value: any) => props.setQuery({ ...props.query, value: value })
+                onChange: (value: any) => props.setQuery({ ...props.query, value: value }),
+                valueType: getValueType(props.query.column as ConditionModel['column'], getOperatorString(props.query))
             } as ConditionModel} />
         </div>
 
@@ -106,7 +121,7 @@ export default function Condition(props: ConditionProps) {
         switch (props.query.column as ConditionModel["column"]) {
             case "Id":
             case "Total":
-                return numericOperators;
+                return numericOperators.concat(numericArrayOperators);
             case "DateTime":
                 return dateTimeOperators;
             case "SourceAccountId":
@@ -172,7 +187,7 @@ export default function Condition(props: ConditionProps) {
         switch (newColumn) {
             case "Id":
             case "Total":
-                if (numericOperators.indexOf(newOperator as any) === -1) newOperator = "equals";
+                if (numericOperators.concat(numericArrayOperators).indexOf(newOperator as any) === -1) newOperator = "equals";
                 break;
             case "SourceAccountId":
             case "DestinationAccountId":
@@ -189,25 +204,24 @@ export default function Condition(props: ConditionProps) {
         }
 
         let value = props.query.value;
-        if (getValueType(props.query.column as ConditionModel['column'], getOperatorString(props.query)) !== getValueType(newColumn, newOperator)) {
-            switch (newColumn) {
-                case "Id":
+        let newType = getValueType(newColumn, newOperator);
+        if (newType !== getValueType(props.query.column as ConditionModel['column'], getOperatorString(props.query))) {
+            switch (newType) {
+                case "number":
                     value = 0;
                     break;
-                case "Total":
+                case "decimal":
                     value = new Decimal(0);
                     break;
-                case "Category":
-                case "Description":
-                case "Identifier":
+                case "string":
                     value = "";
                     break;
-                case "SourceAccountId":
-                case "DestinationAccountId":
+                case "account":
                     value = null;
                     break;
-                case "DateTime":
-                    value = DateTime.now();
+                case "number[]":
+                case "decimal[]":
+                    value = [];
                     break;
             }
         }
@@ -225,9 +239,23 @@ export default function Condition(props: ConditionProps) {
 function getValueType(column: ConditionModel['column'], operator: ConditionModel['operator']): ConditionModel['valueType'] {
     switch (column) {
         case "Id":
-            return "number";
+            switch (operator)
+            {
+                case "in":
+                case "not-in":
+                    return "number[]";
+                default:
+                    return "number";
+            }
         case "Total":
-            return "decimal";
+            switch (operator)
+            {
+                case "in":
+                case "not-in":
+                    return "decimal[]";
+                default:
+                    return "decimal";
+            }
         case "Category":
         case "Description":
         case "Identifier":
@@ -266,16 +294,31 @@ function ConditionValueEditorNumeric(props: { condition: ConditionModel }) {
         case "greater-than-or-equal":
         case "less-than":
         case "less-than-or-equal":
-            if (props.condition.column === "Id") {
+            if (props.condition.valueType === "number") {
                 let condition = props.condition;
                 return <InputNumber
                     value={new Decimal(props.condition.value)}
-                    onChange={e => condition.onChange(e.target.valueAsNumber)} />
-            } else if (props.condition.column === "Total") {
+                    onChange={e => condition.onChange(props.condition.column === "Id" ? Math.round(e.target.valueAsNumber) : e.target.valueAsNumber)} />
+            } else if (props.condition.valueType === "decimal") {
                 let condition = props.condition;
                 return <InputNumber
                     value={props.condition.value}
                     onChange={e => condition.onChange(new Decimal(e.target.valueAsNumber))} />
+            }
+        case "in":
+        case "not-in":
+            if (props.condition.valueType === "number[]") {
+                let condition = props.condition;
+                return <InputNumbers
+                    allowDecimal={props.condition.column !== "Id"}
+                    value={props.condition.value.map(number => new Decimal(number))}
+                    onChange={value => condition.onChange(value.map(number => number.toNumber()))} />
+            } else if (props.condition.valueType === "decimal[]") {
+                let condition = props.condition;
+                return <InputNumbers
+                    value={props.condition.value}
+                    allowDecimal={true}
+                    onChange={value => condition.onChange(value)} />
             }
     }
 }

@@ -1,0 +1,58 @@
+/*
+ * Dropdown
+ */
+.dropdown.is-fullwidth {
+    display: flex;
+  
+    .dropdown-trigger,
+    .dropdown-menu {
+        width: 100%;
+    }
+
+    .dropdown-trigger {
+        display: flex;
+    }
+
+    .dropdown-trigger .button, .dropdown-trigger .input {
+        text-align: left;
+        justify-content: space-between;
+
+        &:first-child {
+            flex-grow: 1;
+        }
+        &:not(:last-child) {
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+        }
+        &:not(:first-child) {
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            border-left: 0;
+        }
+    }
+}
+
+/*
+ * Multiple input
+ */
+.input-multiple {
+    @extend %input;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    height: auto;
+    min-height: 2.5rem;
+
+    & > .tag, & > input {
+        margin: 0.25rem;
+    }
+
+    & > input {
+        flex-grow: 1;
+        border: 0;
+        outline: none;
+        &:focus {
+            outline: none;
+        }
+    }
+}

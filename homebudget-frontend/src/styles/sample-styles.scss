@@ -1,34 +1,3 @@
-.dropdown.is-fullwidth {
-    display: flex;
-  
-    .dropdown-trigger,
-    .dropdown-menu {
-        width: 100%;
-    }
-
-    .dropdown-trigger {
-        display: flex;
-    }
-
-    .dropdown-trigger .button, .dropdown-trigger .input {
-        text-align: left;
-        justify-content: space-between;
-
-        &:first-child {
-            flex-grow: 1;
-        }
-        &:not(:last-child) {
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
-        }
-        &:not(:first-child) {
-            border-bottom-left-radius: 0;
-            border-top-left-radius: 0;
-            border-left: 0;
-        }
-    }
-}
-
 .tooltip-container {
     position: relative;
     display: inline-block;
