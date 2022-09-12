@@ -82,7 +82,6 @@ div.table.transaction-table {
                     & > :first-child, & > :last-child {
                         position: relative;
                         border-bottom: 0;
-                        background: transparent;
                     }
                 }
             }
@@ -105,6 +104,7 @@ div.table.transaction-table {
                     justify-content: right;
                     align-items: center;
                     padding-right: 0;
+                    background: transparent;
 
                     .grip {
                         padding: 0;
@@ -117,6 +117,7 @@ div.table.transaction-table {
                     justify-content: left;
                     align-items: center;
                     border-left-width: 1px;
+                    background: transparent;
                 }
             }
         }
