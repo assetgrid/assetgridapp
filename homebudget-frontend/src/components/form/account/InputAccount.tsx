@@ -5,6 +5,7 @@ import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/sear
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
+import { debounce } from "../../../lib/Utils";
 
 interface Props {
     label?: string,
@@ -15,7 +16,6 @@ interface Props {
     nullSelectedText?: string;
 }
 
-let requestNumber = 0;
 export default function InputAccount(props: Props) {
     let text: string;
     const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
@@ -33,7 +33,7 @@ export default function InputAccount(props: Props) {
 
     const [open, setOpen] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState("");
-    const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null)
+    const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null);
     const selectedAccountId = account?.id ?? props.value as number;
 
     // Fetch the account based on the id in the props, if none is available
@@ -46,13 +46,10 @@ export default function InputAccount(props: Props) {
 
     // Fetch dropdown options
     React.useEffect(() => {
-        var currentRequestNumber = ++requestNumber;
-        setTimeout(() => {
-            if (currentRequestNumber == requestNumber) {
-                refreshDropdown();
-            }
-        }, 300);
+        refreshDropdownDebounced(searchQuery);
     }, [searchQuery]);
+
+    const refreshDropdownDebounced = React.useCallback(debounce(refreshDropdown, 300), []);
 
     return <div className="field" tabIndex={0}
         onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
@@ -110,7 +107,7 @@ export default function InputAccount(props: Props) {
         props.onChange(account)
     }
 
-    function refreshDropdown() {
+    function refreshDropdown(searchQuery: string) {
         var query: any = searchQuery == ""
             ? null
             : {

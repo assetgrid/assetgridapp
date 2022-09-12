@@ -13,7 +13,7 @@ export default class Tooltip extends React.Component<Props> {
     public render() {
         return <div className="tooltip-container">
             {this.props.children}
-            <div className="tooltip box">
+            <div className="tooltip box is-size-7">
                 {this.props.content}
             </div>
         </div>;

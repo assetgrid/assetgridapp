@@ -1,0 +1,141 @@
+.number-total, table td.number-total {
+    text-align: right;
+    font-weight: bold;
+    color: $dark;
+    &.positive {
+        color: #27ae60;
+    }
+    &.negative {
+        color: #e74c3c;
+    }
+}
+
+table tr.editing td {
+    vertical-align: middle;
+}
+
+/*
+ * Transaction table
+ */
+div.table {
+    display: grid;
+
+    & > .table-heading, & > .table-body > .table-row {
+        & > div, & > .transaction-lines > div,
+        & > .transaction-lines > .transaction-line > div {
+            border: $table-cell-border;
+            border-width: $table-cell-border-width;
+            padding: $table-cell-padding;
+            vertical-align: top;
+            border: $table-cell-border;
+            border-width: $table-cell-border-width;
+
+            & > .field {
+                flex-grow: 1;
+            }
+        }
+    }
+    
+    & > .table-heading {
+        display: contents;
+        font-weight: bold;
+        color: $table-head-cell-color;
+        & > div {
+            border-width: $table-head-cell-border-width
+        }
+    }
+
+    & > .table-body {
+        display: contents;
+        & > .table-row {
+            display: contents;
+        }
+    }
+
+    &.is-hoverable > .table-body > .table-row:hover > div,
+    &.is-hoverable > .table-body > .table-row:hover > .transaction-lines > .transaction-line > div {
+        background-color: $table-row-hover-background-color;
+    }
+}
+
+div.table.transaction-table {
+    grid-template-columns: [colstart] auto auto auto auto auto auto auto [actionsstart] auto [colend];
+
+    .table-row > div {
+        display: flex;
+        align-items: center;
+
+        &.transaction-lines {
+            &.split {
+                display: contents;
+                & > .transaction-line {
+                    display: contents;
+                    font-size: $size-7;
+
+                    & > .description {
+                        grid-column: 3;
+                    }
+                    & > .total {
+                        grid-column: 4;
+                        text-align: right;
+                    }
+                    & > :first-child, & > :last-child {
+                        position: relative;
+                        border-bottom: 0;
+                        background: transparent;
+                    }
+                }
+            }
+        }
+
+        &.number-total {
+            justify-content: right;
+        }
+    }
+
+    .table-row.editing > div {
+        background-color: $table-row-hover-background-color;
+        &.transaction-lines div {
+            background-color: white;
+            &.transaction-line > div {
+                background-color: $table-row-hover-background-color;
+                &:first-child {
+                    border-right-width: 1px;
+                    display: flex;
+                    justify-content: right;
+                    align-items: center;
+                    padding-right: 0;
+
+                    .grip {
+                        padding: 0;
+                        color: #999;
+                        cursor: move;
+                    }
+                }
+                &:last-child {
+                    display: flex;
+                    justify-content: left;
+                    align-items: center;
+                    border-left-width: 1px;
+                }
+            }
+        }
+
+        &.transaction-lines {
+            &.non-split {
+                grid-column-start: colstart;
+                grid-column-end: colend;
+                display: flex;
+                justify-content: center;
+            }
+            &.split {
+                & > .btn-add-line {
+                    grid-column: 3 / 5;
+                    display: flex;
+                    justify-content: center;
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+}

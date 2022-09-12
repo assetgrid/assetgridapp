@@ -64,6 +64,7 @@ export class InputParseOptions extends React.Component<InputParseOptionsProps, I
                         items={this.props.previewData}
                         paginationSize={7}
                         type="sync"
+                        renderType="table"
                         renderItem={(item, index) => <tr key={index}>
                             <td>{item}</td>
                             <td>{this.isValid() ? parseWithOptions(item, this.getParseOptions()) : <span className="has-text-danger">Invalid options</span>}</td>

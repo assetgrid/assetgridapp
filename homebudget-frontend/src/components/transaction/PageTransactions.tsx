@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
+import { debounce } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { SearchGroup, SearchGroupType } from "../../models/search";
 import { Card } from "../common/Card";
@@ -20,14 +21,11 @@ export default function PageTransactions(props: Props) {
     const [draw, setDraw] = React.useState(0);
 
     React.useEffect(() => {
-        // If query changed wait for one second before refetching, to prevent too many requests
-        let currentRequestNumber = ++requestNumber;
-            setTimeout(() => {
-                if (currentRequestNumber == requestNumber) {
-                    setDraw(draw => draw + 1);
-                }
-            }, 500);
+        // Debounce to prevent too many requests if the query is changed frequently
+        setDrawDebounced();
     }, [query]);
+
+    const setDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
 
     return <>
         <section className="hero has-background-primary">

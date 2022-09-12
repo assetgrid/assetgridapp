@@ -55,7 +55,7 @@ namespace homebudget_server.Controllers
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
                         Identifier = model.Identifier,
-                        Total = model.Lines.Select(line => line.Amount).Sum(),
+                        Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
                         Category = category,
                         TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
                         {
@@ -163,6 +163,23 @@ namespace homebudget_server.Controllers
                         {
                             dbObject.Category = null;
                         }
+                    }
+                    if (model.Total != null)
+                    {
+                        dbObject.Total = model.Total.Value;
+                    }
+                    if (model.Lines != null)
+                    {
+                        _context.RemoveRange(dbObject.TransactionLines);
+                        dbObject.TransactionLines = model.Lines.Select((line, index) =>
+                            new TransactionLine {
+                                Amount = line.Amount,
+                                Description = line.Description,
+                                Order = index,
+                                Transaction = dbObject,
+                                TransactionId = dbObject.Id,
+                            })
+                            .ToList();
                     }
 
                     ModelState.Clear();
@@ -293,7 +310,7 @@ namespace homebudget_server.Controllers
                             Description = transaction.Description,
                             DestinationAccountId = transaction.DestinationId,
                             Identifier = transaction.Identifier,
-                            Total = transaction.Lines.Select(line => line.Amount).Sum(),
+                            Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
                             Category = category,
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {

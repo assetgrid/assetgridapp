@@ -239,6 +239,8 @@ const Transaction = {
         return new Promise<TransactionModel>((resolve, reject) => {
             axios.post<TransactionModel>(rootUrl + '/transaction', {
                 ...transaction,
+                total: undefined,
+                totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
                 lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
             } as CreateTransaction)
                 .then(result => {
@@ -261,6 +263,8 @@ const Transaction = {
             axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>(rootUrl + "/transaction/createmany",
                 transactions.map(transaction => ({
                     ...transaction,
+                    total: undefined,
+                    totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
                     lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
                 }))
             ).then(result => resolve(result.data))
@@ -280,7 +284,14 @@ const Transaction = {
         return new Promise<Transaction>((resolve, reject) => {
             axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
                 ...transaction,
-            }).then(result => resolve(result.data))
+                totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
+                total: undefined,
+                lines: transaction.lines ? transaction.lines.map(line => ({
+                    ...line,
+                    amountString: line.amount.mul(new Decimal(10000)).round().toString(),
+                    amount: undefined
+                })) : undefined
+            } as UpdateTransaction).then(result => resolve(result.data))
                 .catch(e => {
                     console.log(e);
                     reject();

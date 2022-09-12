@@ -6,25 +6,42 @@ export type Props<T> = {
     pageSize: number;
     paginationSize?: number;
     reversePagination?: boolean;
-    headings: React.ReactNode;
-    renderItem: (item: T, index: number) => React.ReactNode;
-
+    
     decrement?: () => void;
     increment?: () => void;
     draw?: number;
 } & (
+    /* Support three different ways of fetching data*/
     {
+        /* A list of items is provided and the table with paginate this. No fetching is done */
         type: "sync";
         items: T[];
     } | {
+        /* An API request to fetch items will be used. Only the current page is fetched */
         type: "async";
         fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
     } | {
+        /* 
+         * Same as async but also allows for incrementing and decrementing beyond the last of first page
+         * Used on data that is grouped by period as well as being paginated
+         */
         type: "async-increment";
         page: number,
         goToPage: (page: number) => void
         fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
     }
+) & (
+    /* Different render styles */
+    {
+        /* The table is rendered as an ordinary HTML table */
+        renderType: "table";
+        headings: React.ReactNode;
+        renderItem: (item: T, index: number) => React.ReactNode;
+    } | {
+        /* The table uses a custom rendering function */
+        renderType: "custom";
+        render: (items: { item: T, index: number }[], renderPagination: () => React.ReactElement) => React.ReactElement;
+    } 
 )
 
 interface FetchItemsResult<T> {
@@ -70,6 +87,10 @@ export default function Table<T>(props: Props<T>) {
         }, [targetPage, props.draw]);
     }
 
+    if (props.renderType === "custom")
+    {
+        return props.render(paginatedItems, renderPagination); 
+    }
     return <>
         <table className="table is-fullwidth is-hoverable" style={{ marginBottom: 0 }}>
             <thead>

@@ -120,3 +120,28 @@ export function formatNumber(number: Decimal, decimals: number, decimalSeparator
     }
     return s.join(decimalSeparator);
 }
+
+export function debounce(func: Function, wait: number) {
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    return (...args: any[]) => {
+        var context = this;
+
+        var later = () => {
+            timeoutId = null;
+            func.apply(context, args);
+        };
+
+        var callNow = ! wait || wait === 0;
+
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+
+        if (callNow) {
+            func.apply(context, args);
+        } else {
+            timeoutId = setTimeout(later, wait);
+        }
+    };
+};

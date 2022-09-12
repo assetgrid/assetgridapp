@@ -10,6 +10,8 @@ namespace homebudget_server.Models.ViewModels
         public string Description { get; set; } = null!;
         public string? Identifier { get; set; }
         public string Category { get; set; } = null!;
+        public long? Total { get; set; }
+        public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
@@ -20,11 +22,24 @@ namespace homebudget_server.Models.ViewModels
                     $"Either source or destination id must be set.",
                     new[] { nameof(SourceId), nameof(DestinationId) });
             }
-            if (SourceId == DestinationId)
+            else if (SourceId == DestinationId)
             {
                 yield return new ValidationResult(
                     $"Source and destination must be different.",
                     new[] { nameof(SourceId), nameof(DestinationId) });
+            }
+
+            if (Total == null && Lines.Count == 0)
+            {
+                yield return new ValidationResult(
+                    $"Total must be specified for transactions with no lines.",
+                    new[] { nameof(Total) });
+            }
+            else if (Total != null && Lines.Count > 0 && Total != Lines.Select(line => line.Amount).Sum())
+            {
+                yield return new ValidationResult(
+                    $"Sum of line amounts does not match transaction total",
+                    new[] { nameof(Total), nameof(Lines) });
             }
         }
     }
@@ -37,6 +52,9 @@ namespace homebudget_server.Models.ViewModels
         public DateTime? DateTime { get; set; }
         public string? Description { get; set; }
         public string? Category { get; set; }
+        public List<ViewTransactionLine>? Lines { get; set; }
+        public long? Total { get; set; }
+        public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
     }
     public class ViewTransaction
     {

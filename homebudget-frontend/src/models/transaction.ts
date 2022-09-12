@@ -23,6 +23,7 @@ export type CreateTransaction = {
     description: string;
     identifier: string | null;
     category: string;
+    total?: Decimal;
     lines: TransactionLine[];
 }
 
@@ -33,6 +34,8 @@ export type UpdateTransaction = {
     dateTime?: DateTime;
     description?: string;
     category?: string;
+    total: Decimal;
+    lines?: TransactionLine[];
 }
 
 export type TransactionLine = {

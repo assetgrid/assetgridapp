@@ -27,11 +27,18 @@ namespace homebudget_server.Models
                     $"Either source or destination id must be set.",
                     new[] { nameof(SourceAccountId), nameof(DestinationAccountId) });
             }
-            if (SourceAccountId == DestinationAccountId)
+            else if (SourceAccountId == DestinationAccountId)
             {
                 yield return new ValidationResult(
                     $"Source and destination must be different.",
                     new[] { nameof(SourceAccountId), nameof(DestinationAccountId) });
+            }
+
+            if (TransactionLines.Count > 0 && Total != TransactionLines.Select(line => line.Amount).Sum())
+            {
+                yield return new ValidationResult(
+                    $"Sum of line amounts does not match transaction total",
+                    new[] { nameof(Total), nameof(TransactionLines) });
             }
         }
     }
@@ -68,8 +75,9 @@ namespace homebudget_server.Models
                     .Select(line => new ViewTransactionLine
                     {
                         Amount = line.Amount,
+                        Description = line.Description,
                     }).ToList(),
-                Total = transaction.TransactionLines.Select(line => line.Amount).Sum()
+                Total = transaction.Total
             });
         }
     }

@@ -10,6 +10,8 @@
         display: none;
         background-color: white;
         z-index: 10;
+        min-width: 15rem;
+        padding: $size-7;
     }
     &:hover .tooltip {
         display: block;
@@ -54,21 +56,6 @@ html, body {
     color: #b6e8dd  !important;
 }
 
-.number-total, table td.number-total {
-    text-align: right;
-    font-weight: bold;
-    color: $dark;
-    &.positive {
-        color: #27ae60;
-    }
-    &.negative {
-        color: #e74c3c;
-    }
-}
-
-table tr.editing td {
-    vertical-align: middle;
-}
 .icon.button {
     border: 0;
     background-color: transparent;

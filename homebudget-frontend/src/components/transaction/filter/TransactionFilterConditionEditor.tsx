@@ -313,13 +313,15 @@ function ConditionValueEditorNumeric(props: { condition: ConditionModel }) {
             if (props.condition.valueType === "number") {
                 let condition = props.condition;
                 return <InputNumber
+                    allowNull={false}
                     value={new Decimal(props.condition.value)}
-                    onChange={e => condition.onChange(props.condition.column === "Id" ? Math.round(e.target.valueAsNumber) : e.target.valueAsNumber)} />
+                    onChange={value => condition.onChange(props.condition.column === "Id" ? Math.round(value.toNumber()) : value.toNumber())} />
             } else if (props.condition.valueType === "decimal") {
                 let condition = props.condition;
                 return <InputNumber
+                    allowNull={false}
                     value={props.condition.value}
-                    onChange={e => condition.onChange(new Decimal(e.target.valueAsNumber))} />
+                    onChange={value => condition.onChange(new Decimal(value))} />
             }
         case "in":
         case "not-in":

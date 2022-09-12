@@ -78,19 +78,20 @@ export default class Import extends React.Component<Props, State> {
     private transactionTable(transactions: CreateTransaction[]) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
-                <th>{transaction.identifier}</th>
-                <th>{transaction.dateTime.toString()}</th>
-                <th>{transaction.description}</th>
-                <th>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</th>
-                <th>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</th>
+                <td>{transaction.identifier}</td>
+                <td>{transaction.dateTime.toString()}</td>
+                <td>{transaction.description}</td>
+                <td>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</td>
+                <td>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</td>
             </tr>}
             type="sync"
+            renderType="table"
             headings={<tr>
-                <td>Identifier</td>
-                <td>Created</td>
-                <td>Description</td>
-                <td>Source (id)</td>
-                <td>Destination (id)</td>
+                <th>Identifier</th>
+                <th>Created</th>
+                <th>Description</th>
+                <th>Source (id)</th>
+                <th>Destination (id)</th>
             </tr>} items={transactions} />;
     }
 
@@ -114,10 +115,8 @@ export default class Import extends React.Component<Props, State> {
                 destinationId: this.getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
                 category: "",
-                lines: [{
-                    amount: transaction.amount !== "invalid" ? transaction.amount : new Decimal(0),
-                    description: "",
-                }]
+                total: transaction.amount,
+                lines: []
             } as CreateTransaction
         });
         await new Promise<void>(resolve => this.setState({
@@ -135,10 +134,8 @@ export default class Import extends React.Component<Props, State> {
                 destinationId: this.getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
                 category: "",
-                lines: [{
-                    amount: transaction.amount,
-                    description: "",
-                }]
+                total: transaction.amount,
+                lines: []
             } as CreateTransaction
         });
 

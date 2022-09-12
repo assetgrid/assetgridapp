@@ -80,10 +80,11 @@ export default class PagePreferences extends React.Component<Props, State> {
                         <div className="column">
                             <InputNumber value={new Decimal(this.state.preferences.decimalDigits)}
                                 label="Digits after decimal point"
-                                onChange={(event => this.setState({
+                                allowNull={false}
+                                onChange={(value => this.setState({
                                     preferences: {
                                         ...this.state.preferences as Preferences,
-                                        decimalDigits: Math.max(0, Math.min(Number.isNaN(event.target.valueAsNumber) ? 0 : event.target.valueAsNumber, 4))
+                                        decimalDigits: Math.max(0, Math.min(value.toNumber(), 4))
                                     }
                                 }))} />
                         </div>

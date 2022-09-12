@@ -57,10 +57,11 @@ $transition-short: 0.2s;
 @import "../node_modules/bulma/sass/components/pagination.sass";
 @import "../node_modules/bulma/sass/layout/hero.sass";
 
-@import "./styles/sample-styles.scss";
+@import "./styles/general-styles.scss";
 @import "./styles/period-selector.scss";
 @import "./styles/filter-editor.scss";
 @import "./styles/input.scss";
+@import "./styles/table.scss";
 
 // General SCSS can be placed here
 .card {

@@ -67,6 +67,7 @@ export default function AccountTransactionList(props: Props) {
             <th>Category</th>
             <th>Actions</th>
         </tr>}
+        renderType="table"
         decrement={() => decrementPeriod()}
         increment={() => incrementPeriod()}
         pageSize={pageSize}

@@ -1,12 +1,20 @@
 import Decimal from "decimal.js";
 import * as React from "react";
 
-interface Props {
+type Props = {
     label?: string;
-    value: Decimal;
     disabled?: boolean;
-    onChange: React.ChangeEventHandler<HTMLInputElement>;
-}
+    isSmall?: boolean;
+} & ({
+    allowNull: false;
+    value: Decimal;
+    onChange: (value: Decimal) => void;
+    
+} | {
+    allowNull: true;
+    value: Decimal | null;
+    onChange: (value: Decimal | null) => void;
+})
 
 export default function InputNumber (props: Props) {
     return <div className="field">
@@ -14,14 +22,21 @@ export default function InputNumber (props: Props) {
         <div className="field has-addons">
             <div className="control is-expanded">
                 <input
-                    className="input"
+                    className={"input" + (props.isSmall ? " is-small" : "")}
                     type="number"
                     placeholder={props.label}
                     value={props.value.toString()}
                     disabled={props.disabled}
-                    onChange={event => props.onChange(event)}
+                    onChange={onChange}
                 />
             </div>
         </div>
     </div>;
+
+    function onChange(event: React.ChangeEvent<HTMLInputElement>) {
+        let value = new Decimal(event.target.valueAsNumber);
+        if (value.isNaN()) value = props.allowNull ? null : new Decimal(0);
+
+        props.onChange(value);
+    }
 }

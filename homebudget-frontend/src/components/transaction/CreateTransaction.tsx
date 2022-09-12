@@ -79,10 +79,11 @@ export default class CreateTransaction extends React.Component<{}, State> {
             {this.state.lines.map((line, i) => <div key={i} className="columns">
                 <div className="column is-3">
                     <InputNumber label={i == 0 ? "Amount" : undefined}
+                        allowNull={false}
                         value={line.amount}
-                        onChange={e => this.updateLine(i, {
+                        onChange={value => this.updateLine(i, {
                             ...this.state.lines[i],
-                            amount: new Decimal(e.target.value)
+                            amount: new Decimal(value)
                         })}
                         disabled={this.state.creating} />
                 </div>

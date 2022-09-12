@@ -1,38 +1,33 @@
 import * as React from "react";
 
-export interface InputTextProps {
+interface Props {
     label?: string,
     value: string,
     disabled?: boolean,
     error?: string,
     addOnAfter?: React.ReactElement,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
+    isSmall?: boolean;
 }
 
-export default class InputText extends React.Component<InputTextProps> {
-    constructor(props: InputTextProps) {
-        super(props);
-    }
-
-    public render() {
-        return <div className="field">
-            {this.props.label && <label className="label">{this.props.label}</label>}
-            <div className="field has-addons">
-                <div className="control is-expanded">
-                    <input
-                        className={"input" + (this.props.error ? " is-danger" : "")}
-                        type="text"
-                        placeholder={this.props.label}
-                        value={this.props.value}
-                        disabled={this.props.disabled}
-                        onChange={event => this.props.onChange(event)}
-                    />
-                    {this.props.error !== undefined && <p className="help has-text-danger">
-                        {this.props.error}
-                    </p>}
-                </div>
-                {this.props.addOnAfter && this.props.addOnAfter}
+export default function InputText (props: Props) {
+    return <div className="field">
+        {props.label && <label className="label">{props.label}</label>}
+        <div className="field has-addons">
+            <div className="control is-expanded">
+                <input
+                    className={"input" + (props.error ? " is-danger" : "") + (props.isSmall ? " is-small" : "")}
+                    type="text"
+                    placeholder={props.label}
+                    value={props.value}
+                    disabled={props.disabled}
+                    onChange={event => props.onChange(event)}
+                />
+                {props.error !== undefined && <p className="help has-text-danger">
+                    {props.error}
+                </p>}
             </div>
-        </div>;
-    }
+            {props.addOnAfter && props.addOnAfter}
+        </div>
+    </div>;
 }
