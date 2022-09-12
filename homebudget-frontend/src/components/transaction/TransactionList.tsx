@@ -21,16 +21,6 @@ export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
     
     return <Table<Transaction>
-        /* headings={<tr>
-            <th></th>
-            <th>Date</th>
-            <th>Description</th>
-            <th className="has-text-right">Amount</th>
-            <th>Source</th>
-            <th>Destination</th>
-            <th>Category</th>
-            <th>Actions</th>
-        </tr>} */
         pageSize={20}
         draw={props.draw + draw}
         type="async"

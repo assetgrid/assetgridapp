@@ -177,6 +177,8 @@ function TransactionEditor(props: TransactionEditorProps) {
 
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
+    // If the current account is the source, all amounts should be negative
+    const amountMultiplier = props.accountId && props.accountId === props.transaction.source?.id ? new Decimal(-1) : new Decimal(1);
 
     return <div key={props.transaction.id} className="table-row editing">
         <div><TransactionLink transaction={props.transaction} /></div>
@@ -190,7 +192,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                 disabled={props.disabled} /></div>
         {model.lines === null
             ? <div>
-                <InputNumber allowNull={false} value={model.total} onChange={newTotal => setModel({ ...model, total: newTotal })} />
+                <InputNumber allowNull={false} value={model.total.times(amountMultiplier)} onChange={newTotal => setModel({ ...model, total: newTotal.times(amountMultiplier) })} />
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
@@ -235,6 +237,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                     update={changes => updateLine(changes, i)}
                     delete={() => deleteLine(i)}
                     disabled={props.disabled}
+                    inverse={amountMultiplier.toNumber() == -1}
                     last={i === model.lines.length} />)}
                 <div style={{ gridColumn: "span 2"}}></div>
                 <div className="btn-add-line">
@@ -311,8 +314,11 @@ interface LineEditorProps {
     update: (changes: Partial<TransactionLine>) => void;
     delete: () => void;
     disabled: boolean, last: boolean;
+    inverse: boolean;
 }
 function TransactionLineEditor(props: LineEditorProps) {
+    const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
+
     return <div className={"transaction-line" + (props.last ? " last" : "")}>
         <div style={{ gridColumn: "span 2" }}>
             <span className="icon button grip">
@@ -330,8 +336,8 @@ function TransactionLineEditor(props: LineEditorProps) {
                 disabled={props.disabled}
                 allowNull={false}
                 isSmall={true}
-                value={props.line.amount}
-                onChange={value => props.update({ amount: value })} />
+                value={props.line.amount.times(multiplier)}
+                onChange={value => props.update({ amount: value.times(multiplier) })} />
         </div>
         <div style={{ gridColumn: "span 4" }}>
             <span className="icon button" onClick={props.delete}>

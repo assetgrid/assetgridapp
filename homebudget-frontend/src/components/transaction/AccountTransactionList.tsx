@@ -18,13 +18,6 @@ interface Props {
     incrementPeriod?: () => Promise<void>;
 }
 
-interface State {
-    total: Decimal | null;
-    descending: boolean;
-    draw: number;
-    page: number;
-}
-
 interface TableLine {
     balance: Decimal;
     transaction: Transaction;
@@ -33,7 +26,6 @@ interface TableLine {
 const pageSize = 20;
 
 export default function AccountTransactionList(props: Props) {
-    const [total, setTotal] = React.useState<Decimal | null>(null);
     const [descending, setDescending] = React.useState(true);
     const [draw, setDraw] = React.useState(0);
     const [page, setPage] = React.useState(1);
@@ -57,17 +49,7 @@ export default function AccountTransactionList(props: Props) {
     }, [props.period])
 
     return <Table<TableLine>
-        headings={<tr>
-            <th></th>
-            <th>Date</th>
-            <th>Description</th>
-            <th className="has-text-right">Amount</th>
-            <th className="has-text-right">Balance</th>
-            <th>Destination</th>
-            <th>Category</th>
-            <th>Actions</th>
-        </tr>}
-        renderType="table"
+        renderType="custom"
         decrement={() => decrementPeriod()}
         increment={() => incrementPeriod()}
         pageSize={pageSize}
@@ -77,14 +59,7 @@ export default function AccountTransactionList(props: Props) {
         page={page}
         goToPage={page => goToPage(page)}
         reversePagination={true}
-        renderItem={line =>
-            <TransactionTableLine preferences={props.preferences}
-                accountId={props.accountId}
-                transaction={line.transaction}
-                balance={line.balance}
-                key={line.transaction.id}
-                updateItem={() => setDraw(draw => draw + 1) } />
-        }
+        render={renderTable}
     />;
     
     function goToPage(page: number) {
@@ -168,7 +143,6 @@ export default function AccountTransactionList(props: Props) {
                     }
                 }
 
-                setTotal(result.total);
                 resolve({
                     items: transactions.map((t, i) => ({ 
                         balance: balances[i],
@@ -180,5 +154,36 @@ export default function AccountTransactionList(props: Props) {
                 });
             })
         });
+    }
+
+    function renderTable(items: { item: TableLine, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
+        const heading = <div className="table-heading">
+            <div></div>
+            <div>Date</div>
+            <div>Description</div>
+            <div className="has-text-right">Amount</div>
+            <div className="has-text-right">Balance</div>
+            <div>Destination</div>
+            <div>Category</div>
+            <div>Actions</div>
+        </div>;
+
+        return <>
+            <div className="transaction-table table is-fullwidth is-hoverable">
+                {heading}
+                <div className="table-body">
+                    {items.map(({ item: line }) => {
+                        return <TransactionTableLine preferences={props.preferences}
+                            accountId={props.accountId}
+                            transaction={line.transaction}
+                            balance={line.balance}
+                            key={line.transaction.id}
+                            updateItem={() => setDraw(draw => draw + 1) } />
+                    })}
+                </div>
+                {heading}
+            </div>
+            {renderPagination()}
+        </>;
     }
 }

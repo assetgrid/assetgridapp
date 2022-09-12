@@ -9,7 +9,7 @@ export default function TransactionLink(props: {transaction: Transaction}) {
         </a>;
     } else {
         return <Tooltip content={<>
-            <span>Identifier: </span> {props.transaction.identifier}
+            <span>Identifier: </span> {props.transaction.identifier}. Click to go to transaction.
         </>}>
             <a className="transaction-link">
                 <span>#</span>{props.transaction.id}
