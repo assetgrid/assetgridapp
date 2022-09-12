@@ -60,14 +60,14 @@ export default function TransactionTableLine(props: Props) {
             {props.balance && <td className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, props.preferences)}</td>}
             {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <td>
                 <InputAccount
-                    value={model.source?.id ?? null}
+                    value={model.source}
                     disabled={disabled}
                     allowNull={true}
                     onChange={account => setModel({ ...model, source: account })} />
             </td>}
             {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <td>
                 <InputAccount
-                    value={model.destination?.id ?? null}
+                    value={model.destination}
                     disabled={disabled}
                     allowNull={true}
                     onChange={account => setModel({ ...model, destination: account })} />

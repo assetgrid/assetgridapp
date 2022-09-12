@@ -6,140 +6,112 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
 
-export interface InputAccountProps {
+interface Props {
     label?: string,
-    value: number | null,
+    value: number | Account | null,
     disabled: boolean,
     allowNull: boolean,
     onChange: (account: Account | null) => void;
     nullSelectedText?: string;
 }
 
-interface State {
-    value: Account | null,
-    open: boolean,
-    searchQuery: string,
-    dropdownOptions: Account[] | null
-}
-
-export default class InputAccount extends React.Component<InputAccountProps, State> {
-    constructor(props: InputAccountProps) {
-        super(props);
-        this.state = {
-            value: null,
-            open: false,
-            searchQuery: "",
-            dropdownOptions: null
-        };
-    }
-
-    private requestNumber: number = 0;
-    public componentDidUpdate(prevProps: Readonly<InputAccountProps>, prevState: Readonly<State>): void {
-        if (this.state.searchQuery != prevState.searchQuery)
-        {
-            var requestNumber = ++this.requestNumber;
-            setTimeout(() => {
-                if (requestNumber == this.requestNumber) {
-                    this.refreshDropdown();
-                }
-            }, 300);
-        }
-    }
-
-    public componentDidMount(): void {
-        this.refreshDropdown();
-
-        if (this.props.value != null && this.state.value == null)
-        {
-            // Fetch the selected item
-            Api.Account.search({
-                from: 0,
-                to: 1,
-                query: {
-                    type: 2,
-                    query: {
-                        column: "Id",
-                        operator: 0,
-                        value: this.props.value,
-                    }
-                },
-            } as SearchRequest).then(result => {
-                if (result.totalItems == 0)
-                {
-                    this.props.onChange(null);
-                }
-                else
-                {
-                    this.setState({
-                        value: result.data[0]
-                    });
-                }
-            })
-        }
-    }
-
-    public render() {
-        var value: string;
-        if (this.props.value == null) {
-            if (this.props.nullSelectedText) {
-                value = this.props.nullSelectedText;
-            } else {
-                value = "Select Account";
-            }
-        } else if (this.state.value == null) {
-            value = "#" + this.props.value + " …";
+let requestNumber = 0;
+export default function InputAccount(props: Props) {
+    let text: string;
+    const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
+    if (props.value == null) {
+        if (props.nullSelectedText) {
+            text = props.nullSelectedText;
         } else {
-            value = "#" + this.state.value.id + " " + this.state.value.name;
+            text = "Select Account";
         }
-        
-        return <div className="field" tabIndex={0}
-            onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && this.setState({ open: false })}
-            >
-            {this.props.label !== undefined && <label className="label">{this.props.label}</label>}
-            <div className={"dropdown is-fullwidth" + (this.state.open && ! this.props.disabled  ? " is-active" : "")}>
-                <div className="dropdown-trigger">
-                    <button className="button" aria-haspopup="true" onClick={e => this.setState({ open: true }) } disabled={this.props.disabled}>
-                        <span>{value}</span>
-                        <span className="icon is-small">
-                            <FontAwesomeIcon icon={faAngleDown} />
-                        </span>
-                    </button>
-                    {this.props.allowNull && !this.props.disabled && this.props.value !== null && <button className="button"
-                        onClick={e => { this.setState({ value: null, open: false, searchQuery: "" }); this.props.onChange(null) }}
-                        disabled={this.props.disabled}>
-                        <span className="icon is-small">
-                            <FontAwesomeIcon icon={faXmark} />
-                        </span>
-                    </button>}
-                </div>
-                <div className={"dropdown-menu"} role="menu">
-                    <div className="dropdown-content">
-                        <input
-                            className="dropdown-item"
-                            style={{border: "0"}}
-                            type="text"
-                            placeholder="Search for account"
-                            value={this.state.searchQuery}
-                            disabled={this.props.disabled}
-                            onChange={e => this.setState({ searchQuery: e.target.value }) }
-                        />
-                        <hr className="dropdown-divider" />
-                        {this.state.dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
-                        {this.state.dropdownOptions?.map(option => <a
-                            className={"dropdown-item" + (this.props.value == option.id ? " is-active" : "")}
-                            key={option.id}
-                            onClick={() => { this.setState({ value: option, open: false, searchQuery: "" }); this.props.onChange(option) }}>
-                            #{option.id} {option.name}
-                        </a>)}
-                    </div>
+    } else if (account == null) {
+        text = "#" + props.value + " …";
+    } else {
+        text = "#" + account.id + " " + account.name;
+    }
+
+    const [open, setOpen] = React.useState(false);
+    const [searchQuery, setSearchQuery] = React.useState("");
+    const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null)
+    const selectedAccountId = account?.id ?? props.value as number;
+
+    // Fetch the account based on the id in the props, if none is available
+    React.useEffect(() => {
+        if (props.value !== null && typeof (props.value) === "number" && (account === null || props.value !== account.id)) {
+            // An id was provided. Fetch the account
+            updateAccount();
+        }
+    }, [props.value]);
+
+    // Fetch dropdown options
+    React.useEffect(() => {
+        var currentRequestNumber = ++requestNumber;
+        setTimeout(() => {
+            if (currentRequestNumber == requestNumber) {
+                refreshDropdown();
+            }
+        }, 300);
+    }, [searchQuery]);
+
+    return <div className="field" tabIndex={0}
+        onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
+    >
+        {/* Label */}
+        {props.label !== undefined && <label className="label">{props.label}</label>}
+
+        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "")}>
+            <div className="dropdown-trigger">
+                <button className="button" aria-haspopup="true" onClick={() => setOpen(true) } disabled={props.disabled}>
+                    <span>{text}</span>
+                    <span className="icon is-small">
+                        <FontAwesomeIcon icon={faAngleDown} />
+                    </span>
+                </button>
+                {props.allowNull && !props.disabled && props.value !== null && <button className="button"
+                    onClick={() => setSelectedAccount(null)}
+                    disabled={props.disabled}>
+                    <span className="icon is-small">
+                        <FontAwesomeIcon icon={faXmark} />
+                    </span>
+                </button>}
+            </div>
+            <div className={"dropdown-menu"} role="menu">
+                <div className="dropdown-content">
+                    <input
+                        className="dropdown-item"
+                        style={{border: "0"}}
+                        type="text"
+                        placeholder="Search for account"
+                        value={searchQuery}
+                        disabled={props.disabled}
+                        onChange={e => setSearchQuery(e.target.value ) }
+                    />
+                    <hr className="dropdown-divider" />
+                    {dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                    {dropdownOptions?.map(option => <a
+                        className={"dropdown-item" + (selectedAccountId == option.id ? " is-active" : "")}
+                        key={option.id}
+                        onClick={() => setSelectedAccount(option) }>
+                        #{option.id} {option.name}
+                    </a>)}
                 </div>
             </div>
-        </div>;
+        </div>
+    </div>;
+
+    /**
+     * Selects no account
+     */
+    function setSelectedAccount(account: Account | null) {
+        setAccount(account);
+        setSearchQuery("");
+        setOpen(false);
+        props.onChange(account)
     }
 
-    private refreshDropdown()
-    {
-        var query: any = this.state.searchQuery == ""
+    function refreshDropdown() {
+        var query: any = searchQuery == ""
             ? null
             : {
                 type: 0,
@@ -149,7 +121,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         query: {
                             column: "Id",
                             operator: 0,
-                            value: Number(this.state.searchQuery.replace(/\D/g,'')),
+                            value: Number(searchQuery.replace(/\D/g,'')),
                         }
                     },
                     {
@@ -157,7 +129,7 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
                         query: {
                             column: "Name",
                             operator: 1,
-                            value: this.state.searchQuery,
+                            value: searchQuery,
                         }
                     }
                 ]
@@ -167,9 +139,35 @@ export default class InputAccount extends React.Component<InputAccountProps, Sta
             to: 5,
             query: query
         } as SearchRequest).then(result => {
-            this.setState({
-                dropdownOptions: result.data
-            });
+            setDropdownOptions(result.data);
+        });
+    }
+
+    /**
+     * Fetch the selected account, if it hasn't yet been fetched
+     */
+    function updateAccount() {
+        Api.Account.search({
+            from: 0,
+            to: 1,
+            query: {
+                type: 2,
+                query: {
+                    column: "Id",
+                    operator: 0,
+                    value: props.value as number,
+                }
+            },
+        } as SearchRequest).then(result => {
+            if (result.totalItems == 0)
+            {
+                // No items found. Reset the selection
+                props.onChange(null);
+            }
+            else
+            {
+                setAccount(result.data[0]);
+            }
         })
     }
 }
