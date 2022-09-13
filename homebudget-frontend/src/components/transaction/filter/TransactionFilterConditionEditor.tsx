@@ -385,6 +385,7 @@ function ConditionValueEditorAccount(props: { condition: ConditionModel }) {
                 onChange={account => condition.onChange(account)}
                 nullSelectedText="No Account"
                 disabled={false}
+                allowCreateNewAccount={false} 
                 allowNull={true} />
     }
 }

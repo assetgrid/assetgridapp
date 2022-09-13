@@ -197,14 +197,16 @@ function TransactionEditor(props: TransactionEditorProps) {
                 value={model.source}
                 disabled={props.disabled}
                 allowNull={true}
-                onChange={account => setModel({ ...model, source: account })} />
+                onChange={account => setModel({ ...model, source: account })}
+                allowCreateNewAccount={true} />
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
                 value={model.destination}
                 disabled={props.disabled}
                 allowNull={true}
-                onChange={account => setModel({ ...model, destination: account })} />
+                onChange={account => setModel({ ...model, destination: account })}
+                allowCreateNewAccount={true} />
         </div>}
         <div>
             <InputCategory

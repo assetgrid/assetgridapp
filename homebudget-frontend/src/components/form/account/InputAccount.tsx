@@ -6,6 +6,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
+import InputButton from "../InputButton";
+import CreateAccountModal from "./CreateAccountModal";
 
 interface Props {
     label?: string,
@@ -14,11 +16,14 @@ interface Props {
     allowNull: boolean,
     onChange: (account: Account | null) => void;
     nullSelectedText?: string;
+    allowCreateNewAccount: boolean;
 }
 
 export default function InputAccount(props: Props) {
     let text: string;
     const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
+    const [creatingAccount, setCreatingAccount] = React.useState(false);
+
     if (props.value == null) {
         if (props.nullSelectedText) {
             text = props.nullSelectedText;
@@ -92,9 +97,25 @@ export default function InputAccount(props: Props) {
                         onClick={() => setSelectedAccount(option) }>
                         #{option.id} {option.name}
                     </a>)}
+                    {props.allowCreateNewAccount && <>
+                        <hr className="dropdown-divider" />
+                        <div className="dropdown-item">
+                            <InputButton className="is-small is-fullwidth" onClick={() => setCreatingAccount(true)}>New Account</InputButton>
+                        </div>
+                    </>}
                 </div>
             </div>
         </div>
+        {creatingAccount && <CreateAccountModal close={() => setCreatingAccount(false)}
+            closeOnChange={true}
+            created={account => setSelectedAccount(account)}
+            preset={{
+            name: "",
+            description: "",
+            accountNumber: "",
+            includeInNetWorth: false,
+            favorite: false
+        }} /> }
     </div>;
 
     /**
