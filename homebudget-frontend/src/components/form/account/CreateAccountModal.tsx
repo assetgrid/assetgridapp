@@ -1,70 +1,41 @@
-import axios, { AxiosResponse } from "axios";
 import * as React from "react";
 import { Api } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
-import { Transaction } from "../../../models/transaction";
 import Modal from "../../common/Modal";
-import InputButton from "../InputButton";
-import InputText from "../InputText";
-import InputCreateAccount from "./InputCreateAccount";
+import InputModifyAccount from "./InputModifyAccount";
 
 interface Props {
     close: () => void;
     closeOnChange?: boolean;
     created: (account: Account) => void;
-    value: CreateAccountModel;
+    preset: CreateAccountModel;
 }
 
-interface State {
-    account: CreateAccountModel;
-    creating: boolean;
-}
+export default function CreateAccountModal(props: Props) {
+    const [model, setModel] = React.useState(props.preset);
+    const [isCreating, setIsCreating] = React.useState(false);
 
-export class CreateAccountModal extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            account: props.value,
-            creating: false,
+    return <Modal
+        active={true}
+        title={"Create account"}
+        close={() => props.close()}
+        footer={<>
+            <button className="button is-success" onClick={() => create()} disabled={isCreating}>Create account</button>
+            <button className="button" onClick={() => props.close()}>Cancel</button>
+        </>}>
+        <InputModifyAccount value={model} disabled={isCreating} onChange={account => setModel(account)}/>
+    </Modal>;
+
+    async function create() {
+        setIsCreating(true);
+        const result = await Api.Account.create(model);
+        setModel(props.preset);
+        setIsCreating(false);
+        if (props.created !== undefined) {
+            props.created(result);
         }
-    }
-
-    public render() {
-        return <Modal
-            active={true}
-            title={"Create account"}
-            close={() => this.props.close()}
-            footer={<>
-                <button className="button is-success" onClick={() => this.create()} disabled={this.state.creating}>Create Account</button>
-                <button className="button" onClick={() => this.props.close()}>Cancel</button>
-            </>}>
-            <InputCreateAccount value={this.state.account} disabled={this.state.creating} onChange={account => this.setState({ account: account })}/>
-        </Modal>;
-    }
-
-    private create() {
-        this.setState({ creating: true });
-        Api.Account.create({
-            name: this.state.account.name,
-            description: this.state.account.description,
-            accountNumber: this.state.account.accountNumber
-        })
-        .then(result => {
-            const newAccount = {
-                name: "",
-                description: "",
-                accountNumber: "",
-            }
-            this.setState({
-                account: newAccount,
-                creating: false
-            });
-            if (this.props.created !== undefined) {
-                this.props.created(result);
-            }
-            if (this.props.closeOnChange) {
-                this.props.close();
-            }
-        })
+        if (props.closeOnChange) {
+            props.close();
+        }
     }
 }

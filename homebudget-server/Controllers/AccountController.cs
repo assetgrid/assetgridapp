@@ -27,11 +27,12 @@ namespace homebudget_server.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = new Models.Account
+                var result = new Account
                 {
                     Name = model.Name,
                     Description = model.Description,
-                    AccountNumber = model.AccountNumber
+                    AccountNumber = model.AccountNumber,
+                    IncludeInNetWorth = model.IncludeInNetWorth,
                 };
                 _context.Accounts.Add(result);
                 _context.SaveChanges();
@@ -193,6 +194,7 @@ namespace homebudget_server.Controllers
             result.Description = model.Description;
             result.Name = model.Name;
             result.Favorite = model.Favorite;
+            result.IncludeInNetWorth = model.IncludeInNetWorth;
 
             _context.SaveChanges();
 
@@ -203,7 +205,32 @@ namespace homebudget_server.Controllers
                 Description = result.Description,
                 AccountNumber = result.AccountNumber,
                 Favorite = result.Favorite,
+                IncludeInNetWorth = result.IncludeInNetWorth,
             };
+        }
+
+        [HttpDelete()]
+        [Route("/[controller]/{id}")]
+        public void Delete(int id)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                var dbObject = _context.Accounts
+                    .Single(t => t.Id == id);
+
+                // Remove all references to this account on transactions
+                _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET SourceAccountId = null WHERE SourceAccountId = {id}");
+                _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET DestinationAccountId = null WHERE DestinationAccountId = {id}");
+                // Delete transactions that do not have any accounts
+                _context.Database.ExecuteSqlInterpolated($"DELETE FROM Transactions WHERE SourceAccountId IS NULL AND DestinationAccountId IS NULL");
+                _context.Accounts.Remove(dbObject);
+
+                transaction.Commit();
+                _context.SaveChanges();
+
+                return;
+            }
+            throw new Exception();
         }
 
         [HttpPost()]

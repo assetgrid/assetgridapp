@@ -3,7 +3,6 @@ import { Transaction, TransactionListResponse } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import { Preferences } from "../../models/preferences";
-import { Account } from "../../models/account";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
@@ -178,6 +177,8 @@ export default function AccountTransactionList(props: Props) {
                             transaction={line.transaction}
                             balance={line.balance}
                             key={line.transaction.id}
+                            allowEditing={true}
+                            allowLinks={true}
                             updateItem={() => setDraw(draw => draw + 1) } />
                     })}
                 </div>

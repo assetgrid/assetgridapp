@@ -59,7 +59,13 @@ div.table {
 }
 
 div.table.transaction-table {
-    grid-template-columns: [colstart] auto auto auto auto auto auto auto [actionsstart] auto [colend];
+    grid-template-columns: [colstart] auto auto auto auto auto auto auto auto [colend];
+    &.no-actions {
+        grid-template-columns: [colstart] auto auto auto auto auto auto auto [colend];
+    }
+    &.is-small {
+        font-size: $size-7;
+    }
 
     .table-row > div {
         display: flex;

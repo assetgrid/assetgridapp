@@ -9,6 +9,7 @@ namespace homebudget_server.Models
         public string Description { get; set; } = null!;
         public string? AccountNumber { get; set; }
         public bool Favorite { get; set; }
+        public bool IncludeInNetWorth { get; set; }
     }
 
     public static class AccountQueryableExtensions
@@ -22,6 +23,7 @@ namespace homebudget_server.Models
                 AccountNumber = account.AccountNumber,
                 Description = account.Description,
                 Favorite = account.Favorite,
+                IncludeInNetWorth = account.IncludeInNetWorth,
             });
         }
     }

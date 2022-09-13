@@ -6,6 +6,8 @@ import { routes } from "../../lib/routes";
 import { Account } from "../../models/account";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import Table from "../common/Table";
+import YesNoDisplay from "../form/YesNoDisplay";
+import AccountLink from "./AccountLink";
 
 interface Props {
     draw?: number;
@@ -30,10 +32,11 @@ function fetchItems(from: number, to: number, draw: number): Promise<{ items: Ac
 export default function AccountList(props: Props) {
     return <Table
         headings={<tr>
-            <th>Id</th>
             <th>Name</th>
             <th>Description</th>
             <th>Account number</th>
+            <th>Favorite</th>
+            <th>In net worth</th>
         </tr>}
         pageSize={20}
         draw={props.draw}
@@ -42,10 +45,15 @@ export default function AccountList(props: Props) {
         fetchItems={fetchItems}
         renderItem={account =>
             <tr key={account.id}>
-                <td>{account.id}</td>
-                <td><Link to={routes.account(account.id.toString())}>{account.name}</Link></td>
+                <td><AccountLink account={account} /></td>
                 <td>{account.description}</td>
                 <td>{account.accountNumber}</td>
+                <td>
+                    <YesNoDisplay value={account.favorite} />
+                </td>
+                <td>
+                    <YesNoDisplay value={account.includeInNetWorth} />
+                </td>
             </tr>}
         />;
 }

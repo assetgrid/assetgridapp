@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Card } from "../common/Card";
-import TransactionList from "../transaction/TransactionList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
@@ -11,11 +10,16 @@ import { Preferences } from "../../models/preferences";
 import { Api } from "../../lib/ApiClient";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import AccountBalanceChart from "./AccountBalanceChart";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import PeriodSelector from "../common/PeriodSelector";
 import { DateTime } from "luxon";
 import { Period, PeriodFunctions } from "../../models/period";
 import AccountCategoryChart from "./AccountCategoryChart";
+import InputIconButton from "../form/InputIconButton";
+import ModifyAccountModal from "../form/account/ModifyAccountModal";
+import YesNoDisplay from "../form/YesNoDisplay";
+import DeleteAccountModal from "../form/account/DeleteAccountModal";
+import { routes } from "../../lib/routes";
 
 interface Props {
     preferences: Preferences | "fetching";
@@ -25,7 +29,9 @@ interface Props {
 export default function (props: Props) {
     const { id } = useParams();
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching")
-    const [updatingFavorite, setUpdatingFavorite] = React.useState<boolean>(false);
+    const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
+    const [currentModal, setCurrentModal] = React.useState<null | "deleting" | "modifying">(null);
+    const navigate = useNavigate();
     
     let defaultPeriod: Period = {
         type: "month",
@@ -106,7 +112,7 @@ export default function (props: Props) {
                 </p>
                 {(account.description?.trim() ?? "") !== "" &&
                     <p className="subtitle has-text-primary-light">
-                        {account.description} {PeriodFunctions.print(period)}
+                        {account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
                     </p>}
             </div>
             <div>
@@ -116,17 +122,32 @@ export default function (props: Props) {
         <div className="p-3">
             <div className="columns m-0">
                 <div className="column p-0 is-narrow is-flex">
-                    <Card title="Account Overview">
+                    <Card title={<>
+                        Account Details
+                        <InputIconButton icon={solid.faPen} onClick={() => setCurrentModal("modifying")} />
+                        <InputIconButton icon={regular.faTrashCan} onClick={() => setCurrentModal("deleting")} />
+                    </>}>
                         <table className="table">
                             <tbody>
                                 <tr>
                                     <td>Balance</td>
                                     <td className="has-text-right">{formatNumberWithPrefs(account.balance!, props.preferences)}</td>
-                                    <td></td>
                                 </tr>
                                 <tr>
                                     <td>Account Number</td>
                                     <td className="has-text-right">{account.accountNumber}</td>
+                                </tr>
+                                <tr>
+                                    <td>Favorite</td>
+                                    <td className="has-text-right">
+                                        <YesNoDisplay value={account.favorite} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Include in net worth</td>
+                                    <td className="has-text-right">
+                                        <YesNoDisplay value={account.includeInNetWorth} />
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -152,5 +173,25 @@ export default function (props: Props) {
                 />
             </Card>
         </div>
+        {currentModal === "modifying" && <ModifyAccountModal
+            close={() => setCurrentModal(null)}
+            created={modifiedAccount => {
+                if (modifiedAccount.favorite !== account.favorite) {
+                    props.updatePreferences();
+                }
+                setAccount(modifiedAccount);
+            }}
+            account={account}
+            closeOnChange={true} />}
+        {currentModal === "deleting" && <DeleteAccountModal
+            close={() => setCurrentModal(null)}
+            deleted={() => {
+                if (account.favorite) {
+                    props.updatePreferences();
+                }
+                navigate(routes.accounts());
+            }}
+            account={account}
+            preferences={props.preferences} />}
     </>;
 }

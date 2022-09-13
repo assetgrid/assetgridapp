@@ -41,7 +41,12 @@ export default function PageTransactions(props: Props) {
                     Create Transaction
                 </Link>
             
-                <TransactionList preferences={props.preferences} query={query} draw={draw} />
+                <TransactionList preferences={props.preferences}
+                    query={query}
+                    draw={draw}
+                    allowLinks={true}
+                    allowEditing={true}
+                />
             </Card>
         </div>
     </>;

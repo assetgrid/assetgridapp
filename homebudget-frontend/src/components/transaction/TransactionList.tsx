@@ -15,14 +15,18 @@ interface Props {
     draw?: number;
     preferences: Preferences | "fetching";
     query?: SearchGroup;
+    allowEditing?: boolean;
+    allowLinks?: boolean;
+    small?: boolean;
+    pageSize?: number;
 }
 
 export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
     
     return <Table<Transaction>
-        pageSize={20}
-        draw={props.draw + draw}
+        pageSize={props.pageSize ?? 20}
+        draw={(props.draw ?? 0) + draw}
         type="async"
         renderType="custom"
         fetchItems={fetchItems}
@@ -56,11 +60,15 @@ export default function TransactionList(props: Props) {
             <div>Source</div>
             <div>Destination</div>
             <div>Category</div>
-            <div>Actions</div>
+            {props.allowEditing && <div>Actions</div>}
         </div>;
 
+        const className = "transaction-table table is-fullwidth is-hoverable" +
+            (props.allowEditing !== true ? " no-actions" : "") +
+            (props.small === true ? " is-small" : "");
+        
         return <>
-            <div className="transaction-table table is-fullwidth is-hoverable">
+            <div className={className}>
                 {heading}
                 <div className="table-body">
                     {items.map(({ item: transaction }) => {
@@ -68,7 +76,9 @@ export default function TransactionList(props: Props) {
                             key={transaction.id}
                             transaction={transaction}
                             preferences={props.preferences}
-                            updateItem={() => setDraw(draw => draw + 1)} />
+                            updateItem={() => setDraw(draw => draw + 1)}
+                            allowEditing={props.allowEditing}
+                            allowLinks={props.allowLinks}/>
                     })}
                 </div>
                 {heading}

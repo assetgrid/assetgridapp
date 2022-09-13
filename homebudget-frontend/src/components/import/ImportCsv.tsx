@@ -8,6 +8,7 @@ import InputSelect from "../form/InputSelect";
 import InputText from "../form/InputText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import InputIconButton from "../form/InputIconButton";
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
@@ -135,18 +136,14 @@ export default class ImportCsv extends React.Component<Props, State> {
                 {Math.min((this.state.columnOffset + 1) * columnPageSize, columnCount)} of {columnCount}</p>
             <Table
                 headings={<tr>
-                    {this.state.columnOffset !== 0 && <th style={{width: "1px"}}>
-                        <span className="icon button" onClick={() => this.setState({columnOffset: Math.max(0, this.state.columnOffset - 1)})}>
-                            <FontAwesomeIcon icon={faChevronLeft} />
-                        </span>
+                    {this.state.columnOffset !== 0 && <th style={{ width: "1px" }}>
+                        <InputIconButton icon={faChevronLeft} onClick={() => this.setState({columnOffset: Math.max(0, this.state.columnOffset - 1)})} />
                     </th>}
                     {columns.map((column, i) => <th key={i}>
                         {column.columnName}
                     </th>)}
                     {(this.state.columnOffset + 1) * columnPageSize < columnCount && <th style={{width: "1px"}}>
-                        <span className="icon button" onClick={() => this.setState({ columnOffset: this.state.columnOffset + 1 })}>
-                            <FontAwesomeIcon icon={faChevronRight} />
-                        </span>
+                        <InputIconButton icon={faChevronRight} onClick={() => this.setState({ columnOffset: this.state.columnOffset + 1 })} />
                     </th>}
                 </tr>}
                 pageSize={pageSize}

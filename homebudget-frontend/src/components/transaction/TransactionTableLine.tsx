@@ -19,6 +19,7 @@ import AccountLink from "../account/AccountLink";
 import InputButton from "../form/InputButton";
 import InputNumber from "../form/InputNumber";
 import Tooltip from "../common/Tooltip";
+import InputIconButton from "../form/InputIconButton";
 
 type Props  = {
     transaction: Transaction;
@@ -26,6 +27,8 @@ type Props  = {
     updateItem: (item: Transaction) => void;
     accountId?: number;
     balance?: Decimal;
+    allowEditing?: boolean;
+    allowLinks?: boolean;
 }
 
 interface TransactionEditingModel {
@@ -53,9 +56,9 @@ export default function TransactionTableLine(props: Props) {
         setDisabled(true);
         setState(null);
 
-        Api.Transaction.delete(props.transaction.id).then(result => {
+        Api.Transaction.delete(props.transaction.id).then(() => {
             setDisabled(false);
-            props.updateItem(result);
+            props.updateItem(null);
         })
     }
 }
@@ -77,25 +80,18 @@ type TableTransactionProps = Props & {
     delete: () => void;
 }
 function TableTransaction(props: TableTransactionProps) {
-    const offsetAccount = props.accountId !== undefined ? props.transaction.destination?.id === props.accountId ? props.transaction.source : props.transaction.destination : null ;
+    const offsetAccount = props.accountId !== undefined ? props.transaction.destination?.id === props.accountId ? props.transaction.source : props.transaction.destination : null;
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     const [expandSplit, setExpandSplit] = React.useState(false);
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            <TransactionLink transaction={props.transaction} />
-            {props.transaction.lines.length > 0 && (expandSplit
-                ? <Tooltip content="This is a split transaction. Click to collapse.">
-                    <span className="icon button" onClick={() => setExpandSplit(expand => ! expand)}>
-                        <FontAwesomeIcon icon={solid.faEllipsisVertical} />
-                    </span>
-                </Tooltip>
-                : <Tooltip content="This is a split transaction. Click to expand.">
-                    <span className="icon button" onClick={() => setExpandSplit(expand => ! expand)}>
-                        <FontAwesomeIcon icon={solid.faEllipsisVertical} />
-                    </span>
-                </Tooltip>)}
+            <TransactionLink transaction={props.transaction} disabled={! (props.allowLinks ?? true)} />
+            {props.transaction.lines.length > 0 && <Tooltip
+                content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
+                <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
+            </Tooltip>}
         </div>
         <div>{props.transaction.dateTime.toString()}</div>
         <div>{props.transaction.description}</div>
@@ -107,21 +103,17 @@ function TableTransaction(props: TableTransactionProps) {
         </div>}
         <div>
             {props.accountId !== undefined
-                ? offsetAccount !== null && <AccountLink account={offsetAccount} />
-                : props.transaction.source !== null && <AccountLink account={props.transaction.source} />}
+                ? offsetAccount !== null && <AccountLink account={offsetAccount} disabled={! (props.allowLinks ?? true)} />
+                : props.transaction.source !== null && <AccountLink account={props.transaction.source} disabled={! (props.allowLinks ?? true)} />}
         </div>
         {props.accountId === undefined && <div>
-            {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} />}
+            {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={! (props.allowLinks ?? true)} />}
         </div>}
         <div>{props.transaction.category}</div>
-        <div>
+        {props.allowEditing && <div>
             {!props.disabled && <>
-                <span className="icon button" onClick={() => props.setState("editing")}>
-                    <FontAwesomeIcon icon={solid.faPen} />
-                </span>
-                <span className="icon button" onClick={() => props.setState("confirm-delete")}>
-                    <FontAwesomeIcon icon={solid.faTrashCan} />
-                </span>
+                <InputIconButton icon={solid.faPen} onClick={() => props.setState("editing")} />
+                <InputIconButton icon={regular.faTrashCan} onClick={() => props.setState("confirm-delete")} />
             </>}
             
             {/* Deletion modal */}
@@ -135,7 +127,7 @@ function TableTransaction(props: TableTransactionProps) {
                 </>}>
                 Are you sure you want to delete transaction "#{props.transaction.id} {props.transaction.description}"?
             </Modal>}
-        </div>
+        </div>}
         {expandSplit && < div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
                 <div style={{ gridColumn: "span 2" }}></div>
@@ -196,7 +188,7 @@ function TransactionEditor(props: TransactionEditorProps) {
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
-                {formatNumberWithPrefs(model.total, props.preferences)}
+                {formatNumberWithPrefs(model.total.times(amountMultiplier), props.preferences)}
             </div>
         }
         {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, props.preferences)}</div>}
@@ -222,12 +214,8 @@ function TransactionEditor(props: TransactionEditorProps) {
         </div>
         <div>
             {! props.disabled && <>
-                <span className="icon button" onClick={() => saveChanges()}>
-                    <FontAwesomeIcon icon={solid.faCheck} />
-                </span>
-                <span className="icon button" onClick={() => props.stopEditing()}>
-                    <FontAwesomeIcon icon={solid.faXmark} />
-                </span>
+                <InputIconButton icon={solid.faSave} onClick={() => saveChanges()} />
+                <InputIconButton icon={solid.faXmark} onClick={() => props.stopEditing()} />
             </>}
         </div>
         {model.lines !== null
@@ -321,9 +309,7 @@ function TransactionLineEditor(props: LineEditorProps) {
 
     return <div className={"transaction-line" + (props.last ? " last" : "")}>
         <div style={{ gridColumn: "span 2" }}>
-            <span className="icon button grip">
-                <FontAwesomeIcon icon={solid.faGripLinesVertical} />
-            </span>
+            <InputIconButton icon={solid.faGripLinesVertical} onClick={() => 0} />
         </div>
         <div className="description">
             <InputText disabled={props.disabled}
@@ -340,9 +326,7 @@ function TransactionLineEditor(props: LineEditorProps) {
                 onChange={value => props.update({ amount: value.times(multiplier) })} />
         </div>
         <div style={{ gridColumn: "span 4" }}>
-            <span className="icon button" onClick={props.delete}>
-                <FontAwesomeIcon icon={solid.faXmark} />
-            </span>
+            <InputIconButton icon={regular.faTrashCan} onClick={props.delete} />
         </div>
     </div>;
 }

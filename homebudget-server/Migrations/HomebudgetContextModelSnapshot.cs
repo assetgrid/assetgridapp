@@ -35,6 +35,9 @@ namespace homebudget_server.Migrations
                     b.Property<bool>("Favorite")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IncludeInNetWorth")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");

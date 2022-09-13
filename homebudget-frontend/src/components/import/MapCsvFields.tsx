@@ -12,7 +12,7 @@ import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "./Imp
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../common/Modal";
-import { CreateAccountModal } from "../form/account/CreateAccountModal";
+import CreateAccountModal from "../form/account/CreateAccountModal";
 import { parseWithOptions, ParseOptions } from "./ParseOptions";
 import { InputParseOptions, InputParseOptionsModal } from "../form/InputParsingOptions";
 import Decimal from "decimal.js";
@@ -742,7 +742,7 @@ export default class MapCsvFields extends React.Component<Props, State> {
         if (account === null) {
             return <Tooltip content={<>
                     No account found with {reference.identifier}: {reference.value}
-                    <InputButton onClick={() => this.beginCreatingAccount(reference)}>
+                    <InputButton onClick={() => this.beginCreatingAccount(reference)} className="is-small">
                         Create Account
                     </InputButton>
                 </>}>
@@ -762,10 +762,12 @@ export default class MapCsvFields extends React.Component<Props, State> {
             name: "",
             description: "",
             accountNumber: "",
+            includeInNetWorth: true,
+            favorite: true,
         };
         (account as any)[accountReference.identifier] = accountReference.value;
         this.setState({
-            modal: <CreateAccountModal value={account}
+            modal: <CreateAccountModal preset={account}
                 close={() => this.setState({ modal: null })}
                 created={account => this.accountCreated(account)} />
         });

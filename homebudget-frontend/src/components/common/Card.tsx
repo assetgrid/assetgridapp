@@ -1,7 +1,7 @@
 import * as React from "react";
 
 interface Props {
-    title: string;
+    title: React.ReactElement |string;
     margin?: number;
     style?: React.CSSProperties;
     children: React.ReactNode;

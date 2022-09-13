@@ -128,6 +128,21 @@ const Account = {
     },
 
     /**
+     * Deletes an Account
+     * @param id The id of the account to delete
+     */
+     delete: function (id: number): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            axios.delete<void>(rootUrl + "/account/" + id)
+                .then(() => resolve())
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                })
+        });
+    },
+
+    /**
      * List transactions for the specified account
      * @param id Account id
      * @param from Return transactions numbered from...to
@@ -301,13 +316,12 @@ const Transaction = {
      
     /**
      * Deletes a transaction
-     * @param transaction The transactions to be created
-     * @returns The updated transaction
+     * @param id The id of the transaction to be deleted
      */
-    delete: function (id: number): Promise<Transaction> {
-        return new Promise<Transaction>((resolve, reject) => {
-            axios.delete<Transaction>(rootUrl + "/transaction/" + id)
-                .then(result => resolve(result.data))
+    delete: function (id: number): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            axios.delete<void>(rootUrl + "/transaction/" + id)
+                .then(() => resolve())
                 .catch(e => {
                     console.log(e);
                     reject();

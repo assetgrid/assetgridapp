@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220902125203_Initial")]
+    [Migration("20220913130944_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,9 @@ namespace homebudget_server.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("Favorite")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IncludeInNetWorth")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")

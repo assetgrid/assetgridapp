@@ -8,12 +8,15 @@ export type Account = {
     favorite: boolean;
     accountNumber: string;
     balance?: Decimal;
+    includeInNetWorth: boolean;
 }
 
 export type CreateAccount = {
     name: string;
     description: string;
     accountNumber: string;
+    includeInNetWorth: boolean;
+    favorite: boolean;
 }
 
 export type MovementItem = {

@@ -25,7 +25,8 @@ namespace homebudget_server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     AccountNumber = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Favorite = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    Favorite = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IncludeInNetWorth = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
                 {

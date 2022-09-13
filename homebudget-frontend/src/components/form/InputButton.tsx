@@ -7,12 +7,10 @@ interface Props {
     children: React.ReactNode;
 }
 
-export default class InputButton extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-    }
-
-    public render() {
-        return <button className={"button " + this.props.className} onClick={this.props.onClick}>{this.props.children}</button>;
-    }
+export default function InputButton (props: Props) {
+    return <button className={"button " + props.className}
+        disabled={props.disabled}
+        onClick={props.onClick}>
+        {props.children}
+    </button>;
 }
