@@ -33,12 +33,18 @@ const Preferences = {
      * @returns Updated preferences
      */
     update: function (preferences: PreferencesModel): Promise<PreferencesModel> {
+        const model = {
+            ...preferences,
+            favoriteAccounts: preferences.favoriteAccounts.map(account => ({
+                ...account,
+                balance: undefined
+            }))
+        };
         return new Promise<PreferencesModel>((resolve, reject) => {
-            axios.put<PreferencesModel>(rootUrl + '/user/preferences', preferences)
+            axios.put<PreferencesModel>(rootUrl + '/user/preferences', model)
                 .then(result => {
                     resolve(result.data);
-                })
-                .catch(e => {
+                }).catch(e => {
                     console.log(e);
                     reject();
                 });
