@@ -6,57 +6,57 @@ import PageCreateTransaction from "./transaction/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
 import PageImportCsv from "./import/PageImportCsv";
 import PageAccount from "./account/PageAccount";
-import { Sidebar } from "./common/Sidebar";
 import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./account/PageAccountOverview";
 import { Api } from "../lib/ApiClient";
+import Sidebar from "./common/Sidebar";
 
-interface State {
+export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
+
+interface PreferencesContext {
     preferences: Preferences | "fetching";
+    updatePreferences: (newPreferences: Preferences) => void;
 }
 
-export default class FairFitPortalApp extends React.Component<{}, State> {
-    constructor(props: {}) {
-        super(props);
-        this.state = {
-            preferences: "fetching",
-        };
-    }
+export default function FairFitPortalApp () {
+    const [preferences, setPreferences] = React.useState<Preferences | "fetching">("fetching");
 
-    public componentDidMount(): void {
-        this.updatePreferences();
-    }
+    React.useEffect(() => updatePreferences(null), []);
 
-    public render() {
-        return <React.StrictMode>
+    return <React.StrictMode>
+        <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
             <div style={{display: "flex", flexGrow: 1}}>
-                <Sidebar preferences={this.state.preferences}/>
+                <Sidebar />
                 <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                     <Routes>
-                        <Route path={routes.dashboard()} element={<PageDashboard preferences={this.state.preferences} />} />
-                        <Route path={routes.importCsv()} element={<PageImportCsv preferences={this.state.preferences} />}/>
-                        <Route path={routes.transactions()} element={<PageTransactions preferences={this.state.preferences} />}/>
+                        <Route path={routes.dashboard()} element={<PageDashboard />} />
+                        <Route path={routes.importCsv()} element={<PageImportCsv />}/>
+                        <Route path={routes.transactions()} element={<PageTransactions />}/>
                         <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
                         <Route path={routes.accounts()} element={<PageAccountOverview />} />
-                        <Route path={routes.account(":id")} element={<PageAccount preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
-                        <Route path={routes.preferences()} element={<PagePreferences preferences={this.state.preferences} updatePreferences={() => this.updatePreferences()} />} />
+                        <Route path={routes.account(":id")} element={<PageAccount />} />
+                        <Route path={routes.preferences()} element={<PagePreferences />} />
                     </Routes>
                 </div>
             </div>
-        </React.StrictMode>;
-    }
+        </preferencesContext.Provider>
+    </React.StrictMode>;
 
-    private updatePreferences() {
-        this.setState({ preferences: "fetching" }, () => Api.Preferences.get()
-            .then(result => {
-                this.setState({ preferences: result });
-            })
-            .catch(e => {
-                console.log(e);
-                this.setState({ preferences: "fetching" });
-            })
-        );
+    function updatePreferences(newPreferences: Preferences | null) {
+        if (newPreferences !== null) {
+            setPreferences(newPreferences);
+        } else {
+            setPreferences("fetching");
+            Api.Preferences.get()
+                .then(result => {
+                    setPreferences(result);
+                })
+                .catch(e => {
+                    console.log(e);
+                    setPreferences("fetching");
+                });
+        }
     }
 }

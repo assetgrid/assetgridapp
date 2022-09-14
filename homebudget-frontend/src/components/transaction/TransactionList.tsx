@@ -2,18 +2,12 @@ import * as React from "react";
 import { Transaction } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchGroup, SearchRequest } from "../../models/search";
-import { Preferences } from "../../models/preferences";
-import { formatNumberWithPrefs } from "../../lib/Utils";
-import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
-import AccountLink from "../account/AccountLink";
-import Tooltip from "../common/Tooltip";
-import TransactionLink from "./TransactionLink";
 import TransactionTableLine from "./TransactionTableLine";
+import { preferencesContext } from "../App";
 
 interface Props {
     draw?: number;
-    preferences: Preferences | "fetching";
     query?: SearchGroup;
     allowEditing?: boolean;
     allowLinks?: boolean;
@@ -23,7 +17,7 @@ interface Props {
 
 export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
-    
+
     return <Table<Transaction>
         pageSize={props.pageSize ?? 20}
         draw={(props.draw ?? 0) + draw}
@@ -75,7 +69,6 @@ export default function TransactionList(props: Props) {
                         return <TransactionTableLine
                             key={transaction.id}
                             transaction={transaction}
-                            preferences={props.preferences}
                             updateItem={() => setDraw(draw => draw + 1)}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}/>

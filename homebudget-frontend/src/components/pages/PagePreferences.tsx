@@ -6,118 +6,106 @@ import { Api } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
 import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
+import { preferencesContext } from "../App";
 import { Card } from "../common/Card";
 import InputButton from "../form/InputButton";
 import InputNumber from "../form/InputNumber";
 import InputText from "../form/InputText";
 
-interface Props {
-    preferences: Preferences | "fetching",
-    updatePreferences: () => void,
-}
+export default function PagePreferences(): React.ReactElement {
+    const { preferences, updatePreferences } = React.useContext(preferencesContext);
+    const [model, setModel] = React.useState<Preferences | "fetching">(preferences);
+    const [isUpdating, setIsUpdating] = React.useState(false);
 
-interface State {
-    preferences: Preferences | "fetching",
-}
-
-export default class PagePreferences extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            preferences: "fetching"
+    React.useEffect(() => {
+        // Whenever global preferences change, update this component to match
+        if (preferences !== "fetching") {
+            setModel(preferences);
         }
+    }, [preferences]);
+
+    if (model === "fetching") {
+        // This will only be shown until the global preferences are loaded.
+        // Then the model will be set and will never be "fetching again"
+        return <>Please wait</>;
     }
 
-    public componentDidMount(): void {
-        if (this.props.preferences !== "fetching") {
-            this.setState({ preferences: this.props.preferences });
-        }
-    }
-
-    public componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
-        if (this.props.preferences !== "fetching" && prevProps.preferences === "fetching") {
-            this.setState({ preferences: this.props.preferences });
-        }
-    }
-
-    public render() {
-        if (this.state.preferences === "fetching") {
-            return "Please wait";
-        }
-
-        return <>
-            <section className="hero has-background-primary">
-                <div className="hero-body">
-                    <p className="title has-text-white">
-                        Preferences
-                    </p>
-                </div>
-            </section>
-
-            <div className="p-3">
-                <Card title="Number formatting">
-                    <div className="columns">
-                        <div className="column">
-                        <InputText value={this.state.preferences.decimalSeparator}
-                            label="Decimal Separator"
-                            onChange={(event => this.setState({
-                                preferences: {
-                                    ...this.state.preferences as Preferences,
-                                    decimalSeparator: event.target.value
-                                }
-                            }))} />
-                        </div>
-                        <div className="column">
-                        <InputText value={this.state.preferences.thousandsSeparator}
-                            label="Thousands Separator"
-                            onChange={(event => this.setState({
-                                preferences: {
-                                    ...this.state.preferences as Preferences,
-                                    thousandsSeparator: event.target.value
-                                }
-                            }))} />
-                        </div>
-                        <div className="column">
-                            <InputNumber value={new Decimal(this.state.preferences.decimalDigits)}
-                                label="Digits after decimal point"
-                                allowNull={false}
-                                onChange={(value => this.setState({
-                                    preferences: {
-                                        ...this.state.preferences as Preferences,
-                                        decimalDigits: Math.max(0, Math.min(value.toNumber(), 4))
-                                    }
-                                }))} />
-                        </div>
-                    </div>
-                    
-                    <p>Example: {
-                        formatNumberWithPrefs(new Decimal("123456789.123456789"), this.state.preferences)}
-                    </p>
-                    
-                    <InputButton className="is-primary" onClick={this.SaveChanges.bind(this)}>
-                        Save changes
-                    </InputButton>
-                </Card>
+    return <>
+        <section className="hero has-background-primary">
+            <div className="hero-body">
+                <p className="title has-text-white">
+                    Preferences
+                </p>
             </div>
-        </>;
-    }
+        </section>
 
-    private SaveChanges() {
-        if (this.state.preferences === "fetching") {
-            throw "error";
+        <div className="p-3">
+            <Card title="Number formatting">
+                <div className="columns">
+                    <div className="column">
+                        <InputText value={model.decimalSeparator}
+                            disabled={isUpdating}
+                            label="Decimal Separator"
+                            onChange={(event => setModel({
+                                ...model,
+                                decimalSeparator: event.target.value
+                            }))} />
+                    </div>
+                    <div className="column">
+                        <InputText value={model.thousandsSeparator}
+                            disabled={isUpdating}
+                            label="Thousands Separator"
+                            onChange={(event => setModel({
+                                ...model,
+                                thousandsSeparator: event.target.value
+                            }))} />
+                    </div>
+                    <div className="column">
+                        <InputNumber value={new Decimal(model.decimalDigits)}
+                            disabled={isUpdating}
+                            label="Digits after decimal point"
+                            allowNull={false}
+                            onChange={(value => setModel({
+                                ...model,
+                                decimalDigits: Math.max(0, Math.min(value.round().toNumber(), 4))
+                            }))} />
+                    </div>
+                </div>
+                
+                <p>Example: {
+                    formatNumberWithPrefs(new Decimal("123456789.123456789"), model)}
+                </p>
+                
+                <InputButton
+                    disabled={isUpdating}
+                    className="is-primary"
+                    onClick={saveChanges}>
+                    Save changes
+                </InputButton>
+            </Card>
+        </div>
+    </>;
+
+    function saveChanges() {
+        if (isUpdating || model === "fetching") {
+            return;
         }
-        let preferences = this.state.preferences;
 
-        this.setState({ preferences: "fetching" }, () => {
-            Api.Preferences.update(preferences)
-                .then(result => {
-                    this.setState({ preferences: result });
-                    this.props.updatePreferences();
-                })
-                .catch(e => {
-                    console.log(e);
-                    this.setState({ preferences: "fetching" });
-                });
-        });
+        setIsUpdating(true);
+        Api.Preferences.update(model)
+            .then(result => {
+                setIsUpdating(false);
+
+                if (preferences === "fetching") {
+                    updatePreferences(null);
+                } else {
+                    const { favoriteAccounts, ...updatedPreferences } = result;
+                    updatePreferences({ ...preferences, ...updatedPreferences });
+                }
+            })
+            .catch(e => {
+                console.log(e);
+                setIsUpdating(false);
+            });
     }
 }

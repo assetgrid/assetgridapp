@@ -8,12 +8,8 @@ import InputButton from "../form/InputButton";
 import Import from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
 import { capitalize, CsvCreateTransaction } from "./ImportModels";
-import MapCsvFields, { MappingOptions } from "./MapCsvFields";
+import MapCsvFields, { MappingOptions } from "./MapCsvFields/MapCsvFields";
 import { ParseOptions } from "./ParseOptions";
-
-interface Props {
-    preferences: Preferences | "fetching";
-}
 
 interface State {
     data: any[] | null;
@@ -31,168 +27,155 @@ interface State {
 /*
  * React object class
  */
-export default class PageImportCsv extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
+export default function PageImportCsv () {
+    const defaultParseOptions = {
+        trimWhitespace: true,
+        regex: null,
+        pattern: "{0}"
+    } as ParseOptions;
 
-        const defaultParseOptions = {
-            trimWhitespace: true,
-            regex: null,
-            pattern: "{0}"
-        } as ParseOptions;
+    const [data, setData] = React.useState<any[] | null>(null);
+    const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
+    const [lines, setLines] = React.useState<string[]>([]);
+    const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
+    const [accountsBy, setAccountsBy] = React.useState<{ [key: string]: { [value: string]: Account | "fetching" } }>({});
+    const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
+    const [csvFile, setCsvFile] = React.useState<File | null>(null);
+    const [csvOptions, setCsvOptions] = React.useState<CsvImportOptions>({
+        csvDelimiter: "auto",
+        csvNewlineCharacter: "auto",
+        csvParseHeader: true
+    });
+    const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
+        duplicateHandling: "identifier-rownumber",
+        identifierColumn: "Dato",
+        identifierParseOptions: defaultParseOptions,
+        sourceAccountColumn: null,
+        sourceAccountIdentifier: "accountNumber",
+        sourceAccountParseOptions: defaultParseOptions,
+        destinationAccountColumn: "Exportkonto",
+        destinationAccountIdentifier: "accountNumber",
+        destinationAccountParseOptions: defaultParseOptions,
+        amountColumn: "Beløb",
+        amountParseOptions: defaultParseOptions,
+        dateColumn: "Dato",
+        dateParseOptions: defaultParseOptions,
+        // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
+        dateFormat: "dd-MM-yyyy",
+        descriptionColumn: "Tekst",
+        descriptionParseOptions: defaultParseOptions,
+    });
 
-        this.state = {
-            data: null,
-            transactions: null,
-            lines: [],
-            currentTab: "parse-csv",
-            accountsBy: {},
-            duplicateIdentifiers: new Set(),
-
-            csvFile: null,
-            csvOptions: {
-                csvDelimiter: "auto",
-                csvNewlineCharacter: "auto",
-                csvParseHeader: true
-            },
-            /* mappingOptions: {
-                duplicateHandling: "identifier",
-                identifierColumn: null,
-                sourceAccountColumn: null,
-                sourceAccountIdentifier: "name",
-                destinationAccountColumn: null,
-                destinationAccountIdentifier: "name",
-                amountColumn: null,
-                dateColumn: null,
-                descriptionColumn: null,
-                // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
-                dateFormat: "yyyy-MM-dd"
-            } */
-            mappingOptions: {
-                duplicateHandling: "identifier-rownumber",
-                identifierColumn: "Dato",
-                identifierParseOptions: defaultParseOptions,
-                sourceAccountColumn: null,
-                sourceAccountIdentifier: "accountNumber",
-                sourceAccountParseOptions: defaultParseOptions,
-                destinationAccountColumn: "Exportkonto",
-                destinationAccountIdentifier: "accountNumber",
-                destinationAccountParseOptions: defaultParseOptions,
-                amountColumn: "Beløb",
-                amountParseOptions: defaultParseOptions,
-                dateColumn: "Dato",
-                dateParseOptions: defaultParseOptions,
-                // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
-                dateFormat: "dd-MM-yyyy",
-                descriptionColumn: "Tekst",
-                descriptionParseOptions: defaultParseOptions,
-            }
-        };
-    }
-
-    public render() {
-        return <>
-            <section className="hero has-background-primary">
-                <div className="hero-body">
-                    <p className="title has-text-white">
-                        Import from CSV
-                    </p>
-                </div>
-            </section>
-            <div className="tabs has-background-white px-5">
-                <ul>
-                    <li className={this.state.currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
-                    <li className={this.state.currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
-                    <li className={this.state.currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
-                </ul>
+    /* mappingOptions: {
+        duplicateHandling: "identifier",
+        identifierColumn: null,
+        sourceAccountColumn: null,
+        sourceAccountIdentifier: "name",
+        destinationAccountColumn: null,
+        destinationAccountIdentifier: "name",
+        amountColumn: null,
+        dateColumn: null,
+        descriptionColumn: null,
+        // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
+        dateFormat: "yyyy-MM-dd"
+    } */
+    
+    return <>
+        <section className="hero has-background-primary">
+            <div className="hero-body">
+                <p className="title has-text-white">
+                    Import from CSV
+                </p>
             </div>
-            <div className="p-3">
-                {this.renderSections()}
-            </div>
-        </>;
-    }
+        </section>
+        <div className="tabs has-background-white px-5">
+            <ul>
+                <li className={currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
+                <li className={currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
+                <li className={currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
+            </ul>
+        </div>
+        <div className="p-3">
+            {renderSections()}
+        </div>
+    </>;
 
-    private renderSections(): React.ReactNode {
-        switch (this.state.currentTab) {
+    function renderSections(): React.ReactNode {
+        switch (currentTab) {
             case "parse-csv":
                 return <>
                     <ImportCsv
-                        csvFile={this.state.csvFile}
-                        csvParsed={(data, lines) => this.setState({ data: data, lines: lines })}
-                        optionsChanged={options => this.setState({ csvOptions: options })}
-                        fileChanged={file => this.setState({ csvFile: file })}
-                        options={this.state.csvOptions}
-                        goToNext={() => this.setState({ currentTab: "map-columns" })}
+                        csvFile={csvFile}
+                        csvParsed={(data, lines) => { setData(data); setLines(lines); }}
+                        optionsChanged={options => setCsvOptions(options)}
+                        fileChanged={file => setCsvFile(file)}
+                        options={csvOptions}
+                        goToNext={() => setCurrentTab("map-columns")}
                     />
                 </>;
             case "map-columns":
-                return this.state.data != null && <MapCsvFields
-                        accountsBy={this.state.accountsBy}
-                        options={this.state.mappingOptions}
-                        transactions={this.state.transactions}
-                        duplicateIdentifiers={this.state.duplicateIdentifiers}
+                return data != null && <MapCsvFields
+                        accountsBy={accountsBy}
+                        options={mappingOptions}
+                        transactions={transactions}
+                        duplicateIdentifiers={duplicateIdentifiers}
                         accountCreated={account => {
-                            const newAccountsBy = { ...this.state.accountsBy };
+                            const newAccountsBy = { ...accountsBy };
                             Object.keys(account).forEach(identifier => {
                                 if (newAccountsBy[identifier] === undefined) newAccountsBy[identifier] = {};
                                 newAccountsBy[identifier][(account as any)[identifier]] = account;
                             });
-                            this.setState({ accountsBy: newAccountsBy });
+                            setAccountsBy(newAccountsBy);
                         }}
-                        preferences={this.props.preferences}
-                        data={this.state.data}
-                        onChange={(transactions, options) => this.mappingsChanged(transactions, options)}
-                        goToPrevious={() => this.setState({ currentTab: "parse-csv" })}
-                        goToNext={() => this.setState({ currentTab: "process" })}
+                        data={data}
+                        onChange={(transactions, options) => mappingsChanged(transactions, options)}
+                        goToPrevious={() => setCurrentTab("parse-csv")}
+                        goToNext={() => setCurrentTab("process")}
                     />;
             case "process":
                 // TODO: Don't show the button on the previous page, while fetching
-                if (Object.keys(this.state.accountsBy).some(identifier =>
-                    Object.keys(this.state.accountsBy[identifier]).some(value =>
-                        this.state.accountsBy[identifier][value] === "fetching"))) {
+                if (Object.keys(accountsBy).some(identifier =>
+                    Object.keys(accountsBy[identifier]).some(value =>
+                        accountsBy[identifier][value] === "fetching"))) {
                     return "Please wait while fetching accounts";
                 }
                 
                 return <>
                     <Import
-                        transactions={this.state.transactions}
-                        accountsBy={this.state.accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
+                        transactions={transactions}
+                        accountsBy={accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
                         batchSize={10}
-                        goToPrevious={() => this.setState({ currentTab: "map-columns" })}/>
+                        goToPrevious={() => setCurrentTab("map-columns")}/>
                 </>;
             default:
                 throw "Unknown state";
         }
     }
 
-    private mappingsChanged(transactions: CsvCreateTransaction[], options: MappingOptions): void {
+    function mappingsChanged(newTransactions: CsvCreateTransaction[], options: MappingOptions): void {
         // Update duplicates
-        if ((this.state.transactions === null && transactions !== null)
-            || transactions.length !== this.state.transactions.length
-            || transactions.some((transaction, i) => this.state.transactions[i].identifier !== transaction.identifier)) {
+        if ((transactions === null && newTransactions !== null)
+            || newTransactions.length !== transactions.length
+            || newTransactions.some((transaction, i) => transactions[i].identifier !== transaction.identifier)) {
             // There has been a change in identifiers
             let identifierCounts: { [identifier: string]: number } = {};
-            for (let i = 0; i < transactions.length; i++) {
-                let id = transactions[i].identifier;
+            for (let i = 0; i < newTransactions.length; i++) {
+                let id = newTransactions[i].identifier;
                 identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
             }
-            this.setState({ duplicateIdentifiers: "fetching" });
+            setDuplicateIdentifiers("fetching");
 
             Api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1))
-                .then(result => {
-                    this.setState({
-                        duplicateIdentifiers: new Set([
-                            ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
-                            ...result
-                        ])
-                    });
-                });
+                .then(result => setDuplicateIdentifiers(new Set([
+                    ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
+                    ...result
+                ])));
         }
         
         // Update AccountsBy
-        let newAccountsBy = { ...this.state.accountsBy };
-        for (let i = 0; i < transactions.length; i++) {
-            let transaction = transactions[i];
+        let newAccountsBy = { ...accountsBy };
+        for (let i = 0; i < newTransactions.length; i++) {
+            let transaction = newTransactions[i];
 
             if (transaction.source !== null) {
                 if (newAccountsBy[transaction.source.identifier] === undefined) {
@@ -212,22 +195,20 @@ export default class PageImportCsv extends React.Component<Props, State> {
                 }
             }
         }
-        this.setState({
-            transactions: transactions,
-            mappingOptions: options,
-            accountsBy: newAccountsBy,
-        });
+        setTransactions(newTransactions);
+        setMappingOptions(options);
+        setAccountsBy(newAccountsBy);
 
         // Find every unique account reference in the transactions that has not been loaded
         let uniqueAccountReferences = [
-            ...transactions.map(transaction => transaction.source),
-            ...transactions.map(transaction => transaction.destination)
+            ...newTransactions.map(transaction => transaction.source),
+            ...newTransactions.map(transaction => transaction.destination)
         ].filter(account => account != null)
             .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
-            .filter(account => this.state.accountsBy[account.identifier] === undefined
-                || this.state.accountsBy[account.identifier][account.value] === undefined
-                || this.state.accountsBy[account.identifier][account.value] === "fetching"
-                || this.state.accountsBy[account.identifier][account.value] === null);
+            .filter(account => accountsBy[account.identifier] === undefined
+                || accountsBy[account.identifier][account.value] === undefined
+                || accountsBy[account.identifier][account.value] === "fetching"
+                || accountsBy[account.identifier][account.value] === null);
 
         let uniqueIdentifiers = uniqueAccountReferences
             .map(account => account.identifier)
@@ -251,7 +232,7 @@ export default class PageImportCsv extends React.Component<Props, State> {
                 })),
             }
         } as SearchRequest).then(result => {
-            let newAccountsBy = { ...this.state.accountsBy };
+            let newAccountsBy = { ...accountsBy };
             // Update the accounts found
             for (let i = 0; i < result.data.length; i++) {
                 let account = result.data[i];
@@ -264,8 +245,8 @@ export default class PageImportCsv extends React.Component<Props, State> {
             }
 
             // Set missing accounts as unknown as well
-            for (let i = 0; i < transactions.length; i++) {
-                let transaction = transactions[i];
+            for (let i = 0; i < newTransactions.length; i++) {
+                let transaction = newTransactions[i];
     
                 if (transaction.source !== null) {
                     if (newAccountsBy[transaction.source.identifier][transaction.source.value] === "fetching") {
@@ -279,7 +260,7 @@ export default class PageImportCsv extends React.Component<Props, State> {
                     }
                 }
             }
-            this.setState({ accountsBy: newAccountsBy });
+            setAccountsBy(newAccountsBy);
         });
     }
 }

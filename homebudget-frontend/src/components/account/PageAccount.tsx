@@ -20,18 +20,15 @@ import ModifyAccountModal from "../form/account/ModifyAccountModal";
 import YesNoDisplay from "../form/YesNoDisplay";
 import DeleteAccountModal from "../form/account/DeleteAccountModal";
 import { routes } from "../../lib/routes";
+import { preferencesContext } from "../App";
 
-interface Props {
-    preferences: Preferences | "fetching";
-    updatePreferences: () => void;
-}
-
-export default function (props: Props) {
+export default function () {
     const { id } = useParams();
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching")
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
     const [currentModal, setCurrentModal] = React.useState<null | "deleting" | "modifying">(null);
     const navigate = useNavigate();
+    const { preferences, updatePreferences } = React.useContext(preferencesContext);
     
     let defaultPeriod: Period = {
         type: "month",
@@ -62,8 +59,8 @@ export default function (props: Props) {
             .then(result => {
                 setUpdatingFavorite(false);
                 result.balance = account.balance;
+                updateAccountFavoriteInPreferences(result, result.favorite);
                 setAccount(result);
-                props.updatePreferences();
             })
             .catch(e => {
                 setAccount("error");
@@ -131,7 +128,7 @@ export default function (props: Props) {
                             <tbody>
                                 <tr>
                                     <td>Balance</td>
-                                    <td className="has-text-right">{formatNumberWithPrefs(account.balance!, props.preferences)}</td>
+                                    <td className="has-text-right">{formatNumberWithPrefs(account.balance!, preferences)}</td>
                                 </tr>
                                 <tr>
                                     <td>Account Number</td>
@@ -155,19 +152,19 @@ export default function (props: Props) {
                 </div>
                 <div className="column p-0 is-flex">
                     <Card title="Categories" style={{flexGrow: 1}}>
-                        <AccountCategoryChart id={Number(id)} preferences={props.preferences} period={period} />
+                        <AccountCategoryChart id={Number(id)} preferences={preferences} period={period} />
                     </Card>
                 </div>
                 <div className="column p-0 is-flex">
                     <Card title="Balance" style={{ flexGrow: 1 }}>
-                        <AccountBalanceChart id={Number(id)} preferences={props.preferences} period={period} />
+                        <AccountBalanceChart id={Number(id)} preferences={preferences} period={period} />
                     </Card>
                 </div>
             </div>
             <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
                 <AccountTransactionList
                     accountId={Number(id)}
-                    preferences={props.preferences} period={period}
+                    period={period}
                     decrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.decrement(period)); resolve(); })}
                     incrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.increment(period)); resolve(); })}
                 />
@@ -177,7 +174,7 @@ export default function (props: Props) {
             close={() => setCurrentModal(null)}
             created={modifiedAccount => {
                 if (modifiedAccount.favorite !== account.favorite) {
-                    props.updatePreferences();
+                    updateAccountFavoriteInPreferences(account, modifiedAccount.favorite);
                 }
                 setAccount(modifiedAccount);
             }}
@@ -187,11 +184,25 @@ export default function (props: Props) {
             close={() => setCurrentModal(null)}
             deleted={() => {
                 if (account.favorite) {
-                    props.updatePreferences();
+                    updateAccountFavoriteInPreferences(account, false);
                 }
                 navigate(routes.accounts());
             }}
             account={account}
-            preferences={props.preferences} />}
+            preferences={preferences} />}
     </>;
+
+    function updateAccountFavoriteInPreferences(account: Account, favorite: boolean) {
+        if (preferences === "fetching") {
+            // Refetch preferences. Can't modify them as they aren't fetched.
+            updatePreferences(null);
+            return;
+        }
+
+        if (favorite) {
+            updatePreferences({ ...preferences, favoriteAccounts: [...preferences.favoriteAccounts, account]});
+        } else {
+            updatePreferences({ ...preferences, favoriteAccounts: preferences.favoriteAccounts.filter(fav => fav.id !== account.id)});
+        }
+    }
 }

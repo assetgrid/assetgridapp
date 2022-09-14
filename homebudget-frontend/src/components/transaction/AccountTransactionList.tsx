@@ -2,16 +2,15 @@ import * as React from "react";
 import { Transaction, TransactionListResponse } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
-import { Preferences } from "../../models/preferences";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import TransactionTableLine from "./TransactionTableLine";
+import { preferencesContext } from "../App";
 
 interface Props {
     draw?: number;
     accountId: number;
-    preferences: Preferences | "fetching";
     period: Period;
     decrementPeriod?: () => Promise<void>;
     incrementPeriod?: () => Promise<void>;
@@ -31,7 +30,15 @@ export default function AccountTransactionList(props: Props) {
 
     const [targetPage, setTargetPage] = React.useState<number | "last" | null>(null);
 
+    const firstEffectTrigger = React.useRef(true);
     React.useEffect(() => {
+        if (firstEffectTrigger.current) {
+            // This effect will be triggered once and then every time the period changes
+            // We want it to run on period changes only and thus discard the first trigger
+            firstEffectTrigger.current = false;
+            return;
+        }
+
         if (targetPage === "last") {
             countTransactions().then(count => {
                 const lastPage = Math.max(1, Math.ceil(count / pageSize));
@@ -172,7 +179,7 @@ export default function AccountTransactionList(props: Props) {
                 {heading}
                 <div className="table-body">
                     {items.map(({ item: line }) => {
-                        return <TransactionTableLine preferences={props.preferences}
+                        return <TransactionTableLine
                             accountId={props.accountId}
                             transaction={line.transaction}
                             balance={line.balance}

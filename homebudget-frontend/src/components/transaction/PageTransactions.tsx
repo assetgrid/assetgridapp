@@ -8,24 +8,13 @@ import { Card } from "../common/Card";
 import TransactionFilterEditor from "./filter/TransactionFilterEditor";
 import TransactionList from "./TransactionList";
 
-interface Props {
-    preferences: Preferences | "fetching";
-}
-
-let requestNumber = 0;
-export default function PageTransactions(props: Props) {
+export default function PageTransactions() {
     const [query, setQuery] = React.useState<SearchGroup>({
         type: SearchGroupType.And,
         children: []
     });
     const [draw, setDraw] = React.useState(0);
-
-    React.useEffect(() => {
-        // Debounce to prevent too many requests if the query is changed frequently
-        setDrawDebounced();
-    }, [query]);
-
-    const setDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
+    const incrementDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
 
     return <>
         <section className="hero has-background-primary">
@@ -35,13 +24,13 @@ export default function PageTransactions(props: Props) {
         </section>
         <div className="p-3">
             <Card title="Transactions">
-                <TransactionFilterEditor query={query} setQuery={setQuery} />
+                <TransactionFilterEditor query={query} setQuery={setQueryAndRedrawTable} />
                 <Link to={routes.createTransaction()}
                     className="button">
                     Create Transaction
                 </Link>
             
-                <TransactionList preferences={props.preferences}
+                <TransactionList
                     query={query}
                     draw={draw}
                     allowLinks={true}
@@ -50,4 +39,9 @@ export default function PageTransactions(props: Props) {
             </Card>
         </div>
     </>;
+
+    function setQueryAndRedrawTable(query: SearchGroup) {
+        setQuery(query);
+        incrementDrawDebounced();
+    }
 }

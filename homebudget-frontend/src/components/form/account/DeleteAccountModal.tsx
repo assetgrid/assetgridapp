@@ -69,7 +69,7 @@ export default function DeleteAccountModal(props: Props) {
 
     return <Modal
         active={true}
-        title={"Create account"}
+        title={"Delete account"}
         close={() => props.close()}
         footer={<>
             {props.deleted && <InputButton onClick={() => deleteAccount()} disabled={isDeleting} className="is-danger">Delete account</InputButton>}
@@ -78,7 +78,7 @@ export default function DeleteAccountModal(props: Props) {
         <p>Are you sure you want to delete this account? This action is irreversible!</p>
         <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
         <p>The following transactions will be deleted:</p>
-        <TransactionList preferences={props.preferences} allowEditing={false} allowLinks={false} query={query} small={true} pageSize={5} />
+        <TransactionList allowEditing={false} allowLinks={false} query={query} small={true} pageSize={5} />
     </Modal>;
 
     async function deleteAccount() {

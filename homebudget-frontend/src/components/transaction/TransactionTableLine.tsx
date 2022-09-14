@@ -20,10 +20,10 @@ import InputButton from "../form/InputButton";
 import InputNumber from "../form/InputNumber";
 import Tooltip from "../common/Tooltip";
 import InputIconButton from "../form/InputIconButton";
+import { preferencesContext } from "../App";
 
 type Props  = {
     transaction: Transaction;
-    preferences: Preferences | "fetching";
     updateItem: (item: Transaction) => void;
     accountId?: number;
     balance?: Decimal;
@@ -84,6 +84,7 @@ function TableTransaction(props: TableTransactionProps) {
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     const [expandSplit, setExpandSplit] = React.useState(false);
+    const { preferences } = React.useContext(preferencesContext);
 
     return <div key={props.transaction.id} className="table-row">
         <div>
@@ -96,10 +97,10 @@ function TableTransaction(props: TableTransactionProps) {
         <div>{props.transaction.dateTime.toString()}</div>
         <div>{props.transaction.description}</div>
         <div className={"number-total " + totalClass}>
-            {formatNumberWithPrefs(total, props.preferences)}
+            {formatNumberWithPrefs(total, preferences)}
         </div>
         {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>
-            {formatNumberWithPrefs(props.balance, props.preferences)}
+            {formatNumberWithPrefs(props.balance, preferences)}
         </div>}
         <div>
             {props.accountId !== undefined
@@ -135,7 +136,7 @@ function TableTransaction(props: TableTransactionProps) {
                     {line.description}
                 </div>
                 <div className="total">
-                    {formatNumberWithPrefs(line.amount, props.preferences)}
+                    {formatNumberWithPrefs(line.amount, preferences)}
                 </div>
                 <div style={{ gridColumn: "span 4" }}></div>
             </div>)}
@@ -166,6 +167,7 @@ function TransactionEditor(props: TransactionEditorProps) {
         lines: props.transaction.lines.length > 0 ? props.transaction.lines : null,
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
+    const { preferences } = React.useContext(preferencesContext);
 
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
@@ -188,10 +190,10 @@ function TransactionEditor(props: TransactionEditorProps) {
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
-                {formatNumberWithPrefs(model.total.times(amountMultiplier), props.preferences)}
+                {formatNumberWithPrefs(model.total.times(amountMultiplier), preferences)}
             </div>
         }
-        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, props.preferences)}</div>}
+        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, preferences)}</div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <div>
             <InputAccount
                 value={model.source}
