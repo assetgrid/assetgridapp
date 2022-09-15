@@ -21,13 +21,14 @@ import YesNoDisplay from "../form/YesNoDisplay";
 import DeleteAccountModal from "../form/account/DeleteAccountModal";
 import { routes } from "../../lib/routes";
 import { preferencesContext } from "../App";
+import InputButton from "../form/InputButton";
+import InputText from "../form/InputText";
+import InputCheckbox from "../form/InputCheckbox";
 
 export default function () {
     const { id } = useParams();
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
-    const [currentModal, setCurrentModal] = React.useState<null | "deleting" | "modifying">(null);
-    const navigate = useNavigate();
     const { preferences, updatePreferences } = React.useContext(preferencesContext);
     
     let defaultPeriod: Period = {
@@ -119,43 +120,12 @@ export default function () {
         <div className="p-3">
             <div className="columns m-0">
                 <div className="column p-0 is-narrow is-flex">
-                    <Card title={<>
-                        <span style={{ flexGrow: 1 }}>Account Details</span>
-                        {updatingFavorite
-                        ? <span className="icon">
-                            <FontAwesomeIcon icon={solid.faSpinner} pulse />
-                        </span>
-                        : <span className="icon" onClick={() => toggleFavorite()} style={{ cursor: "pointer" }}>
-                            {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
-                        </span>}
-                        <InputIconButton icon={solid.faPen} onClick={() => setCurrentModal("modifying")} />
-                        <InputIconButton icon={regular.faTrashCan} onClick={() => setCurrentModal("deleting")} />
-                    </>}>
-                        <table className="table">
-                            <tbody>
-                                <tr>
-                                    <td>Balance</td>
-                                    <td className="has-text-right">{formatNumberWithPrefs(account.balance!, preferences)}</td>
-                                </tr>
-                                <tr>
-                                    <td>Account Number</td>
-                                    <td className="has-text-right">{account.accountNumber}</td>
-                                </tr>
-                                <tr>
-                                    <td>Favorite</td>
-                                    <td className="has-text-right">
-                                        <YesNoDisplay value={account.favorite} />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Include in net worth</td>
-                                    <td className="has-text-right">
-                                        <YesNoDisplay value={account.includeInNetWorth} />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </Card>
+                    <AccountDetailsCard account={account}
+                        updatingFavorite={updatingFavorite}
+                        toggleFavorite={toggleFavorite}
+                        onChange={setAccount}
+                        updateAccountFavoriteInPreferences={updateAccountFavoriteInPreferences}
+                    />
                 </div>
                 <div className="column p-0 is-flex">
                     <Card title="Categories" style={{flexGrow: 1}}>
@@ -177,26 +147,6 @@ export default function () {
                 />
             </Card>
         </div>
-        {currentModal === "modifying" && <ModifyAccountModal
-            close={() => setCurrentModal(null)}
-            updated={modifiedAccount => {
-                if (modifiedAccount.favorite !== account.favorite) {
-                    updateAccountFavoriteInPreferences(account, modifiedAccount.favorite);
-                }
-                setAccount(modifiedAccount);
-            }}
-            account={account}
-            closeOnChange={true} />}
-        {currentModal === "deleting" && <DeleteAccountModal
-            close={() => setCurrentModal(null)}
-            deleted={() => {
-                if (account.favorite) {
-                    updateAccountFavoriteInPreferences(account, false);
-                }
-                navigate(routes.accounts());
-            }}
-            account={account}
-            preferences={preferences} />}
     </>;
 
     function updateAccountFavoriteInPreferences(account: Account, favorite: boolean) {
@@ -211,5 +161,152 @@ export default function () {
         } else {
             updatePreferences({ ...preferences, favoriteAccounts: preferences.favoriteAccounts.filter(fav => fav.id !== account.id)});
         }
+    }
+}
+
+export function AccountDetailsCard(props: {
+    account: Account,
+    updatingFavorite: boolean,
+    toggleFavorite: () => void,
+    onChange: (account: Account) => void;
+    updateAccountFavoriteInPreferences: (account: Account, favorite: boolean) => void
+}): React.ReactElement {
+    
+    const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
+    const [editingModel, setEditingModel] = React.useState<Account | null>(null);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const { preferences } = React.useContext(preferencesContext);
+    const navigate = useNavigate();
+
+    if (editingModel === null) {
+        return <Card title={<>
+            <span style={{ flexGrow: 1 }}>Account details</span>
+            {props.updatingFavorite
+                ? <span className="icon">
+                    <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                </span>
+                : <span className="icon" onClick={() => props.toggleFavorite()} style={{ cursor: "pointer" }}>
+                    {props.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                </span>}
+            <InputIconButton icon={solid.faPen} onClick={() => setEditingModel(props.account)} />
+            <InputIconButton icon={regular.faTrashCan} onClick={() => setIsConfirmingDelete(true)} />
+        </>}>
+            <table className="table">
+                <tbody>
+                    <tr>
+                        <td>Balance</td>
+                        <td className="has-text-right">{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td className="has-text-right">{props.account.name}</td>
+                    </tr>
+                    <tr>
+                        <td>Description</td>
+                        <td className="has-text-right">{props.account.description}</td>
+                    </tr>
+                    <tr>
+                        <td>Account Number</td>
+                        <td className="has-text-right">{props.account.accountNumber}</td>
+                    </tr>
+                    <tr>
+                        <td>Favorite</td>
+                        <td className="has-text-right">
+                            <YesNoDisplay value={props.account.favorite} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Include in net worth</td>
+                        <td className="has-text-right">
+                            <YesNoDisplay value={props.account.includeInNetWorth} />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            {isConfirmingDelete && <DeleteAccountModal
+                close={() => setIsConfirmingDelete(false)}
+                deleted={() => {
+                    if (props.account.favorite) {
+                        props.updateAccountFavoriteInPreferences(props.account, false);
+                    }
+                    navigate(routes.accounts());
+                }}
+                account={props.account}
+                preferences={preferences} />}
+        </Card>
+    } else {
+        return <Card title="Account details">
+            <table className="table">
+                <tbody>
+                    <tr>
+                        <td>Balance</td>
+                        <td className="has-text-right">{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td>
+                            <InputText
+                                value={editingModel.name}
+                                onChange={e => setEditingModel({ ...editingModel, name: e.target.value })}
+                                disabled={isUpdating} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Description</td>
+                        <td>
+                            <InputText
+                                value={editingModel.description}
+                                onChange={e => setEditingModel({ ...editingModel, description: e.target.value })}
+                                disabled={isUpdating} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Account number</td>
+                        <td>
+                            <InputText
+                                value={editingModel.accountNumber}
+                                onChange={e => setEditingModel({ ...editingModel, accountNumber: e.target.value })}
+                                disabled={isUpdating} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Favorite</td>
+                        <td className="has-text-right">
+                            <InputCheckbox
+                                value={editingModel.favorite}
+                                onChange={e => setEditingModel({ ...editingModel, favorite: e.target.checked })}
+                                disabled={isUpdating} />  
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Include in net worth</td>
+                        <td className="has-text-right">
+                            <InputCheckbox
+                                value={editingModel.includeInNetWorth}
+                                onChange={e => setEditingModel({ ...editingModel, includeInNetWorth: e.target.checked })}
+                                disabled={isUpdating} />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div className="buttons">
+                <InputButton disabled={isUpdating} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
+                <InputButton onClick={() => setEditingModel(null)}>Cancel</InputButton>
+            </div>
+        </Card>
+    }
+
+    async function saveChanges() {
+        setIsUpdating(true);
+        const { balance, ...updateModel } = editingModel;
+        const result = await Api.Account.update(props.account.id, updateModel);
+        result.balance = props.account.balance;
+        setEditingModel(null);
+        setIsUpdating(false);
+        if (editingModel.favorite !== props.account.favorite) {
+            props.updateAccountFavoriteInPreferences(props.account, editingModel.favorite);
+        }
+        props.onChange(result);
     }
 }
