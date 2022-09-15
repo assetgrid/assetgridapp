@@ -12,6 +12,7 @@ import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./account/PageAccountOverview";
 import { Api } from "../lib/ApiClient";
 import Sidebar from "./common/Sidebar";
+import PageTransaction from "./transaction/PageTransaction";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 
@@ -34,6 +35,7 @@ export default function FairFitPortalApp () {
                         <Route path={routes.dashboard()} element={<PageDashboard />} />
                         <Route path={routes.importCsv()} element={<PageImportCsv />}/>
                         <Route path={routes.transactions()} element={<PageTransactions />}/>
+                        <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
                         <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
                         <Route path={routes.accounts()} element={<PageAccountOverview />} />
                         <Route path={routes.account(":id")} element={<PageAccount />} />

@@ -5,6 +5,7 @@ import * as React from "react";
 import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
 import { CreateTransaction } from "../../models/transaction";
+import AccountLink from "../account/AccountLink";
 import { Card } from "../common/Card";
 import Table from "../common/Table";
 import InputButton from "../form/InputButton";
@@ -81,8 +82,8 @@ export default class Import extends React.Component<Props, State> {
                 <td>{transaction.identifier}</td>
                 <td>{transaction.dateTime.toString()}</td>
                 <td>{transaction.description}</td>
-                <td>{transaction.sourceId !== null ? "#" + transaction.sourceId : ""}</td>
-                <td>{transaction.destinationId !== null ? "#" + transaction.destinationId : ""}</td>
+                <td>{transaction.sourceId && <AccountLink account={this.props.accountsBy["id"][transaction.sourceId]} />}</td>
+                <td>{transaction.destinationId && <AccountLink account={this.props.accountsBy["id"][transaction.destinationId]} />}</td>
             </tr>}
             type="sync"
             renderType="table"
@@ -90,8 +91,8 @@ export default class Import extends React.Component<Props, State> {
                 <th>Identifier</th>
                 <th>Created</th>
                 <th>Description</th>
-                <th>Source (id)</th>
-                <th>Destination (id)</th>
+                <th>Source</th>
+                <th>Destination</th>
             </tr>} items={transactions} />;
     }
 

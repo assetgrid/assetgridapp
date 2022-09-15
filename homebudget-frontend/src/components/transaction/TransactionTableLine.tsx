@@ -21,6 +21,7 @@ import InputNumber from "../form/InputNumber";
 import Tooltip from "../common/Tooltip";
 import InputIconButton from "../form/InputIconButton";
 import { preferencesContext } from "../App";
+import DeleteTransactionModal from "../form/transaction/DeleteTransactionModal";
 
 type Props  = {
     transaction: Transaction;
@@ -49,17 +50,7 @@ export default function TransactionTableLine(props: Props) {
         case "editing":
             return <TransactionEditor disabled={disabled} setDisabled={setDisabled} stopEditing={() => setState(null)} {...props} />;
         default:
-            return <TableTransaction setState={setState} isConfirmingDeletion={state === "confirm-delete"} delete={deleteTransaction} disabled={disabled} {...props} />;
-    }
-
-    function deleteTransaction() {
-        setDisabled(true);
-        setState(null);
-
-        Api.Transaction.delete(props.transaction.id).then(() => {
-            setDisabled(false);
-            props.updateItem(null);
-        })
+            return <TableTransaction setState={setState} isConfirmingDeletion={state === "confirm-delete"} disabled={disabled} {...props} />;
     }
 }
 
@@ -77,7 +68,6 @@ type TableTransactionProps = Props & {
     disabled: boolean;
     setState: (state: null | "editing" | "confirm-delete") => void;
     isConfirmingDeletion: boolean;
-    delete: () => void;
 }
 function TableTransaction(props: TableTransactionProps) {
     const offsetAccount = props.accountId !== undefined ? props.transaction.destination?.id === props.accountId ? props.transaction.source : props.transaction.destination : null;
@@ -118,16 +108,10 @@ function TableTransaction(props: TableTransactionProps) {
             </>}
             
             {/* Deletion modal */}
-            {props.isConfirmingDeletion && <Modal
-                active={true}
-                title={"Delete transaction"}
+            {props.isConfirmingDeletion && <DeleteTransactionModal
                 close={() => props.setState(null)}
-                footer={<>
-                    <button className="button is-danger" onClick={() => props.delete()}>Delete transaction</button>
-                    <button className="button" onClick={() => props.setState(null)}>Cancel</button>
-                </>}>
-                Are you sure you want to delete transaction "#{props.transaction.id} {props.transaction.description}"?
-            </Modal>}
+                deleted={() => props.updateItem(null)}
+                transaction={props.transaction} />}
         </div>}
         {expandSplit && < div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
@@ -173,6 +157,16 @@ function TransactionEditor(props: TransactionEditorProps) {
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     // If the current account is the source, all amounts should be negative
     const amountMultiplier = props.accountId && props.accountId === props.transaction.source?.id ? new Decimal(-1) : new Decimal(1);
+
+    // When this component is present, don't allow the user to refresh to prevent them discarding their changes
+    React.useEffect(() => {
+        const onUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            return false;
+        };
+        window.addEventListener("beforeunload", onUnload);
+        return () => window.removeEventListener("beforeunload", onUnload);
+    }, []);
 
     return <div key={props.transaction.id} className="table-row editing">
         <div><TransactionLink transaction={props.transaction} /></div>
@@ -288,7 +282,6 @@ function TransactionEditor(props: TransactionEditorProps) {
 
     function deleteLine(index: number) {
         const newLines = [...model.lines.slice(0, index), ...model.lines.slice(index + 1)];
-        console.log(newLines);
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : model.lines[index].amount;
         setModel({
             ...model,

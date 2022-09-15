@@ -24,7 +24,7 @@ import { preferencesContext } from "../App";
 
 export default function () {
     const { id } = useParams();
-    const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching")
+    const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
     const [currentModal, setCurrentModal] = React.useState<null | "deleting" | "modifying">(null);
     const navigate = useNavigate();
@@ -120,7 +120,14 @@ export default function () {
             <div className="columns m-0">
                 <div className="column p-0 is-narrow is-flex">
                     <Card title={<>
-                        Account Details
+                        <span style={{ flexGrow: 1 }}>Account Details</span>
+                        {updatingFavorite
+                        ? <span className="icon">
+                            <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                        </span>
+                        : <span className="icon" onClick={() => toggleFavorite()} style={{ cursor: "pointer" }}>
+                            {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                        </span>}
                         <InputIconButton icon={solid.faPen} onClick={() => setCurrentModal("modifying")} />
                         <InputIconButton icon={regular.faTrashCan} onClick={() => setCurrentModal("deleting")} />
                     </>}>
@@ -172,7 +179,7 @@ export default function () {
         </div>
         {currentModal === "modifying" && <ModifyAccountModal
             close={() => setCurrentModal(null)}
-            created={modifiedAccount => {
+            updated={modifiedAccount => {
                 if (modifiedAccount.favorite !== account.favorite) {
                     updateAccountFavoriteInPreferences(account, modifiedAccount.favorite);
                 }

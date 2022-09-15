@@ -21,6 +21,19 @@ namespace homebudget_server.Controllers
             _context = context;
         }
 
+        [HttpGet()]
+        [Route("/[controller]/{id}")]
+        public ViewTransaction? Get(int id)
+        {
+            var result = _context.Transactions
+                .SelectView()
+                .SingleOrDefault(transaction => transaction.Id == id);
+
+            if (result == null) return null;
+
+            return result;
+        }
+
         [HttpPost()]
         public ViewTransaction Create(ViewCreateTransaction model)
         {
@@ -196,6 +209,7 @@ namespace homebudget_server.Controllers
                             DateTime = dbObject.DateTime,
                             Description = dbObject.Description,
                             Category = dbObject.Category?.Name ?? "",
+                            Total = dbObject.Total,
                             Source = dbObject.SourceAccount != null
                                 ? new ViewAccount
                                 {
@@ -214,6 +228,7 @@ namespace homebudget_server.Controllers
                                 .OrderBy(line => line.Order)
                                 .Select(line => new ViewTransactionLine
                                 {
+                                    Description = line.Description,
                                     Amount = line.Amount,
                                 }).ToList(),
                         };

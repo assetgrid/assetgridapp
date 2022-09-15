@@ -1,4 +1,6 @@
 import React = require("react");
+import { Link } from "react-router-dom";
+import { routes } from "../../lib/routes";
 import { Transaction } from "../../models/transaction";
 import Tooltip from "../common/Tooltip";
 
@@ -10,16 +12,16 @@ export default function TransactionLink(props: { transaction: Transaction, disab
     }
 
     if (props.transaction.identifier === null) {
-        return <a className="transaction-link">
+        return <Link className="transaction-link" to={routes.transaction(props.transaction.id.toString())}>
             <span>#</span>{props.transaction.id}
-        </a>;
+        </Link>;
     } else {
         return <Tooltip content={<>
             <span>Identifier: </span> {props.transaction.identifier}. Click to go to transaction.
         </>}>
-            <a className="transaction-link">
+            <Link className="transaction-link" to={routes.transaction(props.transaction.id.toString())}>
                 <span>#</span>{props.transaction.id}
-            </a>
+            </Link>
         </Tooltip>;
     }
 }

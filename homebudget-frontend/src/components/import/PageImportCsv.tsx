@@ -133,7 +133,6 @@ export default function PageImportCsv () {
                         goToNext={() => setCurrentTab("process")}
                     />;
             case "process":
-                // TODO: Don't show the button on the previous page, while fetching
                 if (Object.keys(accountsBy).some(identifier =>
                     Object.keys(accountsBy[identifier]).some(value =>
                         accountsBy[identifier][value] === "fetching"))) {
@@ -232,7 +231,7 @@ export default function PageImportCsv () {
                 })),
             }
         } as SearchRequest).then(result => {
-            let newAccountsBy = { ...accountsBy };
+            newAccountsBy = { ...newAccountsBy };
             // Update the accounts found
             for (let i = 0; i < result.data.length; i++) {
                 let account = result.data[i];
@@ -244,7 +243,7 @@ export default function PageImportCsv () {
                 });
             }
 
-            // Set missing accounts as unknown as well
+            // Set missing accounts to be known missing as well (rather than being fetching)
             for (let i = 0; i < newTransactions.length; i++) {
                 let transaction = newTransactions[i];
     

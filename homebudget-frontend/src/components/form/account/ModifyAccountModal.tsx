@@ -8,11 +8,11 @@ import InputModifyAccount from "./InputModifyAccount";
 interface Props {
     close: () => void;
     closeOnChange?: boolean;
-    created: (account: Account) => void;
+    updated: (account: Account) => void;
     account: Account;
 }
 
-export default function CreateAccountModal(props: Props) {
+export default function ModifyAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.account);
     const [isUpdating, setIsUpdating] = React.useState(false);
 
@@ -21,7 +21,7 @@ export default function CreateAccountModal(props: Props) {
         title={"Modify account"}
         close={() => props.close()}
         footer={<>
-            <InputButton className="is-success" onClick={() => create()} disabled={isUpdating}>Save changes</InputButton>
+            <InputButton className="is-success" onClick={() => update()} disabled={isUpdating}>Save changes</InputButton>
             <InputButton onClick={() => props.close()}>Cancel</InputButton>
         </>}>
         <InputModifyAccount value={model} disabled={isUpdating} onChange={account => setModel({
@@ -34,13 +34,13 @@ export default function CreateAccountModal(props: Props) {
         })}/>
     </Modal>;
 
-    async function create() {
+    async function update() {
         setIsUpdating(true);
         const result = await Api.Account.update(props.account.id, model);
         setModel(result);
         setIsUpdating(false);
-        if (props.created !== undefined) {
-            props.created(result);
+        if (props.updated !== undefined) {
+            props.updated(result);
         }
         if (props.closeOnChange) {
             props.close();

@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
-import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, Transaction, UpdateTransaction } from "../models/transaction";
+import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction, Transaction } from "../models/transaction";
 
 const rootUrl = 'https://localhost:7262';
 
@@ -252,6 +252,28 @@ const Account = {
 
 const Transaction = {
     /**
+     * Get a single transaction
+     * @param id Transaction id
+     * @returns The transaction with the specified id
+     */
+     get: function (id: number): Promise<Transaction | null> {
+        return new Promise<Transaction | null>((resolve, reject) => {
+            axios.get<Transaction>(rootUrl + '/transaction/' + Number(id))
+                .then(result => {
+                    if (result.data) {
+                        resolve(fixTransaction(result.data));
+                    } else {
+                        resolve(null);
+                    }
+                })
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                });
+        });
+    },
+
+    /**
      * Create a new transaction
      * @param transaction The transaction to be created
      * @returns The newly created transaction
@@ -262,11 +284,10 @@ const Transaction = {
                 ...transaction,
                 total: undefined,
                 totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
+                dateTime: DateTime.fromISO(transaction.dateTime as any as string),
                 lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
             } as CreateTransaction)
-                .then(result => {
-                    resolve(result.data);
-                })
+                .then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -312,7 +333,7 @@ const Transaction = {
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
                 })) : undefined
-            } as UpdateTransaction).then(result => resolve(result.data))
+            } as UpdateTransaction).then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -358,18 +379,8 @@ const Transaction = {
                 query.query = fixQuery(query.query);
             }
             axios.post<SearchResponse<TransactionModel>>(rootUrl + "/transaction/search", fixedQuery)
-                .then(result => {
-                    result.data.data = (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
-                        ...transaction,
-                        total: new Decimal(totalString).div(new Decimal(10000)),
-                        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-                        lines: (transaction.lines as (TransactionLine & { amountString: string })[]).map(({ amountString, ...line }) => ({
-                            ...line,
-                            amount: new Decimal(amountString).div(new Decimal(10000)),
-                        }))
-                    }));
-                    resolve(result.data)
-                }).catch(error => {
+                .then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
+                .catch(error => {
                     console.log(error);
                     reject();
                 });
@@ -402,6 +413,25 @@ const Transaction = {
         }
     }
 };
+
+/**
+ * Converts fields from RAW json into complex javascript types
+ * like decimal fields or date fields that are sent as string
+ */
+function fixTransaction(transaction: Transaction): Transaction {
+    console.log(transaction);
+    let { totalString, ...rest } = transaction as Transaction & { totalString: string };
+    return {
+        ...rest,
+        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
+        total: new Decimal(totalString).div(new Decimal(10000)),
+        lines: (transaction.lines as (TransactionLine & { amountString: string })[]).map(({ amountString, ...line }) => ({
+            ...line,
+            description: line.description ?? "",
+            amount: new Decimal(amountString).div(new Decimal(10000)),
+        }))
+    };
+}
 
 const Taxonomy = {
     /**

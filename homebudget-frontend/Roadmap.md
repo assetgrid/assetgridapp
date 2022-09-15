@@ -7,11 +7,28 @@ Bank API integration
 Automation and rules
 Reports
 Budgets
-Future expenses, recurring expenses
+ - A budget allows you to monitor your spending over a period and define targets for each category, so you can see how much you have left to spend.
+Bills
+ - A bill represents a future expense.
+ - Bills and piggy banks are fundamentally the same. They allow you to reserve money for a future purpose. This money will show as reserved, so you know you cannot spend it.
+   Bills can be recurring, meaning they are automatically created each period
+   Transactions can be linked to a bill to pay it off
+   Bills can also be used for savings. Create a bill called vacation and increment the bill each time you want to reserve money for the vacation. When you then go on vacation you can link your vacation expenses to the bill, which will decrease it
+Future expenses, recurring expenses.
+Another option is to create a concept of reservations. A reservation would be a transaction that has not yet occured. You can then make reports with and without reservations. Linking a transaction to a reservation will mark the reservation as fulfilled by that transaction. That could be used to mark future expenses.
 Tags
 Transaction and account metadata
 
 # Tiny todo
-Move preferences to context
-Make it so that relevant components (account modification, creation, toggle favorite) automatically trigger a preference refetch through the context.
 Allow periods as decimal separators when parsing numbers
+404 page
+Error handling
+Multiple transaction editing
+Format dates consistently
+Prevent navigating away from forms with data. Waiting for react-router to imlpement blocking in v6
+Use portals for modals
+Use strict typescript
+Allow the use of back to the import page
+Date time input rather than just date
+Make the CreateMany function fix transactions before returning them
+Input for amounts should show the correct decimals
