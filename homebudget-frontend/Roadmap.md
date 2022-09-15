@@ -29,6 +29,7 @@ Prevent navigating away from forms with data. Waiting for react-router to imlpem
 Use portals for modals
 Use strict typescript
 Allow the use of back to the import page
+Preserve state on the transactions page
 Date time input rather than just date
 Make the CreateMany function fix transactions before returning them
 Input for amounts should show the correct decimals
