@@ -80,9 +80,9 @@ const Account = {
         return new Promise<AccountModel | null>((resolve, reject) => {
             axios.get<AccountModel>(rootUrl + '/account/' + Number(id))
                 .then(result => {
-                    const data = result.data as AccountModel & { balanceString: string };
+                    const data = result.data as AccountModel & { balanceString?: string };
                     if (data) {
-                        data.balance = new Decimal(data.balanceString).div(new Decimal(10000))
+                        data.balance = new Decimal(data.balanceString!).div(new Decimal(10000))
                         delete data.balanceString;
                         resolve(result.data);
                     } else {
@@ -280,13 +280,13 @@ const Transaction = {
      */
     create: function (transaction: CreateTransaction): Promise<TransactionModel> {
         return new Promise<TransactionModel>((resolve, reject) => {
+            const { total, ...model } = transaction;
             axios.post<TransactionModel>(rootUrl + '/transaction', {
-                ...transaction,
-                total: undefined,
-                totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
+                ...model,
+                totalString: total.mul(new Decimal(10000)).round().toString(),
                 dateTime: DateTime.fromISO(transaction.dateTime as any as string),
                 lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
-            } as CreateTransaction)
+            })
                 .then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
@@ -324,10 +324,10 @@ const Transaction = {
      */
     update: function (transaction: UpdateTransaction): Promise<Transaction> {
         return new Promise<Transaction>((resolve, reject) => {
+            const { total, ...model } = transaction;
             axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
                 ...transaction,
                 totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
-                total: undefined,
                 lines: transaction.lines ? transaction.lines.map(line => ({
                     ...line,
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),

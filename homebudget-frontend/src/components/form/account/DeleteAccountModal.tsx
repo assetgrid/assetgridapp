@@ -9,7 +9,7 @@ import InputButton from "../InputButton";
 
 interface Props {
     close: () => void;
-    deleted: () => void;
+    deleted?: () => void;
     account: Account;
     preferences: Preferences | "fetching";
 }
@@ -84,6 +84,8 @@ export default function DeleteAccountModal(props: Props) {
     async function deleteAccount() {
         setisDeleting(true);
         await Api.Account.delete(props.account.id);
-        props.deleted();
+        if (props.deleted) {
+            props.deleted();
+        }
     }
 }

@@ -31,6 +31,7 @@ function print(period: Period): string {
         return period.start.toLocaleString(DateTime.DATE_MED) + " - " +
             period.end.toLocaleString(DateTime.DATE_MED);
     }
+    throw "Unknown period type";
 }
 
 function increment(period: Period): Period {
@@ -51,6 +52,7 @@ function increment(period: Period): Period {
             end: period.end.plus({ days: Math.floor(period.end.diff(period.start, "days").days) + 1 }),
         };
     }
+    throw "Unknown period type";
 }
 
 function decrement(period: Period): Period {
@@ -71,6 +73,7 @@ function decrement(period: Period): Period {
             end: period.end.minus({ days: Math.floor(period.end.diff(period.start, "days").days) + 1 }),
         };
     }
+    throw "Unknown period type";
 }
 
 function getRange(period: Period): [DateTime, DateTime] {
@@ -81,6 +84,7 @@ function getRange(period: Period): [DateTime, DateTime] {
     } else if (period.type === "custom") {
         return [period.start, period.end];
     }
+    throw "Unknown period type";
 }
 
 function serialize(period: Period): string {

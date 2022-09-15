@@ -47,8 +47,8 @@ type ConditionModel = {
     column: "SourceAccountId" | "DestinationAccountId";
     operator: typeof accountOperators[number];
     valueType: "account";
-    value: number;
-    onChange: (value: Account) => void;
+    value: number | null;
+    onChange: (value: Account | null) => void;
 } | {
     column: "DateTime";
     operator: typeof dateTimeOperators[number];
@@ -284,7 +284,7 @@ function getValueType(column: ConditionModel['column'], operator: ConditionModel
     }
 }
 
-function ConditionValueEditor(props: {condition: ConditionModel}) {
+function ConditionValueEditor(props: {condition: ConditionModel}): React.ReactElement {
     switch (props.condition.column) {
         case "Id":
         case "Total":
@@ -297,12 +297,24 @@ function ConditionValueEditor(props: {condition: ConditionModel}) {
         case "DestinationAccountId":
             return <ConditionValueEditorAccount condition={{
                 ...props.condition,
-                onChange: (account: Account) => (props.condition.onChange as (id: number) => void)(account?.id ?? null)
+                onChange: ((account: Account) => (props.condition.onChange as (id: number) => void)(account?.id ?? null)) as any
             }} />;
+        default:
+            throw "Uknown column";
     }
 }
 
-function ConditionValueEditorNumeric(props: { condition: ConditionModel }) {
+function ConditionValueEditorNumeric(props: { condition: ConditionModel }): React.ReactElement {
+    switch (props.condition.valueType) {
+        case "number":
+        case "decimal":
+        case "number[]":
+        case "decimal[]":
+            break;
+        default:
+            throw "Invalid value type for numeric editor";
+    }
+
     switch (props.condition.operator) {
         case "equals":
         case "not-equals":
@@ -338,6 +350,8 @@ function ConditionValueEditorNumeric(props: { condition: ConditionModel }) {
                     allowDecimal={true}
                     onChange={value => condition.onChange(value)} />
             }
+        default:
+            throw "";
     }
 }
 

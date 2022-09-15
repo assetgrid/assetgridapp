@@ -24,7 +24,7 @@ export type OrSearchGroup = {
 
 export type SearchQuery = {
     column: string;
-    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[];
+    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null;
     operator: SearchOperator;
     not: boolean;
 }

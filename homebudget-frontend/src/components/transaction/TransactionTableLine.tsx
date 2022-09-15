@@ -25,7 +25,7 @@ import DeleteTransactionModal from "../form/transaction/DeleteTransactionModal";
 
 type Props  = {
     transaction: Transaction;
-    updateItem: (item: Transaction) => void;
+    updateItem: (item: Transaction | null) => void;
     accountId?: number;
     balance?: Decimal;
     allowEditing?: boolean;
@@ -224,13 +224,13 @@ function TransactionEditor(props: TransactionEditorProps) {
                     delete={() => deleteLine(i)}
                     disabled={props.disabled}
                     inverse={amountMultiplier.toNumber() == -1}
-                    last={i === model.lines.length} />)}
+                    last={i === model.lines!.length} />)}
                 <div style={{ gridColumn: "span 2"}}></div>
                 <div className="btn-add-line">
                     <InputButton className="is-small"
                         onClick={() => setModel({
                             ...model,
-                            lines: [...model.lines, { amount: new Decimal(0), description: "Transaction line" }]
+                            lines: [...model.lines!, { amount: new Decimal(0), description: "Transaction line" }]
                         })}>Add line</InputButton>
                 </div>
                 <div style={{ gridColumn: "span 4"}}></div>
@@ -268,6 +268,8 @@ function TransactionEditor(props: TransactionEditorProps) {
     }
 
     function updateLine(newLine: Partial<TransactionLine>, index: number) {
+        if (model === null || model.lines === null) return;
+
         const lines = [
             ...model.lines.slice(0, index),
             { ...model.lines[index], ...newLine },
@@ -281,6 +283,8 @@ function TransactionEditor(props: TransactionEditorProps) {
     }
 
     function deleteLine(index: number) {
+        if (model === null || model.lines === null) return;
+        
         const newLines = [...model.lines.slice(0, index), ...model.lines.slice(index + 1)];
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : model.lines[index].amount;
         setModel({

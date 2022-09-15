@@ -74,11 +74,13 @@ export default function AccountTransactionList(props: Props) {
     }
 
     function decrementPeriod() {
+        if (!props.decrementPeriod) return;
         setTargetPage(1);
         props.decrementPeriod();
     }
 
     async function incrementPeriod() {
+        if (!props.incrementPeriod) return;
         setTargetPage("last");
         props.incrementPeriod();
     }

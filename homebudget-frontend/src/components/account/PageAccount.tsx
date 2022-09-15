@@ -45,29 +45,6 @@ export default function () {
     }
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
 
-    function toggleFavorite() {
-        if (account === "error" || account === "fetching") {
-            throw "error";
-        }
-
-        let favorite = ! account.favorite;
-        let { balance, id, ...newAccount } = account;
-        newAccount.favorite = favorite;
-
-        setUpdatingFavorite(true);
-
-        Api.Account.update(Number(id), newAccount)
-            .then(result => {
-                setUpdatingFavorite(false);
-                result.balance = account.balance;
-                updateAccountFavoriteInPreferences(result, result.favorite);
-                setAccount(result);
-            })
-            .catch(e => {
-                setAccount("error");
-            });
-    }
-
     // Update history when period is changed
     React.useEffect(() => {
         window.history.replaceState({ ...window.history.state, period: PeriodFunctions.serialize(period) }, "");
@@ -161,6 +138,29 @@ export default function () {
         } else {
             updatePreferences({ ...preferences, favoriteAccounts: preferences.favoriteAccounts.filter(fav => fav.id !== account.id)});
         }
+    }
+
+    function toggleFavorite() {
+        if (account === "error" || account === "fetching" || account === null) {
+            throw "error";
+        }
+
+        let favorite = ! account.favorite;
+        let { balance, id, ...newAccount } = account;
+        newAccount.favorite = favorite;
+
+        setUpdatingFavorite(true);
+
+        Api.Account.update(Number(id), newAccount)
+            .then(result => {
+                setUpdatingFavorite(false);
+                result.balance = account.balance;
+                updateAccountFavoriteInPreferences(result, result.favorite);
+                setAccount(result);
+            })
+            .catch(e => {
+                setAccount("error");
+            });
     }
 }
 
@@ -298,6 +298,8 @@ export function AccountDetailsCard(props: {
     }
 
     async function saveChanges() {
+        if (editingModel === null) return;
+
         setIsUpdating(true);
         const { balance, ...updateModel } = editingModel;
         const result = await Api.Account.update(props.account.id, updateModel);

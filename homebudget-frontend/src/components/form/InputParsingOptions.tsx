@@ -47,7 +47,7 @@ export class InputParseOptions extends React.Component<InputParseOptionsProps, I
                 {this.state.regexEnabled && <>
                     <InputText label="RegEx"
                         value={this.state.regexString}
-                        error={this.state.regexStringValid ? null : "Invalid regex"}
+                        error={this.state.regexStringValid ? undefined : "Invalid regex"}
                         onChange={e => this.regexTextChanged(e.target.value)} />
                     <InputText label="Pattern"
                         value={this.state.pattern}
@@ -144,7 +144,7 @@ export class InputParseOptionsModal extends React.Component<InputParseOptionsMod
             </>}>
             <InputParseOptions
                 value={this.props.value}
-                previewData={this.props.previewData}
+                previewData={this.props.previewData ?? null}
                 onChange={options => this.onChange(options)}
             />
         </Modal>;

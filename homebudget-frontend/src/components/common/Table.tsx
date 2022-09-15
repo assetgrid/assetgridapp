@@ -19,7 +19,7 @@ export type Props<T> = {
     } | {
         /* An API request to fetch items will be used. Only the current page is fetched */
         type: "async";
-        fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+        fetchItems: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
     } | {
         /* 
          * Same as async but also allows for incrementing and decrementing beyond the last of first page
@@ -28,7 +28,7 @@ export type Props<T> = {
         type: "async-increment";
         page: number,
         goToPage: (page: number) => void
-        fetchItems?: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+        fetchItems: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
     }
 ) & (
     /* Different render styles */
@@ -72,7 +72,7 @@ export default function Table<T>(props: Props<T>) {
         page = Math.max(1, Math.min(page, Math.ceil(totalItems / props.pageSize)));
         if (props.type === "async-increment") {
             props.goToPage(page);
-        } else {
+        } else if (setTargetPage) {
             setTargetPage(page);
         }
     }
@@ -132,7 +132,7 @@ export default function Table<T>(props: Props<T>) {
                     <ul className="pagination-list">
                         <li>
                             {page === lastPage && props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement(); }}>
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement!(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
@@ -162,7 +162,7 @@ export default function Table<T>(props: Props<T>) {
                         </li>
                         <li>
                             {page === 1 && props.increment
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment(); }}>
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment!(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
@@ -189,7 +189,7 @@ export default function Table<T>(props: Props<T>) {
                     <ul className="pagination-list">
                         <li>
                             {page === 1 && props.decrement
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement(); }}>
+                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.decrement!(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
@@ -219,7 +219,7 @@ export default function Table<T>(props: Props<T>) {
                         </li>}
                         <li>
                             {page === lastPage && props.increment
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment(); }}>
+                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.increment!(); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
@@ -245,7 +245,7 @@ export default function Table<T>(props: Props<T>) {
             setTotalItems(props.items.length);
             setDisplayingPage(targetPage);
         } else {
-            props.fetchItems(from, to, draw)
+            props.fetchItems(from, to, draw ?? 0)
                 .then(result => {
                     if (result.draw === props.draw) {
                         setItems(result.items);

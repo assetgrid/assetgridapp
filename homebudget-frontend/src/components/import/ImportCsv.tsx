@@ -26,7 +26,7 @@ export interface CsvImportOptions {
 }
 
 interface State {
-    csvData: Papa.ParseResult<unknown> | null | "error";
+    csvData: Papa.ParseResult<any> | null | "error";
     rowOffset: number;
     columnOffset: number;
 }
@@ -163,6 +163,8 @@ export default class ImportCsv extends React.Component<Props, State> {
 
     private fileUploaded(e: React.ChangeEvent<HTMLInputElement>)
     {
+        if (!e.target?.files) return;
+
         let file = e.target.files[0];
         this.setState({
             rowOffset: 0,
@@ -182,13 +184,15 @@ export default class ImportCsv extends React.Component<Props, State> {
 
         const reader = new FileReader();
         reader.onload = (event) => {
+            if (!event.target?.result) return;
+
             Papa.parse(event.target.result.toString(), {
                 header: this.props.options.csvParseHeader,
                 delimiter: this.props.options.csvDelimiter == "auto" ? undefined : this.props.options.csvDelimiter,
                 newline: this.props.options.csvNewlineCharacter == "auto" ? undefined : this.props.options.csvNewlineCharacter,
                 download: false,
                 complete: (a) => {
-                    this.props.csvParsed(a.data, event.target.result.toString().split(a.meta.linebreak));
+                    this.props.csvParsed(a.data, event.target!.result!.toString().split(a.meta.linebreak));
                     this.setState({ csvData: a });
                 }
             });

@@ -1,8 +1,8 @@
-export class ParseOptions {
-    public trimWhitespace: boolean;
+export interface ParseOptions {
+    trimWhitespace: boolean;
 
-    public regex: RegExp | null;
-    public pattern: string;
+    regex: RegExp | null;
+    pattern: string;
 }
 
 export function parseWithOptions(input: string, options: ParseOptions): string

@@ -25,7 +25,7 @@ export default function InputNumber (props: Props) {
                     className={"input" + (props.isSmall ? " is-small" : "")}
                     type="number"
                     placeholder={props.label}
-                    value={props.value.toString()}
+                    value={props.value?.toString() ?? ""}
                     disabled={props.disabled}
                     onChange={onChange}
                 />
@@ -34,9 +34,9 @@ export default function InputNumber (props: Props) {
     </div>;
 
     function onChange(event: React.ChangeEvent<HTMLInputElement>) {
-        let value = new Decimal(event.target.valueAsNumber);
+        let value: Decimal | null = new Decimal(event.target.valueAsNumber);
         if (value.isNaN()) value = props.allowNull ? null : new Decimal(0);
 
-        props.onChange(value);
+        props.onChange(value!);
     }
 }

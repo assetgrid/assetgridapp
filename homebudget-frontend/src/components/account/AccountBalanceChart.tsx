@@ -96,7 +96,7 @@ export default function AccountBalanceChart(props: Props) {
     </>;
 }
 
-function updateData(id: number, period: Period, resolutionString: string, setData: React.Dispatch<GetMovementResponse>) {
+function updateData(id: number, period: Period, resolutionString: "day" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {

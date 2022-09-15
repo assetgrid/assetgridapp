@@ -22,7 +22,7 @@ import Decimal from "decimal.js";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
-    const [transaction, setTransaction] = React.useState<Transaction | "fetching">("fetching");
+    const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null>("fetching");
     const { preferences } = React.useContext(preferencesContext);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
@@ -30,6 +30,10 @@ export default function PageTransaction(): React.ReactElement {
     const navigate = useNavigate();
 
     React.useEffect(fetchTransaction, [id]);
+
+    if (transaction === null) {
+        return <>Not found</>;
+    }
 
     return <>
         <section className="hero has-background-primary">
@@ -76,6 +80,8 @@ export default function PageTransaction(): React.ReactElement {
     }
 
     async function update() {
+        if (editModel === null) return;
+
         setIsUpdating(true);
         const result = await Api.Transaction.update({
             ...editModel,
@@ -91,7 +97,7 @@ export default function PageTransaction(): React.ReactElement {
 function transactionDetails(
     transaction: Transaction | "fetching",
     isUpdating: boolean,
-    onChange: (transaction: Transaction) => void,
+    onChange: (editModel: Transaction | null) => void,
     editModel: Transaction | null,
     beginDelete: () => void,
     saveChanges: () => void,
@@ -365,6 +371,8 @@ function transactionLines(
     }
 
     function updateLine(newLine: TransactionLine, index: number) {
+        if (editModel === null) return;
+
         const lines = [
             ...editModel.lines.slice(0, index),
             newLine,
@@ -378,6 +386,8 @@ function transactionLines(
     }
 
     function deleteLine(index: number) {
+        if (editModel === null) return;
+        
         const newLines = [...editModel.lines.slice(0, index), ...editModel.lines.slice(index + 1)];
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : editModel.lines[index].amount;
         onChange({

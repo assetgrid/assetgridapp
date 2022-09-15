@@ -19,7 +19,7 @@ export default class Modal extends React.Component<Props> {
             <div className="modal-card">
                 <header className="modal-card-head">
                     <p className="modal-card-title">{this.props.title}</p>
-                    {this.props.close !== undefined && <button className="delete" aria-label="close" onClick={() => this.props.close()}></button>}
+                    {this.props.close !== undefined && <button className="delete" aria-label="close" onClick={() => this.props.close!()}></button>}
                 </header>
                 <section className="modal-card-body">
                     {this.props.children}

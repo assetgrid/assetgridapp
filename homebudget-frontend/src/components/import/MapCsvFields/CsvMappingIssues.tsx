@@ -7,7 +7,7 @@ import { CsvMappingTableFilter } from "./MapCsvFields";
 
 interface Props {
     transactions: CsvCreateTransaction[];
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
     setTableFilter: (newFilter: CsvMappingTableFilter) => void;
 }
@@ -36,7 +36,7 @@ export default function CsvMappingIssues(props: Props): React.ReactElement {
     const sameSourceDestinationCount = props.transactions.filter(t =>
         t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value
     ).length;
-    const duplicateCount = props.transactions.filter(t => (props.duplicateIdentifiers as Set<string>).has(t.identifier)).length;
+    const duplicateCount = props.transactions.filter(t => t.identifier && (props.duplicateIdentifiers as Set<string>).has(t.identifier)).length;
     const errorCount = props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid).length;
     const allCount = referenceToMissingAccountCount + noAccountCount + duplicateCount + errorCount;
     

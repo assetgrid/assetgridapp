@@ -18,7 +18,7 @@ export const preferencesContext = React.createContext<PreferencesContext>({ pref
 
 interface PreferencesContext {
     preferences: Preferences | "fetching";
-    updatePreferences: (newPreferences: Preferences) => void;
+    updatePreferences: (newPreferences: Preferences | null) => void;
 }
 
 export default function FairFitPortalApp () {

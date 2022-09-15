@@ -11,7 +11,7 @@ import TableAccount from "./TableAccount";
 
 interface Props {
     transactions: CsvCreateTransaction[];
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
     tableFilter: CsvMappingTableFilter;
     tableDraw: number;
@@ -55,7 +55,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
                 );
                 break;
             case "duplicate":
-                items = props.transactions.filter(t => (props.duplicateIdentifiers as Set<string>).has(t.identifier));
+                items = props.transactions.filter(t => t.identifier && (props.duplicateIdentifiers as Set<string>).has(t.identifier));
                 break;
             case "error":
                 items = props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid);
@@ -78,12 +78,12 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         renderType="table"
         renderItem={transaction =>
             <tr key={transaction.rowNumber}>
-                <td><DuplicateIndicator identifier={transaction.identifier} duplicateIdentifiers={props.duplicateIdentifiers} />
-                    {transaction.identifier.length < 30
+                <td>{transaction.identifier && <DuplicateIndicator identifier={transaction.identifier} duplicateIdentifiers={props.duplicateIdentifiers} />}
+                    {transaction.identifier === null ? "None" : (transaction.identifier.length < 30
                         ? transaction.identifier
                         : <Tooltip content={transaction.identifier}>
                             {transaction.identifier.substring(0, 30) + "…"}
-                        </Tooltip>
+                        </Tooltip>)
                 }</td>
                 <td>
                     <Tooltip content={transaction.dateText}>

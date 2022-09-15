@@ -5,10 +5,10 @@ import { SearchRequest, SearchResponse } from "./search";
 
 export type Transaction = {
     id: number;
-    source: Account;
-    destination: Account;
+    source: Account | null;
+    destination: Account | null;
     dateTime: DateTime;
-    identifier: string;
+    identifier: string | null;
     lines: TransactionLine[];
     category: string;
     description: string;
@@ -23,7 +23,7 @@ export type CreateTransaction = {
     description: string;
     identifier: string | null;
     category: string;
-    total?: Decimal;
+    total: Decimal;
     lines: TransactionLine[];
 }
 

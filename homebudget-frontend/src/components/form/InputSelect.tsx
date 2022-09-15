@@ -3,7 +3,7 @@ import * as React from "react";
 interface Props {
     label?: string;
     items: { key: string, value: string }[];
-    value: string,
+    value: string | null,
     placeholder?: string,
     onChange: (selectedKey: string) => void;
     addOnAfter?: React.ReactElement;

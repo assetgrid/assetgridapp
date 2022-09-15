@@ -18,7 +18,7 @@ export default function DeleteTransactionModal(props: Props) {
         title={"Delete account"}
         close={() => props.close()}
         footer={<>
-            {props.deleted && <InputButton onClick={() => deleteTransaction()} disabled={isDeleting} className="is-danger">Delete transaction</InputButton>}
+            {<InputButton onClick={() => deleteTransaction()} disabled={isDeleting} className="is-danger">Delete transaction</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <p>Are you sure you want to delete transaction "#{props.transaction.id} {props.transaction.description}"? This action is irreversible!</p>

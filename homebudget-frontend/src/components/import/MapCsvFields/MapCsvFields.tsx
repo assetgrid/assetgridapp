@@ -21,7 +21,7 @@ export type CsvMappingTableFilter = "all" | "reference-to-missing-account" | "no
 interface Props {
     data: any[];
     transactions: CsvCreateTransaction[] | null;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
     options: MappingOptions;
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
@@ -73,6 +73,7 @@ export default function MapCsvFields(props: Props) {
         const newTransactions = parseTransactions(props.data, props.options);
         props.onChange(newTransactions, props.options);
     }, [props.data]);
+
     // Redraw the table whenever the parsed transactions change
     React.useEffect(() => {
         setTableDraw(draw => draw + 1);
@@ -109,7 +110,7 @@ export default function MapCsvFields(props: Props) {
                                 }
                             })}
                             addOnAfter={
-                                props.options.identifierColumn && <div className="control">
+                                props.options.identifierColumn ? <div className="control">
                                     <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.identifierParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.identifierColumn))}
@@ -119,7 +120,7 @@ export default function MapCsvFields(props: Props) {
                                         />)}>
                                         Parse Options
                                     </a>
-                                </div>
+                                </div> : undefined
                             } />
                     }
                 </div>
@@ -152,7 +153,7 @@ export default function MapCsvFields(props: Props) {
                             }
                         })}
                         addOnAfter={
-                            props.options.dateColumn && <div className="control">
+                            props.options.dateColumn ? <div className="control">
                                 <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.dateParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.dateColumn))}
@@ -163,7 +164,7 @@ export default function MapCsvFields(props: Props) {
                                     )}>
                                     Parse Options
                                 </a>
-                            </div>
+                            </div> : undefined
                         } />
                 </div>
                 {props.options.dateColumn !== null && <div className="column">
@@ -201,7 +202,7 @@ export default function MapCsvFields(props: Props) {
                             }
                         })}
                         addOnAfter={
-                            props.options.sourceAccountColumn && <div className="control">
+                            props.options.sourceAccountColumn ? <div className="control">
                                 <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                     value={props.options.sourceAccountParseOptions}
                                     previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
@@ -211,7 +212,7 @@ export default function MapCsvFields(props: Props) {
                                 />)}>
                                 Parse Options
                             </a>
-                        </div>
+                        </div> : undefined
                         } />
                 </div>
             </div>
@@ -242,7 +243,7 @@ export default function MapCsvFields(props: Props) {
                             }
                         })}
                         addOnAfter={
-                            props.options.destinationAccountColumn && <div className="control">
+                            props.options.destinationAccountColumn ? <div className="control">
                                 <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                         value={props.options.destinationAccountParseOptions}
                                         previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
@@ -252,7 +253,7 @@ export default function MapCsvFields(props: Props) {
                                     />)}>
                                     Parse Options
                                 </a>
-                            </div>
+                            </div> : undefined
                         } />
                 </div>
             </div>
@@ -271,7 +272,7 @@ export default function MapCsvFields(props: Props) {
                             }
                         })}
                         addOnAfter={
-                            props.options.amountColumn && <div className="control">
+                            props.options.amountColumn ? <div className="control">
                                 <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                     previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
                                     value={props.options.amountParseOptions}
@@ -281,7 +282,7 @@ export default function MapCsvFields(props: Props) {
                                 />)}>
                                     Parse Options
                                 </a>
-                            </div>
+                            </div> : undefined
                         } />
                 </div>
                 <div className="column"></div>
@@ -301,7 +302,7 @@ export default function MapCsvFields(props: Props) {
                             }
                         })}
                         addOnAfter={
-                            props.options.descriptionColumn && <div className="control">
+                            props.options.descriptionColumn ? <div className="control">
                                     <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.descriptionParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
@@ -311,14 +312,14 @@ export default function MapCsvFields(props: Props) {
                                         /> )}>
                                     Parse Options
                                 </a>
-                            </div>
+                            </div> : undefined
                         } />
                 </div>
                 <div className="column"></div>
             </div>
         </Card>
 
-        <Card title="Import preview">
+        {props.transactions && <Card title="Import preview">
             {tableFilter !== "all" && <Message title="Filter is active" type="link">
                 Some transactions are hidden!{" "}
                 {tableFilter === "reference-to-missing-account" && <>Currently only transactions that reference a missing source or destination account are shown.{" "}</>}
@@ -335,28 +336,28 @@ export default function MapCsvFields(props: Props) {
                 tableFilter={tableFilter}
                 tableDraw={tableDraw}
                 beginCreatingAccount={beginCreatingAccount} />
-        </Card>
+        </Card>}
 
-        <Card title="Continue">
+        {props.transactions && <Card title="Continue">
             <CsvMappingIssues
                 transactions={props.transactions}
                 accountsBy={props.accountsBy}
                 duplicateIdentifiers={props.duplicateIdentifiers}
-                setTableFilter={filter => { setTableFilter(filter); setTableDraw(draw => draw + 1)}} />
+                setTableFilter={filter => { setTableFilter(filter); setTableDraw(draw => draw + 1) }} />
             <div className="buttons">
                 <InputButton onClick={props.goToPrevious}>Back</InputButton>
                 <InputButton className="is-primary" onClick={props.goToNext}>Continue</InputButton>
             </div>
-        </Card>
+        </Card>}
     </>;
 
     /**
      * Updates how the amount is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAmountMapping(newValue: string, parseOptions: ParseOptions) {
+    function updateAmountMapping(newValue: string | null, parseOptions: ParseOptions) {
         props.onChange([
             ...props.data.map((row, i) => ({
-                ...props.transactions[i],
+                ...props.transactions![i],
                 amount: parseAmount(getValue(row, newValue), parseOptions)
             }))
         ], {
@@ -369,10 +370,10 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how the description is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateDescriptionMapping(newValue: string, parseOptions: ParseOptions) {
+    function updateDescriptionMapping(newValue: string | null, parseOptions: ParseOptions) {
         props.onChange([
             ...props.data.map((row, i) => ({
-                ...props.transactions[i],
+                ...props.transactions![i],
                 description: parseWithOptions(getValue(row, newValue), parseOptions)
             }))
         ], {
@@ -385,12 +386,16 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how the description is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateDateMapping(dateColumn: string, dateFormat: string, parseOptions: ParseOptions) {
+    function updateDateMapping(dateColumn: string | null, dateFormat: string, parseOptions: ParseOptions) {
+        if (props.transactions === null) {
+            return;
+        }
+
         props.onChange([
             ...props.data.map((row, i) => {
-                const dateText = parseWithOptions((row as any)[dateColumn] ?? "", parseOptions);
+                const dateText = parseWithOptions(dateColumn ? (row as any)[dateColumn] ?? "" : "", parseOptions);
                 return {
-                    ...props.transactions[i],
+                    ...props.transactions![i],
                     dateTime: DateTime.fromFormat(dateText, dateFormat),
                     dateText: dateText
                 }
@@ -406,14 +411,14 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how duplicates are handled from the raw CSV data and recalculates the unique identifiers for all transactions
      */
-    function updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string, parseOptions: ParseOptions) {
+    function updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string | null, parseOptions: ParseOptions) {
         if (props.transactions === null) {
             return;
         }
 
         props.onChange([
             ...props.data.map((row, i) => ({
-                ...props.transactions[i],
+                ...props.transactions![i],
                 identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, i, row, props.data)
             }))
         ], {
@@ -427,13 +432,15 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how an account column is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAccountMapping(type: "source" | "destination", identifier: AccountIdentifier, column: string, parseOptions: ParseOptions) {
+    function updateAccountMapping(type: "source" | "destination", identifier: AccountIdentifier, column: string | null, parseOptions: ParseOptions) {
+        if (props.transactions === null) return;
+
         let newTransactions: CsvCreateTransaction[];
         if (type == "source") {
             newTransactions = [
                 ...props.data.map((row, i) => ({
-                    ...props.transactions[i],
-                    source: isNullOrWhitespace(row[column]) ? null : {
+                    ...props.transactions![i],
+                    source: column === null || isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: parseWithOptions(row[column], parseOptions),
                     } as AccountReference
@@ -442,8 +449,8 @@ export default function MapCsvFields(props: Props) {
         } else {
             newTransactions = [
                 ...props.data.map((row, i) => ({
-                    ...props.transactions[i],
-                    destination: isNullOrWhitespace(row[column]) ? null : {
+                    ...props.transactions![i],
+                    destination: column === null || isNullOrWhitespace(row[column]) ? null : {
                         identifier: identifier,
                         value: parseWithOptions(row[column], parseOptions),
                     } as AccountReference
@@ -486,8 +493,8 @@ export default function MapCsvFields(props: Props) {
  * @param columnName The name of the field to get the value of
  * @returns The value of that field
  */
-function getValue(row: any, columnName: string): any {
-    return row[columnName];
+function getValue(row: {[key: string]: string}, columnName: string | null): string {
+    return columnName ? row[columnName] : "";
 }
 
 /**
@@ -498,22 +505,22 @@ function getValue(row: any, columnName: string): any {
  */
 function parseTransactions(data: any[], options: MappingOptions): CsvCreateTransaction[] {
     return data.map((row, i) => {
-        const dateText = parseWithOptions(getValue(row, options.dateColumn) ?? "", options.dateParseOptions);
+        const dateText = parseWithOptions(getValue(row, options.dateColumn), options.dateParseOptions);
         return {
             rowNumber: i,
             dateText: dateText,
             dateTime: DateTime.fromFormat(dateText, options.dateFormat),
-            description: parseWithOptions(row[options.descriptionColumn], options.descriptionParseOptions),
-            source: isNullOrWhitespace(row[options.sourceAccountColumn]) ? null : {
+            description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
+            source: isNullOrWhitespace(getValue(row, options.sourceAccountColumn)) ? null : {
                 identifier: options.sourceAccountIdentifier,
-                value: parseWithOptions(row[options.sourceAccountColumn], options.sourceAccountParseOptions),
+                value: parseWithOptions(getValue(row, options.descriptionColumn), options.sourceAccountParseOptions),
             } as AccountReference,
-            destination: isNullOrWhitespace(row[options.destinationAccountColumn]) ? null : {
+            destination: isNullOrWhitespace(getValue(row, options.destinationAccountColumn)) ? null : {
                 identifier: options.destinationAccountIdentifier,
-                value: parseWithOptions(row[options.destinationAccountColumn], options.destinationAccountParseOptions),
+                value: parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions),
             } as AccountReference,
             identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, i, row, data),
-            amount: parseAmount(row[options.amountColumn], options.amountParseOptions),
+            amount: parseAmount(getValue(row, options.amountColumn), options.amountParseOptions),
         } as CsvCreateTransaction
     });
 }
@@ -562,16 +569,16 @@ function parseAmount(rawValue: string, parseOptions: ParseOptions): Decimal | "i
  * @returns The unique identifier for the transaction described by the function parameters
  */
 function getIdentifier(duplicateHandling: DuplicateHandlingOptions,
-    identifierColumn: string,
+    identifierColumn: string | null,
     parseOptions: ParseOptions,
     rowNumber: number,
-    row: string[] | { [key: string]: string },
-    data: any[]): string {
+    row: { [key: string]: string },
+    data: any[]): string | null {
     
     switch (duplicateHandling)
     {
         case "none":
-            return "";
+            return null;
         case "rownumber":
             return rowNumber.toString();
         case "identifier":

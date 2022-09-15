@@ -9,7 +9,7 @@ import { AccountReference } from "../ImportModels";
 
 interface Props {
     reference: AccountReference | null;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     beginCreatingAccount: (accountReference: AccountReference) => void;
 }
 
@@ -29,7 +29,7 @@ export default function TableAccount(props: Props): React.ReactElement {
     if (account === null) {
         return <Tooltip content={<>
                 No account found with {props.reference.identifier}: {props.reference.value}
-                <InputButton onClick={() => props.beginCreatingAccount(props.reference)} className="is-small">
+                <InputButton onClick={() => props.beginCreatingAccount(props.reference!)} className="is-small">
                     Create Account
                 </InputButton>
             </>}>

@@ -9,6 +9,7 @@
         "declaration": true,
         "allowJs": true,
         "moduleResolution": "node",
+        "strict": true
     },
     "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"],
     "include": ["./src/**/*", "index.d.ts"]

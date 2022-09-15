@@ -11,7 +11,7 @@ interface Props<T1, T2> {
 }
 
 export default function TransactionFilterEditor(props: Props<SearchGroup, SearchGroup>) {
-    return <Group query={props.query} setQuery={props.setQuery} />;
+    return <Group query={props.query} setQuery={query => query && props.setQuery(query)} />;
 }
 
 function Group(props: Props<SearchGroup, SearchGroup | null>) {
@@ -20,7 +20,7 @@ function Group(props: Props<SearchGroup, SearchGroup | null>) {
         case SearchGroupType.Or:
             return <AndOrGroup query={props.query} setQuery={props.setQuery} />;
         case SearchGroupType.Query:
-            return <Condition query={props.query.query} setQuery={query => props.setQuery({ type: SearchGroupType.Query, query: query })}/>;
+            return <Condition query={props.query.query} setQuery={query => query === null ? null : props.setQuery({ type: SearchGroupType.Query, query: query })}/>;
         default:
             throw "Unknown search group";
     }
@@ -56,7 +56,7 @@ function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup>) {
         });
     }
 
-    function setChildQuery(query: SearchGroup, index: number) {
+    function setChildQuery(query: SearchGroup | null, index: number) {
         let children: SearchGroup[] = [];
         if (query !== null && ! (query.type === SearchGroupType.Query && query.query === null)) {
             if (query.type === props.query.type) {

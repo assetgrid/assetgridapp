@@ -7,7 +7,7 @@ import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "
 import InputButton from "../form/InputButton";
 import Import from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
-import { capitalize, CsvCreateTransaction } from "./ImportModels";
+import { AccountReference, capitalize, CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields/MapCsvFields";
 import { ParseOptions } from "./ParseOptions";
 
@@ -18,7 +18,7 @@ interface State {
     csvFile: File | null;
     csvOptions: CsvImportOptions;
     mappingOptions: MappingOptions;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" } };
+    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
 
     currentTab: "parse-csv" | "map-columns" | "process";
@@ -38,7 +38,7 @@ export default function PageImportCsv () {
     const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
     const [lines, setLines] = React.useState<string[]>([]);
     const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
-    const [accountsBy, setAccountsBy] = React.useState<{ [key: string]: { [value: string]: Account | "fetching" } }>({});
+    const [accountsBy, setAccountsBy] = React.useState<{ [key: string]: { [value: string]: Account | "fetching" | null } }>({});
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
     const [csvOptions, setCsvOptions] = React.useState<CsvImportOptions>({
@@ -139,7 +139,7 @@ export default function PageImportCsv () {
                     return "Please wait while fetching accounts";
                 }
                 
-                return <>
+                return transactions != null && <>
                     <Import
                         transactions={transactions}
                         accountsBy={accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
@@ -154,13 +154,15 @@ export default function PageImportCsv () {
     function mappingsChanged(newTransactions: CsvCreateTransaction[], options: MappingOptions): void {
         // Update duplicates
         if ((transactions === null && newTransactions !== null)
-            || newTransactions.length !== transactions.length
+            || newTransactions.length !== transactions?.length
             || newTransactions.some((transaction, i) => transactions[i].identifier !== transaction.identifier)) {
             // There has been a change in identifiers
             let identifierCounts: { [identifier: string]: number } = {};
             for (let i = 0; i < newTransactions.length; i++) {
                 let id = newTransactions[i].identifier;
-                identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
+                if (id !== null) {
+                    identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
+                }
             }
             setDuplicateIdentifiers("fetching");
 
@@ -199,10 +201,10 @@ export default function PageImportCsv () {
         setAccountsBy(newAccountsBy);
 
         // Find every unique account reference in the transactions that has not been loaded
-        let uniqueAccountReferences = [
+        let uniqueAccountReferences = ([
             ...newTransactions.map(transaction => transaction.source),
             ...newTransactions.map(transaction => transaction.destination)
-        ].filter(account => account != null)
+        ].filter(account => account != null) as AccountReference[])
             .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
             .filter(account => accountsBy[account.identifier] === undefined
                 || accountsBy[account.identifier][account.value] === undefined

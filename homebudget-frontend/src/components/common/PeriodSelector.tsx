@@ -60,8 +60,8 @@ export default class PeriodSelector extends React.Component<Props, State> {
         });
     }
 
-    private up = ((e: MouseEvent | undefined) => {
-        let target = e?.target as HTMLElement;
+    private up = ((e?: MouseEvent) => {
+        let target: HTMLElement | null = e?.target as HTMLElement;
         while (target) {
             if (target.classList.contains("period-selector")) {
                 return;
@@ -125,8 +125,8 @@ export default class PeriodSelector extends React.Component<Props, State> {
                         ranges={[{ startDate: this.props.period.start.startOf("day").toJSDate(), endDate: this.props.period.end.endOf("day").toJSDate(), key: "range" }]}
                         onChange={item => this.props.onChange({
                             type: "custom",
-                            start: DateTime.fromJSDate((item.range as Range).startDate).startOf("day"),
-                            end: DateTime.fromJSDate((item.range as Range).endDate).endOf("day"),
+                            start: DateTime.fromJSDate((item.range as Range).startDate!).startOf("day"),
+                            end: DateTime.fromJSDate((item.range as Range).endDate!).endOf("day"),
                         })}
                     />
                 </div>
