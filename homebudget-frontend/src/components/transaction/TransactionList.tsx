@@ -17,6 +17,7 @@ interface Props {
 
 export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
+    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
 
     return <Table<Transaction>
         pageSize={props.pageSize ?? 20}
@@ -32,7 +33,9 @@ export default function TransactionList(props: Props) {
             Api.Transaction.search({
                 from: from,
                 to: to,
-                query: props.query
+                query: props.query,
+                descending: orderBy.descending,
+                orderByColumn: orderBy.column
             } as SearchRequest).then(result => {
                 const transactions: Transaction[] = result.data;
                 resolve({

@@ -5,6 +5,8 @@ export type SearchRequest = {
     from: number;
     to: number;
     query?: SearchGroup;
+    descending: boolean;
+    orderByColumn: string;
 }
 
 export type SearchGroup = {

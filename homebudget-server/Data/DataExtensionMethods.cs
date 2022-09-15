@@ -7,7 +7,7 @@ namespace homebudget_server.Data
 {
     public static class DataExtensionMethods
     {
-        public static IQueryable<Account> ApplySearch(this IQueryable<Account> items, ViewSearch query)
+        public static IQueryable<Account> ApplySearch(this IQueryable<Account> items, ViewSearch query, bool applyOrder)
         {
             if (query.Query == null)
             {
@@ -26,12 +26,25 @@ namespace homebudget_server.Data
             {
                 return items.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
             }
+
+            if (applyOrder && query.OrderByColumn != null)
+            {
+                // Construct expression to invoke OrderBy or OrderByDescending with the specified ordering
+                var orderColumn = query.OrderByColumn;
+                var orderColumnType = columns.First(column => column.Item1 == orderColumn).Item2;
+                string command = (query.Descending ?? false) ? "OrderByDescending" : "OrderBy";
+                var orderByExpression = Expression.Lambda(Expression.Property(parameter, orderColumn), parameter);
+                var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Account), orderColumnType },
+                                              items.Expression, Expression.Quote(orderByExpression));
+                items = items.Provider.CreateQuery<Account>(resultExpression);
+            }
+
             return items;
         }
 
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup? query)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder)
         {
-            if (query == null)
+            if (query.Query == null)
             {
                 return items;
             }
@@ -47,12 +60,40 @@ namespace homebudget_server.Data
                 ("Total", typeof(long), true),
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
-            var expression = SearchGroupToExpression(query, columns, parameter);
+            var expression = SearchGroupToExpression(query.Query, columns, parameter);
             if (expression != null)
             {
                 items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
             }
+
+            if (applyOrder && query.OrderByColumn != null)
+            {
+                // Construct expression to invoke OrderBy or OrderByDescending with the specified ordering
+                var orderColumn = query.OrderByColumn;
+                var orderColumnType = columns.First(column => column.Item1 == orderColumn).Item2;
+                string command = (query.Descending ?? false) ? "OrderByDescending" : "OrderBy";
+                var orderByExpression = Expression.Lambda(Expression.Property(parameter, orderColumn), parameter);
+                var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Transaction), orderColumnType },
+                                              items.Expression, Expression.Quote(orderByExpression));
+                items = items.Provider.CreateQuery<Transaction>(resultExpression);
+            }
+
             return items;
+        }
+
+        /// <summary>
+        /// Applies a search group but does not apply ordering
+        /// </summary>
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup query)
+        {
+            return items.ApplySearch(new ViewSearch
+            {
+                Descending = null,
+                From = 0,
+                To = 0,
+                OrderByColumn = null,
+                Query = query,
+            }, false);
         }
 
         private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type, bool allowNull)[] columns, ParameterExpression parameter)

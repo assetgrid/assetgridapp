@@ -4,6 +4,7 @@ using homebudget_server.Models.ViewModels;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace homebudget_server.Controllers
 {
@@ -262,7 +263,7 @@ namespace homebudget_server.Controllers
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)
         {
             var result = _context.Transactions
-                .ApplySearch(query.Query)
+                .ApplySearch(query, true)
                 .Skip(query.From)
                 .Take(query.To - query.From)
                 .SelectView()
@@ -271,7 +272,7 @@ namespace homebudget_server.Controllers
             return new ViewSearchResponse<ViewTransaction>
             {
                 Data = result,
-                TotalItems = _context.Transactions.ApplySearch(query.Query).Count(),
+                TotalItems = _context.Transactions.ApplySearch(query, false).Count(),
             };
         }
 

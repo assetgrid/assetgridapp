@@ -5,6 +5,8 @@
         public ViewSearchGroup? Query { get; set; }
         public int From { get; set; }
         public int To { get; set; }
+        public string? OrderByColumn { get; set; }
+        public bool? Descending { get; set; }
     }
 
     public class ViewSearchQuery

@@ -238,7 +238,7 @@ namespace homebudget_server.Controllers
         public ViewSearchResponse<ViewAccount> Search(ViewSearch query)
         {
             var result = _context.Accounts
-                .ApplySearch(query)
+                .ApplySearch(query, true)
                 .Skip(query.From)
                 .Take(query.To - query.From)
                 .SelectView()
@@ -247,7 +247,7 @@ namespace homebudget_server.Controllers
             return new ViewSearchResponse<ViewAccount>
             {
                 Data = result,
-                TotalItems = _context.Accounts.ApplySearch(query).Count()
+                TotalItems = _context.Accounts.ApplySearch(query, false).Count()
             };
         }
 

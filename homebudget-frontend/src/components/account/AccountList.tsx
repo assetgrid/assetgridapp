@@ -17,7 +17,9 @@ function fetchItems(from: number, to: number, draw: number): Promise<{ items: Ac
     return new Promise(resolve => {
         Api.Account.search({
             from: from,
-            to: to
+            to: to,
+            descending: false,
+            orderByColumn: "Id"
         }).then(result => {
             resolve({
                 items: result.data,

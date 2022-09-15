@@ -11,7 +11,7 @@ import TransactionList from "./TransactionList";
 export default function PageTransactions() {
     const [query, setQuery] = React.useState<SearchGroup>({
         type: SearchGroupType.And,
-        children: []
+        children: [],
     });
     const [draw, setDraw] = React.useState(0);
     const incrementDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);

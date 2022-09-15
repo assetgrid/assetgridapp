@@ -247,7 +247,7 @@ export default function Table<T>(props: Props<T>) {
         } else {
             props.fetchItems(from, to, draw ?? 0)
                 .then(result => {
-                    if (result.draw === props.draw) {
+                    if (result.draw === (props.draw ?? 0)) {
                         setItems(result.items);
                         setTotalItems(result.totalItems);
                         setDisplayingPage(targetPage);

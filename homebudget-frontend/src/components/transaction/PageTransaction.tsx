@@ -387,7 +387,7 @@ function transactionLines(
 
     function deleteLine(index: number) {
         if (editModel === null) return;
-        
+
         const newLines = [...editModel.lines.slice(0, index), ...editModel.lines.slice(index + 1)];
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : editModel.lines[index].amount;
         onChange({

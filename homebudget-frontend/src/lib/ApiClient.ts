@@ -419,7 +419,6 @@ const Transaction = {
  * like decimal fields or date fields that are sent as string
  */
 function fixTransaction(transaction: Transaction): Transaction {
-    console.log(transaction);
     let { totalString, ...rest } = transaction as Transaction & { totalString: string };
     return {
         ...rest,
