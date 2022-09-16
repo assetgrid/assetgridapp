@@ -34,6 +34,6 @@ Transaction and account metadata
 [x] Make the CreateMany function fix transactions before returning them
 [ ] Input for amounts should show the correct decimals
 [ ] When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
-[ ] Implement ordering for transactions
+[x] Implement ordering for transactions
 [x] Truncate long descriptions
 [ ] Favorite button in create account modal does not work

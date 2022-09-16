@@ -43,6 +43,12 @@ div.table {
         & > div {
             border-width: $table-head-cell-border-width
         }
+        & > .column-header.sortable {
+            cursor: pointer;
+            .icon {
+                color: $info;
+            }
+        }
     }
 
     & > .table-body {

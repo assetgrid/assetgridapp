@@ -4,7 +4,8 @@ import Table from "../common/Table";
 import { SearchGroup, SearchRequest } from "../../models/search";
 import { Api } from "../../lib/ApiClient";
 import TransactionTableLine from "./TransactionTableLine";
-import { preferencesContext } from "../App";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZA } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
     draw?: number;
@@ -50,13 +51,13 @@ export default function TransactionList(props: Props) {
 
     function renderTable(items: { item: Transaction, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
-            <div></div>
-            <div>Date</div>
-            <div>Description</div>
-            <div className="has-text-right">Amount</div>
-            <div>Source</div>
-            <div>Destination</div>
-            <div>Category</div>
+            {renderColumnHeader("Id", "Id", "numeric")}
+            {renderColumnHeader("Timestamp", "DateTime", "numeric")}
+            {renderColumnHeader("Description", "Description", "string")}
+            {renderColumnHeader("Amount", "Total", "numeric", true)}
+            {renderColumnHeader("Source", "SourceAccountId", "numeric")}
+            {renderColumnHeader("Destination", "DestinationAccountId", "numeric")}
+            {renderColumnHeader("Category", "Category", "string")}
             {props.allowEditing && <div>Actions</div>}
         </div>;
 
@@ -81,5 +82,39 @@ export default function TransactionList(props: Props) {
             </div>
             {renderPagination()}
         </>;
+    }
+
+    function renderColumnHeader(title: string, columnName: string, type: "numeric" | "string", rightAligned?: boolean): React.ReactElement {
+        let sortIcon: React.ReactElement | undefined = undefined;
+        if (orderBy.column === columnName)
+        {
+            switch (type) {
+                case "numeric":
+                    sortIcon = orderBy.descending
+                        ? <span className="icon"><FontAwesomeIcon icon={faArrowDownWideShort} /></span>
+                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownShortWide} /></span>
+                    break;
+                case "string":
+                    sortIcon = orderBy.descending
+                        ? <span className="icon"><FontAwesomeIcon icon={faArrowDownZA} /></span>
+                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownAZ} /></span>
+                    break;
+            }
+        }
+
+        return <div className={"column-header sortable" + (rightAligned ? " has-text-right" : "")}
+            onClick={() => switchOrderBy(columnName)}>
+            {title}
+            {sortIcon}
+        </div>;
+    }
+
+    function switchOrderBy(column: string) {
+        if (orderBy.column === column) {
+            setOrderBy(orderBy => ({ column, descending: !orderBy.descending }))
+        } else {
+            setOrderBy({ column, descending: false })
+        }
+        setDraw(draw => draw + 1);
     }
 }

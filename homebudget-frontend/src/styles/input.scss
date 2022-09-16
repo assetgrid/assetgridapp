@@ -6,11 +6,21 @@
   
     .dropdown-trigger,
     .dropdown-menu {
-        width: 100%;
+        min-width: 100%;
+        max-width: calc(max(100%, 300px));
     }
 
     .dropdown-trigger {
         display: flex;
+    }
+    .dropdown-content {
+        & > .dropdown-item {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        & > .rdrCalendarWrapper {
+            display: block;
+        }
     }
 
     .dropdown-trigger .button, .dropdown-trigger .input {

@@ -38,7 +38,7 @@ export default function InputDate (props: Props) {
                     </span>
                 </button>
             </div>
-            <div className={"dropdown-menu"} role="menu">
+            <div className={"dropdown-menu"} role="menu" style={{maxWidth: "none"}}>
                 <div className="dropdown-content">
                     <Calendar
                         date={props.value.startOf("day").toJSDate()}

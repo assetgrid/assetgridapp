@@ -72,7 +72,16 @@ namespace homebudget_server.Data
                 var orderColumn = query.OrderByColumn;
                 var orderColumnType = columns.First(column => column.Item1 == orderColumn).Item2;
                 string command = (query.Descending ?? false) ? "OrderByDescending" : "OrderBy";
-                var orderByExpression = Expression.Lambda(Expression.Property(parameter, orderColumn), parameter);
+                var property = Expression.Property(parameter, orderColumn);
+                if (query.OrderByColumn == "Category")
+                {
+                    property = Expression.Property(property, "Name");
+                }
+                if (query.OrderByColumn == "SourceAccountId" || query.OrderByColumn == "DestinationAccountId")
+                {
+                    property = Expression.Property(Expression.Property(parameter, query.OrderByColumn.Substring(0, query.OrderByColumn.Length - 2)), "Id");
+                }
+                var orderByExpression = Expression.Lambda(property, parameter);
                 var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Transaction), orderColumnType },
                                               items.Expression, Expression.Quote(orderByExpression));
                 items = items.Provider.CreateQuery<Transaction>(resultExpression);
