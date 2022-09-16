@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import React = require("react");
-import { formatNumberWithPrefs } from "../../lib/Utils";
+import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";
 import { Transaction, TransactionLine } from "../../models/transaction";
@@ -84,7 +84,7 @@ function TableTransaction(props: TableTransactionProps) {
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
             </Tooltip>}
         </div>
-        <div>{props.transaction.dateTime.toString()}</div>
+        <div>{formatDateTimeWithPrefs(props.transaction.dateTime, preferences)}</div>
         <div>{props.transaction.description}</div>
         <div className={"number-total " + totalClass}>
             {formatNumberWithPrefs(total, preferences)}

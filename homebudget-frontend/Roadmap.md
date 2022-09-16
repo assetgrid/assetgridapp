@@ -20,18 +20,19 @@ Tags
 Transaction and account metadata
 
 # Tiny todo
-Allow periods as decimal separators when parsing numbers
-404 page
-Error handling
-Multiple transaction editing
-Format dates consistently
-Prevent navigating away from forms with data. Waiting for react-router to imlpement blocking in v6
-Use portals for modals
-Use strict typescript
-Allow the use of back to the import page
-Preserve state on the transactions page
-Date time input rather than just date
-Make the CreateMany function fix transactions before returning them
-Input for amounts should show the correct decimals
-When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
-Implement ordering for transactions
+[ ] Allow periods as decimal separators when parsing numbers
+[ ] 404 page
+[ ] Error handling
+[ ] Multiple transaction editing
+[x] Format dates consistently
+[ ] Prevent navigating away from forms with data. Waiting for react-router to imlpement blocking in v6
+[ ] Use portals for modals
+[ ] Use strict typescript
+[ ] Allow the use of back to the import page
+[ ] Preserve state on the transactions page
+[ ] Date time input rather than just date
+[x] Make the CreateMany function fix transactions before returning them
+[ ] Input for amounts should show the correct decimals
+[ ] When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
+[ ] Implement ordering for transactions
+[ ] Truncate long descriptions

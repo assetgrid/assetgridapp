@@ -1,4 +1,7 @@
 import Decimal from "decimal.js";
+import { DateTime } from "luxon";
+import React = require("react");
+import { preferencesContext } from "../components/App";
 import { Preferences } from "../models/preferences";
 
 const Utils = {
@@ -49,6 +52,35 @@ function range(start: number, end: number) {
         ans.push(i);
     }
     return ans;
+}
+
+/**
+ * Formats a date to a string based on the user preferences
+ * @param date The date to format
+ * @param preferences The preferences to use
+ * @returns A string representation of the date
+ */
+export function formatDateWithPrefs(date: DateTime, preferences?: Preferences | "fetching"): string {
+    const prefs = preferences ?? React.useContext(preferencesContext).preferences;
+    if (prefs === "fetching" || prefs.dateFormat === null) {
+        return date.toJSDate().toLocaleDateString();
+    } else {
+        return date.toFormat(prefs.dateFormat);
+    }
+}
+
+/**
+ * Formats a dateTime to a string based on the user preferences
+ * @param dateTime The dateTime to format
+ * @param preferences The preferences to use
+ * @returns A string representation of the dateTime
+ */
+export function formatDateTimeWithPrefs(dateTime: DateTime, preferences: Preferences | "fetching"): string {
+    if (preferences === "fetching" || preferences.dateTimeFormat === null) {
+        return dateTime.toJSDate().toLocaleString();
+    } else {
+        return dateTime.toFormat(preferences.dateTimeFormat);
+    }
 }
 
 export function formatNumberWithPrefs(number: Decimal, preferences: Preferences | "fetching"): string {

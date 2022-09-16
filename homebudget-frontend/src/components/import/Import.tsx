@@ -3,9 +3,11 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Api } from "../../lib/ApiClient";
+import { formatDateTimeWithPrefs } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { CreateTransaction } from "../../models/transaction";
 import AccountLink from "../account/AccountLink";
+import { preferencesContext } from "../App";
 import { Card } from "../common/Card";
 import Table from "../common/Table";
 import InputButton from "../form/InputButton";
@@ -30,60 +32,54 @@ interface State {
 /*
  * React object class
  */
-export default class Import extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            succeeded: [],
-            failed: [],
-            duplicate: [],
+export function Import (props: Props) {
+    const [succeeded, setSucceeded] = React.useState<CreateTransaction[]>([])
+    const [failed, setFailed] = React.useState<CreateTransaction[]>([])
+    const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([])
+    const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
+    const [progress, setProgress] = React.useState(0);
 
-            state: "waiting",
-            progress: 0,
-        };
+    const { preferences } = React.useContext(preferencesContext);
+
+    switch (state) {
+        case "waiting":
+            return <Card title="Begin import">
+                <InputButton onClick={() => importTransactions()}>Import Transactions</InputButton>
+                <div className="buttons mt-3">
+                    <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
+                </div>
+            </Card>;
+        case "importing":
+            return <Card title="Importing&hellip;">
+                <p>{progress} of {props.transactions.length} transactions have been imported.</p>
+                <p>Please wait while the import is completed</p>
+            </Card>;
+        case "imported":
+            return <>
+                <Card title="Import complete">Your transactions have been imported</Card>
+                <Card title="Succeeded">
+                    <p className="mb-3">The following transactions were successfully created:</p>
+                    {transactionTable(succeeded)}
+                </Card>
+                <Card title="Duplicate">
+                    <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
+                    {transactionTable(duplicate)}
+                </Card>
+                <Card title="Failed">
+                    <p className="mb-3">The following transactions could not be created due to errors:</p>
+                    {transactionTable(failed)}
+                </Card>
+            </>;
     }
 
-    public render() {
-        switch (this.state.state) {
-            case "waiting":
-                return <Card title="Begin import">
-                    <InputButton onClick={() => this.import()}>Import Transactions</InputButton>
-                    <div className="buttons mt-3">
-                        <InputButton onClick={() => this.props.goToPrevious()}>Back</InputButton>
-                    </div>
-                </Card>;
-            case "importing":
-                return <Card title="Importing&hellip;">
-                    <p>{this.state.progress} of {this.props.transactions.length} transactions have been imported.</p>
-                    <p>Please wait while the import is completed</p>
-                </Card>;
-            case "imported":
-                return <>
-                    <Card title="Import complete">Your transactions have been imported</Card>
-                    <Card title="Succeeded">
-                        <p className="mb-3">The following transactions were successfully created:</p>
-                        {this.transactionTable(this.state.succeeded)}
-                    </Card>
-                    <Card title="Duplicate">
-                        <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
-                        {this.transactionTable(this.state.duplicate)}
-                    </Card>
-                    <Card title="Failed">
-                        <p className="mb-3">The following transactions could not be created due to errors:</p>
-                        {this.transactionTable(this.state.failed)}
-                    </Card>
-                </>;
-        }
-    }
-
-    private transactionTable(transactions: CreateTransaction[]) {
+    function transactionTable(transactions: CreateTransaction[]) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifier}</td>
-                <td>{transaction.dateTime.toString()}</td>
+                <td>{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
                 <td>{transaction.description}</td>
-                <td>{transaction.sourceId && <AccountLink account={this.props.accountsBy["id"][transaction.sourceId]} />}</td>
-                <td>{transaction.destinationId && <AccountLink account={this.props.accountsBy["id"][transaction.destinationId]} />}</td>
+                <td>{transaction.sourceId && <AccountLink account={props.accountsBy["id"][transaction.sourceId]} />}</td>
+                <td>{transaction.destinationId && <AccountLink account={props.accountsBy["id"][transaction.destinationId]} />}</td>
             </tr>}
             type="sync"
             renderType="table"
@@ -96,43 +92,43 @@ export default class Import extends React.Component<Props, State> {
             </tr>} items={transactions} />;
     }
 
-    private async import() {
-        this.setState({
-            state: "importing",
-            progress: 0
-        });
+    async function importTransactions() {
+        setState("importing");
 
-        // Don't send transactions with obvious errors to the server
-        let errors = this.props.transactions.map(t =>
+        // Don't send transactions with known errors to the server
+        let errors = props.transactions.map(t =>
             t.amount === "invalid" ||
             !t.dateTime.isValid ||
             (t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value)
         );
-        let invalidTransactions = this.props.transactions.filter((_, i) => errors[i]).map(transaction => {
+        let invalidTransactions = props.transactions.filter((_, i) => errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
                 description: transaction.description,
-                sourceId: this.getAccount(transaction.source)?.id,
-                destinationId: this.getAccount(transaction.destination)?.id,
+                sourceId: getAccount(transaction.source)?.id,
+                destinationId: getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
                 category: "",
                 total: transaction.amount,
                 lines: []
             } as CreateTransaction
         });
-        await new Promise<void>(resolve => this.setState({
-            progress: invalidTransactions.length,
-            succeeded: [],
-            failed: invalidTransactions,
-            duplicate: [],
-        }, () => resolve()));
+        let progress = invalidTransactions.length;
+        let succeeded: CreateTransaction[] = [];
+        let failed: CreateTransaction[]  = invalidTransactions;
+        let duplicate: CreateTransaction[]  = []
+
+        setProgress(progress);
+        setSucceeded(succeeded);
+        setFailed(failed);
+        setDuplicate(duplicate);
         
-        let createModels = this.props.transactions.filter((_, i) => ! errors[i]).map(transaction => {
+        let createModels = props.transactions.filter((_, i) => ! errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime,
                 description: transaction.description,
-                sourceId: this.getAccount(transaction.source)?.id,
-                destinationId: this.getAccount(transaction.destination)?.id,
+                sourceId: getAccount(transaction.source)?.id,
+                destinationId: getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
                 category: "",
                 total: transaction.amount,
@@ -140,25 +136,30 @@ export default class Import extends React.Component<Props, State> {
             } as CreateTransaction
         });
 
-        while (this.state.progress - invalidTransactions.length < createModels.length - 1) {
-            const progress = this.state.progress - invalidTransactions.length;
-            let result = await Api.Transaction.createMany(createModels.slice(progress, progress + this.props.batchSize));
-            await new Promise<void>(resolve => this.setState({
-                progress: this.state.progress + this.props.batchSize,
-                succeeded: [...this.state.succeeded, ...result.succeeded],
-                failed: [...this.state.failed, ...result.failed],
-                duplicate: [...this.state.duplicate, ...result.duplicate],
-            }, () => resolve()));
+        while (progress - invalidTransactions.length < createModels.length - 1) {
+            let result = await Api.Transaction.createMany(
+                createModels.slice(progress - invalidTransactions.length, progress - invalidTransactions.length + props.batchSize)
+            );
+            
+            progress += props.batchSize;
+            succeeded = [...succeeded, ...result.succeeded];
+            failed = [...failed, ...result.failed];
+            duplicate = [...duplicate, ...result.duplicate];
+
+            setProgress(progress);
+            setSucceeded(succeeded);
+            setFailed(failed);
+            setDuplicate(duplicate);
         }
 
-        this.setState({ state: "imported" });
+        setState("imported");
     }
 
-    private getAccount(reference: AccountReference | null): Account | null {
+    function getAccount(reference: AccountReference | null): Account | null {
         if (reference === null || reference === undefined) return null;
-        if (this.props.accountsBy[reference.identifier] === undefined) return null;
-        if (this.props.accountsBy[reference.identifier][reference.value] === undefined) return null;
+        if (props.accountsBy[reference.identifier] === undefined) return null;
+        if (props.accountsBy[reference.identifier][reference.value] === undefined) return null;
 
-        return this.props.accountsBy[reference.identifier][reference.value];
+        return props.accountsBy[reference.identifier][reference.value];
     }
 }

@@ -309,7 +309,11 @@ const Transaction = {
                     totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
                     lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
                 }))
-            ).then(result => resolve(result.data))
+            ).then(result => resolve({
+                    succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as CreateTransaction),
+                    failed: result.data.failed.map(t => fixTransaction(t) as any as CreateTransaction),
+                    duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as CreateTransaction),
+                }))
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -418,7 +422,7 @@ const Transaction = {
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
  */
-function fixTransaction(transaction: Transaction): Transaction {
+function fixTransaction(transaction: Transaction | CreateTransaction): Transaction {
     let { totalString, ...rest } = transaction as Transaction & { totalString: string };
     return {
         ...rest,

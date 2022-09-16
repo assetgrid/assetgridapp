@@ -61,6 +61,10 @@ namespace homebudget_server.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DecimalDigits = table.Column<int>(type: "int", nullable: false),
                     ThousandsSeparator = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateFormat = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DateTimeFormat = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Api } from "../../lib/ApiClient";
-import { formatNumberWithPrefs } from "../../lib/Utils";
+import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../lib/Utils";
 import { Transaction, TransactionLine } from "../../models/transaction";
 import AccountLink from "../account/AccountLink";
 import { preferencesContext } from "../App";
@@ -159,7 +159,7 @@ function transactionDetails(
                     </tr>
                     <tr>
                         <td>Timestamp</td>
-                        <td className="has-text-right">{transaction.dateTime.toString()}</td>
+                        <td className="has-text-right">{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
                     </tr>
                     <tr>
                         <td>Total</td>

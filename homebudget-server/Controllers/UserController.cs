@@ -37,6 +37,8 @@ namespace homebudget_server.Controllers
             preferences.ThousandsSeparator = model.ThousandsSeparator;
             preferences.DecimalSeparator = model.DecimalSeparator;
             preferences.DecimalDigits = model.DecimalDigits;
+            preferences.DateFormat = model.DateFormat;
+            preferences.DateTimeFormat = model.DateTimeFormat;
             
             if (!preferencesExist)
             {
@@ -50,6 +52,8 @@ namespace homebudget_server.Controllers
                 DecimalDigits = preferences.DecimalDigits,
                 DecimalSeparator = preferences.DecimalSeparator,
                 ThousandsSeparator = preferences.ThousandsSeparator,
+                DateTimeFormat = preferences.DateTimeFormat,
+                DateFormat = preferences.DateFormat,
             };
         }
 
@@ -69,6 +73,8 @@ namespace homebudget_server.Controllers
                     DecimalDigits = preferences.DecimalDigits,
                     DecimalSeparator = preferences.DecimalSeparator,
                     ThousandsSeparator = preferences.ThousandsSeparator,
+                    DateFormat = preferences.DateFormat,
+                    DateTimeFormat = preferences.DateTimeFormat,
                 })
                 .SingleOrDefault() ?? new ViewPreferences
                 {
@@ -76,6 +82,8 @@ namespace homebudget_server.Controllers
                     DecimalDigits = 2,
                     DecimalSeparator = ".",
                     ThousandsSeparator = ",",
+                    DateFormat = null,
+                    DateTimeFormat = null,
                 };
 
             preferences.FavoriteAccounts = favoriteAccounts;

@@ -143,6 +143,12 @@ namespace homebudget_server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<string>("DateFormat")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DateTimeFormat")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("DecimalDigits")
                         .HasColumnType("int");
 

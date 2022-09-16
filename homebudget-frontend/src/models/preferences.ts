@@ -5,5 +5,7 @@ export type Preferences = {
     decimalSeparator: string;
     decimalDigits: number;
     thousandsSeparator: string;
+    dateFormat: string | null;
+    dateTimeFormat: string | null;
     favoriteAccounts: Account[];
 }

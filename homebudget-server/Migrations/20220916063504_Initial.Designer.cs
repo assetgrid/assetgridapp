@@ -11,7 +11,7 @@ using homebudget_server.Data;
 namespace homebudget_server.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220913130944_Initial")]
+    [Migration("20220916063504_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -144,6 +144,12 @@ namespace homebudget_server.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    b.Property<string>("DateFormat")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DateTimeFormat")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("DecimalDigits")
                         .HasColumnType("int");

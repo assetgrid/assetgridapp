@@ -5,7 +5,7 @@ import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
 import InputButton from "../form/InputButton";
-import Import from "./Import";
+import { Import } from "./Import";
 import ImportCsv, { CsvImportOptions } from "./ImportCsv";
 import { AccountReference, capitalize, CsvCreateTransaction } from "./ImportModels";
 import MapCsvFields, { MappingOptions } from "./MapCsvFields/MapCsvFields";
