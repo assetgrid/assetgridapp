@@ -330,14 +330,14 @@ const Transaction = {
         return new Promise<Transaction>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
-                ...transaction,
+                ...model,
                 totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
                 lines: transaction.lines ? transaction.lines.map(line => ({
                     ...line,
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
                 })) : undefined
-            } as UpdateTransaction).then(result => resolve(fixTransaction(result.data)))
+            }).then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
                     reject();

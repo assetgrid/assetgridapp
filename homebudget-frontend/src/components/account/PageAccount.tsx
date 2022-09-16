@@ -195,29 +195,29 @@ export function AccountDetailsCard(props: {
                 <tbody>
                     <tr>
                         <td>Balance</td>
-                        <td className="has-text-right">{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                        <td>{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
                     </tr>
                     <tr>
                         <td>Name</td>
-                        <td className="has-text-right">{props.account.name}</td>
+                        <td>{props.account.name}</td>
                     </tr>
                     <tr>
                         <td>Description</td>
-                        <td className="has-text-right">{props.account.description}</td>
+                        <td style={{maxWidth: "300px"}}>{props.account.description}</td>
                     </tr>
                     <tr>
                         <td>Account Number</td>
-                        <td className="has-text-right">{props.account.accountNumber}</td>
+                        <td>{props.account.accountNumber}</td>
                     </tr>
                     <tr>
                         <td>Favorite</td>
-                        <td className="has-text-right">
+                        <td>
                             <YesNoDisplay value={props.account.favorite} />
                         </td>
                     </tr>
                     <tr>
                         <td>Include in net worth</td>
-                        <td className="has-text-right">
+                        <td>
                             <YesNoDisplay value={props.account.includeInNetWorth} />
                         </td>
                     </tr>
@@ -241,7 +241,7 @@ export function AccountDetailsCard(props: {
                 <tbody>
                     <tr>
                         <td>Balance</td>
-                        <td className="has-text-right">{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                        <td>{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
                     </tr>
                     <tr>
                         <td>Name</td>
@@ -272,7 +272,7 @@ export function AccountDetailsCard(props: {
                     </tr>
                     <tr>
                         <td>Favorite</td>
-                        <td className="has-text-right">
+                        <td>
                             <InputCheckbox
                                 value={editingModel.favorite}
                                 onChange={e => setEditingModel({ ...editingModel, favorite: e.target.checked })}
@@ -281,7 +281,7 @@ export function AccountDetailsCard(props: {
                     </tr>
                     <tr>
                         <td>Include in net worth</td>
-                        <td className="has-text-right">
+                        <td>
                             <InputCheckbox
                                 value={editingModel.includeInNetWorth}
                                 onChange={e => setEditingModel({ ...editingModel, includeInNetWorth: e.target.checked })}

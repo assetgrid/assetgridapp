@@ -85,7 +85,9 @@ function TableTransaction(props: TableTransactionProps) {
             </Tooltip>}
         </div>
         <div>{formatDateTimeWithPrefs(props.transaction.dateTime, preferences)}</div>
-        <div>{props.transaction.description}</div>
+        <div>{props.transaction.description.length < 50
+            ? props.transaction.description
+            : <Tooltip content={props.transaction.description}>{props.transaction.description.substring(0, 50)}&hellip;</Tooltip>}</div>
         <div className={"number-total " + totalClass}>
             {formatNumberWithPrefs(total, preferences)}
         </div>

@@ -27,7 +27,7 @@ Transaction and account metadata
 [x] Format dates consistently
 [ ] Prevent navigating away from forms with data. Waiting for react-router to imlpement blocking in v6
 [ ] Use portals for modals
-[ ] Use strict typescript
+[x] Use strict typescript
 [ ] Allow the use of back to the import page
 [ ] Preserve state on the transactions page
 [ ] Date time input rather than just date
@@ -35,4 +35,5 @@ Transaction and account metadata
 [ ] Input for amounts should show the correct decimals
 [ ] When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
 [ ] Implement ordering for transactions
-[ ] Truncate long descriptions
+[x] Truncate long descriptions
+[ ] Favorite button in create account modal does not work

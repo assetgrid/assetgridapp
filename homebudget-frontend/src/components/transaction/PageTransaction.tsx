@@ -110,31 +110,31 @@ function transactionDetails(
                 <tbody>
                     <tr>
                         <td>Id</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Description</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Timestamp</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Total</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Source</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Destination</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                     <tr>
                         <td>Category</td>
-                        <td className="has-text-right">&hellip;</td>
+                        <td>&hellip;</td>
                     </tr>
                 </tbody>
             </table>}
@@ -151,35 +151,35 @@ function transactionDetails(
                 <tbody>
                     <tr>
                         <td>Id</td>
-                        <td className="has-text-right">{transaction.id}</td>
+                        <td>{transaction.id}</td>
                     </tr>
                     <tr>
                         <td>Description</td>
-                        <td className="has-text-right">{transaction.description}</td>
+                        <td style={{maxWidth: "300px"}}>{transaction.description}</td>
                     </tr>
                     <tr>
                         <td>Timestamp</td>
-                        <td className="has-text-right">{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
+                        <td>{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
                     </tr>
                     <tr>
                         <td>Total</td>
-                        <td className="has-text-right">{formatNumberWithPrefs(transaction.total, preferences)}</td>
+                        <td>{formatNumberWithPrefs(transaction.total, preferences)}</td>
                     </tr>
                     <tr>
                         <td>Source</td>
-                        <td className="has-text-right">
+                        <td>
                             {transaction.source === null ? "None" : <AccountLink account={transaction.source} />}
                         </td>
                     </tr>
                     <tr>
                         <td>Destination</td>
-                        <td className="has-text-right">
+                        <td>
                             {transaction.destination === null ? "None" : <AccountLink account={transaction.destination} />}
                         </td>
                     </tr>
                     <tr>
                         <td>Category</td>
-                        <td className="has-text-right">
+                        <td>
                             {transaction.category}
                         </td>
                     </tr>
@@ -192,7 +192,7 @@ function transactionDetails(
                 <tbody>
                     <tr>
                         <td>Id</td>
-                        <td className="has-text-right">{transaction.id}</td>
+                        <td>{transaction.id}</td>
                     </tr>
                     <tr>
                         <td>Description</td>
@@ -220,7 +220,7 @@ function transactionDetails(
                                 onChange={value => onChange({ ...editModel, total: value })}
                                 allowNull={false}
                                 disabled={isUpdating} /></td>
-                            : <td className="has-text-right">{formatNumberWithPrefs(editModel.total, preferences)}</td>}
+                            : <td>{formatNumberWithPrefs(editModel.total, preferences)}</td>}
                     </tr>
                     <tr>
                         <td>Source</td>
