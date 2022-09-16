@@ -37,3 +37,5 @@ Transaction and account metadata
 [x] Implement ordering for transactions
 [x] Truncate long descriptions
 [ ] Favorite button in create account modal does not work
+[ ] Consider moving multi-edit to it's own page
+[ ] Cleanup categories that are not used by any transactions

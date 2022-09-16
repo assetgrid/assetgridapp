@@ -46,7 +46,6 @@ namespace homebudget_server.Models.ViewModels
 
     public class ViewUpdateTransaction
     {
-        public int Id { get; set; }
         public int? SourceId { get; set; }
         public int? DestinationId { get; set; }
         public DateTime? DateTime { get; set; }
@@ -58,6 +57,13 @@ namespace homebudget_server.Models.ViewModels
         public bool HasUniqueIdentifier { get; set; } 
         public string? Identifier { get; set; }
     }
+
+    public class ViewUpdateMultipleTransactions
+    {
+        public ViewUpdateTransaction model { get; set; } = null!;
+        public ViewSearchGroup query { get; set; } = null!;
+    }
+
     public class ViewTransaction
     {
         public int Id { get; set; }

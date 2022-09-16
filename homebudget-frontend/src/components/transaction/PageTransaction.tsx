@@ -84,7 +84,7 @@ export default function PageTransaction(): React.ReactElement {
         if (editModel === null) return;
 
         setIsUpdating(true);
-        const result = await Api.Transaction.update({
+        const result = await Api.Transaction.update(id, {
             ...editModel,
             sourceId: editModel.source?.id ?? -1,
             destinationId: editModel.destination?.id ?? -1

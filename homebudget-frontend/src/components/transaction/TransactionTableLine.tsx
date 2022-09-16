@@ -22,6 +22,7 @@ import Tooltip from "../common/Tooltip";
 import InputIconButton from "../form/InputIconButton";
 import { preferencesContext } from "../App";
 import DeleteTransactionModal from "../form/transaction/DeleteTransactionModal";
+import InputCheckbox from "../form/InputCheckbox";
 
 type Props  = {
     transaction: Transaction;
@@ -30,6 +31,8 @@ type Props  = {
     balance?: Decimal;
     allowEditing?: boolean;
     allowLinks?: boolean;
+    selected?: boolean;
+    toggleSelected?: () => void;
 }
 
 interface TransactionEditingModel {
@@ -77,6 +80,9 @@ function TableTransaction(props: TableTransactionProps) {
     const { preferences } = React.useContext(preferencesContext);
 
     return <div key={props.transaction.id} className="table-row">
+        {props.selected !== undefined && props.allowEditing && <div>
+            <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />
+        </div>}
         <div>
             <TransactionLink transaction={props.transaction} disabled={! (props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
@@ -117,7 +123,7 @@ function TableTransaction(props: TableTransactionProps) {
         </div>}
         {expandSplit && < div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
-                <div style={{ gridColumn: "span 2" }}></div>
+                <div style={{ gridColumn: "span 3" }}></div>
                 <div className="description">
                     {line.description}
                 </div>
@@ -126,7 +132,7 @@ function TableTransaction(props: TableTransactionProps) {
                 </div>
                 <div style={{ gridColumn: "span 4" }}></div>
             </div>)}
-        </div> }
+        </div>}
     </div>;
 }
 
@@ -171,6 +177,9 @@ function TransactionEditor(props: TransactionEditorProps) {
     }, []);
 
     return <div key={props.transaction.id} className="table-row editing">
+        {props.selected !== undefined && props.allowEditing && <div>
+            <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />
+        </div>}
         <div><TransactionLink transaction={props.transaction} /></div>
         <div>
             <InputDate value={model.dateTime}
@@ -227,7 +236,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                     disabled={props.disabled}
                     inverse={amountMultiplier.toNumber() == -1}
                     last={i === model.lines!.length} />)}
-                <div style={{ gridColumn: "span 2"}}></div>
+                <div style={{ gridColumn: "span 3"}}></div>
                 <div className="btn-add-line">
                     <InputButton className="is-small"
                         onClick={() => setModel({
@@ -243,7 +252,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                         ...model,
                         lines: [{ amount: props.transaction.total, description: "Transaction line" }]
                     })}>Split transaction</InputButton>
-            </div> }
+            </div>}
     </div>;
 
     function saveChanges() {
@@ -253,8 +262,7 @@ function TransactionEditor(props: TransactionEditorProps) {
             return;
         }
 
-        Api.Transaction.update({
-            id: props.transaction.id,
+        Api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
             description: model.description,
             sourceId: model.source?.id ?? -1,
@@ -311,7 +319,7 @@ function TransactionLineEditor(props: LineEditorProps) {
     const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
 
     return <div className={"transaction-line" + (props.last ? " last" : "")}>
-        <div style={{ gridColumn: "span 2" }}>
+        <div style={{ gridColumn: "span 3" }}>
             <InputIconButton icon={solid.faGripLinesVertical} onClick={() => 0} />
         </div>
         <div className="description">

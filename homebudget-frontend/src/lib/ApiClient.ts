@@ -323,13 +323,14 @@ const Transaction = {
 
     /**
      * Updates a transaction
-     * @param transaction The transactions to be created
+     * @param id The id of the transaction to update
+     * @param transaction The changes to make
      * @returns The updated transaction
      */
-    update: function (transaction: UpdateTransaction): Promise<Transaction> {
+    update: function (id: number, transaction: UpdateTransaction): Promise<Transaction> {
         return new Promise<Transaction>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.put<Transaction>(rootUrl + "/transaction/" + transaction.id, {
+            axios.put<Transaction>(rootUrl + "/transaction/" + id, {
                 ...model,
                 hasUniqueIdentifier: model.identifier !== undefined,
                 totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
@@ -339,6 +340,35 @@ const Transaction = {
                     amount: undefined
                 })) : undefined
             }).then(result => resolve(fixTransaction(result.data)))
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                })
+        });
+    },
+
+    /**
+     * Updates all transactions matching the specified query
+     * @param query A query describing which transactions to modify
+     * @param transaction The changes to make
+     * @returns The updated transaction
+     */
+     updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const { total, ...model } = transaction;
+            axios.post<Transaction>(rootUrl + "/transaction/updateMultiple", {
+                query: query,
+                model: {
+                    ...model,
+                    hasUniqueIdentifier: model.identifier !== undefined,
+                    totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
+                    lines: transaction.lines ? transaction.lines.map(line => ({
+                        ...line,
+                        amountString: line.amount.mul(new Decimal(10000)).round().toString(),
+                        amount: undefined
+                    })) : undefined
+                }
+            }).then(result => resolve())
                 .catch(e => {
                     console.log(e);
                     reject();

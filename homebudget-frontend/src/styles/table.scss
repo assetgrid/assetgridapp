@@ -49,6 +49,16 @@ div.table {
                 color: $info;
             }
         }
+
+        .btn-multiselect {
+            margin-left: -0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: normal;
+            .button {
+                padding: 0.5rem;
+                margin-bottom: 0;
+            }
+        }
     }
 
     & > .table-body {
@@ -69,6 +79,9 @@ div.table.transaction-table {
     &.no-actions {
         grid-template-columns: [colstart] auto auto auto auto auto auto auto [colend];
     }
+    &.multi-select {
+        grid-template-columns: [colstart] auto auto auto auto auto auto auto auto auto [colend];
+    }
     &.is-small {
         font-size: $size-7;
     }
@@ -85,10 +98,10 @@ div.table.transaction-table {
                     font-size: $size-7;
 
                     & > .description {
-                        grid-column: 3;
+                        grid-column: 4;
                     }
                     & > .total {
-                        grid-column: 4;
+                        grid-column: 5;
                         text-align: right;
                     }
                     & > :first-child, & > :last-child {
@@ -143,7 +156,7 @@ div.table.transaction-table {
             }
             &.split {
                 & > .btn-add-line {
-                    grid-column: 3 / 5;
+                    grid-column: 4 / 6;
                     display: flex;
                     justify-content: center;
                     background-color: transparent;

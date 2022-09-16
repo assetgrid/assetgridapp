@@ -8,6 +8,7 @@ interface Props {
     onChange: (selectedKey: string) => void;
     addOnAfter?: React.ReactElement;
     isFullwidth?: boolean;
+    disabled?: boolean;
 }
 
 export default class InputSelect<T> extends React.Component<Props> {
@@ -22,6 +23,7 @@ export default class InputSelect<T> extends React.Component<Props> {
                 <div className="control is-expanded">
                     <div className={"select" + (this.props.isFullwidth ? " is-fullwidth" : "")}>
                         <select value={this.props.value ?? "___placeholder___"}
+                            disabled={this.props.disabled}
                             onChange={e => this.props.onChange(e.target.value)}>
                             {this.props.placeholder !== undefined && <option disabled value="___placeholder___">{this.props.placeholder}</option>}
                             {this.props.items.map(item => <option key={item.key}

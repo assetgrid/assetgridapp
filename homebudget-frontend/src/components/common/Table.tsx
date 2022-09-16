@@ -10,6 +10,7 @@ export type Props<T> = {
     decrement?: () => void;
     increment?: () => void;
     draw?: number;
+    afterDraw?: (items: T[]) => void;
 } & (
     /* Support three different ways of fetching data*/
     {
@@ -244,6 +245,7 @@ export default function Table<T>(props: Props<T>) {
             setItems(props.items.slice(from, to));
             setTotalItems(props.items.length);
             setDisplayingPage(targetPage);
+            props.afterDraw && props.afterDraw(props.items.slice(from, to));
         } else {
             props.fetchItems(from, to, draw ?? 0)
                 .then(result => {
@@ -251,6 +253,7 @@ export default function Table<T>(props: Props<T>) {
                         setItems(result.items);
                         setTotalItems(result.totalItems);
                         setDisplayingPage(targetPage);
+                        props.afterDraw && props.afterDraw(result.items);
                     }
                 });
         }

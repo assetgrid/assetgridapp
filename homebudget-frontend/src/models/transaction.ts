@@ -28,14 +28,13 @@ export type CreateTransaction = {
 }
 
 export type UpdateTransaction = {
-    id: number;
     identifier?: string | null;
-    sourceId?: number;
-    destinationId?: number;
+    sourceId?: number | null;
+    destinationId?: number | null;
     dateTime?: DateTime;
     description?: string;
     category?: string;
-    total: Decimal;
+    total?: Decimal;
     lines?: TransactionLine[];
 }
 
