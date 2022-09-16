@@ -14,9 +14,9 @@ interface Props {
 
 export default function InputNumbers(props: Props) {
     const [enteringNumber, setEnteringNumber] = React.useState<number | " ">(" ");
-    let inputElement: HTMLInputElement | null = null;
+    const inputElement = React.useRef<HTMLInputElement>(null);
 
-    return <div className="field" onClick={() => inputElement?.focus()}>
+    return <div className="field" onClick={() => inputElement?.current?.focus()}>
         {props.label && <label className="label">{props.label}</label>}
         <div className="field input-multiple">
             {props.value.map((value, i) => <span className="tag is-primary" key={i}>
@@ -24,7 +24,7 @@ export default function InputNumbers(props: Props) {
                 <button className="delete is-small" onClick={() => props.onChange([...props.value.slice(0, i), ...props.value.slice(i + 1)])}></button>
             </span>) }
             <input
-                ref={element => inputElement = element}
+                ref={inputElement}
                 type="number"
                 placeholder={props.label}
                 value={enteringNumber}

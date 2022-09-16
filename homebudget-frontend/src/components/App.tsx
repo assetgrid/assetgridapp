@@ -15,6 +15,7 @@ import Sidebar from "./common/Sidebar";
 import PageTransaction from "./transaction/PageTransaction";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
+export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
 
 interface PreferencesContext {
     preferences: Preferences | "fetching";
@@ -23,27 +24,31 @@ interface PreferencesContext {
 
 export default function FairFitPortalApp () {
     const [preferences, setPreferences] = React.useState<Preferences | "fetching">("fetching");
+    const modalContainer = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => updatePreferences(null), []);
 
     return <React.StrictMode>
-        <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
-            <div style={{display: "flex", flexGrow: 1}}>
-                <Sidebar />
-                <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
-                    <Routes>
-                        <Route path={routes.dashboard()} element={<PageDashboard />} />
-                        <Route path={routes.importCsv()} element={<PageImportCsv />}/>
-                        <Route path={routes.transactions()} element={<PageTransactions />}/>
-                        <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
-                        <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
-                        <Route path={routes.accounts()} element={<PageAccountOverview />} />
-                        <Route path={routes.account(":id")} element={<PageAccount />} />
-                        <Route path={routes.preferences()} element={<PagePreferences />} />
-                    </Routes>
+        <modalContainerContext.Provider value={{ container: modalContainer.current }}>
+            <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
+                <div style={{display: "flex", flexGrow: 1}}>
+                    <Sidebar />
+                    <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
+                        <Routes>
+                            <Route path={routes.dashboard()} element={<PageDashboard />} />
+                            <Route path={routes.importCsv()} element={<PageImportCsv />}/>
+                            <Route path={routes.transactions()} element={<PageTransactions />}/>
+                            <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
+                            <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
+                            <Route path={routes.accounts()} element={<PageAccountOverview />} />
+                            <Route path={routes.account(":id")} element={<PageAccount />} />
+                            <Route path={routes.preferences()} element={<PagePreferences />} />
+                        </Routes>
+                    </div>
                 </div>
-            </div>
-        </preferencesContext.Provider>
+            </preferencesContext.Provider>
+        </modalContainerContext.Provider>
+        <div ref={modalContainer}></div>
     </React.StrictMode>;
 
     function updatePreferences(newPreferences: Preferences | null) {

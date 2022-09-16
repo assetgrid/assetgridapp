@@ -23,10 +23,10 @@ Transaction and account metadata
 [ ] Allow periods as decimal separators when parsing numbers
 [ ] 404 page
 [ ] Error handling
-[ ] Multiple transaction editing
+[x] Multiple transaction editing
 [x] Format dates consistently
 [ ] Prevent navigating away from forms with data. Waiting for react-router to imlpement blocking in v6
-[ ] Use portals for modals
+[x] Use portals for modals
 [x] Use strict typescript
 [ ] Allow the use of back to the import page
 [ ] Preserve state on the transactions page
@@ -39,3 +39,4 @@ Transaction and account metadata
 [ ] Favorite button in create account modal does not work
 [ ] Consider moving multi-edit to it's own page
 [ ] Cleanup categories that are not used by any transactions
+[ ] Reduce code reuse in transaction controller

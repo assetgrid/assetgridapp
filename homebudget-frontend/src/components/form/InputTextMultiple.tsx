@@ -11,9 +11,9 @@ interface Props {
 
 export default function InputTextMultiple(props: Props) {
     const [enteringText, setEnteringText] = React.useState<string>("");
-    let inputElement: HTMLInputElement | null = null;
+    const inputElement = React.useRef<HTMLInputElement>(null);
 
-    return <div className="field" onClick={() => inputElement?.focus()}>
+    return <div className="field" onClick={() => inputElement?.current?.focus()}>
         {props.label && <label className="label">{props.label}</label>}
         <div className="field input-multiple">
             {props.value.map((value, i) => <span className="tag is-primary" key={i}>
@@ -21,7 +21,7 @@ export default function InputTextMultiple(props: Props) {
                 <button className="delete is-small" onClick={() => props.onChange([...props.value.slice(0, i), ...props.value.slice(i + 1)])}></button>
             </span>) }
             <input
-                ref={element => inputElement = element}
+                ref={inputElement}
                 type="text"
                 placeholder={props.label}
                 value={enteringText}

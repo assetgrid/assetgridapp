@@ -1,4 +1,6 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
+import { modalContainerContext } from "../App";
 
 export interface Props {
     active: boolean;
@@ -8,26 +10,24 @@ export interface Props {
     children: React.ReactNode;
 }
 
-export default class Modal extends React.Component<Props> {
-    constructor(props: Props) {
-        super(props);
-    }
+export default function Modal (props: Props) {
+    const { container } = React.useContext(modalContainerContext);
 
-    public render() {
-        return <div className="modal is-active">
+    if (!container) { return null; }
+
+    return createPortal(<div className="modal is-active">
         <div className="modal-background"></div>
-            <div className="modal-card">
-                <header className="modal-card-head">
-                    <p className="modal-card-title">{this.props.title}</p>
-                    {this.props.close !== undefined && <button className="delete" aria-label="close" onClick={() => this.props.close!()}></button>}
-                </header>
-                <section className="modal-card-body">
-                    {this.props.children}
-                </section>
-                {this.props.footer !== undefined && <footer className="modal-card-foot">
-                    {this.props.footer}
-                </footer>}
-            </div>
+        <div className="modal-card">
+            <header className="modal-card-head">
+                <p className="modal-card-title">{props.title}</p>
+                {props.close !== undefined && <button className="delete" aria-label="close" onClick={() => props.close!()}></button>}
+            </header>
+            <section className="modal-card-body">
+                {props.children}
+            </section>
+            {props.footer !== undefined && <footer className="modal-card-foot">
+                {props.footer}
+            </footer>}
         </div>
-    }
+    </div>, container);
 }
