@@ -40,9 +40,9 @@ export default function InputTextOrNull(props: Props): React.ReactElement {
                     </p>}
                 </div>
                 <div className="control">
-                    <a className="button" onClick={() => props.onChange(null)}>
+                    <button className="button" disabled={props.disabled} onClick={() => props.onChange(null)}>
                         <FontAwesomeIcon icon={faXmark} />
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>;
@@ -51,9 +51,9 @@ export default function InputTextOrNull(props: Props): React.ReactElement {
             {props.label && <label className="label">{props.label}</label>}
             <div className="field has-addons">
                 <div className="control is-expanded">
-                    <span style={{ cursor: "pointer" }}
+                    <span style={props.disabled ? { color: "#999"} : { cursor: "pointer" }}
                         className="input"
-                        onClick={() => props.onChange("")}>
+                        onClick={() => ! props.disabled && props.onChange("")}>
                         {props.noValueText}
                     </span>
                 </div>

@@ -55,6 +55,8 @@ namespace homebudget_server.Models.ViewModels
         public List<ViewTransactionLine>? Lines { get; set; }
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
+        public bool HasUniqueIdentifier { get; set; } 
+        public string? Identifier { get; set; }
     }
     public class ViewTransaction
     {

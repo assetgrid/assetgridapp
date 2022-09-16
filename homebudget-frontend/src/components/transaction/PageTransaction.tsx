@@ -19,6 +19,7 @@ import InputAccount from "../form/account/InputAccount";
 import InputCategory from "../form/InputCategory";
 import InputButton from "../form/InputButton";
 import Decimal from "decimal.js";
+import InputTextOrNull from "../form/InputTextOrNull";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
@@ -113,6 +114,10 @@ function transactionDetails(
                         <td>&hellip;</td>
                     </tr>
                     <tr>
+                        <td>Unique Identifier</td>
+                        <td>&hellip;</td>
+                    </tr>
+                    <tr>
                         <td>Description</td>
                         <td>&hellip;</td>
                     </tr>
@@ -154,6 +159,10 @@ function transactionDetails(
                         <td>{transaction.id}</td>
                     </tr>
                     <tr>
+                        <td>Unique Identifier</td>
+                        <td>{transaction.identifier ?? "None"}</td>
+                    </tr>
+                    <tr>
                         <td>Description</td>
                         <td style={{maxWidth: "300px"}}>{transaction.description}</td>
                     </tr>
@@ -193,6 +202,17 @@ function transactionDetails(
                     <tr>
                         <td>Id</td>
                         <td>{transaction.id}</td>
+                    </tr>
+                    <tr>
+                        <td>Unique identifier</td>
+                        <td>
+                            <InputTextOrNull
+                                value={editModel.identifier}
+                                onChange={value => onChange({ ...editModel, identifier: value })}
+                                disabled={isUpdating}
+                                noValueText={"None"}
+                            />
+                        </td>
                     </tr>
                     <tr>
                         <td>Description</td>

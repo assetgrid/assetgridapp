@@ -151,6 +151,10 @@ namespace homebudget_server.Controllers
                     {
                         dbObject.Description = model.Description;
                     }
+                    if (model.HasUniqueIdentifier)
+                    {
+                        dbObject.Identifier = model.Identifier;
+                    }
                     if (model.DestinationId != null)
                     {
                         dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;

@@ -29,6 +29,7 @@ export type CreateTransaction = {
 
 export type UpdateTransaction = {
     id: number;
+    identifier?: string | null;
     sourceId?: number;
     destinationId?: number;
     dateTime?: DateTime;
