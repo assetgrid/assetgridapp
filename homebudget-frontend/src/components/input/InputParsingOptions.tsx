@@ -34,6 +34,8 @@ export class InputParseOptions extends React.Component<InputParseOptionsProps, I
     }
 
     public render() {
+        const [page, setPage] = React.useState(1);
+
         return <div className="columns">
             <div className="column">
                 <InputCheckbox label="Trim whitespace"
@@ -57,6 +59,8 @@ export class InputParseOptions extends React.Component<InputParseOptionsProps, I
             <div className="column">
                 {this.props.previewData !== null &&
                     <Table pageSize={10}
+                        page={page}
+                        goToPage={setPage}
                         headings={<tr>
                             <th>Raw Value</th>
                             <th>Parsed Value</th>

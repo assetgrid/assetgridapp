@@ -16,7 +16,6 @@ import { DateTime } from "luxon";
 import { Period, PeriodFunctions } from "../../models/period";
 import AccountCategoryChart from "../account/AccountCategoryChart";
 import InputIconButton from "../input/InputIconButton";
-import ModifyAccountModal from "../account/input/ModifyAccountModal";
 import YesNoDisplay from "../input/YesNoDisplay";
 import DeleteAccountModal from "../account/input/DeleteAccountModal";
 import { routes } from "../../lib/routes";
@@ -24,13 +23,20 @@ import { preferencesContext } from "../App";
 import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 import InputCheckbox from "../input/InputCheckbox";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
+
+const pageSize = 20;
 
 export default function () {
-    const { id } = useParams();
+    const idString = useParams().id;
+    const id = Number(idString);
+
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
     const { preferences, updatePreferences } = React.useContext(preferencesContext);
-    
+    const [page, setPage] = React.useState(1);
+    const [draw, setDraw] = React.useState(0);
+
     let defaultPeriod: Period = {
         type: "month",
         start: DateTime.now().startOf("month"),
@@ -53,14 +59,18 @@ export default function () {
     // Update account when id is changed
     React.useEffect(() => {
         setAccount("fetching");
-        Api.Account.get(Number(id))
-            .then(result => {
-                setAccount(result);
-            })
-            .catch(e => {
-                console.log(e);
-                setAccount("error");
-            })
+        if (isNaN(id)) {
+            setAccount("error");
+        } else {
+            Api.Account.get(id)
+                .then(result => {
+                    setAccount(result);
+                })
+                .catch(e => {
+                    console.log(e);
+                    setAccount("error");
+                });
+        }
     }, [id])
 
     if (account === "fetching") {
@@ -91,7 +101,7 @@ export default function () {
                     </p>}
             </div>
             <div>
-                <PeriodSelector period={period} onChange={period => setPeriod(period) } />
+                <PeriodSelector period={period} onChange={period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); } } />
             </div>
         </section>
         <div className="p-3">
@@ -106,25 +116,43 @@ export default function () {
                 </div>
                 <div className="column p-0 is-flex">
                     <Card title="Categories" style={{flexGrow: 1}}>
-                        <AccountCategoryChart id={Number(id)} preferences={preferences} period={period} />
+                        <AccountCategoryChart id={id} preferences={preferences} period={period} />
                     </Card>
                 </div>
                 <div className="column p-0 is-flex">
                     <Card title="Balance" style={{ flexGrow: 1 }}>
-                        <AccountBalanceChart id={Number(id)} preferences={preferences} period={period} />
+                        <AccountBalanceChart id={id} preferences={preferences} period={period} />
                     </Card>
                 </div>
             </div>
             <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
                 <AccountTransactionList
-                    accountId={Number(id)}
+                    accountId={id}
                     period={period}
-                    decrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.decrement(period)); resolve(); })}
-                    incrementPeriod={() => new Promise<void>(resolve => { setPeriod(PeriodFunctions.increment(period)); resolve(); })}
+                    page={page}
+                    goToPage={goToPage}
+                    pageSize={pageSize}
+                    draw={draw}
                 />
             </Card>
         </div>
     </>;
+
+    async function goToPage(page: number | "increment" | "decrement") {
+        if (page === "increment") {
+            const nextPeriod = PeriodFunctions.increment(period);
+            const transactionCount = await countTransactions(nextPeriod);
+            const lastPage = Math.max(1, Math.ceil(transactionCount / pageSize));
+            setPeriod(nextPeriod);
+            setPage(lastPage);
+        } else if (page === "decrement") { 
+            setPeriod(PeriodFunctions.decrement(period));
+            setPage(1);
+        } else {
+            setPage(page);
+        }
+        setDraw(draw => draw + 1);
+    }
 
     function updateAccountFavoriteInPreferences(account: Account, favorite: boolean) {
         if (preferences === "fetching") {
@@ -161,6 +189,34 @@ export default function () {
             .catch(e => {
                 setAccount("error");
             });
+    }
+
+    function countTransactions(period: Period): Promise<number> {
+        let [start, end] = PeriodFunctions.getRange(period);
+        let query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [ {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true
+                }
+            }]
+        };
+        return new Promise(resolve => {
+            Api.Account.countTransactions(id, query)
+                .then(result => resolve(result));
+        });
     }
 }
 

@@ -32,6 +32,8 @@ function fetchItems(from: number, to: number, draw: number): Promise<{ items: Ac
 }
 
 export default function AccountList(props: Props) {
+    const [page, setPage] = React.useState(1);
+
     return <Table
         headings={<tr>
             <th>Name</th>
@@ -40,6 +42,8 @@ export default function AccountList(props: Props) {
             <th>Favorite</th>
             <th>In net worth</th>
         </tr>}
+        page={page}
+        goToPage={setPage}
         pageSize={20}
         draw={props.draw}
         type="async"

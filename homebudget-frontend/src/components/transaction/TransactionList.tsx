@@ -25,8 +25,12 @@ export default function TransactionList(props: Props) {
     const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>({});
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
+    const [page, setPage] = React.useState(1);
 
-    return <><Table<Transaction>
+    return <>
+        <Table<Transaction>
+            page={page}
+            goToPage={setPage}
             pageSize={props.pageSize ?? 20}
             draw={(props.draw ?? 0) + draw}
             type="async"

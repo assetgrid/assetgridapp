@@ -25,181 +25,148 @@ export interface CsvImportOptions {
     csvDelimiter: string;
 }
 
-interface State {
-    csvData: Papa.ParseResult<any> | null | "error";
-    rowOffset: number;
-    columnOffset: number;
-}
-
 const pageSize: number = 20;
 const columnPageSize: number = 5;
 
-/*
- * React object class
- */
-export default class ImportCsv extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.state = {
-            csvData: null,
-            rowOffset: 0,
-            columnOffset: 0
-        };
-    }
+export default function ImportCsv(props: Props) {
+    const [csvData, setCsvData] = React.useState<Papa.ParseResult<any> | null | "error">(null);
+    const [columnOffset, setColumnOffset] = React.useState(0);
+    const [page, setPage] = React.useState(1);
 
-    componentDidMount(): void {
-        if (this.props.csvFile !== null) {
-            this.reparseFile(this.props.csvFile);
+    React.useEffect(() => {
+        if (props.csvFile !== null) {
+            reparseFile(props.csvFile);
         }
-    }
+    }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter])
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>): void {
-        if (this.props.options.csvParseHeader != prevProps.options.csvParseHeader
-            || this.props.options.csvNewlineCharacter != prevProps.options.csvNewlineCharacter
-            || this.props.options.csvDelimiter != prevProps.options.csvDelimiter) {
-            
-            if (this.props.csvFile != null) {
-                this.reparseFile(this.props.csvFile);
-            }
-        }
-    }
-
-    public render() {
-        return <>
-            <Card title="Import options">
-                <InputCheckbox label="Parse header"
-                    value={this.props.options.csvParseHeader}
-                    onChange={e => this.props.optionsChanged({ ...this.props.options, csvParseHeader: e.target.checked })} />
-                <InputCheckbox label="Auto-detect delimiter"
-                    value={this.props.options.csvDelimiter == "auto"}
-                    onChange={e => e.target.checked == true
-                        ? this.props.optionsChanged({ ...this.props.options, csvDelimiter: "auto" })
-                        : this.props.optionsChanged({ ...this.props.options, csvDelimiter: "" })}
-                />
-                {this.props.options.csvDelimiter != "auto" &&
-                    <InputText label="Delimiter" value={this.props.options.csvDelimiter} onChange={e => this.props.optionsChanged({ ...this.props.options, csvDelimiter: e.target.value })} />}
-                <InputSelect label="Newline character"
-                    value={this.props.options.csvNewlineCharacter}
-                    onChange={result => this.props.optionsChanged({ ...this.props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
-                    items={[
-                        { key: "auto", value: "Detect automatically" },
-                        { key: "\n", value: "\\n" },
-                        { key: "\r", value: "\\r" },
-                        { key: "\r\n", value: "\\r\\n" }
-                    ]} />
-                <div className={"file " + (this.props.csvFile != null ? " has-name" : "")}>
-                    <label className="file-label">
-                        <input className="file-input" type="file" name="resume" onChange={e => this.fileUploaded(e)} />
-                        <span className="file-cta">
-                            <span className="file-icon">
-                                <FontAwesomeIcon icon={faUpload} />
-                            </span>
-                            <span className="file-label">
-                                Choose a file…
-                            </span>
+    return <>
+        <Card title="Import options">
+            <InputCheckbox label="Parse header"
+                value={props.options.csvParseHeader}
+                onChange={e => props.optionsChanged({ ...props.options, csvParseHeader: e.target.checked })} />
+            <InputCheckbox label="Auto-detect delimiter"
+                value={props.options.csvDelimiter == "auto"}
+                onChange={e => e.target.checked == true
+                    ? props.optionsChanged({ ...props.options, csvDelimiter: "auto" })
+                    : props.optionsChanged({ ...props.options, csvDelimiter: "" })}
+            />
+            {props.options.csvDelimiter != "auto" &&
+                <InputText label="Delimiter" value={props.options.csvDelimiter} onChange={e => props.optionsChanged({ ...props.options, csvDelimiter: e.target.value })} />}
+            <InputSelect label="Newline character"
+                value={props.options.csvNewlineCharacter}
+                onChange={result => props.optionsChanged({ ...props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
+                items={[
+                    { key: "auto", value: "Detect automatically" },
+                    { key: "\n", value: "\\n" },
+                    { key: "\r", value: "\\r" },
+                    { key: "\r\n", value: "\\r\\n" }
+                ]} />
+            <div className={"file " + (props.csvFile != null ? " has-name" : "")}>
+                <label className="file-label">
+                    <input className="file-input" type="file" name="resume" onChange={e => fileUploaded(e)} />
+                    <span className="file-cta">
+                        <span className="file-icon">
+                            <FontAwesomeIcon icon={faUpload} />
                         </span>
-                        {this.props.csvFile != null && <span className="file-name">
-                            {this.props.csvFile.name}
-                        </span>}
-                    </label>
-                </div>
-            </Card>
+                        <span className="file-label">
+                            Choose a file…
+                        </span>
+                    </span>
+                    {props.csvFile != null && <span className="file-name">
+                        {props.csvFile.name}
+                    </span>}
+                </label>
+            </div>
+        </Card>
 
-            {this.props.csvFile != null && <Card title="CSV data">
-                {this.renderCsvTable()}
+        {props.csvFile != null && <Card title="CSV data">
+            {renderCsvTable()}
 
-                <div className="buttons">
-                    <InputButton className="is-primary" onClick={this.props.goToNext}>Continue</InputButton>
-                </div>
-            </Card>}
-        </>;
-    }
+            <div className="buttons">
+                <InputButton className="is-primary" onClick={props.goToNext}>Continue</InputButton>
+            </div>
+        </Card>}
+    </>;
 
-    private renderCsvTable()
+    function renderCsvTable()
     {
-        if (this.state.csvData == null) {
+        if (csvData == null) {
             return <p>Loading…</p>;
         }
-        if (this.state.csvData == "error") {
+        if (csvData == "error") {
             return <p>CSV file could not be parsed</p>;
         }
-        if (this.state.csvData.data.length == 0) {
+        if (csvData.data.length == 0) {
             return <p>No lines could be parsed</p>;
         }
 
-        const columnCount = Object.keys(this.state.csvData.data[0]).length;
-        const columns = Object.keys(this.state.csvData.data[0])
+        const columnCount = Object.keys(csvData.data[0]).length;
+        const columns = Object.keys(csvData.data[0])
             .map((column, i) => { return { columnName: column, index: i } })
-            .slice(this.state.columnOffset * columnPageSize, (this.state.columnOffset + 1) * columnPageSize);
+            .slice(columnOffset * columnPageSize, (columnOffset + 1) * columnPageSize);
         return <>
-            <p>Displaying columns {(this.state.columnOffset) * columnPageSize + 1} to&nbsp;
-                {Math.min((this.state.columnOffset + 1) * columnPageSize, columnCount)} of {columnCount}</p>
+            <p>Displaying columns {(columnOffset) * columnPageSize + 1} to&nbsp;
+                {Math.min((columnOffset + 1) * columnPageSize, columnCount)} of {columnCount}</p>
             <Table
                 headings={<tr>
-                    {this.state.columnOffset !== 0 && <th style={{ width: "1px" }}>
-                        <InputIconButton icon={faChevronLeft} onClick={() => this.setState({columnOffset: Math.max(0, this.state.columnOffset - 1)})} />
+                    {columnOffset !== 0 && <th style={{ width: "1px" }}>
+                        <InputIconButton icon={faChevronLeft} onClick={() => setColumnOffset(Math.max(0, columnOffset - 1))} />
                     </th>}
                     {columns.map((column, i) => <th key={i}>
                         {column.columnName}
                     </th>)}
-                    {(this.state.columnOffset + 1) * columnPageSize < columnCount && <th style={{width: "1px"}}>
-                        <InputIconButton icon={faChevronRight} onClick={() => this.setState({ columnOffset: this.state.columnOffset + 1 })} />
+                    {(columnOffset + 1) * columnPageSize < columnCount && <th style={{width: "1px"}}>
+                        <InputIconButton icon={faChevronRight} onClick={() => setColumnOffset(columnOffset + 1)} />
                     </th>}
                 </tr>}
+                page={page}
+                goToPage={setPage}
                 pageSize={pageSize}
-                items={this.state.csvData.data}
+                items={csvData.data}
                 type="sync"
                 renderType="table"
                 renderItem={(row, i) => <tr key={i}>
-                    {this.state.columnOffset !== 0 && <td></td>}
+                    {columnOffset !== 0 && <td></td>}
                     {columns.map(column =>
                         <td key={column.index}>{(row as any)[column.columnName]}</td>
                     )}
-                    {(this.state.columnOffset + 1) * columnPageSize < columnCount && <td></td>}
+                    {(columnOffset + 1) * columnPageSize < columnCount && <td></td>}
                 </tr>}
             />
         </>;
     }
-
-    private fileUploaded(e: React.ChangeEvent<HTMLInputElement>)
-    {
+    
+    function fileUploaded(e: React.ChangeEvent<HTMLInputElement>) {
         if (!e.target?.files) return;
 
         let file = e.target.files[0];
-        this.setState({
-            rowOffset: 0,
-            columnOffset: 0,
-        });
-        this.props.fileChanged(e.target.files[0]);
-
-        this.reparseFile(file);
+        setColumnOffset(0);
+        setPage(1);
+        props.fileChanged(e.target.files[0]);
     }
 
-    private reparseFile(file: File)
-    {
-        this.setState({
-            csvData: null,
-        });
-        this.props.fileChanged(file);
+    function reparseFile(file: File) {
+        setCsvData(null);
+        props.fileChanged(file);
 
         const reader = new FileReader();
         reader.onload = (event) => {
             if (!event.target?.result) return;
 
             Papa.parse(event.target.result.toString(), {
-                header: this.props.options.csvParseHeader,
-                delimiter: this.props.options.csvDelimiter == "auto" ? undefined : this.props.options.csvDelimiter,
-                newline: this.props.options.csvNewlineCharacter == "auto" ? undefined : this.props.options.csvNewlineCharacter,
+                header: props.options.csvParseHeader,
+                delimiter: props.options.csvDelimiter == "auto" ? undefined : props.options.csvDelimiter,
+                newline: props.options.csvNewlineCharacter == "auto" ? undefined : props.options.csvNewlineCharacter,
                 download: false,
                 complete: (a) => {
-                    this.props.csvParsed(a.data, event.target!.result!.toString().split(a.meta.linebreak));
-                    this.setState({ csvData: a });
+                    props.csvParsed(a.data, event.target!.result!.toString().split(a.meta.linebreak));
+                    setCsvData(a);
                 }
             });
         };
         reader.onerror = (event) => {
             console.log(event);
-            this.setState({ csvData: "error" });
+            setCsvData("error");
         }
         reader.readAsText(file, "UTF-8");
     }

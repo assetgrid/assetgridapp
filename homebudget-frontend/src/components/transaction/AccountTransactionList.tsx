@@ -12,8 +12,10 @@ interface Props {
     draw?: number;
     accountId: number;
     period: Period;
-    decrementPeriod?: () => Promise<void>;
-    incrementPeriod?: () => Promise<void>;
+    goToPage: (page: number | "increment" | "decrement") => void;
+    page: number;
+    pageSize?: number;
+    totalItems?: number;
 }
 
 interface TableLine {
@@ -21,97 +23,21 @@ interface TableLine {
     transaction: Transaction;
 }
 
-const pageSize = 20;
-
 export default function AccountTransactionList(props: Props) {
     const [descending, setDescending] = React.useState(true);
     const [draw, setDraw] = React.useState(0);
-    const [page, setPage] = React.useState(1);
-
-    const [targetPage, setTargetPage] = React.useState<number | "last" | null>(null);
-
-    const firstEffectTrigger = React.useRef(true);
-    React.useEffect(() => {
-        if (firstEffectTrigger.current) {
-            // This effect will be triggered once and then every time the period changes
-            // We want it to run on period changes only and thus discard the first trigger
-            firstEffectTrigger.current = false;
-            return;
-        }
-
-        if (targetPage === "last") {
-            countTransactions().then(count => {
-                const lastPage = Math.max(1, Math.ceil(count / pageSize));
-                setPage(lastPage);
-                setDraw(draw => draw + 1);
-                setTargetPage(null);
-            });
-            return;
-        } else if (targetPage !== null) {
-            setPage(targetPage);
-            setTargetPage(null);
-        }
-        setDraw(draw => draw + 1);
-    }, [props.period])
 
     return <Table<TableLine>
         renderType="custom"
-        decrement={() => decrementPeriod()}
-        increment={() => incrementPeriod()}
-        pageSize={pageSize}
+        pageSize={props.pageSize ?? 20}
         draw={(props.draw ?? 0) + draw}
         type="async-increment"
         fetchItems={fetchItems}
-        page={page}
-        goToPage={page => goToPage(page)}
+        page={props.page}
+        goToPage={props.goToPage}
         reversePagination={true}
         render={renderTable}
     />;
-    
-    function goToPage(page: number) {
-        setPage(page);
-        setDraw(draw => draw + 1);
-    }
-
-    function decrementPeriod() {
-        if (!props.decrementPeriod) return;
-        setTargetPage(1);
-        props.decrementPeriod();
-    }
-
-    async function incrementPeriod() {
-        if (!props.incrementPeriod) return;
-        setTargetPage("last");
-        props.incrementPeriod();
-    }
-
-    function countTransactions(): Promise<number> {
-        let [start, end] = PeriodFunctions.getRange(props.period);
-        let query: SearchGroup = {
-            type: SearchGroupType.And,
-            children: [ {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "DateTime",
-                    value: start.toISO(),
-                    operator: SearchOperator.GreaterThanOrEqual,
-                    not: false
-                }
-            }, {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "DateTime",
-                    value: end.toISO(),
-                    operator: SearchOperator.GreaterThan,
-                    not: true
-                }
-            }]
-        };
-        return new Promise(resolve => {
-            Api.Account.countTransactions(props.accountId, query)
-                .then(result => resolve(result));
-        });
-    }
 
     function fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
         let [start, end] = PeriodFunctions.getRange(props.period);

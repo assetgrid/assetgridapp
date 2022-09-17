@@ -20,6 +20,7 @@ interface Props {
 
 export default function CsvMappingTransactionTable(props: Props): React.ReactElement {
     const { preferences } = React.useContext(preferencesContext);
+    const [page, setPage] = React.useState(1);
 
     if (props.transactions === null) {
         return <p>Loading</p>;
@@ -75,6 +76,8 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         </tr>}
         draw={props.tableDraw}
         type="sync"
+        page={page}
+        goToPage={setPage}
         renderType="table"
         renderItem={transaction =>
             <tr key={transaction.rowNumber}>

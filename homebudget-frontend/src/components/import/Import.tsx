@@ -38,6 +38,7 @@ export function Import (props: Props) {
     const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([])
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
+    const [page, setPage] = React.useState(1);
 
     const { preferences } = React.useContext(preferencesContext);
 
@@ -81,6 +82,8 @@ export function Import (props: Props) {
                 <td>{transaction.sourceId && <AccountLink account={props.accountsBy["id"][transaction.sourceId]} />}</td>
                 <td>{transaction.destinationId && <AccountLink account={props.accountsBy["id"][transaction.destinationId]} />}</td>
             </tr>}
+            page={page}
+            goToPage={setPage}
             type="sync"
             renderType="table"
             headings={<tr>
