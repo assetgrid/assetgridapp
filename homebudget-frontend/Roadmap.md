@@ -45,3 +45,4 @@ Transaction and account metadata
 [ ] Use a text field that allows null for quick search
 [ ] Reduce code reuse in the transaction controller
 [ ] Add create transaction page
+[ ] Move account deletion modal to it's own page

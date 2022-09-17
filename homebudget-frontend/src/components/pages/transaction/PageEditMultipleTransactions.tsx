@@ -3,7 +3,7 @@ import { DateTime } from "luxon";
 import * as React from "react";
 import { useNavigate } from "react-router";
 import { Api } from "../../../lib/ApiClient";
-import { emptyQuery } from "../../../lib/Utils";
+import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup } from "../../../models/search";
 import { UpdateTransaction } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
@@ -38,18 +38,22 @@ export default function PageEditMultipleTransactions() {
         ? window.history.state.usr.query
         : emptyQuery);
     
+    // The table query is modified separately and debounced from the main query to prevent excessive redraws when modifying the query
+    const [tableQuery, setTableQuery] = React.useState<SearchGroup>(query);
+    
     const navigate = useNavigate();
     const showBack = window.history.state.usr.showBack === true;
 
-    // Keep state updated
+    // Keep history state updated
+    const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
+    const setTableQueryDebounced = React.useCallback(debounce((query: SearchGroup) => { setTableQuery(query); setDraw(draw => draw + 1); }, 300), []);
+    const first = React.useRef(true);
     React.useEffect(() => {
-        window.history.replaceState({
-            ...window.history.state,
-            usr: {
-                query: query,
-                showBack: showBack
-            }
-        }, "");
+        updateHistoryDebounced(query);
+        if (!first.current) {
+            setTableQueryDebounced(query);
+        }
+        first.current = false;
     }, [query]);
     
     React.useEffect(() => {
@@ -88,7 +92,7 @@ export default function PageEditMultipleTransactions() {
         </section>
         <div className="p-3">
             <Card title="Query">
-                <TransactionFilterEditor query={query} setQuery={query => { setQuery(query); setDraw(draw => draw + 1)} } />
+                <TransactionFilterEditor query={query} setQuery={query => { setQuery(query) } } />
             </Card>
             <Card title="Actions">
                 {renderAction(action, setAction, model, setModel, isUpdating)}
@@ -100,11 +104,21 @@ export default function PageEditMultipleTransactions() {
             </Card>
             <Card title="Transactions">
                 <p>The following transactions will be modified:</p>
-                <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={query} />
+                <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={tableQuery} />
             </Card>
         </div>
     </>;
 
+    function updateHistory(query: SearchGroup) {
+        window.history.replaceState({
+            ...window.history.state,
+            usr: {
+                query: query,
+                showBack: showBack
+            }
+        }, "");
+    }
+    
     async function update() {
         setIsUpdating(true);
         if (model === null) {

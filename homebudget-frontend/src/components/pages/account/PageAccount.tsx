@@ -8,7 +8,7 @@ import axios from "axios";
 import AccountTransactionList from "../../transaction/AccountTransactionList";
 import { Preferences } from "../../../models/preferences";
 import { Api } from "../../../lib/ApiClient";
-import { formatNumber, formatNumberWithPrefs } from "../../../lib/Utils";
+import { debounce, formatNumber, formatNumberWithPrefs } from "../../../lib/Utils";
 import AccountBalanceChart from "../../account/AccountBalanceChart";
 import { useNavigate, useParams } from "react-router";
 import PeriodSelector from "../../common/PeriodSelector";
@@ -53,12 +53,9 @@ export default function () {
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
 
     // Keep state updated
+    const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
     React.useEffect(() => {
-        window.history.replaceState({
-            ...window.history.state,
-            period: PeriodFunctions.serialize(period),
-            page: page
-        }, "");
+        updateHistoryDebounced(period, page);
     }, [period, page]);
 
     // Update account when id is changed
@@ -143,6 +140,14 @@ export default function () {
         </div>
     </>;
 
+    function updateHistory(period: Period, page: number) {
+        window.history.replaceState({
+            ...window.history.state,
+            period: PeriodFunctions.serialize(period),
+            page: page
+        }, "");
+    }
+    
     async function goToPage(page: number | "increment" | "decrement") {
         if (page === "increment") {
             const nextPeriod = PeriodFunctions.increment(period);

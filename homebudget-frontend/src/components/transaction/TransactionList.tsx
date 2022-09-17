@@ -10,6 +10,7 @@ import InputButton from "../input/InputButton";
 import InputCheckbox from "../input/InputCheckbox";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
+import { render } from "react-dom";
 
 interface Props {
     draw?: number;
@@ -24,7 +25,16 @@ interface Props {
     selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void]
 }
 
-export default function TransactionList(props: Props) {
+export default React.memo(TransactionList, (a, b) =>
+    a.draw === b.draw &&
+    a.query === b.query &&
+    a.allowEditing === b.allowEditing &&
+    a.small === b.small &&
+    a.pageSize === b.pageSize &&
+    a.selectedTransactions?.[0] === b.selectedTransactions?.[0] &&
+    a.orderBy?.[0] === b.orderBy?.[0] &&
+    a.page?.[0] === b.page?.[0]);
+function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
     const [orderBy, setOrderBy] = props.orderBy ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
     const [selectedTransactions, setSelectedTransactions] = props.selectedTransactions ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
@@ -63,7 +73,7 @@ export default function TransactionList(props: Props) {
                 if (!firstRender.current) {
                     setSelectedTransactions({});
                 }
-                firstRender.current = true;
+                firstRender.current = false;
 
                 resolve({
                     items: transactions,

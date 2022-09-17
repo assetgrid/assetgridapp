@@ -10,8 +10,6 @@ import TransactionList from "../../transaction/TransactionList";
 
 export default function PageTransactions() {
     const [draw, setDraw] = React.useState(0);
-    const incrementDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
-
     const history = window.history.state.usr;
     const [query, setQuery] = React.useState<SearchGroup>(history?.query ? history.query : emptyQuery);
     const [searchString, setSearchString] = React.useState(typeof(history?.searchString) === "string" ? history.searchString : "");
@@ -29,20 +27,22 @@ export default function PageTransactions() {
         isFirst.current = false;
     }, [searchString])
 
-    // Keep state updated
+    // Keep history state updated
+    const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
     React.useEffect(() => {
-        window.history.replaceState({
-            ...window.history.state,
-            usr: {
-                query,
-                searchMode,
-                page,
-                orderBy,
-                searchString,
-                selectedTransactions
-            }
-        }, "");
+        updateHistoryDebounced({ query, searchMode, page, orderBy, searchString, selectedTransactions })
     }, [query, searchMode, page, orderBy, searchString, selectedTransactions]);
+
+    // The table query is modified separately and debounced from the main query to prevent excessive redraws when modifying the query
+    const [tableQuery, setTableQuery] = React.useState<SearchGroup>(query);
+    const setTableQueryDebounced = React.useCallback(debounce((query: SearchGroup) => { setTableQuery(query); setDraw(draw => draw + 1) }, 300), []);
+    const first = React.useRef(true);
+    React.useEffect(() => {
+        if (!first.current) {
+            setTableQueryDebounced(query);
+        }
+        first.current = false;
+    }, [query]);
 
     return <>
         <section className="hero has-background-primary">
@@ -67,13 +67,13 @@ export default function PageTransactions() {
                         <a onClick={() => setSearchMode("advanced")}>Advanced search</a>
                     </>
                     : <>
-                        <TransactionFilterEditor query={query} setQuery={setQueryAndRedrawTable} />
+                        <TransactionFilterEditor query={query} setQuery={setQuery} />
                         <a onClick={() => setSearchMode("simple")}>Simple search</a>
                     </>}
             </Card>
             <Card title="Transactions">
                 <TransactionList
-                    query={query}
+                    query={tableQuery}
                     draw={draw}
                     allowLinks={true}
                     allowEditing={true}
@@ -85,18 +85,28 @@ export default function PageTransactions() {
         </div>
     </>;
 
-    function setQueryAndRedrawTable(query: SearchGroup) {
-        setQuery(query);
-        incrementDrawDebounced();
+    function updateHistory(state: any) {
+        const { query, searchMode, page, orderBy, searchString, selectedTransactions } = state;
+        window.history.replaceState({
+            ...window.history.state,
+            usr: {
+                query,
+                searchMode,
+                page,
+                orderBy,
+                searchString,
+                selectedTransactions
+            }
+        }, "");
     }
 
     function updateSearchQueryFromText() {
         if (searchString === "") {
-            setQueryAndRedrawTable(emptyQuery);
+            setQuery(emptyQuery);
             return;
         }
 
-        setQueryAndRedrawTable({
+        setQuery({
             type: SearchGroupType.Or,
             children: [{
                 type: SearchGroupType.Query,
