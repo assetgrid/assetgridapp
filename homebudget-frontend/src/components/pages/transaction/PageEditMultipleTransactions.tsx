@@ -1,25 +1,22 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Api } from "../../lib/ApiClient";
-import { SearchGroup, SearchQuery } from "../../models/search";
-import { Transaction, UpdateTransaction } from "../../models/transaction";
-import Modal from "../common/Modal";
-import InputAccount from "../account/input/InputAccount";
-import InputButton from "../input/InputButton";
-import InputCategory from "../input/InputCategory";
-import InputDate from "../input/InputDate";
-import InputNumber from "../input/InputNumber";
-import InputSelect from "../input/InputSelect";
-import InputText from "../input/InputText";
-import TransactionList from "./TransactionList";
-
-interface Props {
-    close: () => void;
-    closeOnChange?: boolean;
-    updated: () => void;
-    query: SearchGroup;
-}
+import { useNavigate } from "react-router";
+import { Api } from "../../../lib/ApiClient";
+import { emptyQuery } from "../../../lib/Utils";
+import { SearchGroup } from "../../../models/search";
+import { UpdateTransaction } from "../../../models/transaction";
+import InputAccount from "../../account/input/InputAccount";
+import { Card } from "../../common/Card";
+import Modal from "../../common/Modal";
+import InputButton from "../../input/InputButton";
+import InputCategory from "../../input/InputCategory";
+import InputDate from "../../input/InputDate";
+import InputNumber from "../../input/InputNumber";
+import InputSelect from "../../input/InputSelect";
+import InputText from "../../input/InputText";
+import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
+import TransactionList from "../../transaction/TransactionList";
 
 const actions = [
     { key: "set-datetime", value: "Set timestamp" },
@@ -32,12 +29,29 @@ const actions = [
 ] as const;
 type Action = typeof actions[number]['key'];
 
-export default function TransactionsActionModal(props: Props) {
+export default function PageEditMultipleTransactions() {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [action, setAction] = React.useState<Action | null>(null);
     const [draw, setDraw] = React.useState(0);
     const [model, setModel] = React.useState<UpdateTransaction | null>(null);
+    const [query, setQuery] = React.useState<SearchGroup>(window.history.state.usr?.query
+        ? window.history.state.usr.query
+        : emptyQuery);
+    
+    const navigate = useNavigate();
+    const showBack = window.history.state.usr.showBack === true;
 
+    // Keep state updated
+    React.useEffect(() => {
+        window.history.replaceState({
+            ...window.history.state,
+            usr: {
+                query: query,
+                showBack: showBack
+            }
+        }, "");
+    }, [query]);
+    
     React.useEffect(() => {
         switch (action) {
             case "set-amount":
@@ -64,22 +78,32 @@ export default function TransactionsActionModal(props: Props) {
         }
     }, [action]);
 
-    return <Modal
-        active={true}
-        title={"Modify multiple transactions"}
-        close={() => props.close()}
-        footer={<>
-            <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || model === null}>Apply changes</InputButton>
-            <InputButton onClick={() => props.close()}>Cancel</InputButton>
-        </>}>
-        
-        {renderAction(action, setAction, model, setModel, isUpdating)}
+        return<>
+        <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
+            <div className="hero-body">
+                <p className="title has-text-white">
+                    Modify multiple transactions
+                </p>
+            </div>
+        </section>
+        <div className="p-3">
+            <Card title="Query">
+                <TransactionFilterEditor query={query} setQuery={query => { setQuery(query); setDraw(draw => draw + 1)} } />
+            </Card>
+            <Card title="Actions">
+                {renderAction(action, setAction, model, setModel, isUpdating)}
 
-        <hr className="mb-3 mt-3"/>
-
-        <p>The following transactions will be modified:</p>
-        <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={props.query} small={true} pageSize={5} />
-    </Modal>;
+                <div className="buttons">
+                    <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || model === null}>Apply changes</InputButton>
+                    {showBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
+                </div>
+            </Card>
+            <Card title="Transactions">
+                <p>The following transactions will be modified:</p>
+                <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={query} />
+            </Card>
+        </div>
+    </>;
 
     async function update() {
         setIsUpdating(true);
@@ -87,14 +111,9 @@ export default function TransactionsActionModal(props: Props) {
             return;
         }
 
-        await Api.Transaction.updateMultiple(props.query, model);
+        await Api.Transaction.updateMultiple(query, model);
         setIsUpdating(false);
-        props.updated && props.updated();
-        if (props.closeOnChange) {
-            props.close();
-        } else {
-            setDraw(draw => draw + 1);
-        }
+        setDraw(draw => draw + 1);
     }
 }
 

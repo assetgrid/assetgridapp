@@ -8,7 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZA, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import InputButton from "../input/InputButton";
 import InputCheckbox from "../input/InputCheckbox";
-import TransactionsActionModal from "./TransactionsActionModal";
+import { useNavigate } from "react-router";
+import { routes } from "../../lib/routes";
 
 interface Props {
     draw?: number;
@@ -18,23 +19,20 @@ interface Props {
     small?: boolean;
     pageSize?: number;
 
-    page?: number;
-    setPage?: (page: number) => void;
-    orderBy?: { column: string, descending: boolean };
-    setOrderBy?: (value: { column: string, descending: boolean }) => void;
+    page?: [number, (page: number) => void];
+    orderBy?: [{ column: string, descending: boolean }, (value: { column: string, descending: boolean }) => void];
+    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void]
 }
 
 export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
-    const [orderBy, setOrderBy] = props.orderBy && props.setOrderBy
-        ? [props.orderBy, props.setOrderBy]
-        : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
-    const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>({});
+    const [orderBy, setOrderBy] = props.orderBy ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
+    const [selectedTransactions, setSelectedTransactions] = props.selectedTransactions ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
-    const [modal, setModal] = React.useState<React.ReactElement | null>(null);
-    const [page, setPage] = props.page && props.setPage
-        ? [props.page, props.setPage]
-        : React.useState(1);
+    const [page, setPage] = props.page ? props.page : React.useState(1);
+    const navigate = useNavigate();
+
+    const firstRender = React.useRef(true);
 
     return <>
         <Table<Transaction>
@@ -48,7 +46,6 @@ export default function TransactionList(props: Props) {
             render={renderTable}
             afterDraw={transactions => setShownTransactions(transactions)}
         />
-        {modal}
     </>;
     
     function fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
@@ -61,7 +58,13 @@ export default function TransactionList(props: Props) {
                 orderByColumn: orderBy.column
             } as SearchRequest).then(result => {
                 const transactions: Transaction[] = result.data;
-                setSelectedTransactions({});
+
+                // If it's not the first render, reset selected transactions
+                if (!firstRender.current) {
+                    setSelectedTransactions({});
+                }
+                firstRender.current = true;
+
                 resolve({
                     items: transactions,
                     draw: draw,
@@ -141,8 +144,12 @@ export default function TransactionList(props: Props) {
                 }
             };
         
-        setModal(<TransactionsActionModal close={() => setModal(null)}
-            updated={() => setDraw(draw => draw + 1)} query={query} />);
+        navigate(routes.transactionEditMultiple(), {
+            state: {
+                query: query,
+                showBack: true,
+            }
+        });
     }
 
     function deselectTransaction(transaction: Transaction) {
@@ -188,7 +195,9 @@ export default function TransactionList(props: Props) {
         } else {
             setOrderBy({ column, descending: false })
         }
-        setDraw(draw => draw + 1);
+        if (props.orderBy === undefined) {
+            setDraw(draw => draw + 1);
+        }
     }
 }
 

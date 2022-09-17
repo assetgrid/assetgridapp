@@ -13,6 +13,7 @@ import PageAccountOverview from "./pages/account/PageAccountOverview";
 import { Api } from "../lib/ApiClient";
 import Sidebar from "./common/Sidebar";
 import PageTransaction from "./pages/transaction/PageTransaction";
+import PageEditMultipleTransactions from "./pages/transaction/PageEditMultipleTransactions";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -37,8 +38,9 @@ export default function FairFitPortalApp () {
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />
                             <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>
-                            <Route path={routes.transactions()} element={<PageTransactions />}/>
                             <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
+                            <Route path={routes.transactions()} element={<PageTransactions />}/>
+                            <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
                             <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />
                             <Route path={routes.accounts()} element={<PageAccountOverview />} />
                             <Route path={routes.account(":id")} element={<PageAccount />} />

@@ -9,11 +9,6 @@ namespace homebudget_server.Data
     {
         public static IQueryable<Account> ApplySearch(this IQueryable<Account> items, ViewSearch query, bool applyOrder)
         {
-            if (query.Query == null)
-            {
-                return items;
-            }
-
             var columns = new[] {
                 ("Id", typeof(int), false),
                 ("Name", typeof(string), false),
@@ -21,10 +16,14 @@ namespace homebudget_server.Data
                 ("AccountNumber", typeof(string), false)
             };
             var parameter = Expression.Parameter(typeof(Account), "account");
-            var expression = SearchGroupToExpression(query.Query, columns, parameter);
-            if (expression != null)
+
+            if (query.Query != null)
             {
-                return items.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
+                var expression = SearchGroupToExpression(query.Query, columns, parameter);
+                if (expression != null)
+                {
+                    return items.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
+                }
             }
 
             if (applyOrder && query.OrderByColumn != null)
@@ -44,11 +43,6 @@ namespace homebudget_server.Data
 
         public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder)
         {
-            if (query.Query == null)
-            {
-                return items;
-            }
-
             var columns = new[] {
                 ("Id", typeof(int), false),
                 ("SourceAccountId", typeof(int), true),
@@ -60,10 +54,14 @@ namespace homebudget_server.Data
                 ("Total", typeof(long), true),
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
-            var expression = SearchGroupToExpression(query.Query, columns, parameter);
-            if (expression != null)
+
+            if (query.Query != null)
             {
-                items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
+                var expression = SearchGroupToExpression(query.Query, columns, parameter);
+                if (expression != null)
+                {
+                    items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
+                }
             }
 
             if (applyOrder && query.OrderByColumn != null)

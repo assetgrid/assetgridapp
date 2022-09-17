@@ -3,6 +3,7 @@ import { DateTime } from "luxon";
 import React = require("react");
 import { preferencesContext } from "../components/App";
 import { Preferences } from "../models/preferences";
+import { SearchGroup, SearchGroupType } from "../models/search";
 
 const Utils = {
     arrayToObject,
@@ -176,4 +177,12 @@ export function debounce(this: any, func: Function, wait: number) {
             timeoutId = setTimeout(later, wait);
         }
     };
+};
+
+/**
+ * A query that allows everything
+ */
+export const emptyQuery: SearchGroup = {
+    type: SearchGroupType.And,
+    children: [],
 };

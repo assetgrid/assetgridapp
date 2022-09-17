@@ -1,41 +1,48 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../../lib/routes";
-import { debounce } from "../../../lib/Utils";
+import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import { Card } from "../../common/Card";
 import InputText from "../../input/InputText";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
 import TransactionList from "../../transaction/TransactionList";
 
-const defaultQuery: SearchGroup = {
-    type: SearchGroupType.And,
-    children: [],
-};
-
 export default function PageTransactions() {
-    const [query, setQuery] = React.useState<SearchGroup>(window.history.state.query ? window.history.state : defaultQuery);
     const [draw, setDraw] = React.useState(0);
     const incrementDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
-    const [searchString, setSearchString] = React.useState(typeof (window.history.state.searchString) === "string" ? window.history.state.searchString : "");
-    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (window.history.state.searchMode) === "string" ? window.history.state.searchMode : "simple");
-    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(window.history.state.orderBy ? window.history.state.orderBy : { column: "DateTime", descending: true });
-    const [page, setPage] = React.useState(typeof(window.history.state.page) === "number" ? window.history.state.page : 1);
 
-    // Match query and search string
-    React.useEffect(updateSearchQueryFromText, [searchString])
+    const history = window.history.state.usr;
+    const [query, setQuery] = React.useState<SearchGroup>(history?.query ? history.query : emptyQuery);
+    const [searchString, setSearchString] = React.useState(typeof(history?.searchString) === "string" ? history.searchString : "");
+    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
+    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(history?.orderBy ? history.orderBy : { column: "DateTime", descending: true });
+    const [page, setPage] = React.useState(typeof(history?.page) === "number" ? history.page : 1);
+    const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(history?.selectedTransactions ? history.selectedTransactions : {});
+
+    // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
+    const isFirst = React.useRef(true);
+    React.useEffect(() => {
+        if (! isFirst.current) {
+            updateSearchQueryFromText();
+        }
+        isFirst.current = false;
+    }, [searchString])
 
     // Keep state updated
     React.useEffect(() => {
         window.history.replaceState({
             ...window.history.state,
-            query: query,
-            searchMode: searchMode,
-            page: page,
-            orderBy: orderBy,
-            searchString: searchString,
+            usr: {
+                query,
+                searchMode,
+                page,
+                orderBy,
+                searchString,
+                selectedTransactions
+            }
         }, "");
-    }, [query, searchMode, page, orderBy, searchString]);
+    }, [query, searchMode, page, orderBy, searchString, selectedTransactions]);
 
     return <>
         <section className="hero has-background-primary">
@@ -70,10 +77,9 @@ export default function PageTransactions() {
                     draw={draw}
                     allowLinks={true}
                     allowEditing={true}
-                    page={page}
-                    setPage={setPage}
-                    orderBy={orderBy}
-                    setOrderBy={setOrderBy}
+                    page={[page, setPage]}
+                    orderBy={[orderBy, orderBy => { setOrderBy(orderBy); setDraw(draw => draw + 1) }]}
+                    selectedTransactions={[selectedTransactions, setSelectedTransactions]}
                 />
             </Card>
         </div>
@@ -85,10 +91,8 @@ export default function PageTransactions() {
     }
 
     function updateSearchQueryFromText() {
-        if (searchString.trim() === "") {
-            if (query !== defaultQuery) {
-                setQueryAndRedrawTable(defaultQuery);
-            }
+        if (searchString === "") {
+            setQueryAndRedrawTable(emptyQuery);
             return;
         }
 
