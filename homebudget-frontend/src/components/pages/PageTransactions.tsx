@@ -15,13 +15,28 @@ const defaultQuery: SearchGroup = {
 };
 
 export default function PageTransactions() {
-    const [query, setQuery] = React.useState<SearchGroup>(defaultQuery);
+    const [query, setQuery] = React.useState<SearchGroup>(window.history.state.query ? window.history.state : defaultQuery);
     const [draw, setDraw] = React.useState(0);
     const incrementDrawDebounced = React.useCallback(debounce(() => setDraw(draw => draw + 1), 500), []);
-    const [searchString, setSearchString] = React.useState("");
-    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">("simple");
+    const [searchString, setSearchString] = React.useState(typeof (window.history.state.searchString) === "string" ? window.history.state.searchString : "");
+    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (window.history.state.searchMode) === "string" ? window.history.state.searchMode : "simple");
+    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(window.history.state.orderBy ? window.history.state.orderBy : { column: "DateTime", descending: true });
+    const [page, setPage] = React.useState(typeof(window.history.state.page) === "number" ? window.history.state.page : 1);
 
+    // Match query and search string
     React.useEffect(updateSearchQueryFromText, [searchString])
+
+    // Keep state updated
+    React.useEffect(() => {
+        window.history.replaceState({
+            ...window.history.state,
+            query: query,
+            searchMode: searchMode,
+            page: page,
+            orderBy: orderBy,
+            searchString: searchString,
+        }, "");
+    }, [query, searchMode, page, orderBy, searchString]);
 
     return <>
         <section className="hero has-background-primary">
@@ -56,6 +71,10 @@ export default function PageTransactions() {
                     draw={draw}
                     allowLinks={true}
                     allowEditing={true}
+                    page={page}
+                    setPage={setPage}
+                    orderBy={orderBy}
+                    setOrderBy={setOrderBy}
                 />
             </Card>
         </div>

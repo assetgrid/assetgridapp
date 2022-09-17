@@ -17,15 +17,24 @@ interface Props {
     allowLinks?: boolean;
     small?: boolean;
     pageSize?: number;
+
+    page?: number;
+    setPage?: (page: number) => void;
+    orderBy?: { column: string, descending: boolean };
+    setOrderBy?: (value: { column: string, descending: boolean }) => void;
 }
 
 export default function TransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
-    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
+    const [orderBy, setOrderBy] = props.orderBy && props.setOrderBy
+        ? [props.orderBy, props.setOrderBy]
+        : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
     const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>({});
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
-    const [page, setPage] = React.useState(1);
+    const [page, setPage] = props.page && props.setPage
+        ? [props.page, props.setPage]
+        : React.useState(1);
 
     return <>
         <Table<Transaction>
@@ -175,7 +184,7 @@ export default function TransactionList(props: Props) {
 
     function switchOrderBy(column: string) {
         if (orderBy.column === column) {
-            setOrderBy(orderBy => ({ column, descending: !orderBy.descending }))
+            setOrderBy({ column, descending: !orderBy.descending })
         } else {
             setOrderBy({ column, descending: false })
         }

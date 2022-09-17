@@ -31,12 +31,7 @@ export default function () {
     const idString = useParams().id;
     const id = Number(idString);
 
-    const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
-    const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
-    const { preferences, updatePreferences } = React.useContext(preferencesContext);
-    const [page, setPage] = React.useState(1);
-    const [draw, setDraw] = React.useState(0);
-
+    // Get state from history
     let defaultPeriod: Period = {
         type: "month",
         start: DateTime.now().startOf("month"),
@@ -49,12 +44,22 @@ export default function () {
             }
         } catch { }
     }
+
+    const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
+    const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
+    const { preferences, updatePreferences } = React.useContext(preferencesContext);
+    const [page, setPage] = React.useState(typeof(window.history.state.page) === "number" ? window.history.state.page : 1);
+    const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
 
-    // Update history when period is changed
+    // Keep state updated
     React.useEffect(() => {
-        window.history.replaceState({ ...window.history.state, period: PeriodFunctions.serialize(period) }, "");
-    }, [period]);
+        window.history.replaceState({
+            ...window.history.state,
+            period: PeriodFunctions.serialize(period),
+            page: page
+        }, "");
+    }, [period, page]);
 
     // Update account when id is changed
     React.useEffect(() => {

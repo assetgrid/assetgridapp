@@ -29,7 +29,7 @@ Transaction and account metadata
 [x] Use portals for modals
 [x] Use strict typescript
 [ ] Allow the use of back to the import page
-[ ] Preserve state on the transactions page
+[x] Preserve state on the transactions page
 [ ] Date time input rather than just date
 [x] Make the CreateMany function fix transactions before returning them
 [ ] Input for amounts should show the correct decimals
