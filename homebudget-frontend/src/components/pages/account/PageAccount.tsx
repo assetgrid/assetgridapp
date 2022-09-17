@@ -17,7 +17,6 @@ import { Period, PeriodFunctions } from "../../../models/period";
 import AccountCategoryChart from "../../account/AccountCategoryChart";
 import InputIconButton from "../../input/InputIconButton";
 import YesNoDisplay from "../../input/YesNoDisplay";
-import DeleteAccountModal from "../../account/input/DeleteAccountModal";
 import { routes } from "../../../lib/routes";
 import { preferencesContext } from "../../App";
 import InputButton from "../../input/InputButton";
@@ -238,7 +237,6 @@ export function AccountDetailsCard(props: {
     updateAccountFavoriteInPreferences: (account: Account, favorite: boolean) => void
 }): React.ReactElement {
     
-    const [isConfirmingDelete, setIsConfirmingDelete] = React.useState(false);
     const [editingModel, setEditingModel] = React.useState<Account | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const { preferences } = React.useContext(preferencesContext);
@@ -255,7 +253,11 @@ export function AccountDetailsCard(props: {
                     {props.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
                 </span>}
             <InputIconButton icon={solid.faPen} onClick={() => setEditingModel(props.account)} />
-            <InputIconButton icon={regular.faTrashCan} onClick={() => setIsConfirmingDelete(true)} />
+            <InputIconButton icon={regular.faTrashCan} onClick={() => {
+                // Balance breaks navigation. Luckily we don't need it on the delete page
+                const { balance, ...accountWithoutBalance } = props.account;
+                navigate(routes.accountDelete(props.account.id.toString()), { state: { account: accountWithoutBalance, allowBack: true } })
+            }} />
         </>}>
             <table className="table">
                 <tbody>
@@ -289,17 +291,6 @@ export function AccountDetailsCard(props: {
                     </tr>
                 </tbody>
             </table>
-
-            {isConfirmingDelete && <DeleteAccountModal
-                close={() => setIsConfirmingDelete(false)}
-                deleted={() => {
-                    if (props.account.favorite) {
-                        props.updateAccountFavoriteInPreferences(props.account, false);
-                    }
-                    navigate(routes.accounts());
-                }}
-                account={props.account}
-                preferences={preferences} />}
         </Card>
     } else {
         return <Card title="Account details">

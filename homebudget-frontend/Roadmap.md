@@ -46,3 +46,4 @@ Transaction and account metadata
 [ ] Reduce code reuse in the transaction controller
 [ ] Add create transaction page
 [ ] Move account deletion modal to it's own page
+[ ] Delete account page should detect invalid accounts

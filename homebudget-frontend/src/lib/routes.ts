@@ -7,5 +7,6 @@ export const routes = {
     createTransaction: () => "/transactions/create",
     account: (id: string) => "/account/" + id,
     accounts: () => "/accounts/",
+    accountDelete: (id: string) => "/account/" + id + "/delete",
     preferences: () => "/preferences",
 };
