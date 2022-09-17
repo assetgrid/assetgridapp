@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import { Account } from "../../models/account";
-import { TransactionLine } from "../../models/transaction";
+import { Account } from "../../../models/account";
+import { TransactionLine } from "../../../models/transaction";
 
 export type AccountIdentifier = "id" | "name" | "accountNumber";
 

@@ -1,33 +1,20 @@
 import axios from "axios";
 import * as React from "react";
-import { Api } from "../../lib/ApiClient";
-import { Account } from "../../models/account";
-import { Preferences } from "../../models/preferences";
-import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
-import InputButton from "../input/InputButton";
-import { Import } from "../import/Import";
-import ImportCsv, { CsvImportOptions } from "../import/ImportCsv";
-import { AccountReference, capitalize, CsvCreateTransaction } from "../import/ImportModels";
-import MapCsvFields, { MappingOptions } from "../import/MapCsvFields/MapCsvFields";
-import { ParseOptions } from "../import/ParseOptions";
-
-interface State {
-    data: any[] | null;
-    lines: string[];
-    transactions: CsvCreateTransaction[] | null;
-    csvFile: File | null;
-    csvOptions: CsvImportOptions;
-    mappingOptions: MappingOptions;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
-    duplicateIdentifiers: Set<string> | "fetching";
-
-    currentTab: "parse-csv" | "map-columns" | "process";
-}
+import { Api } from "../../../lib/ApiClient";
+import { Account } from "../../../models/account";
+import { Preferences } from "../../../models/preferences";
+import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../../models/search";
+import InputButton from "../../input/InputButton";
+import { Import } from "../../transaction/import/Import";
+import ImportCsv, { CsvImportOptions } from "../../transaction/import/ImportCsv";
+import { AccountReference, capitalize, CsvCreateTransaction } from "../../transaction/import/ImportModels";
+import MapCsvFields, { MappingOptions } from "../../transaction/import/MapCsvFields/MapCsvFields";
+import { ParseOptions } from "../../transaction/import/ParseOptions";
 
 /*
  * React object class
  */
-export default function PageImportCsv () {
+export default function PageImportTransactionsCsv () {
     const defaultParseOptions = {
         trimWhitespace: true,
         regex: null,

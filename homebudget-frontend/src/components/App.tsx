@@ -1,18 +1,18 @@
 import * as React from "react";
 import { Route, Routes  } from "react-router";
 import { routes } from "../lib/routes";
-import PageTransactions from "./pages/PageTransactions";
-import PageCreateTransaction from "./pages/PageCreateTransaction";
+import PageTransactions from "./pages/transaction/PageTransactions";
+import PageCreateTransaction from "./pages/transaction/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
-import PageImportCsv from "./pages/PageImportCsv";
-import PageAccount from "./pages/PageAccount";
+import PageImportTransactionsCsv from "./pages/transaction/PageImportTransactionsCsv";
+import PageAccount from "./pages/account/PageAccount";
 import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
-import PageAccountOverview from "./pages/PageAccountOverview";
+import PageAccountOverview from "./pages/account/PageAccountOverview";
 import { Api } from "../lib/ApiClient";
 import Sidebar from "./common/Sidebar";
-import PageTransaction from "./pages/PageTransaction";
+import PageTransaction from "./pages/transaction/PageTransaction";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -36,7 +36,7 @@ export default function FairFitPortalApp () {
                     <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />
-                            <Route path={routes.importCsv()} element={<PageImportCsv />}/>
+                            <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>
                             <Route path={routes.transactions()} element={<PageTransactions />}/>
                             <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
                             <Route path={routes.createTransaction()} element={<PageCreateTransaction />} />

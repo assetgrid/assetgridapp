@@ -1,29 +1,29 @@
 import * as React from "react";
-import { Card } from "../common/Card";
+import { Card } from "../../common/Card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
-import { Account } from "../../models/account";
+import { Account } from "../../../models/account";
 import axios from "axios";
-import AccountTransactionList from "../transaction/AccountTransactionList";
-import { Preferences } from "../../models/preferences";
-import { Api } from "../../lib/ApiClient";
-import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
-import AccountBalanceChart from "../account/AccountBalanceChart";
+import AccountTransactionList from "../../transaction/AccountTransactionList";
+import { Preferences } from "../../../models/preferences";
+import { Api } from "../../../lib/ApiClient";
+import { formatNumber, formatNumberWithPrefs } from "../../../lib/Utils";
+import AccountBalanceChart from "../../account/AccountBalanceChart";
 import { useNavigate, useParams } from "react-router";
-import PeriodSelector from "../common/PeriodSelector";
+import PeriodSelector from "../../common/PeriodSelector";
 import { DateTime } from "luxon";
-import { Period, PeriodFunctions } from "../../models/period";
-import AccountCategoryChart from "../account/AccountCategoryChart";
-import InputIconButton from "../input/InputIconButton";
-import YesNoDisplay from "../input/YesNoDisplay";
-import DeleteAccountModal from "../account/input/DeleteAccountModal";
-import { routes } from "../../lib/routes";
-import { preferencesContext } from "../App";
-import InputButton from "../input/InputButton";
-import InputText from "../input/InputText";
-import InputCheckbox from "../input/InputCheckbox";
-import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
+import { Period, PeriodFunctions } from "../../../models/period";
+import AccountCategoryChart from "../../account/AccountCategoryChart";
+import InputIconButton from "../../input/InputIconButton";
+import YesNoDisplay from "../../input/YesNoDisplay";
+import DeleteAccountModal from "../../account/input/DeleteAccountModal";
+import { routes } from "../../../lib/routes";
+import { preferencesContext } from "../../App";
+import InputButton from "../../input/InputButton";
+import InputText from "../../input/InputText";
+import InputCheckbox from "../../input/InputCheckbox";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 
 const pageSize = 20;
 

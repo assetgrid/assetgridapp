@@ -1,7 +1,7 @@
 import { faExclamationTriangle, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React = require("react");
-import Tooltip from "../../common/Tooltip";
+import Tooltip from "../../../common/Tooltip";
 
 interface Props {
     identifier: string;

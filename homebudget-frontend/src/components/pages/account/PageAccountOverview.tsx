@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Card } from "../common/Card";
-import AccountList from "../account/AccountList";
+import { Card } from "../../common/Card";
+import AccountList from "../../account/AccountList";
 
 export default function PageAccountOverview() {
     return <>

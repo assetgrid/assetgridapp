@@ -1,10 +1,10 @@
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React = require("react");
-import { Account } from "../../../models/account";
-import AccountLink from "../../account/AccountLink";
-import Tooltip from "../../common/Tooltip";
-import InputButton from "../../input/InputButton";
+import { Account } from "../../../../models/account";
+import AccountLink from "../../../account/AccountLink";
+import Tooltip from "../../../common/Tooltip";
+import InputButton from "../../../input/InputButton";
 import { AccountReference } from "../ImportModels";
 
 interface Props {

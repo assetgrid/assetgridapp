@@ -1,13 +1,12 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { routes } from "../../lib/routes";
-import { debounce } from "../../lib/Utils";
-import { Preferences } from "../../models/preferences";
-import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
-import { Card } from "../common/Card";
-import InputText from "../input/InputText";
-import TransactionFilterEditor from "../transaction/filter/TransactionFilterEditor";
-import TransactionList from "../transaction/TransactionList";
+import { routes } from "../../../lib/routes";
+import { debounce } from "../../../lib/Utils";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
+import { Card } from "../../common/Card";
+import InputText from "../../input/InputText";
+import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
+import TransactionList from "../../transaction/TransactionList";
 
 const defaultQuery: SearchGroup = {
     type: SearchGroupType.And,

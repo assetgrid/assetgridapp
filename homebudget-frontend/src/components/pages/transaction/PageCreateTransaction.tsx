@@ -1,5 +1,5 @@
 import * as React from "react";
-import CreateTransaction from "../transaction/CreateTransaction";
+import CreateTransaction from "../../transaction/CreateTransaction";
 
 export default class PageCreateTransaction extends React.Component<{}> {
     constructor(props: {}) {

@@ -1,9 +1,9 @@
 import React = require("react");
-import { formatNumberWithPrefs } from "../../../lib/Utils";
-import { Account } from "../../../models/account";
-import { preferencesContext } from "../../App";
-import Table from "../../common/Table";
-import Tooltip from "../../common/Tooltip";
+import { formatNumberWithPrefs } from "../../../../lib/Utils";
+import { Account } from "../../../../models/account";
+import { preferencesContext } from "../../../App";
+import Table from "../../../common/Table";
+import Tooltip from "../../../common/Tooltip";
 import { AccountReference, CsvCreateTransaction } from "../ImportModels";
 import DuplicateIndicator from "./DuplicateIndicator";
 import { CsvMappingTableFilter } from "./MapCsvFields";

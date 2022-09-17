@@ -1,14 +1,14 @@
 import * as Papa from "papaparse";
 import * as React from "react";
-import { Card } from "../common/Card";
-import Table from "../common/Table";
-import InputButton from "../input/InputButton";
-import InputCheckbox from "../input/InputCheckbox";
-import InputSelect from "../input/InputSelect";
-import InputText from "../input/InputText";
+import { Card } from "../../common/Card";
+import Table from "../../common/Table";
+import InputButton from "../../input/InputButton";
+import InputCheckbox from "../../input/InputCheckbox";
+import InputSelect from "../../input/InputSelect";
+import InputText from "../../input/InputText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
-import InputIconButton from "../input/InputIconButton";
+import InputIconButton from "../../input/InputIconButton";
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
