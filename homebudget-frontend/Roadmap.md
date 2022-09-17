@@ -47,3 +47,4 @@ Transaction and account metadata
 [ ] Add create transaction page
 [x] Move account deletion modal to it's own page
 [x] Delete account page should detect invalid accounts
+[ ] Implement multi editing on the account page
