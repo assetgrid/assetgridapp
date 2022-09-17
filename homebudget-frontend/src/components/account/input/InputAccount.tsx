@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
-import InputButton from "../InputButton";
+import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
 
 interface Props {

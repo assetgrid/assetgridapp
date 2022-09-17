@@ -2,7 +2,7 @@ import * as React from "react";
 import { Api } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import Modal from "../../common/Modal";
-import InputButton from "../InputButton";
+import InputButton from "../../input/InputButton";
 import InputModifyAccount from "./InputModifyAccount";
 
 interface Props {

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { Preferences } from "../../models/preferences";
 import AccountList from "../account/AccountList";
-import CreateAccountModal from "../form/account/CreateAccountModal";
+import CreateAccountModal from "../account/input/CreateAccountModal";
 import CreateTransaction from "../transaction/CreateTransaction";
 import TransactionList from "../transaction/TransactionList";
 

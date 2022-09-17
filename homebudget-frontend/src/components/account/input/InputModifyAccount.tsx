@@ -2,9 +2,9 @@ import axios from "axios";
 import * as React from "react";
 import { CreateAccount as CreateAccount } from "../../../models/account";
 import { Transaction } from "../../../models/transaction";
-import InputButton from "../InputButton";
-import InputCheckbox from "../InputCheckbox";
-import InputText from "../InputText";
+import InputButton from "../../input/InputButton";
+import InputCheckbox from "../../input/InputCheckbox";
+import InputText from "../../input/InputText";
 
 interface Props
 {

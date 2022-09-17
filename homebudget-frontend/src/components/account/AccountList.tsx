@@ -6,7 +6,7 @@ import { routes } from "../../lib/routes";
 import { Account } from "../../models/account";
 import { SearchRequest, SearchResponse } from "../../models/search";
 import Table from "../common/Table";
-import YesNoDisplay from "../form/YesNoDisplay";
+import YesNoDisplay from "../input/YesNoDisplay";
 import AccountLink from "./AccountLink";
 
 interface Props {

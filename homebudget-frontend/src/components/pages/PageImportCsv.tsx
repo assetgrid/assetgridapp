@@ -4,12 +4,12 @@ import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../models/search";
-import InputButton from "../form/InputButton";
-import { Import } from "./Import";
-import ImportCsv, { CsvImportOptions } from "./ImportCsv";
-import { AccountReference, capitalize, CsvCreateTransaction } from "./ImportModels";
-import MapCsvFields, { MappingOptions } from "./MapCsvFields/MapCsvFields";
-import { ParseOptions } from "./ParseOptions";
+import InputButton from "../input/InputButton";
+import { Import } from "../import/Import";
+import ImportCsv, { CsvImportOptions } from "../import/ImportCsv";
+import { AccountReference, capitalize, CsvCreateTransaction } from "../import/ImportModels";
+import MapCsvFields, { MappingOptions } from "../import/MapCsvFields/MapCsvFields";
+import { ParseOptions } from "../import/ParseOptions";
 
 interface State {
     data: any[] | null;

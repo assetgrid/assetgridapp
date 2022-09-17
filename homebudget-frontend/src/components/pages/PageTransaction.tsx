@@ -6,20 +6,20 @@ import { Transaction, TransactionLine } from "../../models/transaction";
 import AccountLink from "../account/AccountLink";
 import { preferencesContext } from "../App";
 import { Card } from "../common/Card";
-import InputIconButton from "../form/InputIconButton";
+import InputIconButton from "../input/InputIconButton";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
 import Modal from "../common/Modal";
 import { routes } from "../../lib/routes";
-import DeleteTransactionModal from "../form/transaction/DeleteTransactionModal";
-import InputText from "../form/InputText";
-import InputDate from "../form/InputDate";
-import InputNumber from "../form/InputNumber";
-import InputAccount from "../form/account/InputAccount";
-import InputCategory from "../form/InputCategory";
-import InputButton from "../form/InputButton";
+import DeleteTransactionModal from "../transaction/input/DeleteTransactionModal";
+import InputText from "../input/InputText";
+import InputDate from "../input/InputDate";
+import InputNumber from "../input/InputNumber";
+import InputAccount from "../account/input/InputAccount";
+import InputCategory from "../input/InputCategory";
+import InputButton from "../input/InputButton";
 import Decimal from "decimal.js";
-import InputTextOrNull from "../form/InputTextOrNull";
+import InputTextOrNull from "../input/InputTextOrNull";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);

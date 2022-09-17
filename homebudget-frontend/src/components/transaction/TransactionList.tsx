@@ -6,8 +6,8 @@ import { Api } from "../../lib/ApiClient";
 import TransactionTableLine from "./TransactionTableLine";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZA, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import InputButton from "../form/InputButton";
-import InputCheckbox from "../form/InputCheckbox";
+import InputButton from "../input/InputButton";
+import InputCheckbox from "../input/InputCheckbox";
 import TransactionsActionModal from "./TransactionsActionModal";
 
 interface Props {

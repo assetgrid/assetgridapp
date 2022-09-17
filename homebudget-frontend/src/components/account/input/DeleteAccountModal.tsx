@@ -5,7 +5,7 @@ import { Preferences } from "../../../models/preferences";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Modal from "../../common/Modal";
 import TransactionList from "../../transaction/TransactionList";
-import InputButton from "../InputButton";
+import InputButton from "../../input/InputButton";
 
 interface Props {
     close: () => void;

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Api } from "../../../lib/ApiClient";
 import { Transaction } from "../../../models/transaction";
 import Modal from "../../common/Modal";
-import InputButton from "../InputButton";
+import InputButton from "../../input/InputButton";
 
 interface Props {
     close: () => void;

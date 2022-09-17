@@ -5,9 +5,9 @@ import { debounce } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import { Card } from "../common/Card";
-import InputText from "../form/InputText";
-import TransactionFilterEditor from "./filter/TransactionFilterEditor";
-import TransactionList from "./TransactionList";
+import InputText from "../input/InputText";
+import TransactionFilterEditor from "../transaction/filter/TransactionFilterEditor";
+import TransactionList from "../transaction/TransactionList";
 
 const defaultQuery: SearchGroup = {
     type: SearchGroupType.And,

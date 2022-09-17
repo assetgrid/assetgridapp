@@ -1,7 +1,7 @@
 import React = require("react");
 import { Account } from "../../../models/account";
 import { Message } from "../../common/Message";
-import InputButton from "../../form/InputButton";
+import InputButton from "../../input/InputButton";
 import { CsvCreateTransaction } from "../ImportModels";
 import { CsvMappingTableFilter } from "./MapCsvFields";
 

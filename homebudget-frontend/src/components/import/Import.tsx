@@ -10,7 +10,7 @@ import AccountLink from "../account/AccountLink";
 import { preferencesContext } from "../App";
 import { Card } from "../common/Card";
 import Table from "../common/Table";
-import InputButton from "../form/InputButton";
+import InputButton from "../input/InputButton";
 import { AccountReference, CsvCreateTransaction } from "./ImportModels";
 
 interface Props {

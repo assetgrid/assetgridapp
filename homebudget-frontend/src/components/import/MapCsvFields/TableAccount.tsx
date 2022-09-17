@@ -4,7 +4,7 @@ import React = require("react");
 import { Account } from "../../../models/account";
 import AccountLink from "../../account/AccountLink";
 import Tooltip from "../../common/Tooltip";
-import InputButton from "../../form/InputButton";
+import InputButton from "../../input/InputButton";
 import { AccountReference } from "../ImportModels";
 
 interface Props {

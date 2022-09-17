@@ -1,6 +1,6 @@
 import * as React from "react";
 import { AndSearchGroup, OrSearchGroup, SearchGroup, SearchGroupType, SearchOperator, SearchQuery, SearchRequest } from "../../../models/search";
-import InputButton from "../../form/InputButton";
+import InputButton from "../../input/InputButton";
 import Condition from "./TransactionFilterConditionEditor";
 
 // Inspiration: https://www.npmjs.com/package/comet-awesome-query-builder

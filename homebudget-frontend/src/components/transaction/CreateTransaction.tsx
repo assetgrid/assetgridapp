@@ -3,10 +3,10 @@ import Decimal from "decimal.js";
 import * as React from "react";
 import { Api } from "../../lib/ApiClient";
 import { Transaction, TransactionLine, CreateTransaction as CreateTransactionModel } from "../../models/transaction";
-import InputAccount from "../form/account/InputAccount";
-import InputButton from "../form/InputButton";
-import InputNumber from "../form/InputNumber";
-import InputText from "../form/InputText";
+import InputAccount from "../account/input/InputAccount";
+import InputButton from "../input/InputButton";
+import InputNumber from "../input/InputNumber";
+import InputText from "../input/InputText";
 
 interface State
 {

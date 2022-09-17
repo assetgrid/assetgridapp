@@ -5,13 +5,13 @@ import { Api } from "../../lib/ApiClient";
 import { SearchGroup, SearchQuery } from "../../models/search";
 import { Transaction, UpdateTransaction } from "../../models/transaction";
 import Modal from "../common/Modal";
-import InputAccount from "../form/account/InputAccount";
-import InputButton from "../form/InputButton";
-import InputCategory from "../form/InputCategory";
-import InputDate from "../form/InputDate";
-import InputNumber from "../form/InputNumber";
-import InputSelect from "../form/InputSelect";
-import InputText from "../form/InputText";
+import InputAccount from "../account/input/InputAccount";
+import InputButton from "../input/InputButton";
+import InputCategory from "../input/InputCategory";
+import InputDate from "../input/InputDate";
+import InputNumber from "../input/InputNumber";
+import InputSelect from "../input/InputSelect";
+import InputText from "../input/InputText";
 import TransactionList from "./TransactionList";
 
 interface Props {

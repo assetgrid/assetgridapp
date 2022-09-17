@@ -6,23 +6,23 @@ import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../lib/Utils"
 import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";
 import { Transaction, TransactionLine } from "../../models/transaction";
-import InputAccount from "../form/account/InputAccount";
-import InputCategory from "../form/InputCategory";
-import InputDate from "../form/InputDate";
-import InputText from "../form/InputText";
+import InputAccount from "../account/input/InputAccount";
+import InputCategory from "../input/InputCategory";
+import InputDate from "../input/InputDate";
+import InputText from "../input/InputText";
 import TransactionLink from "./TransactionLink";
 import * as regular from "@fortawesome/free-regular-svg-icons"
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import Modal from "../common/Modal";
 import { Api } from "../../lib/ApiClient";
 import AccountLink from "../account/AccountLink";
-import InputButton from "../form/InputButton";
-import InputNumber from "../form/InputNumber";
+import InputButton from "../input/InputButton";
+import InputNumber from "../input/InputNumber";
 import Tooltip from "../common/Tooltip";
-import InputIconButton from "../form/InputIconButton";
+import InputIconButton from "../input/InputIconButton";
 import { preferencesContext } from "../App";
-import DeleteTransactionModal from "../form/transaction/DeleteTransactionModal";
-import InputCheckbox from "../form/InputCheckbox";
+import DeleteTransactionModal from "./input/DeleteTransactionModal";
+import InputCheckbox from "../input/InputCheckbox";
 
 type Props  = {
     transaction: Transaction;

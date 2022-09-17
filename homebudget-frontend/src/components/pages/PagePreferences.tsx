@@ -9,10 +9,10 @@ import { formatDateTimeWithPrefs, formatDateWithPrefs, formatNumber, formatNumbe
 import { Preferences } from "../../models/preferences";
 import { preferencesContext } from "../App";
 import { Card } from "../common/Card";
-import InputButton from "../form/InputButton";
-import InputNumber from "../form/InputNumber";
-import InputText from "../form/InputText";
-import InputTextOrNull from "../form/InputTextOrNull";
+import InputButton from "../input/InputButton";
+import InputNumber from "../input/InputNumber";
+import InputText from "../input/InputText";
+import InputTextOrNull from "../input/InputTextOrNull";
 
 export default function PagePreferences(): React.ReactElement {
     const { preferences, updatePreferences } = React.useContext(preferencesContext);

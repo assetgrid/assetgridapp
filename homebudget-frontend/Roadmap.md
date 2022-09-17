@@ -42,3 +42,5 @@ Transaction and account metadata
 [ ] Reduce code reuse in transaction controller
 [ ] Move modify multiple transactions modal to it's own page. The page could have a section for the query. A section for the action and a list of transactions affected. When automation is added, a button to create a Rule can be added, which will take the user to a similar page that also has a section about conditions
 [x] Implement quick search, that searches transaction id, description, account names and categories. It is possible to switch between that and real search
+[ ] Use a text field that allows null for quick search
+[ ] Reduce code reuse in the transaction controller

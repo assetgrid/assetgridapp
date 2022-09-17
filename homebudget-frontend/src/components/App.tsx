@@ -1,18 +1,18 @@
 import * as React from "react";
 import { Route, Routes  } from "react-router";
 import { routes } from "../lib/routes";
-import PageTransactions from "./transaction/PageTransactions";
-import PageCreateTransaction from "./transaction/PageCreateTransaction";
+import PageTransactions from "./pages/PageTransactions";
+import PageCreateTransaction from "./pages/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
-import PageImportCsv from "./import/PageImportCsv";
-import PageAccount from "./account/PageAccount";
+import PageImportCsv from "./pages/PageImportCsv";
+import PageAccount from "./pages/PageAccount";
 import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
-import PageAccountOverview from "./account/PageAccountOverview";
+import PageAccountOverview from "./pages/PageAccountOverview";
 import { Api } from "../lib/ApiClient";
 import Sidebar from "./common/Sidebar";
-import PageTransaction from "./transaction/PageTransaction";
+import PageTransaction from "./pages/PageTransaction";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
