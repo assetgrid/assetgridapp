@@ -27,12 +27,6 @@ export default function PagePreferences(): React.ReactElement {
     }, [preferences]);
     const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), [])
 
-    if (model === "fetching") {
-        // This will only be shown until the global preferences are loaded.
-        // Then the model will be set and will never be "fetching again"
-        return <>Please wait</>;
-    }
-
     return <>
         <section className="hero has-background-primary">
             <div className="hero-body">
@@ -43,80 +37,92 @@ export default function PagePreferences(): React.ReactElement {
         </section>
 
         <div className="t-3">
-            <Card title="Number and date formatting">
-                <div className="columns mb-0">
-                    <div className="column">
-                        <InputText value={model.decimalSeparator}
-                            disabled={isUpdating}
-                            label="Decimal Separator"
-                            onChange={(event => setModel({
-                                ...model,
-                                decimalSeparator: event.target.value
-                            }))} />
-                    </div>
-                    <div className="column">
-                        <InputText value={model.thousandsSeparator}
-                            disabled={isUpdating}
-                            label="Thousands Separator"
-                            onChange={(event => setModel({
-                                ...model,
-                                thousandsSeparator: event.target.value
-                            }))} />
-                    </div>
-                    <div className="column">
-                        <InputNumber value={new Decimal(model.decimalDigits)}
-                            disabled={isUpdating}
-                            label="Digits after decimal point"
-                            allowNull={false}
-                            onChange={(value => setModel({
-                                ...model,
-                                decimalDigits: Math.max(0, Math.min(value.round().toNumber(), 4))
-                            }))} />
-                    </div>
-                </div>
-                
-                <p className="pb-3 pt-1">Example: {
-                    formatNumberWithPrefs(new Decimal("123456789.123456789"), model)}
-                </p>
-                
-                <div className="columns pt-3">
-                    <div className="column">
-                        <InputTextOrNull value={model.dateFormat}
-                            disabled={isUpdating}
-                            noValueText="System default"
-                            label="Date format"
-                            onChange={(value => setModel({
-                                ...model,
-                                dateFormat: value
-                            }))} />
-                        <p>Example: {formatDateWithPrefs(exampleDateTime, model)}</p>
-                    </div>
-                    <div className="column">
-                        <InputTextOrNull value={model.dateTimeFormat}
-                            disabled={isUpdating}
-                            label="Date and time format"
-                            noValueText="System default"
-                            onChange={(value => setModel({
-                                ...model,
-                                dateTimeFormat: value
-                            }))} />
-                        <p>Example: {formatDateTimeWithPrefs(exampleDateTime, model)}</p>
-                    </div>
-                </div>
-                <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank">More information on date formats</a>
-
-                <div className="buttons mt-5">
-                    <InputButton
-                        disabled={isUpdating}
-                        className="is-primary"
-                        onClick={saveChanges}>
-                        Save changes
-                    </InputButton>
-                </div>
-            </Card>
+            {renderContent()}
         </div>
     </>;
 
+    function renderContent() {
+        if (model === "fetching") {
+            // This will only be shown until the global preferences are loaded.
+            // Then the model will be set and will never be "fetching again"
+            return <Card title="Number and date formatting">
+                Please wait&hellip;
+            </Card>;
+        }
+
+        return <Card title="Number and date formatting">
+            <div className="columns mb-0">
+                <div className="column">
+                    <InputText value={model.decimalSeparator}
+                        disabled={isUpdating}
+                        label="Decimal Separator"
+                        onChange={(event => setModel({
+                            ...model,
+                            decimalSeparator: event.target.value
+                        }))} />
+                </div>
+                <div className="column">
+                    <InputText value={model.thousandsSeparator}
+                        disabled={isUpdating}
+                        label="Thousands Separator"
+                        onChange={(event => setModel({
+                            ...model,
+                            thousandsSeparator: event.target.value
+                        }))} />
+                </div>
+                <div className="column">
+                    <InputNumber value={new Decimal(model.decimalDigits)}
+                        disabled={isUpdating}
+                        label="Digits after decimal point"
+                        allowNull={false}
+                        onChange={(value => setModel({
+                            ...model,
+                            decimalDigits: Math.max(0, Math.min(value.round().toNumber(), 4))
+                        }))} />
+                </div>
+            </div>
+                
+            <p className="pb-3 pt-1">Example: {
+                formatNumberWithPrefs(new Decimal("123456789.123456789"), model)}
+            </p>
+                
+            <div className="columns pt-3">
+                <div className="column">
+                    <InputTextOrNull value={model.dateFormat}
+                        disabled={isUpdating}
+                        noValueText="System default"
+                        label="Date format"
+                        onChange={(value => setModel({
+                            ...model,
+                            dateFormat: value
+                        }))} />
+                    <p>Example: {formatDateWithPrefs(exampleDateTime, model)}</p>
+                </div>
+                <div className="column">
+                    <InputTextOrNull value={model.dateTimeFormat}
+                        disabled={isUpdating}
+                        label="Date and time format"
+                        noValueText="System default"
+                        onChange={(value => setModel({
+                            ...model,
+                            dateTimeFormat: value
+                        }))} />
+                    <p>Example: {formatDateTimeWithPrefs(exampleDateTime, model)}</p>
+                </div>
+            </div>
+            <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank">More information on date formats</a>
+
+            <div className="buttons mt-5">
+                <InputButton
+                    disabled={isUpdating}
+                    className="is-primary"
+                    onClick={saveChanges}>
+                    Save changes
+                </InputButton>
+            </div>
+        </Card>;
+    }
+    
     function saveChanges() {
         if (isUpdating || model === "fetching") {
             return;

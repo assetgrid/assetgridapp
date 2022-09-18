@@ -10,6 +10,8 @@ import { preferencesContext } from "../../App";
 import { Card } from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import TransactionList from "../../transaction/TransactionList";
+import Page404 from "./Page404";
+import PageError from "./PageError";
 
 export default function PageAccountConfirmDelete() {
     const id = Number(useParams().id);
@@ -40,10 +42,10 @@ export default function PageAccountConfirmDelete() {
         return <>Please wait</>;
     }
     if (account === null) {
-        return <>Not found</>;
+        return <Page404 />;
     }
     if (account === "error" || account.id !== id) {
-        return <>Error</>;
+        return <PageError />;
     }
 
     /* Query returning transactions that reference this account and no other account*/

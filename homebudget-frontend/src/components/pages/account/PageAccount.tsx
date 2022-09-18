@@ -23,6 +23,8 @@ import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
 import InputCheckbox from "../../input/InputCheckbox";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
+import Page404 from "./Page404";
+import PageError from "./PageError";
 
 const pageSize = 20;
 
@@ -76,13 +78,43 @@ export default function () {
     }, [id])
 
     if (account === "fetching") {
-        return <p>Please wait</p>;
+        return <>
+            <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
+                <div className="hero-body">
+                    <p className="title has-text-white">
+                        #{id} &hellip;
+                    </p>
+                </div>
+            </section>
+            <div className="p-3">
+                <div className="columns m-0">
+                    <div className="column p-0 is-narrow is-flex">
+                        <Card title="Account details">
+                            Please wait&hellip;
+                        </Card>
+                    </div>
+                    <div className="column p-0 is-flex">
+                        <Card title="Categories" style={{flexGrow: 1}}>
+                            Please wait&hellip;
+                        </Card>
+                    </div>
+                    <div className="column p-0 is-flex">
+                        <Card title="Balance" style={{ flexGrow: 1 }}>
+                            Please wait&hellip;
+                        </Card>
+                    </div>
+                </div>
+                <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
+                    Please wait&hellip;
+                </Card>
+            </div>
+        </>;
     }
     if (account === "error") {
-        return <p>Error</p>;
+        return <PageError />;
     }
     if (account === null) {
-        return <p>Not found</p>;
+        return <Page404 />;
     }
 
     return <>

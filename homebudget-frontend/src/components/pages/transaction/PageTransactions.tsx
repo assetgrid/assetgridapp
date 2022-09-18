@@ -5,6 +5,7 @@ import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import { Card } from "../../common/Card";
 import InputText from "../../input/InputText";
+import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
 import TransactionList from "../../transaction/TransactionList";
 
@@ -12,7 +13,7 @@ export default function PageTransactions() {
     const [draw, setDraw] = React.useState(0);
     const history = window.history.state.usr;
     const [query, setQuery] = React.useState<SearchGroup>(history?.query ? history.query : emptyQuery);
-    const [searchString, setSearchString] = React.useState(typeof(history?.searchString) === "string" ? history.searchString : "");
+    const [searchString, setSearchString] = React.useState<string>(typeof(history?.searchString) === "string" ? history.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(history?.orderBy ? history.orderBy : { column: "DateTime", descending: true });
     const [page, setPage] = React.useState(typeof(history?.page) === "number" ? history.page : 1);
@@ -94,14 +95,14 @@ export default function PageTransactions() {
                 searchMode,
                 page,
                 orderBy,
-                searchString,
+                searchString: (searchString?.trim() ?? "") === "" ? null : searchString,
                 selectedTransactions
             }
         }, "");
     }
 
     function updateSearchQueryFromText() {
-        if (searchString === "") {
+        if (searchString?.trim() === "") {
             setQuery(emptyQuery);
             return;
         }

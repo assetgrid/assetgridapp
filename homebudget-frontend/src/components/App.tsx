@@ -15,6 +15,7 @@ import Sidebar from "./common/Sidebar";
 import PageTransaction from "./pages/transaction/PageTransaction";
 import PageEditMultipleTransactions from "./pages/transaction/PageEditMultipleTransactions";
 import PageAccountConfirmDelete from "./pages/account/PageAccountConfirmDelete";
+import Page404 from "./pages/account/Page404";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -47,6 +48,8 @@ export default function FairFitPortalApp () {
                             <Route path={routes.account(":id")} element={<PageAccount />} />
                             <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
                             <Route path={routes.preferences()} element={<PagePreferences />} />
+
+                            <Route path='*' element={<Page404 />} />
                         </Routes>
                     </div>
                 </div>

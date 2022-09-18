@@ -20,10 +20,12 @@ import InputCategory from "../../input/InputCategory";
 import InputButton from "../../input/InputButton";
 import Decimal from "decimal.js";
 import InputTextOrNull from "../../input/InputTextOrNull";
+import Page404 from "../account/Page404";
+import PageError from "../account/PageError";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
-    const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null>("fetching");
+    const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null | "error">("fetching");
     const { preferences } = React.useContext(preferencesContext);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
@@ -33,7 +35,10 @@ export default function PageTransaction(): React.ReactElement {
     React.useEffect(fetchTransaction, [id]);
 
     if (transaction === null) {
-        return <>Not found</>;
+        return <Page404 />;
+    }
+    if (transaction === "error") {
+        return <PageError />;
     }
 
     return <>
@@ -76,8 +81,14 @@ export default function PageTransaction(): React.ReactElement {
 
     function fetchTransaction() {
         setTransaction("fetching");
-        Api.Transaction.get(id)
-            .then(transaction => setTransaction(transaction));
+
+        if (isNaN(id)) {
+            setTransaction("error");
+        } else {
+            Api.Transaction.get(id)
+                .then(transaction => setTransaction(transaction))
+                .catch(() => setTransaction("error"));
+        }
     }
 
     async function update() {
