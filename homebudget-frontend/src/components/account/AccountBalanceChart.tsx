@@ -57,49 +57,51 @@ export default function AccountBalanceChart(props: Props) {
     let [start, end] = PeriodFunctions.getRange(props.period);
 
     return <>
-        <div>
-            <Chart type={"line"} height="400px" data={{
-                labels: movements.items.map(point => point.dateTime.toJSDate()),
-                datasets: [{
-                    label: "Balance",
-                    data: balances,
-                    type: "line",
-                    stepped: true,
-                    borderColor: "#558eb3",
-                    backgroundColor: "transparent",
-                },
-                {
-                    label: "Revenue",
-                    data: movements.items.map(point => point.revenue.toNumber()),
-                    type: "bar",
-                    borderColor: "transparent",
-                    backgroundColor: "#4db09b"
-                },
-                {
-                    label: "Expenses",
-                    data: movements.items.map(point => point.expenses.toNumber()),
-                    type: "bar",
-                    borderColor: "transparent",
-                    backgroundColor: "#ff6b6b"
-                }],
-            }} options={{
-                maintainAspectRatio: false,
-                responsive: true,
-                scales: {
-                    x: {
-                        type: 'time',
-                        display: true,
-                        offset: true,
-                        time: {
-                            unit: resolution
-                        }
+        <div style={{ height: "400px", position: "relative" }}>
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
+                <Chart type={"line"} height="400px" data={{
+                    labels: movements.items.map(point => point.dateTime.toJSDate()),
+                    datasets: [{
+                        label: "Balance",
+                        data: balances,
+                        type: "line",
+                        stepped: true,
+                        borderColor: "#558eb3",
+                        backgroundColor: "transparent",
                     },
-                },
-                interaction: {
-                    intersect: false,
-                }
-            }}>
-            </Chart>
+                    {
+                        label: "Revenue",
+                        data: movements.items.map(point => point.revenue.toNumber()),
+                        type: "bar",
+                        borderColor: "transparent",
+                        backgroundColor: "#4db09b"
+                    },
+                    {
+                        label: "Expenses",
+                        data: movements.items.map(point => point.expenses.toNumber()),
+                        type: "bar",
+                        borderColor: "transparent",
+                        backgroundColor: "#ff6b6b"
+                    }],
+                }} options={{
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            display: true,
+                            offset: true,
+                            time: {
+                                unit: resolution
+                            }
+                        },
+                    },
+                    interaction: {
+                        intersect: false,
+                    }
+                    }}>
+                </Chart>
+            </div>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
             <p>Showing (click to change):</p>&nbsp;

@@ -49,36 +49,38 @@ export default function AccountCategoryChart(props: Props) {
     // Generate colors by selecting evenly spaced hues on the color wheel
     let colors = Array.from(Array(data.length).keys()).map((_, i) => "hsl(" + (i / data.length * 360) + ", 70%, 70%)");
     return <>
-        <div>
-            <Chart type={"line"} height="400px" data={{
-                labels: data.map(point => point.category),
-                datasets: [{
-                    label: "Revenue",
-                    data: data.map(point => point.revenue),
-                    type: "bar",
-                    borderColor: "transparent",
-                    backgroundColor: "#4db09b"
-                },
-                {
-                    label: "Expenses",
-                    data: data.map(point => -point.expenses),
-                    type: "bar",
-                    borderColor: "transparent",
-                    backgroundColor: "#ff6b6b"
-                }],
-            }} options={{
-                maintainAspectRatio: false,
-                responsive: true,
-                interaction: {
-                    intersect: false,
-                },
-                scales: {
-                    x: {
-                        stacked: true
+        <div style={{ height: "400px", position: "relative" }}>
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
+                <Chart type={"line"} height="400px" data={{
+                    labels: data.map(point => point.category),
+                    datasets: [{
+                        label: "Revenue",
+                        data: data.map(point => point.revenue),
+                        type: "bar",
+                        borderColor: "transparent",
+                        backgroundColor: "#4db09b"
+                    },
+                    {
+                        label: "Expenses",
+                        data: data.map(point => -point.expenses),
+                        type: "bar",
+                        borderColor: "transparent",
+                        backgroundColor: "#ff6b6b"
+                    }],
+                }} options={{
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    interaction: {
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            stacked: true
+                        }
                     }
-                }
-            }}>
-            </Chart>
+                }}>
+                </Chart>
+            </div>
         </div>
     </>;
 }
