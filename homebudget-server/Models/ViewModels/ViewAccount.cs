@@ -18,6 +18,7 @@
         public string Description { get; set; } = null!;
         public string? AccountNumber { get; set; }
         public bool IncludeInNetWorth { get; set; }
+        public bool Favorite { get; set; }
     }
 
     public enum AccountMovementResolution

@@ -33,6 +33,7 @@ namespace homebudget_server.Controllers
                     Description = model.Description,
                     AccountNumber = model.AccountNumber,
                     IncludeInNetWorth = model.IncludeInNetWorth,
+                    Favorite = model.Favorite,
                 };
                 _context.Accounts.Add(result);
                 _context.SaveChanges();
@@ -41,7 +42,8 @@ namespace homebudget_server.Controllers
                     Id = result.Id,
                     AccountNumber = result.AccountNumber,
                     Description = result.Description,
-                    Name = result.Name
+                    Name = result.Name,
+                    Favorite = model.Favorite,
                 };
             }
             throw new Exception();

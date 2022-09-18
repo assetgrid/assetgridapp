@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Api } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
+import { preferencesContext } from "../../App";
 import Modal from "../../common/Modal";
 import InputModifyAccount from "./InputModifyAccount";
 
@@ -14,6 +15,7 @@ interface Props {
 export default function CreateAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.preset);
     const [isCreating, setIsCreating] = React.useState(false);
+    const { preferences, updatePreferences } = React.useContext(preferencesContext);
 
     return <Modal
         active={true}
@@ -31,6 +33,16 @@ export default function CreateAccountModal(props: Props) {
         const result = await Api.Account.create(model);
         setModel(props.preset);
         setIsCreating(false);
+        if (result.favorite) {
+            if (preferences === "fetching") {
+                updatePreferences(null);
+            } else {
+                updatePreferences({
+                    ...preferences,
+                    favoriteAccounts: [...preferences.favoriteAccounts, result]
+                });
+            }
+        }
         if (props.created !== undefined) {
             props.created(result);
         }
