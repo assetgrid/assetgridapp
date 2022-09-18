@@ -123,14 +123,14 @@ function TableTransaction(props: TableTransactionProps) {
         </div>}
         {expandSplit && < div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
-                <div style={{ gridColumn: "span 3" }}></div>
+                <div style={{ gridColumn: "colstart/innerstart" }}></div>
                 <div className="description">
                     {line.description}
                 </div>
                 <div className="total">
                     {formatNumberWithPrefs(line.amount, preferences)}
                 </div>
-                <div style={{ gridColumn: "span 4" }}></div>
+                <div style={{ gridColumn: "innerend/colend" }}></div>
             </div>)}
         </div>}
     </div>;
@@ -319,7 +319,7 @@ function TransactionLineEditor(props: LineEditorProps) {
     const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
 
     return <div className={"transaction-line" + (props.last ? " last" : "")}>
-        <div style={{ gridColumn: "span 3" }}>
+        <div style={{ gridColumn: "colstart/innerstart" }}>
             <InputIconButton icon={solid.faGripLinesVertical} onClick={() => 0} />
         </div>
         <div className="description">
@@ -336,7 +336,7 @@ function TransactionLineEditor(props: LineEditorProps) {
                 value={props.line.amount.times(multiplier)}
                 onChange={value => props.update({ amount: value.times(multiplier) })} />
         </div>
-        <div style={{ gridColumn: "span 4" }}>
+        <div style={{ gridColumn: "innerend/colend" }}>
             <InputIconButton icon={regular.faTrashCan} onClick={props.delete} />
         </div>
     </div>;

@@ -75,12 +75,12 @@ div.table {
 }
 
 div.table.transaction-table {
-    grid-template-columns: [colstart] auto auto auto auto auto auto auto auto [colend];
+    grid-template-columns: [colstart] auto auto [innerstart] auto auto [innerend] auto auto auto auto [colend];
     &.no-actions {
-        grid-template-columns: [colstart] auto auto auto auto auto auto auto [colend];
+        grid-template-columns: [colstart] auto auto [innerstart] auto auto [innerend] auto auto auto [colend];
     }
     &.multi-select {
-        grid-template-columns: [colstart] auto auto auto auto auto auto auto auto auto [colend];
+        grid-template-columns: [colstart] auto auto auto [innerstart] auto auto [innerend] auto auto auto auto [colend];
     }
     &.is-small {
         font-size: $size-7;
@@ -98,10 +98,10 @@ div.table.transaction-table {
                     font-size: $size-7;
 
                     & > .description {
-                        grid-column: 4;
+                        grid-column: innerstart;
                     }
                     & > .total {
-                        grid-column: 5;
+                        grid-column-end: innerend;
                         text-align: right;
                     }
                     & > :first-child, & > :last-child {
