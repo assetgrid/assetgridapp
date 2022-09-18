@@ -1,13 +1,35 @@
 import * as React from "react";
-import { LineChart, Line, ResponsiveContainer, XAxis, CartesianGrid, Tooltip, YAxis, Legend, AreaChart, Area, BarChart, Bar, ComposedChart } from "recharts";
 import { GetMovementResponse, TimeResolution } from "../../models/account";
-import ResizeObserver from 'react-resize-detector';
 import { Api } from "../../lib/ApiClient";
 import { DateTime, Duration, DurationLike } from "luxon";
 import { Preferences } from "../../models/preferences";
-import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import Utils, { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Period, PeriodFunctions } from "../../models/period";
+import 'chartjs-adapter-luxon';
+import {
+    Chart as ChartJS,
+    LinearScale,
+    TimeScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement
+} from 'chart.js'
+import { Chart } from 'react-chartjs-2'
+  
+ChartJS.register(
+    LinearScale,
+    PointElement,
+    TimeScale,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+)
 
 interface Props {
     id: number;
@@ -28,58 +50,57 @@ export default function AccountBalanceChart(props: Props) {
         return <>Please wait&hellip;</>;
     }
 
-    let data: { datetime: number, balance: number, revenue: number, expenses: number }[] = [];
+    let balances: number[] = [];
     for (let i = 0; i < movements.items.length; i++) {
         let item = movements.items[i];
-        data[i] = {
-            datetime: item.dateTime.valueOf(),
-            balance: (data[i - 1] !== undefined ? data[i - 1].balance : movements.initialBalance.toNumber()) + item.revenue.toNumber() - item.expenses.toNumber(),
-            revenue: item.revenue.toNumber(),
-            expenses: item.expenses.toNumber(),
-        };
+        balances[i] = (balances[i - 1] !== undefined ? balances[i - 1] : movements.initialBalance.toNumber()) + item.revenue.toNumber() - item.expenses.toNumber();
     }
     let [start, end] = PeriodFunctions.getRange(props.period);
 
     return <>
-        <div style={{ height: 400 }}>
-            <ResponsiveContainer>
-                {type === "balance"
-                    ? <ComposedChart data={data}>
-                        <defs>
-                            <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#558eb3" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="#558eb3" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <Area type="step" dataKey={"balance"} strokeWidth={2} stroke={"rgb(6, 30, 47)"} fill="url(#fill)" animateNewValues={false} />
-                        <Line dataKey="revenue" stroke="none" fill="none" />
-                        <Line dataKey="expenses" stroke="none" fill="none" />
-                        <XAxis dataKey={'datetime'}
-                            domain={data.length != 0 ? [start?.valueOf() ?? DateTime.now().minus({ years: 1 }).valueOf(), end?.valueOf() ?? DateTime.now().valueOf()] : undefined}
-                            scale="time"
-                            type="number"
-                            tickFormatter={(date: number) => DateTime.fromMillis(date).toFormat("dd LLL yy")} />
-                        <YAxis />
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <Tooltip content={(data: any) => customTooltip(data, type, props.preferences)} />
-                        <Legend />
-                    </ComposedChart>
-                    : <ComposedChart data={data}>
-                        <XAxis dataKey={'datetime'}
-                            domain={data.length != 0 ? [start?.valueOf() ?? DateTime.now().minus({ years: 1 }).valueOf(), end?.valueOf() ?? DateTime.now().valueOf()] : undefined}
-                            scale="time"
-                            type="number"
-                            padding={{ left: 30, right: 30 }}
-                            tickFormatter={(date: number) => DateTime.fromMillis(date).toFormat("dd LLL yy")} />
-                        <YAxis />
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <Tooltip content={(data: any) => customTooltip(data, type, props.preferences)} />
-                        <Legend />
-                        <Line dataKey="balance" stroke="none" />
-                        <Line type="monotone" dataKey="revenue" stroke="#4db09b" strokeWidth={2} animateNewValues={false} />
-                        <Line type="monotone" dataKey="expenses" stroke="#ff6b6b" strokeWidth={2} animateNewValues={false} />
-                    </ComposedChart >}
-            </ResponsiveContainer>
+        <div>
+            <Chart type={"line"} height="400px" data={{
+                labels: movements.items.map(point => point.dateTime.toJSDate()),
+                datasets: [{
+                    label: "Balance",
+                    data: balances,
+                    type: "line",
+                    stepped: true,
+                    borderColor: "#558eb3",
+                    backgroundColor: "transparent",
+                },
+                {
+                    label: "Revenue",
+                    data: movements.items.map(point => point.revenue.toNumber()),
+                    type: "bar",
+                    borderColor: "transparent",
+                    backgroundColor: "#4db09b"
+                },
+                {
+                    label: "Expenses",
+                    data: movements.items.map(point => point.expenses.toNumber()),
+                    type: "bar",
+                    borderColor: "transparent",
+                    backgroundColor: "#ff6b6b"
+                }],
+            }} options={{
+                maintainAspectRatio: false,
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'time',
+                        display: true,
+                        offset: true,
+                        time: {
+                            unit: resolution
+                        }
+                    },
+                },
+                interaction: {
+                    intersect: false,
+                }
+            }}>
+            </Chart>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
             <p>Showing (click to change):</p>&nbsp;

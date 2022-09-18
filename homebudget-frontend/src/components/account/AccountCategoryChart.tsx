@@ -1,15 +1,31 @@
 import * as React from "react";
-import { LineChart, Line, ResponsiveContainer, XAxis, CartesianGrid, Tooltip, YAxis, Legend, AreaChart, Area, BarChart, Bar, ComposedChart, PieChart, Pie, Cell } from "recharts";
-import { GetMovementResponse, TimeResolution } from "../../models/account";
-import ResizeObserver from 'react-resize-detector';
 import { Api } from "../../lib/ApiClient";
-import { DateTime, Duration, DurationLike } from "luxon";
 import { Preferences } from "../../models/preferences";
-import { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
-import Decimal from "decimal.js";
 import { Period, PeriodFunctions } from "../../models/period";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
-
+import {
+    Chart as ChartJS,
+    LinearScale,
+    CategoryScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement
+} from 'chart.js'
+import { Chart } from 'react-chartjs-2'
+  
+ChartJS.register(
+    LinearScale,
+    PointElement,
+    CategoryScale,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+)
 interface Props {
     id: number;
     preferences: Preferences | "fetching";
@@ -33,33 +49,31 @@ export default function AccountCategoryChart(props: Props) {
     // Generate colors by selecting evenly spaced hues on the color wheel
     let colors = Array.from(Array(data.length).keys()).map((_, i) => "hsl(" + (i / data.length * 360) + ", 70%, 70%)");
     return <>
-        <div style={{ height: 400 }}>
-            <ResponsiveContainer>
-                {(props.type ?? "bar") === "bar"
-                    ? < BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey={'category'} />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="revenue" fill="#4db09b" />
-                        <Bar dataKey="expenses" fill="#ff6b6b" />
-                    </BarChart>
-                    : <PieChart>
-                        <Pie data={data} dataKey="revenue" nameKey="category" cx="50%" cy="50%" innerRadius="30%" outerRadius="50%">
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                            ))}
-                        </Pie>
-                        <Pie data={data} dataKey="expenses" nameKey="category" cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" legendType="none">
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                    </PieChart>}
-            </ResponsiveContainer>
+        <div>
+            <Chart type={"line"} height="400px" data={{
+                labels: data.map(point => point.category),
+                datasets: [{
+                    label: "Revenue",
+                    data: data.map(point => point.revenue),
+                    type: "bar",
+                    borderColor: "transparent",
+                    backgroundColor: "#4db09b"
+                },
+                {
+                    label: "Expenses",
+                    data: data.map(point => point.expenses),
+                    type: "bar",
+                    borderColor: "transparent",
+                    backgroundColor: "#ff6b6b"
+                }],
+            }} options={{
+                maintainAspectRatio: false,
+                responsive: true,
+                interaction: {
+                    intersect: false,
+                }
+            }}>
+            </Chart>
         </div>
     </>;
 }
