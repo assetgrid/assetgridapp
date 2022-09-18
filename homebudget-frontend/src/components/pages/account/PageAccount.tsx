@@ -47,15 +47,16 @@ export default function () {
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
     const { preferences, updatePreferences } = React.useContext(preferencesContext);
-    const [page, setPage] = React.useState(typeof(window.history.state.page) === "number" ? window.history.state.page : 1);
+    const [page, setPage] = React.useState(typeof(window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
     const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
+    const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(window.history.state.usr?.selectedTransactions ? window.history.state.usr?.selectedTransactions : {});
 
     // Keep state updated
     const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
     React.useEffect(() => {
-        updateHistoryDebounced(period, page);
-    }, [period, page]);
+        updateHistoryDebounced(period, page, selectedTransactions);
+    }, [period, page, selectedTransactions]);
 
     // Update account when id is changed
     React.useEffect(() => {
@@ -134,16 +135,21 @@ export default function () {
                     goToPage={goToPage}
                     pageSize={pageSize}
                     draw={draw}
+                    selectedTransactions={selectedTransactions}
+                    setSelectedTransactions={setSelectedTransactions}
                 />
             </Card>
         </div>
     </>;
 
-    function updateHistory(period: Period, page: number) {
+    function updateHistory(period: Period, page: number, selectedTransactions: { [id: number]: boolean }) {
         window.history.replaceState({
             ...window.history.state,
-            period: PeriodFunctions.serialize(period),
-            page: page
+            usr: {
+                period: PeriodFunctions.serialize(period),
+                page,
+                selectedTransactions
+            }
         }, "");
     }
     

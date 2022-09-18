@@ -88,13 +88,14 @@ function TransactionList(props: Props) {
     function renderTable(items: { item: Transaction, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
             {props.allowEditing && <div>
-                <DropdownButton
+                <TransactionSelectDropdownButton
                     clearSelection={() => setSelectedTransactions({})}
                     selectAll={() => selectAllTransactions()}
                     selected={Object.keys(selectedTransactions).length > 0}
                     editSelection={() => beginEditMultiple("selection")}
                     editSelectionDisabled={Object.keys(selectedTransactions).length === 0}
                     editAll={() => beginEditMultiple("all")}
+                    editAllText="Modify all transactions matching current search"
                 />
             </div>}
             {renderColumnHeader("Id", "Id", "numeric")}
@@ -218,8 +219,9 @@ interface DropdownButtonProps {
     editSelection: () => void;
     editSelectionDisabled: boolean;
     editAll: () => void;
+    editAllText: string;
 }
-function DropdownButton(props: DropdownButtonProps): React.ReactElement {
+export function TransactionSelectDropdownButton(props: DropdownButtonProps): React.ReactElement {
     const [open, setOpen] = React.useState(false);
 
     return <div tabIndex={0}
@@ -241,7 +243,7 @@ function DropdownButton(props: DropdownButtonProps): React.ReactElement {
                     Modify selection
                 </a>
                 <a className="dropdown-item" onClick={props.editAll}>
-                    Modify all transactions matching current search
+                    {props.editAllText}
                 </a>
             </div>
         </div>
