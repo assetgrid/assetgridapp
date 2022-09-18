@@ -61,7 +61,7 @@ export default function AccountCategoryChart(props: Props) {
                 },
                 {
                     label: "Expenses",
-                    data: data.map(point => point.expenses),
+                    data: data.map(point => -point.expenses),
                     type: "bar",
                     borderColor: "transparent",
                     backgroundColor: "#ff6b6b"
@@ -71,6 +71,11 @@ export default function AccountCategoryChart(props: Props) {
                 responsive: true,
                 interaction: {
                     intersect: false,
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    }
                 }
             }}>
             </Chart>
