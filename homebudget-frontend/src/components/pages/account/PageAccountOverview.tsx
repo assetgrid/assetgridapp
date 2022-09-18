@@ -14,7 +14,7 @@ export default function PageAccountOverview() {
         </section>
         <div className="p-3">
             <Card title="Actions">
-                <Link to={routes.accountCreate()}
+                <Link to={routes.accountCreate()} state={{ allowBack: true }}
                     className="button">
                     Create account
                 </Link>

@@ -25,6 +25,8 @@ export default function () {
     const navigate = useNavigate();
     const [createdAccount, setCreatedAccount] = React.useState<Account | null>(null);
 
+    const allowBack = window.history.state.usr?.allowBack === true;
+
     return <>
         <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
             <div className="hero-body">
@@ -63,8 +65,9 @@ export default function () {
                     disabled={isCreating} />  
 
                 <div className="buttons">
-                    <InputButton onClick={() => create(true)} disabled={isCreating}>Create and stay</InputButton>
-                    <InputButton onClick={() => create(false)} disabled={isCreating}>Create and view account</InputButton>
+                    <InputButton className="is-primary" onClick={() => create(true)} disabled={isCreating}>Create and stay</InputButton>
+                    <InputButton className="is-primary" onClick={() => create(false)} disabled={isCreating}>Create and view account</InputButton>
+                    {allowBack && <InputButton onClick={() => navigate(-1)}>Cancel</InputButton>}
                 </div>
             </Card>
         </div>
