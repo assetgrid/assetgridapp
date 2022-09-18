@@ -20,10 +20,9 @@ namespace homebudget_server.Controllers
         [Route("/[controller]/[action]/{prefix}")]
         public string[] CategoryAutocomplete(string prefix)
         {
-            return _context.Transactions
-                .Where(t => t.Category!.NormalizedName.Contains(Category.Normalize(prefix)))
-                .Select(t => t.Category!.Name)
-                .Distinct()
+            return _context.Categories
+                .Where(category => category.NormalizedName.Contains(Category.Normalize(prefix)))
+                .Select(category => category.Name)
                 .ToArray();
         }
     }

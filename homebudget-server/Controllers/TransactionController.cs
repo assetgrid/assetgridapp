@@ -137,103 +137,9 @@ namespace homebudget_server.Controllers
                         .Include(t => t.DestinationAccount)
                         .Include(t => t.TransactionLines)
                         .Single(t => t.Id == id);
-                    
-                    if (model.DateTime != null)
-                    {
-                        dbObject.DateTime = model.DateTime.Value;
-                    }
-                    if (model.Description != null)
-                    {
-                        dbObject.Description = model.Description;
-                    }
-                    if (model.HasUniqueIdentifier)
-                    {
-                        dbObject.Identifier = model.Identifier;
-                    }
-                    if (model.DestinationId != null)
-                    {
-                        dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;
-                    }
-                    if (model.SourceId != null)
-                    {
-                        dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
-                    }
-                    if (model.Category != null)
-                    {
-                        if (Category.Normalize(model.Category) != "")
-                        {
-                            dbObject.Category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
-                            if (dbObject.Category == null)
-                            {
-                                dbObject.Category = new Category
-                                {
-                                    Name = model.Category,
-                                    NormalizedName = Category.Normalize(model.Category),
-                                };
-                            }
-                        }
-                        else
-                        {
-                            dbObject.Category = null;
-                            dbObject.CategoryId = null;
-                        }
-                    }
-                    if (model.Total != null)
-                    {
-                        dbObject.Total = model.Total.Value;
-                    }
-                    if (model.Lines != null)
-                    {
-                        _context.RemoveRange(dbObject.TransactionLines);
-                        dbObject.TransactionLines = model.Lines.Select((line, index) =>
-                            new TransactionLine {
-                                Amount = line.Amount,
-                                Description = line.Description,
-                                Order = index,
-                                Transaction = dbObject,
-                                TransactionId = dbObject.Id,
-                            })
-                            .ToList();
-                    }
-
-                    ModelState.Clear();
-                    if (TryValidateModel(dbObject))
-                    {
-
-                        transaction.Commit();
-                        _context.SaveChanges();
-
-                        return new ViewTransaction
-                        {
-                            Id = dbObject.Id,
-                            Identifier = dbObject.Identifier,
-                            DateTime = dbObject.DateTime,
-                            Description = dbObject.Description,
-                            Category = dbObject.Category?.Name ?? "",
-                            Total = dbObject.Total,
-                            Source = dbObject.SourceAccount != null
-                                ? new ViewAccount
-                                {
-                                    Id = dbObject.SourceAccount.Id,
-                                    Name = dbObject.SourceAccount.Name,
-                                    Description = dbObject.SourceAccount.Description,
-                                } : null,
-                            Destination = dbObject.DestinationAccount != null
-                                ? new ViewAccount
-                                {
-                                    Id = dbObject.DestinationAccount.Id,
-                                    Name = dbObject.DestinationAccount.Name,
-                                    Description = dbObject.DestinationAccount.Description,
-                                } : null,
-                            Lines = dbObject.TransactionLines
-                                .OrderBy(line => line.Order)
-                                .Select(line => new ViewTransactionLine
-                                {
-                                    Description = line.Description,
-                                    Amount = line.Amount,
-                                }).ToList(),
-                        };
-                    }
+                    var result = UpdateTransaction(dbObject, model);
+                    transaction.Commit();
+                    return result;
                 }
             }
             throw new Exception();
@@ -256,77 +162,120 @@ namespace homebudget_server.Controllers
 
                     foreach (var dbObject in transactions)
                     {
-                        var model = request.model;
-                        if (model.DateTime != null)
-                        {
-                            dbObject.DateTime = model.DateTime.Value;
-                        }
-                        if (model.Description != null)
-                        {
-                            dbObject.Description = model.Description;
-                        }
-                        if (model.HasUniqueIdentifier)
-                        {
-                            dbObject.Identifier = model.Identifier;
-                        }
-                        if (model.DestinationId != null)
-                        {
-                            dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;
-                        }
-                        if (model.SourceId != null)
-                        {
-                            dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
-                        }
-                        if (model.Category != null)
-                        {
-                            if (Category.Normalize(model.Category) != "")
-                            {
-                                dbObject.Category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
-                                if (dbObject.Category == null)
-                                {
-                                    dbObject.Category = new Category
-                                    {
-                                        Name = model.Category,
-                                        NormalizedName = Category.Normalize(model.Category),
-                                    };
-                                }
-                            }
-                            else
-                            {
-                                dbObject.Category = null;
-                                dbObject.CategoryId = null;
-                            }
-                        }
-                        if (model.Total != null)
-                        {
-                            dbObject.Total = model.Total.Value;
-                        }
-                        if (model.Lines != null)
-                        {
-                            _context.RemoveRange(dbObject.TransactionLines);
-                            dbObject.TransactionLines = model.Lines.Select((line, index) =>
-                                new TransactionLine
-                                {
-                                    Amount = line.Amount,
-                                    Description = line.Description,
-                                    Order = index,
-                                    Transaction = dbObject,
-                                    TransactionId = dbObject.Id,
-                                })
-                                .ToList();
-                        }
-
-                        ModelState.Clear();
-                        if (TryValidateModel(dbObject))
-                        {
-
-                            _context.SaveChanges();
-                        }
+                        UpdateTransaction(dbObject, request.model);
                     }
                     transaction.Commit();
                 }
                 return;
             }
+            throw new Exception();
+        }
+
+        private ViewTransaction UpdateTransaction(Transaction dbObject, ViewUpdateTransaction model)
+        {
+            if (model.DateTime != null)
+            {
+                dbObject.DateTime = model.DateTime.Value;
+            }
+            if (model.Description != null)
+            {
+                dbObject.Description = model.Description;
+            }
+            if (model.HasUniqueIdentifier)
+            {
+                dbObject.Identifier = model.Identifier;
+            }
+            if (model.DestinationId != null)
+            {
+                dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;
+            }
+            if (model.SourceId != null)
+            {
+                dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
+            }
+            if (model.Category != null)
+            {
+                var previousCategoryId = dbObject.CategoryId;
+                if (Category.Normalize(model.Category) != "")
+                {
+                    dbObject.Category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
+                    if (dbObject.Category == null)
+                    {
+                        dbObject.Category = new Category
+                        {
+                            Name = model.Category,
+                            NormalizedName = Category.Normalize(model.Category),
+                        };
+                    }
+                }
+                else
+                {
+                    dbObject.Category = null;
+                    dbObject.CategoryId = null;
+                }
+
+                _context.SaveChanges();
+                if (previousCategoryId.HasValue && ! _context.Transactions.Any(transaction => transaction.CategoryId == previousCategoryId)) {
+                    // Remove categories that are not referenced by any transactions
+                    _context.Categories.Remove(_context.Categories.Single(category => category.Id == previousCategoryId));
+                }
+            }
+            if (model.Total != null)
+            {
+                dbObject.Total = model.Total.Value;
+            }
+            if (model.Lines != null)
+            {
+                _context.RemoveRange(dbObject.TransactionLines);
+                dbObject.TransactionLines = model.Lines.Select((line, index) =>
+                    new TransactionLine
+                    {
+                        Amount = line.Amount,
+                        Description = line.Description,
+                        Order = index,
+                        Transaction = dbObject,
+                        TransactionId = dbObject.Id,
+                    })
+                    .ToList();
+            }
+
+            ModelState.Clear();
+            if (TryValidateModel(dbObject))
+            {
+                _context.SaveChanges();
+
+                return new ViewTransaction
+                {
+                    Id = dbObject.Id,
+                    Identifier = dbObject.Identifier,
+                    DateTime = dbObject.DateTime,
+                    Description = dbObject.Description,
+                    Category = dbObject.Category?.Name ?? "",
+                    Total = dbObject.Total,
+                    Source = dbObject.SourceAccount != null
+                        ? new ViewAccount
+                        {
+                            Id = dbObject.SourceAccount.Id,
+                            Name = dbObject.SourceAccount.Name,
+                            Description = dbObject.SourceAccount.Description,
+                        } : null,
+                    Destination = dbObject.DestinationAccount != null
+                        ? new ViewAccount
+                        {
+                            Id = dbObject.DestinationAccount.Id,
+                            Name = dbObject.DestinationAccount.Name,
+                            Description = dbObject.DestinationAccount.Description,
+                        } : null,
+                    Lines = dbObject.TransactionLines
+                        .OrderBy(line => line.Order)
+                        .Select(line => new ViewTransactionLine
+                        {
+                            Description = line.Description,
+                            Amount = line.Amount,
+                        }).ToList(),
+                };
+            }
+
             throw new Exception();
         }
 
@@ -339,7 +288,16 @@ namespace homebudget_server.Controllers
                 var dbObject = _context.Transactions
                     .Single(t => t.Id == id);
 
+                var categoryId = dbObject.CategoryId;
+
                 _context.Transactions.Remove(dbObject);
+                _context.SaveChanges();
+
+                if (categoryId.HasValue && ! _context.Transactions.Any(transaction => transaction.CategoryId == categoryId))
+                {
+                    // Remove categories that are not referenced by any transactions
+                    _context.Categories.Remove(_context.Categories.Single(category => category.Id == categoryId));
+                }
 
                 transaction.Commit();
                 _context.SaveChanges();

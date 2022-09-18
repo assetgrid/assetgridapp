@@ -224,9 +224,12 @@ namespace homebudget_server.Controllers
                 // Delete transactions that do not have any accounts
                 _context.Database.ExecuteSqlInterpolated($"DELETE FROM Transactions WHERE SourceAccountId IS NULL AND DestinationAccountId IS NULL");
                 _context.Accounts.Remove(dbObject);
+                _context.SaveChanges();
+                // Delete all categories that are unused by transactions
+                _context.Categories.RemoveRange(_context.Categories.Where(category => !_context.Transactions.Any(transaction => transaction.CategoryId == category.Id)));
+                _context.SaveChanges();
 
                 transaction.Commit();
-                _context.SaveChanges();
 
                 return;
             }
