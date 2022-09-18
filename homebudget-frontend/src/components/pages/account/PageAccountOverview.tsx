@@ -1,6 +1,8 @@
 import * as React from "react";
 import { Card } from "../../common/Card";
 import AccountList from "../../account/AccountList";
+import { Link } from "react-router-dom";
+import { routes } from "../../../lib/routes";
 
 export default function PageAccountOverview() {
     return <>
@@ -11,6 +13,12 @@ export default function PageAccountOverview() {
             </div>
         </section>
         <div className="p-3">
+            <Card title="Actions">
+                <Link to={routes.accountCreate()}
+                    className="button">
+                    Create account
+                </Link>
+            </Card>
             <Card title="Accounts">
                 <AccountList />
             </Card>

@@ -42,8 +42,6 @@ export default class CreateTransaction extends React.Component<{}, State> {
 
     public render() {
         return <>
-            <h2 className="title is-2">Create Transaction</h2>
-            <h3 className="title is-4">Properties</h3>
             <div className="columns">
                 <div className="column is-half">
                     <InputText label="Description"
@@ -113,12 +111,6 @@ export default class CreateTransaction extends React.Component<{}, State> {
             )}
             <div className="buttons">
                 <InputButton onClick={() => this.addLine()}>Add line</InputButton>
-            </div>
-
-            <h3 className="title is-4">Create Transaction</h3>
-            <div className="buttons">
-                <InputButton onClick={() => this.create()}>Create and Continue</InputButton>
-                <InputButton onClick={() => this.create()}>Create and View Transaction</InputButton>
             </div>
         </>;
     }

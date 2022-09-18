@@ -53,7 +53,7 @@ export default function PageTransactions() {
         </section>
         <div className="p-3">
             <Card title="Actions">
-                <Link to={routes.createTransaction()}
+                <Link to={routes.transactionCreate()}
                     className="button">
                     Create Transaction
                 </Link>

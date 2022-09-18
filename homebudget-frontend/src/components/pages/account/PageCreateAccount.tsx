@@ -8,7 +8,7 @@ export default function () {
         <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
             <div className="hero-body">
                 <p className="title has-text-white">
-                    Create new transaction
+                    Create new account
                 </p>
             </div>
         </section>
