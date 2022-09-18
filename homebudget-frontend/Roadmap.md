@@ -32,7 +32,7 @@
 - [x] Preserve state on the transactions page
 - [ ] Date time input rather than just date
 - [x] Make the CreateMany function fix transactions before returning them
-- [ ] Input for amounts should show the correct decimals
+~~- [ ] Input for amounts should show the correct decimals~~
 - [ ] When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
 - [x] Implement ordering for transactions
 - [x] Truncate long descriptions
@@ -47,3 +47,5 @@
 - [x] Move account deletion modal to it's own page
 - [x] Delete account page should detect invalid accounts
 - [x] Implement multi editing on the account page
+- [ ] Finish dashboard
+- [ ] Fix search

@@ -20,8 +20,8 @@ import InputCategory from "../../input/InputCategory";
 import InputButton from "../../input/InputButton";
 import Decimal from "decimal.js";
 import InputTextOrNull from "../../input/InputTextOrNull";
-import Page404 from "../account/Page404";
-import PageError from "../account/PageError";
+import Page404 from "../Page404";
+import PageError from "../PageError";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);

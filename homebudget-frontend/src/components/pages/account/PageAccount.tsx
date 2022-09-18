@@ -23,8 +23,8 @@ import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
 import InputCheckbox from "../../input/InputCheckbox";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
-import Page404 from "./Page404";
-import PageError from "./PageError";
+import Page404 from "../Page404";
+import PageError from "../PageError";
 
 const pageSize = 20;
 

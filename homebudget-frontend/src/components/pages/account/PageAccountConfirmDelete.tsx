@@ -10,8 +10,8 @@ import { preferencesContext } from "../../App";
 import { Card } from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import TransactionList from "../../transaction/TransactionList";
-import Page404 from "./Page404";
-import PageError from "./PageError";
+import Page404 from "../Page404";
+import PageError from "../PageError";
 
 export default function PageAccountConfirmDelete() {
     const id = Number(useParams().id);
