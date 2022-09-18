@@ -37,9 +37,9 @@ export default function () {
         type: "month",
         start: DateTime.now().startOf("month"),
     };
-    if (window.history.state.period) {
+    if (window.history.state.usr?.period) {
         try {
-            const period = PeriodFunctions.parse(window.history.state.period);
+            const period = PeriodFunctions.parse(window.history.state.usr.period);
             if (period) {
                 defaultPeriod = period;
             }
