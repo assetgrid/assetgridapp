@@ -39,7 +39,6 @@ interface Props {
 
 export default function AccountBalanceChart(props: Props) {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
-    const [type, setType] = React.useState<"cashflow" | "balance">("balance");
     const [resolution, setResolution] = React.useState<"month" | "day" | "year">("day");
 
     React.useEffect(() => {
@@ -109,10 +108,6 @@ export default function AccountBalanceChart(props: Props) {
                     let options = ["day", "month", "year"];
                     setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
                 }}>{["Daily", "Monthly", "Yearly"][["day", "month", "year"].indexOf(resolution)]}</span>
-            <span style={{ cursor: "pointer" }} className="tag is-dark"
-                onClick={() => setType(type === "balance" ? "cashflow" : "balance")}>
-                { type === "balance" ? <>Balance</> : <>Revenue/expenses</>}
-            </span>
         </div>
     </>;
 }
@@ -136,22 +131,4 @@ function updateData(id: number, period: Period, resolutionString: "day" | "year"
         .then(result => {
             setData(result);
         });
-}
-
-function customTooltip(data: { active: boolean, payload: any, label: number }, type: "cashflow" | "balance", preferences: Preferences | "fetching") {
-    let { active, payload, label } = data;
-    if (active && payload && payload.length) {
-        return (
-            <div style={{ background: "white", padding: "0.75rem", border: "1px solid #999" }}>
-                <p className="label">{DateTime.fromMillis(label).toLocaleString(DateTime.DATE_FULL)}</p>
-                {type === "balance" && <p className="desc">Balance: {formatNumberWithPrefs(new Decimal(payload[0].value), preferences)}</p>}
-                {type === "cashflow" && <>
-                    <p className="desc">Revenue: {formatNumberWithPrefs(new Decimal(payload[1].value), preferences)}</p>
-                    <p className="desc">Expenses: {formatNumberWithPrefs(new Decimal(payload[2].value), preferences)}</p>
-                </>}
-            </div>
-        );
-    }
-  
-    return null;
 }
