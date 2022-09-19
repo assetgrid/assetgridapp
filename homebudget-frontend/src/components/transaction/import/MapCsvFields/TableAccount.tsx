@@ -5,7 +5,7 @@ import { Account } from "../../../../models/account";
 import AccountLink from "../../../account/AccountLink";
 import Tooltip from "../../../common/Tooltip";
 import InputButton from "../../../input/InputButton";
-import { AccountReference } from "../ImportModels";
+import { AccountReference } from "../importModels";
 
 interface Props {
     reference: AccountReference | null;

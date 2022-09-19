@@ -4,7 +4,7 @@ import { Account, CreateAccount } from "../../../../models/account";
 import { Card } from "../../../common/Card";
 import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
-import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "../ImportModels";
+import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "../importModels";
 import CreateAccountModal from "../../../account/input/CreateAccountModal";
 import { parseWithOptions, ParseOptions } from "../ParseOptions";
 import { InputParseOptionsModal } from "../../../input/InputParsingOptions";

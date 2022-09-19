@@ -2,7 +2,7 @@ import * as React from "react";
 import { Account } from "../../../../models/account";
 import { Message } from "../../../common/Message";
 import InputButton from "../../../input/InputButton";
-import { CsvCreateTransaction } from "../ImportModels";
+import { CsvCreateTransaction } from "../importModels";
 import { CsvMappingTableFilter } from "./MapCsvFields";
 
 interface Props {

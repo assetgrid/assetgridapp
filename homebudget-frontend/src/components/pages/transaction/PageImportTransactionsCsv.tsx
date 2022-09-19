@@ -7,7 +7,7 @@ import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "
 import InputButton from "../../input/InputButton";
 import { Import } from "../../transaction/import/Import";
 import ImportCsv, { CsvImportOptions } from "../../transaction/import/ImportCsv";
-import { AccountReference, capitalize, CsvCreateTransaction } from "../../transaction/import/ImportModels";
+import { AccountReference, capitalize, CsvCreateTransaction } from "../../transaction/import/importModels";
 import MapCsvFields, { MappingOptions } from "../../transaction/import/MapCsvFields/MapCsvFields";
 import { ParseOptions } from "../../transaction/import/ParseOptions";
 
