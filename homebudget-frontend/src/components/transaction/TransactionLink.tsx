@@ -1,4 +1,4 @@
-import React = require("react");
+import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { Transaction } from "../../models/transaction";

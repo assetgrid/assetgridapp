@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import React = require("react");
+import * as React from "react";
 import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";

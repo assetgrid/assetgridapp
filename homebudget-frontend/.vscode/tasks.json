@@ -21,6 +21,22 @@
             }
         },
         {
+            "label": "Build (production)",
+            "command": "${workspaceFolder}/node_modules/.bin/webpack",
+            "windows": {
+                "command": "${workspaceFolder}/node_modules/.bin/webpack.cmd"
+            },
+            "args": [
+                "--progress",
+                "--config",
+                "./webpack.production.config.js"
+            ],
+            "problemMatcher": "$tsc",
+            "group": {
+                "kind": "build",
+            }
+        },
+        {
             "label": "Lint",
             "command": "npm run lint",
             "problemMatcher": "$eslint-compact"

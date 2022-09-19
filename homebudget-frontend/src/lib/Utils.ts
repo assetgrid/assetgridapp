@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import React = require("react");
+import * as React from "react";
 import { preferencesContext } from "../components/App";
 import { Preferences } from "../models/preferences";
 import { SearchGroup, SearchGroupType } from "../models/search";

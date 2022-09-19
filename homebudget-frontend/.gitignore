@@ -76,3 +76,4 @@ typings/
 .fusebox/
 
 dist/
+dist.production/

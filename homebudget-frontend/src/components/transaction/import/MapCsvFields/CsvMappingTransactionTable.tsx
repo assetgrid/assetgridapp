@@ -1,4 +1,4 @@
-import React = require("react");
+import * as React from "react";
 import { formatNumberWithPrefs } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
 import { preferencesContext } from "../../../App";

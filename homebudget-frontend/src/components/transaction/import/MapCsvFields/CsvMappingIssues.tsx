@@ -1,4 +1,4 @@
-import React = require("react");
+import * as React from "react";
 import { Account } from "../../../../models/account";
 import { Message } from "../../../common/Message";
 import InputButton from "../../../input/InputButton";

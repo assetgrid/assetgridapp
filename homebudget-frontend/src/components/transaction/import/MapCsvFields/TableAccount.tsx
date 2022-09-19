@@ -1,6 +1,6 @@
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React = require("react");
+import * as React from "react";
 import { Account } from "../../../../models/account";
 import AccountLink from "../../../account/AccountLink";
 import Tooltip from "../../../common/Tooltip";
