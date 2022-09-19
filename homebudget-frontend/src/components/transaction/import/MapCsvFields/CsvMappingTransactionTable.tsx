@@ -4,7 +4,7 @@ import { Account } from "../../../../models/account";
 import { preferencesContext } from "../../../App";
 import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
-import { AccountReference, CsvCreateTransaction } from "../ImportModels";
+import { AccountReference, CsvCreateTransaction } from "../importModels";
 import DuplicateIndicator from "./DuplicateIndicator";
 import { CsvMappingTableFilter } from "./MapCsvFields";
 import TableAccount from "./TableAccount";
