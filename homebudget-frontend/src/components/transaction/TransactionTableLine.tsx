@@ -8,7 +8,7 @@ import { Preferences } from "../../models/preferences";
 import { Transaction, TransactionLine } from "../../models/transaction";
 import InputAccount from "../account/input/InputAccount";
 import InputCategory from "../input/InputCategory";
-import InputDate from "../input/InputDate";
+import InputDateTime from "../input/InputDateTime";
 import InputText from "../input/InputText";
 import TransactionLink from "./TransactionLink";
 import * as regular from "@fortawesome/free-regular-svg-icons"
@@ -182,7 +182,7 @@ function TransactionEditor(props: TransactionEditorProps) {
         </div>}
         <div><TransactionLink transaction={props.transaction} /></div>
         <div>
-            <InputDate value={model.dateTime}
+            <InputDateTime value={model.dateTime}
                 fullwidth={true}
                 onChange={e => setModel({ ...model, dateTime: e })}
                 disabled={props.disabled} /></div>

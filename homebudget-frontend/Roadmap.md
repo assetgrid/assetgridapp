@@ -30,7 +30,7 @@
 - [x] Use strict typescript
 - [ ] Allow the use of back to the import page
 - [x] Preserve state on the transactions page
-- [ ] Date time input rather than just date
+- [x] Date time input rather than just date
 - [x] Make the CreateMany function fix transactions before returning them
 ~~- [ ] Input for amounts should show the correct decimals~~
 - [ ] When importing, if there are any empty unique identifier columns. The user should be given the option of excluding those transactions or allowing duplicates for those transactions.
@@ -51,5 +51,5 @@
 - [ ] Fix search
 - [x] Fix account and transaction creation pages
 - ~~[ ] Add property to transaction called type that can be deposit, withdrawal or transfer. Depends on whether source, destination or both are included in net worth. Transactions should be colored according to type on transaction page and it should be possible to filter transactions based on type~~
-- [ ] Add set lines transaction multi editor 
+- [x] Add set lines transaction multi editor 
 - [x] Add delete to transaction multi editor

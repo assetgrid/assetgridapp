@@ -4,8 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { DateTime } from "luxon";
 import { Calendar } from "react-date-range";
-import { formatDateWithPrefs } from "../../lib/Utils";
+import { formatDateTimeWithPrefs, formatDateWithPrefs } from "../../lib/Utils";
 import { preferencesContext } from "../App";
+import InputNumber from "./InputNumber";
+import Decimal from "decimal.js";
 
 export interface Props {
     label?: string,
@@ -15,7 +17,7 @@ export interface Props {
     fullwidth: boolean;
 }
 
-export default function InputDate (props: Props) {
+export default function InputDateTime (props: Props) {
     const [open, setOpen] = React.useState(false);
     const { preferences } = React.useContext(preferencesContext);
 
@@ -23,10 +25,10 @@ export default function InputDate (props: Props) {
     if (props.value == null) {
         value = "Select date";
     } else {
-        value = formatDateWithPrefs(props.value, preferences);
+        value = formatDateTimeWithPrefs(props.value, preferences);
     }
     
-    return <div className="field" tabIndex={0}
+    return <div className="field input-datetime" tabIndex={0}
         onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
         >
         {props.label !== undefined && <label className="label">{props.label}</label>}
@@ -45,6 +47,19 @@ export default function InputDate (props: Props) {
                         date={props.value.startOf("day").toJSDate()}
                         onChange={date => props.onChange(DateTime.fromJSDate(date))}
                     />
+                    <div className="input-time">
+                        <InputNumber
+                            allowNull={false}
+                            value={new Decimal(props.value.hour)}
+                            disabled={props.disabled}
+                            onChange={value => props.onChange(props.value.set({ hour: value.toNumber() }))} />
+                        <div className="separator"> : </div>
+                        <InputNumber
+                            allowNull={false}
+                            value={new Decimal(props.value.minute)}
+                            disabled={props.disabled}
+                            onChange={value => props.onChange(props.value.set({ minute: value.toNumber() }))} />
+                    </div>
                 </div>
             </div>
         </div>

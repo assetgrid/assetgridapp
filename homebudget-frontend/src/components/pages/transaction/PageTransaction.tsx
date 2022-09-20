@@ -13,7 +13,7 @@ import Modal from "../../common/Modal";
 import { routes } from "../../../lib/routes";
 import DeleteTransactionModal from "../../transaction/input/DeleteTransactionModal";
 import InputText from "../../input/InputText";
-import InputDate from "../../input/InputDate";
+import InputDateTime from "../../input/InputDateTime";
 import InputNumber from "../../input/InputNumber";
 import InputAccount from "../../account/input/InputAccount";
 import InputCategory from "../../input/InputCategory";
@@ -237,7 +237,7 @@ function transactionDetails(
                     <tr>
                         <td>Timestamp</td>
                         <td>
-                            <InputDate
+                            <InputDateTime
                                 value={editModel.dateTime}
                                 fullwidth={true}
                                 onChange={value => onChange({ ...editModel, dateTime: value })}

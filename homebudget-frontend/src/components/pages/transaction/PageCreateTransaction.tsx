@@ -12,7 +12,7 @@ import { preferencesContext } from "../../App";
 import Card from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
-import InputDate from "../../input/InputDate";
+import InputDateTime from "../../input/InputDateTime";
 import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputText from "../../input/InputText";
@@ -53,7 +53,7 @@ export default function () {
                     </div>
                 </article>}
 
-                <InputDate label="Timestamp"
+                <InputDateTime label="Timestamp"
                     value={model.dateTime}
                     onChange={value => setModel({ ...model, dateTime: value })}
                     fullwidth={false}

@@ -11,7 +11,7 @@ import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
-import InputDate from "../../input/InputDate";
+import InputDateTime from "../../input/InputDateTime";
 import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputSelect from "../../input/InputSelect";
@@ -201,7 +201,7 @@ function renderActionValue(action: Action, model: UpdateTransaction, setModel: R
             if (! model.dateTime) {
                 return <></>;
             }
-            return <InputDate label="Select timestamp"
+            return <InputDateTime label="Select timestamp"
                 disabled={disabled}
                 fullwidth={false}
                 value={model.dateTime}

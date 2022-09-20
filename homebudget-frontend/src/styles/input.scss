@@ -123,3 +123,19 @@
 .button.icon {
     height: 2.5rem;
 }
+
+/*
+ * DateTime
+ */
+.input-datetime {
+    .input-time {
+        padding: 0 0.5rem;
+        display: flex;
+    }
+    .separator {
+        padding: 0.25rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+    }
+}
