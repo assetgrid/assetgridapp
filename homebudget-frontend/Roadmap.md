@@ -52,4 +52,4 @@
 - [x] Fix account and transaction creation pages
 - ~~[ ] Add property to transaction called type that can be deposit, withdrawal or transfer. Depends on whether source, destination or both are included in net worth. Transactions should be colored according to type on transaction page and it should be possible to filter transactions based on type~~
 - [ ] Add set lines transaction multi editor 
-- [ ] Add delete to transaction multi editor
+- [x] Add delete to transaction multi editor

@@ -26,6 +26,7 @@ const actions = [
     { key: "set-source", value: "Set source account" },
     { key: "set-destination", value: "Set destination account" },
     { key: "set-category", value: "Set category" },
+    { key: "delete", value: "Delete" },
 ] as const;
 type Action = typeof actions[number]['key'];
 
@@ -79,6 +80,9 @@ export default function PageEditMultipleTransactions() {
             case "set-lines":
                 setModel({ lines: [] });
                 break;
+            case "delete":
+                setModel({});
+                break;
         }
     }, [action]);
 
@@ -125,7 +129,11 @@ export default function PageEditMultipleTransactions() {
             return;
         }
 
-        await Api.Transaction.updateMultiple(query, model);
+        if (action === "delete") {
+            await Api.Transaction.deleteMultiple(query);
+        } else {
+            await Api.Transaction.updateMultiple(query, model);
+        }
         setIsUpdating(false);
         setDraw(draw => draw + 1);
     }
@@ -147,6 +155,7 @@ function renderAction(action: Action | null, setAction: (action: Action) => void
 
     switch (action) {
         case "set-lines":
+        case "delete":
             return <InputSelect
                 label="Action"
                 items={[...actions]}

@@ -351,7 +351,6 @@ const Transaction = {
      * Updates all transactions matching the specified query
      * @param query A query describing which transactions to modify
      * @param transaction The changes to make
-     * @returns The updated transaction
      */
      updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -384,6 +383,21 @@ const Transaction = {
         return new Promise<void>((resolve, reject) => {
             axios.delete<void>(rootUrl + "/transaction/" + id)
                 .then(() => resolve())
+                .catch(e => {
+                    console.log(e);
+                    reject();
+                })
+        });
+    },
+
+    /**
+     * Deletes all transactions matching the specified query
+     * @param query A query describing which transactions to delete
+     */
+     deleteMultiple: function (query: SearchGroup): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            axios.delete<Transaction>(rootUrl + "/transaction/deleteMultiple", { data: query })
+                .then(result => resolve())
                 .catch(e => {
                     console.log(e);
                     reject();
