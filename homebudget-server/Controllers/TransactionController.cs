@@ -153,13 +153,13 @@ namespace homebudget_server.Controllers
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
-                    var transactions = _context.Transactions
+                    var query = _context.Transactions
                         .Include(t => t.SourceAccount)
                         .Include(t => t.DestinationAccount)
                         .Include(t => t.TransactionLines)
-                        .ApplySearch(request.query)
-                        .ToList();
+                        .ApplySearch(request.query);
 
+                    var transactions = query.ToList();
                     foreach (var dbObject in transactions)
                     {
                         UpdateTransaction(dbObject, request.model);
@@ -220,12 +220,25 @@ namespace homebudget_server.Controllers
                     _context.Categories.Remove(_context.Categories.Single(category => category.Id == previousCategoryId));
                 }
             }
-            if (model.Total != null)
+            if (model.Total != null && dbObject.TransactionLines.Count == 0)
             {
                 dbObject.Total = model.Total.Value;
+                if (dbObject.Total < 0)
+                {
+                    // All transactions must have positive totals
+                    dbObject.Total = -dbObject.Total;
+                    var source = dbObject.SourceAccountId;
+                    dbObject.SourceAccountId = dbObject.DestinationAccountId;
+                    dbObject.DestinationAccountId = source;
+                }
             }
             if (model.Lines != null)
             {
+                if (model.Total != null)
+                {
+                    dbObject.Total = model.Total.Value;
+                }
+
                 _context.RemoveRange(dbObject.TransactionLines);
                 dbObject.TransactionLines = model.Lines.Select((line, index) =>
                     new TransactionLine
@@ -237,6 +250,16 @@ namespace homebudget_server.Controllers
                         TransactionId = dbObject.Id,
                     })
                     .ToList();
+
+                if (dbObject.Total < 0)
+                {
+                    // All transactions must have positive totals
+                    dbObject.Total = -dbObject.Total;
+                    var source = dbObject.SourceAccountId;
+                    dbObject.SourceAccountId = dbObject.DestinationAccountId;
+                    dbObject.DestinationAccountId = source;
+                    dbObject.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                }
             }
 
             ModelState.Clear();

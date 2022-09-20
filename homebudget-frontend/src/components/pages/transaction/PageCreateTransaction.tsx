@@ -164,7 +164,7 @@ export default function () {
                 ...model.lines,
                 {
                     amount: new Decimal(0),
-                    description: ""
+                    description: "Transaction line"
                 }
             ]
         });
