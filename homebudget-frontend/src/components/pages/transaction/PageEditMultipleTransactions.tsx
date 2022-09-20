@@ -193,6 +193,7 @@ function renderActionValue(action: Action, model: UpdateTransaction, setModel: R
             }
             return <InputDate label="Select timestamp"
                 disabled={disabled}
+                fullwidth={false}
                 value={model.dateTime}
                 onChange={value => setModel({ ...model, dateTime: value })} />
         case "set-description":

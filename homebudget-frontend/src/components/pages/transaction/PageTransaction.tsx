@@ -239,6 +239,7 @@ function transactionDetails(
                         <td>
                             <InputDate
                                 value={editModel.dateTime}
+                                fullwidth={true}
                                 onChange={value => onChange({ ...editModel, dateTime: value })}
                                 disabled={isUpdating} />
                         </td>

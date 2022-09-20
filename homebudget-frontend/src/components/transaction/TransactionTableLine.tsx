@@ -183,6 +183,7 @@ function TransactionEditor(props: TransactionEditorProps) {
         <div><TransactionLink transaction={props.transaction} /></div>
         <div>
             <InputDate value={model.dateTime}
+                fullwidth={true}
                 onChange={e => setModel({ ...model, dateTime: e })}
                 disabled={props.disabled} /></div>
         <div>

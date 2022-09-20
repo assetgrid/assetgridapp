@@ -12,6 +12,7 @@ export interface Props {
     value: DateTime,
     disabled?: boolean,
     onChange: (date: DateTime) => void;
+    fullwidth: boolean;
 }
 
 export default function InputDate (props: Props) {
@@ -29,7 +30,7 @@ export default function InputDate (props: Props) {
         onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
         >
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown is-fullwidth" + (open && ! props.disabled ? " is-active" : "")}>
+        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && ! props.disabled ? " is-active" : "")}>
             <div className="dropdown-trigger">
                 <button className="button" aria-haspopup="true" onClick={e => setOpen(true) } disabled={props.disabled}>
                     <span>{value}</span>

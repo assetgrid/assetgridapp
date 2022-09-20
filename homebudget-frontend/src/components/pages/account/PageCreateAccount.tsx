@@ -38,9 +38,9 @@ export default function () {
         <div className="p-3">
             <Card title="Create account" isNarrow={true}>
                 {createdAccount && <article className="message is-link">
-                        <div className="message-body">
-                        Account has been created: <AccountLink account={createdAccount} />
-                        </div>
+                    <div className="message-body">
+                    Account has been created: <AccountLink account={createdAccount} />
+                    </div>
                 </article>}
 
                 <InputText label="Name"

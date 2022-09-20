@@ -307,6 +307,34 @@ namespace homebudget_server.Controllers
             throw new Exception();
         }
 
+        [HttpDelete()]
+        [Route("/[controller]/[Action]")]
+        public void DeleteMultiple(ViewSearchGroup query)
+        {
+            if (ModelState.IsValid)
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    var transactions = _context.Transactions
+                        .Include(t => t.TransactionLines)
+                        .ApplySearch(query)
+                        .ToList();
+
+                    _context.RemoveRange(transactions.SelectMany(transaction => transaction.TransactionLines));
+                    _context.RemoveRange(transactions);
+                    _context.SaveChanges();
+
+                    // Delete all categories that are unused by transactions
+                    _context.Categories.RemoveRange(_context.Categories.Where(category => !_context.Transactions.Any(transaction => transaction.CategoryId == category.Id)));
+
+                    _context.SaveChanges();
+                    transaction.Commit();
+                }
+                return;
+            }
+            throw new Exception();
+        }
+
         [HttpPost()]
         [Route("/[controller]/[action]")]
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)

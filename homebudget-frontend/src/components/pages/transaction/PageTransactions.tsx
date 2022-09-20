@@ -53,7 +53,7 @@ export default function PageTransactions() {
         </section>
         <div className="p-3">
             <Card title="Actions" isNarrow={true}>
-                <Link to={routes.transactionCreate()}
+                <Link to={routes.transactionCreate()} state={{ allowBack: true }}
                     className="button">
                     Create Transaction
                 </Link>

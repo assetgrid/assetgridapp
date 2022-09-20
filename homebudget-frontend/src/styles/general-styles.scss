@@ -56,15 +56,6 @@ html, body {
     color: #b6e8dd  !important;
 }
 
-.icon.button {
-    border: 0;
-    background-color: transparent;
-    color: $dark;
-    &:hover {
-        color: $link;
-    }
-}
-
 .account-link, .transaction-link {
     & > span {
         color: #999;

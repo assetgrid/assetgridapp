@@ -43,11 +43,13 @@
 - [x] Move modify multiple transactions modal to it's own page. The page could have a - section for the query. A section for the action and a list of transactions affected. - When automation is added, a button to create a Rule can be added, which will take the - user to a similar page that also has a section about conditions
 - [x] Implement quick search, that searches transaction id, description, account names and - categories. It is possible to switch between that and real search
 - ~~[ ] Use a text field that allows null for quick search~~
-- [ ] Add create transaction page
+- [x] Add create transaction page
 - [x] Move account deletion modal to it's own page
 - [x] Delete account page should detect invalid accounts
 - [x] Implement multi editing on the account page
 - [ ] Finish dashboard
 - [ ] Fix search
-- [ ] Fix account and transaction creation pages
+- [x] Fix account and transaction creation pages
 - ~~[ ] Add property to transaction called type that can be deposit, withdrawal or transfer. Depends on whether source, destination or both are included in net worth. Transactions should be colored according to type on transaction page and it should be possible to filter transactions based on type~~
+- [ ] Add set lines transaction multi editor 
+- [ ] Add delete to transaction multi editor

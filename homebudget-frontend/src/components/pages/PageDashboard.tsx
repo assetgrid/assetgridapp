@@ -4,7 +4,6 @@ import { routes } from "../../lib/routes";
 import { Preferences } from "../../models/preferences";
 import AccountList from "../account/AccountList";
 import CreateAccountModal from "../account/input/CreateAccountModal";
-import CreateTransaction from "../transaction/CreateTransaction";
 import TransactionList from "../transaction/TransactionList";
 
 export default function PageDashboard () {
@@ -12,7 +11,6 @@ export default function PageDashboard () {
         <AccountList />
         
         <TransactionList />
-        <CreateTransaction />
 
         <Link to={routes.transactions()}>View transactions</Link>
 
