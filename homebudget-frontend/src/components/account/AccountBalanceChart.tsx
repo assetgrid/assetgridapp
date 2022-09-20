@@ -59,16 +59,16 @@ export default function AccountBalanceChart(props: Props) {
     }
     let [start, end] = PeriodFunctions.getRange(props.period);
 
-    if (movements.items.length === 0 || movements.items[0].dateTime.diff(start).days > 1) {
+    if (movements.items.length === 0 || movements.items[0].dateTime.diff(start, "days").days > 1) {
         balances = [movements.initialBalance.toNumber(), ...balances];
         revenues = [0, ...revenues];
-        expenses = [0, ...revenues];
+        expenses = [0, ...expenses];
         labels = [start.toJSDate(), ...labels];
     }
-    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end).days > 1) {
+    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end, "days").days > 1) {
         balances = [...balances, balances[balances.length - 1]];
         revenues = [...revenues, 0];
-        expenses = [...revenues, 0];
+        expenses = [...expenses, 0];
         labels = [...labels, end.toJSDate()];
     }
 
