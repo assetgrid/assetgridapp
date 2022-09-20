@@ -50,19 +50,33 @@ export default function AccountBalanceChart(props: Props) {
     }
 
     let balances: number[] = [];
+    let revenues: number[] = movements.items.map(point => point.revenue.toNumber());
+    let expenses: number[] = movements.items.map(point => point.expenses.toNumber());
+    let labels = movements.items.map(point => point.dateTime.toJSDate());
     for (let i = 0; i < movements.items.length; i++) {
         let item = movements.items[i];
         balances[i] = (balances[i - 1] !== undefined ? balances[i - 1] : movements.initialBalance.toNumber()) + item.revenue.toNumber() - item.expenses.toNumber();
     }
-    balances = [movements.initialBalance.toNumber(), ...balances];
-    balances = [...balances, balances[balances.length - 1]];
     let [start, end] = PeriodFunctions.getRange(props.period);
+
+    if (movements.items.length === 0 || movements.items[0].dateTime.diff(start).days > 1) {
+        balances = [movements.initialBalance.toNumber(), ...balances];
+        revenues = [0, ...revenues];
+        expenses = [0, ...revenues];
+        labels = [start.toJSDate(), ...labels];
+    }
+    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end).days > 1) {
+        balances = [...balances, balances[balances.length - 1]];
+        revenues = [...revenues, 0];
+        expenses = [...revenues, 0];
+        labels = [...labels, end.toJSDate()];
+    }
 
     return <>
         <div style={{ height: "400px", position: "relative" }}>
             <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
                 <Chart type={"line"} height="400px" data={{
-                    labels: [start.toJSDate(), ...movements.items.map(point => point.dateTime.toJSDate()), end.toJSDate()],
+                    labels,
                     datasets: [{
                         label: "Balance",
                         data: balances,
@@ -73,14 +87,14 @@ export default function AccountBalanceChart(props: Props) {
                     },
                     {
                         label: "Revenue",
-                        data: movements.items.map(point => point.revenue.toNumber()),
+                        data: revenues,
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#4db09b"
                     },
                     {
                         label: "Expenses",
-                        data: movements.items.map(point => point.expenses.toNumber()),
+                        data: expenses,
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#ff6b6b"
