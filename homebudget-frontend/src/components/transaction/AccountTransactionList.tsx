@@ -118,7 +118,6 @@ export default function AccountTransactionList(props: Props) {
                     editAllText="Modify all transactions for this account"
                 />
             </div>
-            <div></div>
             <div>Date</div>
             <div>Description</div>
             <div className="has-text-right">Amount</div>

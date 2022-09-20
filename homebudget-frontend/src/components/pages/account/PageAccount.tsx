@@ -88,8 +88,8 @@ export default function () {
             </section>
             <div className="p-3">
                 <div className="columns m-0">
-                    <div className="column p-0 is-narrow is-flex">
-                        <Card title="Account details" isNarrow={false}>
+                    <div className="column p-0 is-narrow-touch is-flex">
+                        <Card title="Account details" isNarrow={false} style={{flexGrow: 1}}>
                             Please wait&hellip;
                         </Card>
                     </div>
@@ -98,7 +98,7 @@ export default function () {
                             Please wait&hellip;
                         </Card>
                     </div>
-                    <div className="column p-0 is-flex">
+                    <div className="column p-0 is-12-tablet is-reset-desktop">
                         <Card title="Balance" style={{ flexGrow: 1 }} isNarrow={false}>
                             Please wait&hellip;
                         </Card>
@@ -139,8 +139,8 @@ export default function () {
             </div>
         </section>
         <div className="p-3">
-            <div className="columns m-0">
-                <div className="column p-0 is-narrow is-flex">
+            <div className="columns m-0 is-multiline">
+                <div className="column p-0 is-narrow-touch is-flex">
                     <AccountDetailsCard account={account}
                         updatingFavorite={updatingFavorite}
                         toggleFavorite={toggleFavorite}
@@ -153,7 +153,7 @@ export default function () {
                         <AccountCategoryChart id={id} preferences={preferences} period={period} />
                     </Card>
                 </div>
-                <div className="column p-0 is-flex">
+                <div className="column p-0 is-flex is-12-tablet is-reset-desktop">
                     <Card title="Balance" style={{ flexGrow: 1 }} isNarrow={false}>
                         <AccountBalanceChart id={id} preferences={preferences} period={period} />
                     </Card>
@@ -281,7 +281,9 @@ export function AccountDetailsCard(props: {
     const navigate = useNavigate();
 
     if (editingModel === null) {
-        return <Card title={<>
+        return <Card
+            style={{ flexGrow: 1 }}
+            title={<>
             <span style={{ flexGrow: 1 }}>Account details</span>
             {props.updatingFavorite
                 ? <span className="icon">

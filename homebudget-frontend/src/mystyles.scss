@@ -77,3 +77,9 @@ $transition-short: 0.2s;
 body {
     overflow-x: auto;
 }
+
+@include desktop {
+    .columns > .is-reset-desktop {
+        flex: 1;
+    }
+}

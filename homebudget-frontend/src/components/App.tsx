@@ -37,10 +37,11 @@ export default function FairFitPortalApp () {
     return <React.StrictMode>
         <modalContainerContext.Provider value={{ container: modalContainer.current }}>
             <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
+                <div className="mobile-header-spacing"></div>
                 <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                 <div style={{display: "flex", flexGrow: 1}}>
                     <Sidebar show={showSidebar} />
-                    <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
+                    <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />
                             <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>

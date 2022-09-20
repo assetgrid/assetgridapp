@@ -80,11 +80,9 @@ function TableTransaction(props: TableTransactionProps) {
     const { preferences } = React.useContext(preferencesContext);
 
     return <div key={props.transaction.id} className="table-row">
-        {props.selected !== undefined && props.allowEditing && <div>
-            <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />
-        </div>}
         <div>
-            <TransactionLink transaction={props.transaction} disabled={! (props.allowLinks ?? true)} />
+            {props.selected !== undefined && props.allowEditing && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
@@ -177,10 +175,10 @@ function TransactionEditor(props: TransactionEditorProps) {
     }, []);
 
     return <div key={props.transaction.id} className="table-row editing">
-        {props.selected !== undefined && props.allowEditing && <div>
-            <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />
-        </div>}
-        <div><TransactionLink transaction={props.transaction} /></div>
+        <div>
+            {props.selected !== undefined && props.allowEditing && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            <TransactionLink transaction={props.transaction} />
+        </div>
         <div>
             <InputDateTime value={model.dateTime}
                 fullwidth={true}

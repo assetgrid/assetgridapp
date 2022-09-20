@@ -98,7 +98,6 @@ function TransactionList(props: Props) {
                     editAllText="Modify all transactions matching current search"
                 />
             </div>}
-            {renderColumnHeader("Id", "Id", "numeric")}
             {renderColumnHeader("Timestamp", "DateTime", "numeric")}
             {renderColumnHeader("Description", "Description", "string")}
             {renderColumnHeader("Amount", "Total", "numeric", true)}

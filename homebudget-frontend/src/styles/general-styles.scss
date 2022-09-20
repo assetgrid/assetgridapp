@@ -69,15 +69,21 @@ html, body {
 }
 
 .mobile-header {
-    height: 100px;
+    height: 50px;
     display: none;
     justify-content: space-between;
+    position: fixed;
+    width: 100%;
+    padding: 0 1rem;
+    z-index: 2000;
 
     .logo {
         height: 100%;
     }
     .navbar-burger {
         display: block;
+        height: 50px;
+        width: 50px;
         & > span {
             background-color: white !important;
         }
@@ -99,8 +105,19 @@ html, body {
         .logo {
             display: none;
         }
+        top: 50px;
+        height: calc(100% - 50px);
+        z-index: 2000;
+        position: fixed;
+        overflow-y: auto;
     }
     .mobile-header {
         display: flex;
+    }
+    .mobile-header-spacing {
+        height: 50px;
+    }
+    .main-content.sidebar-shown {
+        margin-left: 300px;
     }
 }
