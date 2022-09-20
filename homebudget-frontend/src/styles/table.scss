@@ -86,7 +86,7 @@ div.table.transaction-table {
         grid-template-columns: [colstart] auto auto [innerstart] auto auto [innerend] auto auto auto [colend];
     }
     &.multi-select {
-        grid-template-columns: [colstart] auto auto auto [innerstart] auto auto [innerend] auto auto auto auto [colend];
+        grid-template-columns: [colstart] max-content max-content max-content [innerstart] auto max-content [innerend] auto auto auto max-content [colend];
     }
     &.is-small {
         font-size: $size-7;
