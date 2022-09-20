@@ -52,15 +52,55 @@ html, body {
     }
 }
 
-.has-text-primary-light {
-    color: #b6e8dd  !important;
-}
-
 .account-link, .transaction-link {
     & > span {
         color: #999;
     }
     &:hover > span {
         color: $dark;
+    }
+}
+
+/*
+ * Sidebar and header
+ */
+.has-text-primary-light {
+    color: #b6e8dd  !important;
+}
+
+.mobile-header {
+    height: 100px;
+    display: none;
+    justify-content: space-between;
+
+    .logo {
+        height: 100%;
+    }
+    .navbar-burger {
+        display: block;
+        & > span {
+            background-color: white !important;
+        }
+    }
+}
+
+.sidebar {
+    .logo {
+        margin: 1rem 3rem 1rem 1rem;
+    }
+}
+
+@media screen and (max-width: 1800px){
+    .sidebar {
+        display: none;
+        &.shown {
+            display: block;
+        }
+        .logo {
+            display: none;
+        }
+    }
+    .mobile-header {
+        display: flex;
     }
 }

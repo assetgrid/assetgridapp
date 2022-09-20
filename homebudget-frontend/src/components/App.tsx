@@ -17,6 +17,7 @@ import PageEditMultipleTransactions from "./pages/transaction/PageEditMultipleTr
 import PageAccountConfirmDelete from "./pages/account/PageAccountConfirmDelete";
 import Page404 from "./pages/Page404";
 import PageCreateAccount from "./pages/account/PageCreateAccount";
+import MobileHeader from "./common/MobileHeader";
 
 export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -29,14 +30,16 @@ interface PreferencesContext {
 export default function FairFitPortalApp () {
     const [preferences, setPreferences] = React.useState<Preferences | "fetching">("fetching");
     const modalContainer = React.useRef<HTMLDivElement>(null);
+    const [showSidebar, setShowSidebar] = React.useState(false); 
 
     React.useEffect(() => updatePreferences(null), []);
 
     return <React.StrictMode>
         <modalContainerContext.Provider value={{ container: modalContainer.current }}>
             <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
+                <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                 <div style={{display: "flex", flexGrow: 1}}>
-                    <Sidebar />
+                    <Sidebar show={showSidebar} />
                     <div style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />

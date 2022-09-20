@@ -7,11 +7,15 @@ import logo from "../../assets/logo.svg";
 import { Preferences } from "../../models/preferences";
 import { preferencesContext } from "../App";
 
-export default function Sidebar() {
+interface Props {
+    show: boolean;
+}
+
+export default function Sidebar(props: Props) {
     const { preferences } = React.useContext(preferencesContext);
 
-    return <div className="has-background-dark" style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
-        <img src={logo} style={{ margin: "1rem 3rem 1rem 1rem" }}></img>
+    return <div className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
+        <img className="logo" src={logo}></img>
         <aside className="menu has-color-white m-5">
             <p className="menu-label">
                 General
