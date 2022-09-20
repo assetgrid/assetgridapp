@@ -5,7 +5,7 @@ import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../../lib/Uti
 import { Transaction, TransactionLine } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { preferencesContext } from "../../App";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import InputIconButton from "../../input/InputIconButton";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
@@ -117,7 +117,7 @@ function transactionDetails(
     const { preferences } = React.useContext(preferencesContext);
 
     if (transaction === "fetching") {
-        return <Card title="Transaction details">
+        return <Card title="Transaction details" isNarrow={false}>
             {transaction && <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -162,7 +162,7 @@ function transactionDetails(
             <span style={{ flexGrow: 1 }}>Transaction details</span>
             <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
             <InputIconButton icon={regular.faTrashCan} onClick={() => beginDelete()} />
-        </>}>
+        </>} isNarrow={false}>
             {transaction && <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -207,7 +207,7 @@ function transactionDetails(
             </table>}
         </Card>;
     } else {
-        return <Card title="Transaction details">
+        return <Card title="Transaction details" isNarrow={false}>
             {transaction && <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -305,7 +305,7 @@ function transactionLines(
     const { preferences } = React.useContext(preferencesContext);
 
     if (transaction === "fetching") {
-        return <Card title="Transaction lines">
+        return <Card title="Transaction lines" isNarrow={false}>
             Please wait&hellip;
         </Card>;
     }
@@ -318,14 +318,14 @@ function transactionLines(
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
                     <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
-                </>}>
+                </>} isNarrow={false}>
                 This transaction does not have any lines.
             </Card>;
         } else {
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
                     <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
-                </>}>
+                </>} isNarrow={false}>
                 <table className="table is-fullwidth">
                     <thead>
                         <tr>
@@ -347,7 +347,7 @@ function transactionLines(
          * Currently editing
          */
         if (editModel.lines.length === 0) {
-            return <Card title="Transaction lines">
+            return <Card title="Transaction lines" isNarrow={false}>
                 <p>This transaction does not have any lines.</p>
                 <p>Split the transaction to add lines.</p>
                 <div className="buttons mt-3">
@@ -358,7 +358,7 @@ function transactionLines(
                 </div>
             </Card>;
         } else {
-            return <Card title="Transaction lines">
+            return <Card title="Transaction lines" isNarrow={false}>
                 <table className="table is-fullwidth">
                     <thead>
                         <tr>

@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Account, CreateAccount } from "../../../../models/account";
-import { Card } from "../../../common/Card";
+import Card from "../../../common/Card";
 import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
 import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "../importModels";
@@ -82,7 +82,7 @@ export default function MapCsvFields(props: Props) {
     return <>
         {modal !== null && modal}
 
-        <Card title="Mapping options">
+        <Card title="Mapping options" isNarrow={true}>
             <div className="columns">
                 <div className="column">
                     <InputSelect label="Duplicate handling"
@@ -319,7 +319,7 @@ export default function MapCsvFields(props: Props) {
             </div>
         </Card>
 
-        {props.transactions && <Card title="Import preview">
+        {props.transactions && <Card title="Import preview" isNarrow={false}>
             {tableFilter !== "all" && <Message title="Filter is active" type="link">
                 Some transactions are hidden!{" "}
                 {tableFilter === "reference-to-missing-account" && <>Currently only transactions that reference a missing source or destination account are shown.{" "}</>}
@@ -338,7 +338,7 @@ export default function MapCsvFields(props: Props) {
                 beginCreatingAccount={beginCreatingAccount} />
         </Card>}
 
-        {props.transactions && <Card title="Continue">
+        {props.transactions && <Card title="Continue" isNarrow={true}>
             <CsvMappingIssues
                 transactions={props.transactions}
                 accountsBy={props.accountsBy}

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { routes } from "../../../lib/routes";
 import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
@@ -52,13 +52,13 @@ export default function PageTransactions() {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Actions">
+            <Card title="Actions" isNarrow={true}>
                 <Link to={routes.transactionCreate()}
                     className="button">
                     Create Transaction
                 </Link>
             </Card>
-            <Card title="Search">
+            <Card title="Search" isNarrow={true}>
                 {searchMode === "simple"
                     ? <>
                         <InputText
@@ -72,7 +72,7 @@ export default function PageTransactions() {
                         <a onClick={() => setSearchMode("simple")}>Simple search</a>
                     </>}
             </Card>
-            <Card title="Transactions">
+            <Card title="Transactions" isNarrow={false}>
                 <TransactionList
                     query={tableQuery}
                     draw={draw}

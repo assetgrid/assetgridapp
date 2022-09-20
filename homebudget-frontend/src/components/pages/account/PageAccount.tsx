@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
@@ -89,22 +89,22 @@ export default function () {
             <div className="p-3">
                 <div className="columns m-0">
                     <div className="column p-0 is-narrow is-flex">
-                        <Card title="Account details">
+                        <Card title="Account details" isNarrow={false}>
                             Please wait&hellip;
                         </Card>
                     </div>
                     <div className="column p-0 is-flex">
-                        <Card title="Categories" style={{flexGrow: 1}}>
+                        <Card title="Categories" style={{flexGrow: 1}} isNarrow={false}>
                             Please wait&hellip;
                         </Card>
                     </div>
                     <div className="column p-0 is-flex">
-                        <Card title="Balance" style={{ flexGrow: 1 }}>
+                        <Card title="Balance" style={{ flexGrow: 1 }} isNarrow={false}>
                             Please wait&hellip;
                         </Card>
                     </div>
                 </div>
-                <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
+                <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"} isNarrow={false}>
                     Please wait&hellip;
                 </Card>
             </div>
@@ -149,17 +149,17 @@ export default function () {
                     />
                 </div>
                 <div className="column p-0 is-flex">
-                    <Card title="Categories" style={{flexGrow: 1}}>
+                    <Card title="Categories" style={{flexGrow: 1}} isNarrow={false}>
                         <AccountCategoryChart id={id} preferences={preferences} period={period} />
                     </Card>
                 </div>
                 <div className="column p-0 is-flex">
-                    <Card title="Balance" style={{ flexGrow: 1 }}>
+                    <Card title="Balance" style={{ flexGrow: 1 }} isNarrow={false}>
                         <AccountBalanceChart id={id} preferences={preferences} period={period} />
                     </Card>
                 </div>
             </div>
-            <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"}>
+            <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"} isNarrow={false}>
                 <AccountTransactionList
                     accountId={id}
                     period={period}
@@ -296,7 +296,7 @@ export function AccountDetailsCard(props: {
                 const { balance, ...accountWithoutBalance } = props.account;
                 navigate(routes.accountDelete(props.account.id.toString()), { state: { account: accountWithoutBalance, allowBack: true } })
             }} />
-        </>}>
+        </>} isNarrow={false}>
             <table className="table">
                 <tbody>
                     <tr>
@@ -331,7 +331,7 @@ export function AccountDetailsCard(props: {
             </table>
         </Card>
     } else {
-        return <Card title="Account details">
+        return <Card title="Account details" isNarrow={false}>
             <table className="table">
                 <tbody>
                     <tr>

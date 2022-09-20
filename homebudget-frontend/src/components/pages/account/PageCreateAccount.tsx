@@ -5,7 +5,7 @@ import { routes } from "../../../lib/routes";
 import { Account, CreateAccount } from "../../../models/account";
 import AccountLink from "../../account/AccountLink";
 import { preferencesContext } from "../../App";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import InputCheckbox from "../../input/InputCheckbox";
 import InputText from "../../input/InputText";
@@ -36,7 +36,7 @@ export default function () {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Create account">
+            <Card title="Create account" isNarrow={true}>
                 {createdAccount && <article className="message is-link">
                         <div className="message-body">
                         Account has been created: <AccountLink account={createdAccount} />

@@ -8,7 +8,7 @@ import { routes } from "../../lib/routes";
 import { formatDateTimeWithPrefs, formatDateWithPrefs, formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { preferencesContext } from "../App";
-import { Card } from "../common/Card";
+import Card from "../common/Card";
 import InputButton from "../input/InputButton";
 import InputNumber from "../input/InputNumber";
 import InputText from "../input/InputText";
@@ -45,12 +45,12 @@ export default function PagePreferences(): React.ReactElement {
         if (model === "fetching") {
             // This will only be shown until the global preferences are loaded.
             // Then the model will be set and will never be "fetching again"
-            return <Card title="Number and date formatting">
+            return <Card title="Number and date formatting" isNarrow={true}>
                 Please wait&hellip;
             </Card>;
         }
 
-        return <Card title="Number and date formatting">
+        return <Card title="Number and date formatting" isNarrow={true}>
             <div className="columns mb-0">
                 <div className="column">
                     <InputText value={model.decimalSeparator}

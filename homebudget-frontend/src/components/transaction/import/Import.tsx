@@ -8,7 +8,7 @@ import { Account } from "../../../models/account";
 import { CreateTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { preferencesContext } from "../../App";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import Table from "../../common/Table";
 import InputButton from "../../input/InputButton";
 import { AccountReference, CsvCreateTransaction } from "./importModels";
@@ -18,15 +18,6 @@ interface Props {
     accountsBy: { [identifier: string]: { [value: string]: Account } };
     batchSize: number;
     goToPrevious: () => void;
-}
-
-interface State {
-    succeeded: CreateTransaction[],
-    failed: CreateTransaction[],
-    duplicate: CreateTransaction[],
-
-    state: "waiting" | "importing" | "imported";
-    progress: number;
 }
 
 /*
@@ -44,29 +35,29 @@ export function Import (props: Props) {
 
     switch (state) {
         case "waiting":
-            return <Card title="Begin import">
+            return <Card isNarrow={true} title="Begin import">
                 <InputButton onClick={() => importTransactions()}>Import Transactions</InputButton>
                 <div className="buttons mt-3">
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
             </Card>;
         case "importing":
-            return <Card title="Importing&hellip;">
+            return <Card isNarrow={true} title="Importing&hellip;">
                 <p>{progress} of {props.transactions.length} transactions have been imported.</p>
                 <p>Please wait while the import is completed</p>
             </Card>;
         case "imported":
             return <>
-                <Card title="Import complete">Your transactions have been imported</Card>
-                <Card title="Succeeded">
+                <Card title="Import complete" isNarrow={true}>Your transactions have been imported</Card>
+                <Card title="Succeeded" isNarrow={false}>
                     <p className="mb-3">The following transactions were successfully created:</p>
                     {transactionTable(succeeded)}
                 </Card>
-                <Card title="Duplicate">
+                <Card title="Duplicate" isNarrow={false}>
                     <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
                     {transactionTable(duplicate)}
                 </Card>
-                <Card title="Failed">
+                <Card title="Failed" isNarrow={false}>
                     <p className="mb-3">The following transactions could not be created due to errors:</p>
                     {transactionTable(failed)}
                 </Card>

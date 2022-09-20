@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card } from "../common/Card";
+import Card from "../common/Card";
 
 export default function () {
     return <>
@@ -11,7 +11,7 @@ export default function () {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Error">
+            <Card title="Error" isNarrow={true}>
                 <p>An unknown error occured.</p>
             </Card>
         </div>

@@ -1,6 +1,6 @@
 import * as Papa from "papaparse";
 import * as React from "react";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import Table from "../../common/Table";
 import InputButton from "../../input/InputButton";
 import InputCheckbox from "../../input/InputCheckbox";
@@ -40,7 +40,7 @@ export default function ImportCsv(props: Props) {
     }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter])
 
     return <>
-        <Card title="Import options">
+        <Card title="Import options" isNarrow={true}>
             <InputCheckbox label="Parse header"
                 value={props.options.csvParseHeader}
                 onChange={e => props.optionsChanged({ ...props.options, csvParseHeader: e.target.checked })} />
@@ -79,7 +79,7 @@ export default function ImportCsv(props: Props) {
             </div>
         </Card>
 
-        {props.csvFile != null && <Card title="CSV data">
+        {props.csvFile != null && <Card title="CSV data" isNarrow={false}>
             {renderCsvTable()}
 
             <div className="buttons">

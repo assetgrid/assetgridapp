@@ -7,7 +7,7 @@ import { routes } from "../../../lib/routes";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import { preferencesContext } from "../../App";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import InputButton from "../../input/InputButton";
 import TransactionList from "../../transaction/TransactionList";
 import Page404 from "../Page404";
@@ -110,7 +110,7 @@ export default function PageAccountConfirmDelete() {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Delete account">
+            <Card title="Delete account" isNarrow={true}>
                 <p>Are you sure you want to delete this account? This action is irreversible!</p>
                 <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
                 <div className="buttons mt-3">
@@ -120,7 +120,7 @@ export default function PageAccountConfirmDelete() {
                         : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>Cancel</Link>}
                 </div>
             </Card>
-            <Card title="The following transactions will be deleted">
+            <Card title="The following transactions will be deleted" isNarrow={false}>
                 <TransactionList allowEditing={false} allowLinks={false} query={query} />
             </Card>
         </div>

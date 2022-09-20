@@ -7,7 +7,7 @@ import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup } from "../../../models/search";
 import { UpdateTransaction } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
-import { Card } from "../../common/Card";
+import Card from "../../common/Card";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
@@ -91,10 +91,10 @@ export default function PageEditMultipleTransactions() {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Query">
+            <Card title="Query" isNarrow={true}>
                 <TransactionFilterEditor query={query} setQuery={query => { setQuery(query) } } />
             </Card>
-            <Card title="Actions">
+            <Card title="Actions" isNarrow={true}>
                 {renderAction(action, setAction, model, setModel, isUpdating)}
 
                 <div className="buttons">
@@ -102,7 +102,7 @@ export default function PageEditMultipleTransactions() {
                     {showBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>
-            <Card title="Transactions">
+            <Card title="Transactions" isNarrow={false}>
                 <p>The following transactions will be modified:</p>
                 <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={tableQuery} />
             </Card>
