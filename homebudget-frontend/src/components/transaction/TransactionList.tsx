@@ -87,8 +87,8 @@ function TransactionList(props: Props) {
 
     function renderTable(items: { item: Transaction, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
-            {props.allowEditing && <div>
-                <TransactionSelectDropdownButton
+            <div>
+                {props.allowEditing && <TransactionSelectDropdownButton
                     clearSelection={() => setSelectedTransactions({})}
                     selectAll={() => selectAllTransactions()}
                     selected={Object.keys(selectedTransactions).length > 0}
@@ -96,8 +96,8 @@ function TransactionList(props: Props) {
                     editSelectionDisabled={Object.keys(selectedTransactions).length === 0}
                     editAll={() => beginEditMultiple("all")}
                     editAllText="Modify all transactions matching current search"
-                />
-            </div>}
+                />}
+            </div>
             {renderColumnHeader("Timestamp", "DateTime", "numeric")}
             {renderColumnHeader("Description", "Description", "string")}
             {renderColumnHeader("Amount", "Total", "numeric", true)}
