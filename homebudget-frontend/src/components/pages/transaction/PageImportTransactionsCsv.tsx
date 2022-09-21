@@ -34,6 +34,27 @@ export default function PageImportTransactionsCsv () {
         csvParseHeader: true
     });
     const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
+        duplicateHandling: "identifier",
+        identifierColumn: null,
+        identifierParseOptions: defaultParseOptions,
+        sourceAccountColumn: null,
+        sourceAccountIdentifier: "name",
+        sourceAccountParseOptions: defaultParseOptions,
+        destinationAccountColumn: null,
+        destinationAccountIdentifier: "name",
+        destinationAccountParseOptions: defaultParseOptions,
+        amountColumn: null,
+        amountParseOptions: defaultParseOptions,
+        decimalSeparator: ".",
+        dateColumn: null,
+        dateParseOptions: defaultParseOptions,
+        // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
+        dateFormat: "yyyy-MM-dd",
+        descriptionColumn: null,
+        descriptionParseOptions: defaultParseOptions,
+    });
+
+    /* const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
         duplicateHandling: "identifier-rownumber",
         identifierColumn: "Dato",
         identifierParseOptions: defaultParseOptions,
@@ -45,27 +66,14 @@ export default function PageImportTransactionsCsv () {
         destinationAccountParseOptions: defaultParseOptions,
         amountColumn: "Beløb",
         amountParseOptions: defaultParseOptions,
+        decimalSeparator: ",",
         dateColumn: "Dato",
         dateParseOptions: defaultParseOptions,
         // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
         dateFormat: "dd-MM-yyyy",
         descriptionColumn: "Tekst",
         descriptionParseOptions: defaultParseOptions,
-    });
-
-    /* mappingOptions: {
-        duplicateHandling: "identifier",
-        identifierColumn: null,
-        sourceAccountColumn: null,
-        sourceAccountIdentifier: "name",
-        destinationAccountColumn: null,
-        destinationAccountIdentifier: "name",
-        amountColumn: null,
-        dateColumn: null,
-        descriptionColumn: null,
-        // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
-        dateFormat: "yyyy-MM-dd"
-    } */
+    }); */
     
     return <>
         <section className="hero has-background-primary">

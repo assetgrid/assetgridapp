@@ -38,6 +38,7 @@ export interface MappingOptions {
 
     amountColumn: string | null;
     amountParseOptions: ParseOptions;
+    decimalSeparator: string;
 
     descriptionColumn: string | null;
     descriptionParseOptions: ParseOptions;
@@ -63,7 +64,6 @@ function isNullOrWhitespace(input: string) {
  * React object class
  */
 export default function MapCsvFields(props: Props) {
-    const [rowOffset, setRowOffset] = React.useState(0);
     const [tableDraw, setTableDraw] = React.useState(0);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
     const [tableFilter, setTableFilter] = React.useState<CsvMappingTableFilter>("all");
@@ -168,7 +168,7 @@ export default function MapCsvFields(props: Props) {
                         } />
                 </div>
                 {props.options.dateColumn !== null && <div className="column">
-                    <InputText label="Date format"
+                    <InputText label="Timestamp format"
                         value={props.options.dateFormat}
                         onChange={e => updateDateMapping(props.options.dateColumn, e.target.value, props.options.dateParseOptions)}
                     />
@@ -264,7 +264,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.amountColumn}
                         placeholder={"Select column"}
-                        onChange={result => updateAmountMapping(result, props.options.amountParseOptions)}
+                        onChange={result => updateAmountMapping(result, props.options.decimalSeparator, props.options.amountParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -276,7 +276,7 @@ export default function MapCsvFields(props: Props) {
                                 <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                     previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
                                     value={props.options.amountParseOptions}
-                                    onChange={options => updateAmountMapping(props.options.amountColumn, options)}
+                                    onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
                                     close={() => setModal(null)}
                                     closeOnChange={true}
                                 />)}>
@@ -285,7 +285,13 @@ export default function MapCsvFields(props: Props) {
                             </div> : undefined
                         } />
                 </div>
-                <div className="column"></div>
+                <div className="column">
+                    {props.options.dateColumn !== null && 
+                        <InputText label="Decimal separator"
+                            value={props.options.decimalSeparator}
+                            onChange={e => updateAmountMapping(props.options.amountColumn, e.target.value, props.options.amountParseOptions)}
+                        />}
+                </div>
             </div>
 
             <div className="columns">
@@ -354,15 +360,16 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how the amount is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAmountMapping(newValue: string | null, parseOptions: ParseOptions) {
+    function updateAmountMapping(column: string | null, decimalSeparator: string, parseOptions: ParseOptions) {
         props.onChange([
             ...props.data.map((row, i) => ({
                 ...props.transactions![i],
-                amount: parseAmount(getValue(row, newValue), parseOptions)
+                amount: parseAmount(getValue(row, column), decimalSeparator, parseOptions)
             }))
         ], {
             ...props.options,
-            amountColumn: newValue,
+            amountColumn: column,
+            decimalSeparator: decimalSeparator,
             amountParseOptions: parseOptions,
         });
     }
@@ -520,7 +527,7 @@ function parseTransactions(data: any[], options: MappingOptions): CsvCreateTrans
                 value: parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions),
             } as AccountReference,
             identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, i, row, data),
-            amount: parseAmount(getValue(row, options.amountColumn), options.amountParseOptions),
+            amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions),
         } as CsvCreateTransaction
     });
 }
@@ -531,9 +538,7 @@ function parseTransactions(data: any[], options: MappingOptions): CsvCreateTrans
  * @param parseOptions The options with which to parse
  * @returns A decimal representation of the number or the string "invalid" if parsing failed
  */
-function parseAmount(rawValue: string, parseOptions: ParseOptions): Decimal | "invalid" {
-    const decimalSeparator = ",";
-
+function parseAmount(rawValue: string, decimalSeparator: string, parseOptions: ParseOptions): Decimal | "invalid" {
     function escapeRegExp(string: string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     }

@@ -221,21 +221,25 @@ function NetWorthTable(props: NetWorthTableProps) {
     return <Card isNarrow={true} title="Net worth">
         <table className="table">
             <thead>
-                <th>Account</th>
-                <th>Balance</th>
-                <th>Change since <br /> {formatDateWithPrefs(props.period.start, preferences)}</th>
+                <tr>
+                    <th>Account</th>
+                    <th>Balance</th>
+                    <th>Change since <br /> {formatDateWithPrefs(props.period.start, preferences)}</th>
+                </tr>
             </thead>
             <tbody>
-                {props.accountBalances.map(obj => <tr>
+                {props.accountBalances.map(obj => <tr key={obj.account.id}>
                     <td><AccountLink account={obj.account} /></td>
                     <td>{formatNumberWithPrefs(new Decimal(obj.balance), preferences)}</td>
                     <td>{formatNumberWithPrefs(new Decimal(obj.revenue - obj.expenses), preferences)}</td>
                 </tr>)}
             </tbody>
             <tfoot>
-                <th>Net worth</th>
-                <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.balance + sum, 0)), preferences)}</th>
-                <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.revenue - item.expenses + sum, 0)), preferences)}</th>
+                <tr>
+                    <th>Net worth</th>
+                    <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.balance + sum, 0)), preferences)}</th>
+                    <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.revenue - item.expenses + sum, 0)), preferences)}</th>
+                </tr>
             </tfoot>
         </table>
     </Card>;

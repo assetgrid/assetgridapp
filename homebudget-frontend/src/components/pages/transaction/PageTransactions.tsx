@@ -52,13 +52,13 @@ export default function PageTransactions() {
             </div>
         </section>
         <div className="p-3">
-            <Card title="Actions" isNarrow={true}>
+            <Card title="Actions" isNarrow={false}>
                 <Link to={routes.transactionCreate()} state={{ allowBack: true }}
                     className="button">
                     Create Transaction
                 </Link>
             </Card>
-            <Card title="Search" isNarrow={true}>
+            <Card title="Search" isNarrow={false}>
                 {searchMode === "simple"
                     ? <>
                         <InputText

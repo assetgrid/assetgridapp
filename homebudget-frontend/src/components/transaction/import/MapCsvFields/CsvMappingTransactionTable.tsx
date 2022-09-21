@@ -1,5 +1,5 @@
 import * as React from "react";
-import { formatNumberWithPrefs } from "../../../../lib/Utils";
+import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
 import { preferencesContext } from "../../../App";
 import Table from "../../../common/Table";
@@ -68,11 +68,11 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         items={items}
         headings={<tr>
             <th>Identifier</th>
-            <th>Date</th>
+            <th>Timestamp</th>
+            <th>Description</th>
+            <th className="has-text-right">Amount</th>
             <th>Source</th>
             <th>Destination</th>
-            <th>Description</th>
-            <th>Amount</th>
         </tr>}
         draw={props.tableDraw}
         type="sync"
@@ -89,19 +89,19 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
                         </Tooltip>)
                 }</td>
                 <td>
-                    <Tooltip content={transaction.dateText}>
-                        {transaction.dateTime.toFormat("yyyy-MM-dd")}
+                    <Tooltip content={<>Parsed from: "{transaction.dateText}"</>}>
+                        {formatDateTimeWithPrefs(transaction.dateTime, preferences)}
                     </Tooltip>
+                </td>
+                <td>{transaction.description}</td>
+                <td style={{ textAlign: "right" }}>
+                    {transaction.amount === "invalid" ? "invalid amount" : formatNumberWithPrefs(transaction.amount, preferences)}
                 </td>
                 <td>
                     <TableAccount reference={transaction.source} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />
                 </td>
                 <td>
                     <TableAccount reference={transaction.destination} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />
-                </td>
-                <td>{transaction.description}</td>
-                <td style={{ textAlign: "right" }}>
-                    {transaction.amount === "invalid" ? "invalid amount" : formatNumberWithPrefs(transaction.amount, preferences)}
                 </td>
             </tr>}
     />;

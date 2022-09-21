@@ -21,74 +21,72 @@ interface InputParseOptionsState {
     pattern: string,
 }
 
-export class InputParseOptions extends React.Component<InputParseOptionsProps, InputParseOptionsState> {
-    constructor(props: InputParseOptionsProps) {
-        super(props);
-        this.state = {
-            trimWhitespace: props.value.trimWhitespace,
-            regexEnabled: props.value.regex !== null,
-            regexString: props.value.regex?.source ?? "",
-            regexStringValid: true,
-            pattern: props.value.pattern,
+export default function InputParseOptions(props: InputParseOptionsProps) {
+    const [page, setPage] = React.useState(1);
+    const [trimWhitespace, setTrimWhitespace] = React.useState(props.value.trimWhitespace);
+    const [regexEnabled, setRegexEnabled] = React.useState(props.value.regex !== null);
+    const [regexString, setRegexString] = React.useState(props.value.regex?.source ?? "");
+    const [regexStringValid, setRegexStringValid] = React.useState(true);
+    const [pattern, setPattern] = React.useState(props.value.pattern);
+
+    React.useEffect(() => {
+        if (regexStringValid) {
+            props.onChange(getParseOptions());
+        } else {
+            props.onChange("invalid");
         }
-    }
+    }, [trimWhitespace, regexEnabled, regexString, regexStringValid, pattern]);
 
-    public render() {
-        const [page, setPage] = React.useState(1);
-
-        return <div className="columns">
-            <div className="column">
-                <InputCheckbox label="Trim whitespace"
-                    onChange={e => this.changed({ trimWhitespace: e.target.checked })}
-                    value={this.state.trimWhitespace} />
-                
-                <InputCheckbox label="Enable RegEx"
-                    onChange={e => this.changed({ regexEnabled: e.target.checked })}
-                    value={this.state.regexEnabled} />
-                
-                {this.state.regexEnabled && <>
-                    <InputText label="RegEx"
-                        value={this.state.regexString}
-                        error={this.state.regexStringValid ? undefined : "Invalid regex"}
-                        onChange={e => this.regexTextChanged(e.target.value)} />
-                    <InputText label="Pattern"
-                        value={this.state.pattern}
-                        onChange={e => this.changed({ pattern: e.target.value })} />
-                </>}
-            </div>
-            <div className="column">
-                {this.props.previewData !== null &&
-                    <Table pageSize={10}
-                        page={page}
-                        goToPage={setPage}
-                        headings={<tr>
-                            <th>Raw Value</th>
-                            <th>Parsed Value</th>
-                        </tr>}
-                        items={this.props.previewData}
-                        paginationSize={7}
-                        type="sync"
-                        renderType="table"
-                        renderItem={(item, index) => <tr key={index}>
-                            <td>{item}</td>
-                            <td>{this.isValid() ? parseWithOptions(item, this.getParseOptions()) : <span className="has-text-danger">Invalid options</span>}</td>
-                        </tr>}
+    return <div className="columns">
+        <div className="column">
+            <InputCheckbox label="Trim whitespace"
+                onChange={e => setTrimWhitespace(e.target.checked)}
+                value={trimWhitespace} />
+            
+            <InputCheckbox label="Enable RegEx"
+                onChange={e => setRegexEnabled(e.target.checked)}
+                value={regexEnabled} />
+            
+            {regexEnabled && <>
+                <InputText label="RegEx"
+                    value={regexString}
+                    error={regexStringValid ? undefined : "Invalid regex"}
+                    onChange={e => setRegex(e.target.value)} />
+                <InputText label="Pattern"
+                    value={pattern}
+                    onChange={e => setPattern(e.target.value)} />
+            </>}
+        </div>
+        <div className="column">
+            {props.previewData !== null &&
+                <Table pageSize={10}
+                    page={page}
+                    goToPage={setPage}
+                    headings={<tr>
+                        <th>Raw Value</th>
+                        <th>Parsed Value</th>
+                    </tr>}
+                    items={props.previewData}
+                    paginationSize={7}
+                    type="sync"
+                    renderType="table"
+                    renderItem={(item, index) => <tr key={index}>
+                        <td>{item}</td>
+                        <td>{regexStringValid ? parseWithOptions(item, getParseOptions()) : <span className="has-text-danger">Invalid options</span>}</td>
+                    </tr>}
                 />}
-            </div>
-        </div>;
+        </div>
+    </div>;
+
+    function getParseOptions(): ParseOptions {
+        return {
+            pattern,
+            regex: regexEnabled && regexStringValid ? new RegExp(regexString) : null,
+            trimWhitespace: trimWhitespace,
+        };
     }
 
-    private changed(newState: Partial<InputParseOptionsState>) {
-        this.setState(newState as any, () => {
-            if (this.isValid()) {
-                this.props.onChange(this.getParseOptions());
-            } else {
-                this.props.onChange("invalid");
-            }
-        });
-    }
-
-    private regexTextChanged(newValue: string): void {
+    function setRegex(newValue: string) {
         let regexValid = true;
         try {
             new RegExp(newValue)
@@ -96,22 +94,8 @@ export class InputParseOptions extends React.Component<InputParseOptionsProps, I
             regexValid = false;
         }
 
-        this.changed({
-            regexString: newValue,
-            regexStringValid: regexValid
-        });
-    }
-
-    private isValid(): boolean {
-        return this.state.regexStringValid;
-    }
-
-    private getParseOptions(): ParseOptions {
-        return {
-            pattern: this.state.pattern,
-            regex: this.state.regexEnabled && this.state.regexStringValid ? new RegExp(this.state.regexString) : null,
-            trimWhitespace: this.state.trimWhitespace,
-        };
+        setRegexString(newValue);
+        setRegexStringValid(regexValid);
     }
 }
 
