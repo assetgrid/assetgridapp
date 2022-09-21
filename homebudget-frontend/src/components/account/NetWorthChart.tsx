@@ -52,7 +52,18 @@ export default function (props: Props) {
     }, [props.period, resolution])
 
     if (movements === "fetching") {
-        return <>Please wait&hellip;</>;
+        return <div className="columns m-0 is-multiline">
+            {props.showTable && <div className="column p-0 is-flex is-narrow-tablet">
+                <Card isNarrow={true} title="Net worth">
+                    Please wait&hellip;
+                </Card>
+            </div>}
+            <div className="column p-0 is-flex is-12-tablet is-reset-desktop">
+                <Card title="Development in net worth" isNarrow={false} style={{ flexGrow: 1 }}>
+                    Please wait&hellip;
+                </Card>
+            </div>
+        </div>;
     }
 
     let [start, end] = PeriodFunctions.getRange(displayingPeriod);
