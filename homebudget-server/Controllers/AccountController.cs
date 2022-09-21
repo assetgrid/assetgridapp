@@ -87,7 +87,22 @@ namespace homebudget_server.Controllers
                     }).ToList();
                     break;
                 case AccountMovementResolution.Weekly:
-                    throw new NotImplementedException();
+                    var offset = request.From ?? new DateTime(1900, 01, 01);
+                    result = statsRequest.Select(transaction => new
+                    {
+                        transaction,
+                        week = Math.Floor(EF.Functions.DateDiffDay(offset, transaction.DateTime) / 7.0)
+                    }).GroupBy(obj => new
+                    {
+                        type = obj.transaction.DestinationAccountId == id ? "revenue" : "expense",
+                        timepoint = obj.week,
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        TimePoint = offset.AddDays(group.Key.timepoint * 7),
+                        Total = group.Select(obj => obj.transaction.Total).Sum(),
+                    }).ToList();
+                    break;
                 case AccountMovementResolution.Monthly:
                     result = statsRequest.GroupBy(transaction => new
                     {

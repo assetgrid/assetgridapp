@@ -39,7 +39,7 @@ interface Props {
 
 export default function AccountBalanceChart(props: Props) {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
-    const [resolution, setResolution] = React.useState<"month" | "day" | "year">("day");
+    const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
 
     React.useEffect(() => {
         updateData(props.id, props.period, resolution, setMovements);
@@ -65,7 +65,7 @@ export default function AccountBalanceChart(props: Props) {
         expenses = [0, ...expenses];
         labels = [start.toJSDate(), ...labels];
     }
-    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end, "days").days > 1) {
+    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end, "days").days < - 1) {
         balances = [...balances, balances[balances.length - 1]];
         revenues = [...revenues, 0];
         expenses = [...expenses, 0];
@@ -123,14 +123,14 @@ export default function AccountBalanceChart(props: Props) {
             <p>Showing (click to change):</p>&nbsp;
             <span style={{ cursor: "pointer" }} className="tag is-dark"
                 onClick={() => {
-                    let options = ["day", "month", "year"];
+                    let options = ["day", "week", "month", "year"];
                     setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
-                }}>{["Daily", "Monthly", "Yearly"][["day", "month", "year"].indexOf(resolution)]}</span>
+                }}>{["Daily", "Weekly", "Monthly", "Yearly"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
         </div>
     </>;
 }
 
-function updateData(id: number, period: Period, resolutionString: "day" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
+function updateData(id: number, period: Period, resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
@@ -142,6 +142,9 @@ function updateData(id: number, period: Period, resolutionString: "day" | "year"
             break;
         case "year":
             resolution = TimeResolution.Yearly;
+            break;
+        case "week":
+            resolution = TimeResolution.Weekly;
             break;
     }
 
