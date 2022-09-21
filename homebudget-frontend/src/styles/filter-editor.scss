@@ -1,14 +1,51 @@
 .filter-group {
-    & > .filter-condition {
-        margin-left: $size-3;
+    .column {
+        padding-top: 0;
+        padding-bottom: 0;
     }
 
-    & > .filter-and-or {
-        color: #999;
+    & > .filter-group--header {
+        padding: $size-7 $size-6;
+        background-color: $link;
+        color: white;
+        display: flex;
+        align-items: center;
+
+        .button {
+            background: $link;
+            border: 2px solid white;
+            color: white;
+            margin-right: $size-7;
+
+            &:hover {
+                color: $link;
+                background-color: white;
+            }
+        }
+
+        & > div > span {
+            text-decoration: underline;
+        }
     }
 
-    border: 2px solid #999;
+    & > .filter-group--children {
+        padding: $size-6;
+
+        & > .filter-condition {
+            margin-left: $size-3;
+        }
+    
+        & > .filter-and-or {
+            color: #999;
+            margin: $size-7 0;
+        }
+
+        .buttons {
+            margin-top: $size-7;
+        }
+    }
+
+    border: 2px solid $link;
     border-radius: $radius;
-    padding: $size-6;
     margin-bottom: $size-6;
 }

@@ -1,3 +1,4 @@
+import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
@@ -5,6 +6,7 @@ import { Account } from "../../../models/account";
 import { SearchOperator, SearchQuery } from "../../../models/search";
 import InputAccount from "../../account/input/InputAccount";
 import InputButton from "../../input/InputButton";
+import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputNumbers from "../../input/InputNumbers";
 import InputSelect from "../../input/InputSelect";
@@ -78,7 +80,7 @@ export default function Condition(props: ConditionProps) {
     return <div className="filter-condition columns mb-0 mt-0">
         {/* Column */}
         <div className="column">
-            <InputSelect items={[
+            <InputSelect isFullwidth={true} items={[
                 { key: "Id", value: "Transaction Id" },
                 { key: "SourceAccountId", value: "Source Account" },
                 { key: "DestinationAccountId", value: "Destination Account" },
@@ -94,7 +96,7 @@ export default function Condition(props: ConditionProps) {
 
         {/* Operator */}
         <div className="column">
-            <InputSelect items={[
+            <InputSelect isFullwidth={true} items={[
                 { key: "equals", value: "Equals" },
                 { key: "not-equals", value: "Does not equal" },
                 { key: "contains", value: "Contains" },
@@ -122,7 +124,7 @@ export default function Condition(props: ConditionProps) {
         </div>
 
         <div className="column">
-            <InputButton onClick={() => props.setQuery(null)}>Delete</InputButton>
+            <InputIconButton icon={faTrashCan}  onClick={() => props.setQuery(null)}/>
         </div>
     </div>;
 

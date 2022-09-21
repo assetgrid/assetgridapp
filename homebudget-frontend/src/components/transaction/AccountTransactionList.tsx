@@ -178,13 +178,16 @@ export default function AccountTransactionList(props: Props) {
                 ]
             }
             : {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "Id",
-                    not: false,
-                    operator: SearchOperator.In,
-                    value: Object.keys(props.selectedTransactions).map(id => Number(id))
-                }
+                type: SearchGroupType.And,
+                children: [{
+                    type: SearchGroupType.Query,
+                    query: {
+                        column: "Id",
+                        not: false,
+                        operator: SearchOperator.In,
+                        value: Object.keys(props.selectedTransactions).map(id => Number(id))
+                    }
+                }]
             };
         
         navigate(routes.transactionEditMultiple(), {
