@@ -88,7 +88,7 @@ export default function () {
             </section>
             <div className="p-3">
                 <div className="columns m-0">
-                    <div className="column p-0 is-narrow-touch is-flex">
+                    <div className="column p-0 is-narrow-tablet is-flex">
                         <Card title="Account details" isNarrow={false} style={{flexGrow: 1}}>
                             Please wait&hellip;
                         </Card>
@@ -140,7 +140,7 @@ export default function () {
         </section>
         <div className="p-3">
             <div className="columns m-0 is-multiline">
-                <div className="column p-0 is-narrow-touch is-flex">
+                <div className="column p-0 is-narrow-tablet is-flex">
                     <AccountDetailsCard account={account}
                         updatingFavorite={updatingFavorite}
                         toggleFavorite={toggleFavorite}
