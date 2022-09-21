@@ -42,19 +42,20 @@ interface Props {
 export default function (props: Props) {
     const [movements, setMovements] = React.useState<GetMovementAllResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
-    const { preferences } = React.useContext(preferencesContext);
+    const [perAccount, setPerAccount] = React.useState(true);
+    const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
 
     const colors = ["#7eb0d5", "#fd7f6f", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"];
 
     React.useEffect(() => {
-        updateData(props.period, resolution, setMovements);
+        updateData(props.period, setDisplayingPeriod, resolution, setMovements);
     }, [props.period, resolution])
 
     if (movements === "fetching") {
         return <>Please wait&hellip;</>;
     }
 
-    let [start, end] = PeriodFunctions.getRange(props.period);
+    let [start, end] = PeriodFunctions.getRange(displayingPeriod);
     let timepoints = Object.keys(movements.items).flatMap(key => movements.items[Number(key)].items.map(item => item.dateTime));
     if (timepoints.length === 0 || timepoints[0].diff(start, "days").days > 1) {
         timepoints = [start, ...timepoints];
@@ -64,8 +65,11 @@ export default function (props: Props) {
     }
 
     let revenue: { [accountId: number]: number[] } = {}; 
+    let totalRevenue: number[] = [];
     let expenses: { [accountId: number]: number[] } = {};
+    let totalExpenses: number[] = [];
     let balances: { [accountId: number]: number[] } = {};
+    let totalBalance: number[] = [];
 
     Object.keys(movements.items).forEach(key => {
         const accountId = Number(key);
@@ -90,12 +94,16 @@ export default function (props: Props) {
                 balances[accountId][timepointIndex] = balances[accountId][timepointIndex - 1];
             }
             balances[accountId][timepointIndex] += revenue[accountId][timepointIndex] - expenses[accountId][timepointIndex];
+
+            totalRevenue[timepointIndex] = (totalRevenue[timepointIndex] ?? 0) + revenue[accountId][timepointIndex];
+            totalExpenses[timepointIndex] = (totalExpenses[timepointIndex] ?? 0) + expenses[accountId][timepointIndex];
+            totalBalance[timepointIndex] = (totalBalance[timepointIndex] ?? 0) + balances[accountId][timepointIndex];
         });
     });
 
     return <div className="columns m-0 is-multiline">
         {props.showTable && <div className="column p-0 is-flex is-narrow-tablet">
-            <NetWorthTable period={props.period}
+            <NetWorthTable period={displayingPeriod}
                 accountBalances={movements.accounts.map(account => ({
                     account,
                     balance: balances[account.id][balances[account.id].length - 1],
@@ -110,14 +118,37 @@ export default function (props: Props) {
                     <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
                         <Chart type={"line"} height="400px" data={{
                             labels: timepoints,
-                            datasets: Object.keys(movements.items).map(Number).flatMap((accountId, index) => [{
-                                label: movements.accounts.find(account => account.id == accountId)?.name,
-                                data: balances[accountId],
-                                type: "line",
-                                stepped: true,
-                                borderColor: colors[index & colors.length],
-                                backgroundColor: "transparent",
-                            }]),
+                            datasets: perAccount
+                                ? Object.keys(movements.items).map(Number).flatMap((accountId, index) => [{
+                                    label: movements.accounts.find(account => account.id == accountId)?.name,
+                                    data: balances[accountId],
+                                    type: "line",
+                                    stepped: true,
+                                    borderColor: colors[index & colors.length],
+                                    backgroundColor: "transparent",
+                                }])
+                                : [{
+                                    label: "Net worth",
+                                    data: totalBalance,
+                                    type: "line",
+                                    stepped: true,
+                                    borderColor: "#558eb3",
+                                    backgroundColor: "transparent",
+                                },
+                                {
+                                    label: "Revenue",
+                                    data: totalRevenue,
+                                    type: "bar",
+                                    borderColor: "transparent",
+                                    backgroundColor: "#4db09b"
+                                },
+                                {
+                                    label: "Expenses",
+                                    data: totalExpenses,
+                                    type: "bar",
+                                    borderColor: "transparent",
+                                    backgroundColor: "#ff6b6b"
+                                }],
                         }} options={{
                             maintainAspectRatio: false,
                             responsive: true,
@@ -128,7 +159,9 @@ export default function (props: Props) {
                                     offset: true,
                                     time: {
                                         unit: resolution
-                                    }
+                                    },
+                                    min: start.valueOf(),
+                                    max: end.valueOf()
                                 },
                             },
                             interaction: {
@@ -145,13 +178,16 @@ export default function (props: Props) {
                             let options = ["day", "week", "month", "year"];
                             setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
                         }}>{["Daily", "Weekly", "Monthly", "Yearly"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
+                    <span style={{ cursor: "pointer" }} className="tag is-dark"
+                        onClick={() => setPerAccount(value => !value)}>{perAccount ? "Per account" : "All accounts"}</span>
                 </div>
             </Card>
         </div>
     </div>;
 }
 
-function updateData(period: Period, resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementAllResponse>) {
+function updateData(period: Period, setDisplayingPeriod: (period: Period) => void,
+    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementAllResponse>) {
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
@@ -171,6 +207,7 @@ function updateData(period: Period, resolutionString: "day" | "week" | "year" | 
 
     Api.Account.getMovementsAll(start, end, resolution)
         .then(result => {
+            setDisplayingPeriod(period);
             setData(result);
         });
 }

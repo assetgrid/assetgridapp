@@ -47,7 +47,7 @@
 - [x] Move account deletion modal to it's own page
 - [x] Delete account page should detect invalid accounts
 - [x] Implement multi editing on the account page
-- [ ] Finish dashboard
+- [x] Finish dashboard
 - [ ] Fix search
 - [x] Fix account and transaction creation pages
 - ~~[ ] Add property to transaction called type that can be deposit, withdrawal or transfer. Depends on whether source, destination or both are included in net worth. Transactions should be colored according to type on transaction page and it should be possible to filter transactions based on type~~

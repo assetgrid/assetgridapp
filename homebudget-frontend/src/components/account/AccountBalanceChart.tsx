@@ -40,9 +40,10 @@ interface Props {
 export default function AccountBalanceChart(props: Props) {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
+    const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
 
     React.useEffect(() => {
-        updateData(props.id, props.period, resolution, setMovements);
+        updateData(props.id, props.period, setDisplayingPeriod, resolution, setMovements);
     }, [props.period, resolution])
 
     if (movements === "fetching") {
@@ -57,7 +58,7 @@ export default function AccountBalanceChart(props: Props) {
         let item = movements.items[i];
         balances[i] = (balances[i - 1] !== undefined ? balances[i - 1] : movements.initialBalance.toNumber()) + item.revenue.toNumber() - item.expenses.toNumber();
     }
-    let [start, end] = PeriodFunctions.getRange(props.period);
+    let [start, end] = PeriodFunctions.getRange(displayingPeriod);
 
     if (movements.items.length === 0 || movements.items[0].dateTime.diff(start, "days").days > 1) {
         balances = [movements.initialBalance.toNumber(), ...balances];
@@ -100,6 +101,7 @@ export default function AccountBalanceChart(props: Props) {
                         backgroundColor: "#ff6b6b"
                     }],
                 }} options={{
+                    normalized: true,
                     maintainAspectRatio: false,
                     responsive: true,
                     scales: {
@@ -109,7 +111,9 @@ export default function AccountBalanceChart(props: Props) {
                             offset: true,
                             time: {
                                 unit: resolution
-                            }
+                            },
+                            min: start.valueOf(),
+                            max: end.valueOf()
                         },
                     },
                     interaction: {
@@ -130,7 +134,9 @@ export default function AccountBalanceChart(props: Props) {
     </>;
 }
 
-function updateData(id: number, period: Period, resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
+function updateData(id: number, period: Period, setDisplayingPeriod: (period: Period) => void,
+    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
+    
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
@@ -150,6 +156,7 @@ function updateData(id: number, period: Period, resolutionString: "day" | "week"
 
     Api.Account.getMovements(id, start, end, resolution)
         .then(result => {
+            setDisplayingPeriod(period);
             setData(result);
         });
 }
