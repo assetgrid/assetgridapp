@@ -22,6 +22,11 @@ namespace homebudget_server.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Creates a new account
+        /// </summary>
+        /// <param name="model">The account to be created</param>
+        /// <returns>The newly created account</returns>
         [HttpPost()]
         public ViewAccount Create(ViewCreateAccount model)
         {
@@ -47,132 +52,6 @@ namespace homebudget_server.Controllers
                 };
             }
             throw new Exception();
-        }
-
-        struct AccountMovementGroup
-        {
-            public DateTime TimePoint { get; set; }
-            public string Type { get; set; }
-            public long Total { get; set; }
-        }
-
-        [HttpPost()]
-        [Route("/[controller]/{id}/Movements")]
-        public ViewGetMovementResponse GetMovement(int id, ViewGetMovementRequest request)
-        {
-            var initialBalance = request.From == null ? 0 :
-                _context.Transactions
-                    .Where(transaction => transaction.DateTime < request.From)
-                    .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
-                    .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
-                    .Sum();
-
-            var statsRequest = _context.Transactions
-                .Where(transaction => request.From == null || transaction.DateTime >= request.From)
-                .Where(transaction => request.To == null || transaction.DateTime <= request.To)
-                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
-
-            List <AccountMovementGroup> result;
-            switch (request.Resolution)
-            {
-                case AccountMovementResolution.Daily:
-                    result = statsRequest.GroupBy(transaction => new
-                    {
-                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
-                        timepoint = transaction.DateTime.Year.ToString() + "-" + transaction.DateTime.Month.ToString() + "-" + transaction.DateTime.Day.ToString()
-                    }).Select(group => new AccountMovementGroup { 
-                        Type = group.Key.type,
-                        TimePoint = DateTime.ParseExact(group.Key.timepoint, "yyyy-M-d", CultureInfo.InvariantCulture),
-                        Total = group.Select(transaction => transaction.Total).Sum(),
-                    }).ToList();
-                    break;
-                case AccountMovementResolution.Weekly:
-                    var offset = request.From ?? new DateTime(1900, 01, 01);
-                    result = statsRequest.Select(transaction => new
-                    {
-                        transaction,
-                        week = Math.Floor(EF.Functions.DateDiffDay(offset, transaction.DateTime) / 7.0)
-                    }).GroupBy(obj => new
-                    {
-                        type = obj.transaction.DestinationAccountId == id ? "revenue" : "expense",
-                        timepoint = obj.week,
-                    }).Select(group => new AccountMovementGroup
-                    {
-                        Type = group.Key.type,
-                        TimePoint = offset.AddDays(group.Key.timepoint * 7),
-                        Total = group.Select(obj => obj.transaction.Total).Sum(),
-                    }).ToList();
-                    break;
-                case AccountMovementResolution.Monthly:
-                    result = statsRequest.GroupBy(transaction => new
-                    {
-                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
-                        timepoint = transaction.DateTime.Year.ToString() + "-" + transaction.DateTime.Month.ToString()
-                    }).Select(group => new AccountMovementGroup
-                    {
-                        Type = group.Key.type,
-                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01", "yyyy-M-dd", CultureInfo.InvariantCulture),
-                        Total = group.Select(transaction => transaction.Total).Sum(),
-                    }).ToList();
-                    break;
-                case AccountMovementResolution.Yearly:
-                    result = statsRequest.GroupBy(transaction => new
-                    {
-                        type = transaction.DestinationAccountId == id ? "revenue" : "expense",
-                        timepoint = transaction.DateTime.Year.ToString()
-                    }).Select(group => new AccountMovementGroup
-                    {
-                        Type = group.Key.type,
-                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                        Total = group.Select(transaction => transaction.Total).Sum(),
-                    }).ToList();
-                    break;
-                default:
-                    throw new Exception($"Unknown resolution {request.Resolution}");
-            }
-
-            var revenue = result.Where(item => item.Type == "revenue").ToDictionary(item => item.TimePoint, item => item.Total);
-            var expenses = result.Where(item => item.Type == "expense").ToDictionary(item => item.TimePoint, item => item.Total);
-            foreach (var key in revenue.Keys)
-            {
-                if (!expenses.ContainsKey(key)) expenses[key] = 0;
-            }
-            foreach (var key in expenses.Keys)
-            {
-                if (!revenue.ContainsKey(key)) revenue[key] = 0;
-            }
-
-            return new ViewGetMovementResponse
-            {
-                InitialBalance = initialBalance,
-                Items = expenses.Join(revenue,
-                        result => result.Key,
-                        result => result.Key,
-                        (a, b) => new ViewAccountMovementItem
-                        {
-                            DateTime = a.Key,
-                            Expenses = a.Value,
-                            Revenue = b.Value,
-                        })
-                    .OrderBy(item => item.DateTime).ToList()
-            };
-        }
-
-        [HttpPost()]
-        [Route("/[controller]/{id}/[action]")]
-        public List<object> CategorySummary(int id, ViewSearchGroup query)
-        {
-            return _context.Transactions
-                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
-                .ApplySearch(query)
-                .GroupBy(transaction => transaction.Category != null ? transaction.Category.Name : "")
-                .Select(group => (object)new
-                {
-                    category = group.Key,
-                    revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
-                    expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
-                })
-                .ToList();
         }
 
         [HttpGet()]
@@ -334,5 +213,251 @@ namespace homebudget_server.Controllers
 
             return query.Count();
         }
+
+
+
+
+        #region Movements
+
+        struct AccountMovementGroup
+        {
+            public int AccountId { get; set; }
+            public DateTime TimePoint { get; set; }
+            public string Type { get; set; }
+            public long Total { get; set; }
+        }
+
+        struct MovementItem
+        {
+            public int AccountId { get; set; }
+            public string Type { get; set; }
+            public Transaction Transaction { get; set; }
+        }
+
+        /// <summary>
+        /// Returns revenue and expenses for a specific account grouped in intervals
+        /// </summary>
+        /// <param name="id">The account to get the balance for</param>
+        /// <param name="request">An object representing the period and the interval to group by</param>
+        /// <returns>The initial balance as well as a list of revenue and expenses for each interval</returns>
+        [HttpPost()]
+        [Route("/[controller]/{id}/Movements")]
+        public ViewGetMovementResponse GetMovement(int id, ViewGetMovementRequest request)
+        {
+            var initialBalance = request.From == null ? 0 : _context.Transactions
+                .Where(transaction => transaction.DateTime < request.From)
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
+                .Sum();
+
+            var query = _context.Transactions
+                .Where(transaction => request.From == null || transaction.DateTime >= request.From)
+                .Where(transaction => request.To == null || transaction.DateTime <= request.To)
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .Select(transaction => new MovementItem
+                {
+                    AccountId = id,
+                    Type = transaction.DestinationAccountId == id ? "revenue" : "expense",
+                    Transaction = transaction
+                });
+
+            var result = ApplyIntervalGrouping(request.From, request.Resolution, query).ToList();
+
+            var revenue = result.Where(item => item.Type == "revenue").ToDictionary(item => item.TimePoint, item => item.Total);
+            var expenses = result.Where(item => item.Type == "expense").ToDictionary(item => item.TimePoint, item => item.Total);
+            foreach (var key in revenue.Keys)
+            {
+                if (!expenses.ContainsKey(key)) expenses[key] = 0;
+            }
+            foreach (var key in expenses.Keys)
+            {
+                if (!revenue.ContainsKey(key)) revenue[key] = 0;
+            }
+
+            return new ViewGetMovementResponse
+            {
+                InitialBalance = initialBalance,
+                Items = expenses.Join(revenue,
+                        result => result.Key,
+                        result => result.Key,
+                        (a, b) => new ViewAccountMovementItem
+                        {
+                            DateTime = a.Key,
+                            Expenses = a.Value,
+                            Revenue = b.Value,
+                        })
+                    .OrderBy(item => item.DateTime).ToList()
+            };
+        }
+
+        /// <summary>
+        /// Returns revenue and expenses for all accounts added to net worth grouped in intervals
+        /// </summary>
+        /// <param name="request">An object representing the period and the interval to group by</param>
+        /// <returns>The initial balance as well as a list of revenue and expenses for each interval</returns>
+        [HttpPost()]
+        [Route("/[controller]/Movements")]
+        public ViewGetMovementAllResponse GetMovementAll(ViewGetMovementRequest request)
+        {
+            List<ViewAccount> accounts = _context.Accounts.Where(account => account.IncludeInNetWorth).SelectView().ToList();
+
+            var query = _context.Transactions
+                .Where(transaction => request.From == null || transaction.DateTime >= request.From)
+                .Where(transaction => request.To == null || transaction.DateTime <= request.To);
+
+            // Calculate revenue and expenses for each account separately
+            var revenueQuery = ApplyIntervalGrouping(request.From, request.Resolution,
+                query.Where(transaction => transaction.DestinationAccount!.IncludeInNetWorth)
+                .Select(transaction => new MovementItem
+                {
+                    AccountId = transaction.DestinationAccountId!.Value,
+                    Type = "revenue",
+                    Transaction = transaction
+                }));
+
+            // Calculate revenue and expenses for each account separately
+            var expensesQuery = ApplyIntervalGrouping(request.From, request.Resolution,
+                query.Where(transaction => transaction.SourceAccount!.IncludeInNetWorth)
+                .Select(transaction => new MovementItem
+                {
+                    AccountId = transaction.SourceAccountId!.Value,
+                    Type = "expense",
+                    Transaction = transaction
+                }));
+
+            // Fetch both using a single query
+            var revenue = revenueQuery.ToLookup(item => item.AccountId);
+            var expenses = expensesQuery.ToLookup(item => item.AccountId);
+            var output = new Dictionary<int, ViewGetMovementResponse>();
+
+            foreach (var account in accounts)
+            {
+                var accountRevenue = revenue[account.Id].ToDictionary(item => item.TimePoint, item => item.Total);
+                var accountExpenses = expenses[account.Id].ToDictionary(item => item.TimePoint, item => item.Total);
+                foreach (var key in accountRevenue.Keys)
+                {
+                    if (!accountExpenses.ContainsKey(key)) accountExpenses[key] = 0;
+                }
+                foreach (var key in accountExpenses.Keys)
+                {
+                    if (!accountRevenue.ContainsKey(key)) accountRevenue[key] = 0;
+                }
+
+                var initialBalance = request.From == null ? 0 : _context.Transactions
+                    .Where(transaction => transaction.DateTime < request.From)
+                    .Where(transaction => transaction.SourceAccountId == account.Id || transaction.DestinationAccountId == account.Id)
+                    .Select(transaction => transaction.DestinationAccountId == account.Id ? transaction.Total : -transaction.Total)
+                    .Sum();
+
+                output[account.Id] = new ViewGetMovementResponse
+                {
+                    InitialBalance = initialBalance,
+                    Items = accountExpenses.Join(accountRevenue,
+                        result => result.Key,
+                        result => result.Key,
+                        (a, b) => new ViewAccountMovementItem
+                        {
+                            DateTime = a.Key,
+                            Expenses = a.Value,
+                            Revenue = b.Value,
+                        })
+                        .OrderBy(item => item.DateTime).ToList()
+                };
+            }
+
+            return new ViewGetMovementAllResponse
+            {
+                Items = output,
+                Accounts = accounts
+            };
+        }
+
+        private IQueryable<AccountMovementGroup> ApplyIntervalGrouping(DateTime? from, AccountMovementResolution resolution, IQueryable<MovementItem> query)
+        {
+            switch (resolution)
+            {
+                case AccountMovementResolution.Daily:
+                    return query.GroupBy(obj => new
+                    {
+                        account = obj.AccountId,
+                        type = obj.Type,
+                        timepoint = obj.Transaction.DateTime.Year.ToString() + "-" + obj.Transaction.DateTime.Month.ToString() + "-" + obj.Transaction.DateTime.Day.ToString()
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        AccountId = group.Key.account,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint, "yyyy-M-d", CultureInfo.InvariantCulture),
+                        Total = group.Select(obj => obj.Transaction.Total).Sum(),
+                    });
+                case AccountMovementResolution.Weekly:
+                    var offset = from ?? new DateTime(1900, 01, 01);
+                    return query.Select(obj => new
+                    {
+                        obj.Transaction,
+                        obj.Type,
+                        obj.AccountId,
+                        week = Math.Floor(EF.Functions.DateDiffDay(offset, obj.Transaction.DateTime) / 7.0)
+                    }).GroupBy(obj => new
+                    {
+                        account = obj.AccountId,
+                        type = obj.Type,
+                        timepoint = obj.week,
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        AccountId = group.Key.account,
+                        TimePoint = offset.AddDays(group.Key.timepoint * 7),
+                        Total = group.Select(obj => obj.Transaction.Total).Sum(),
+                    });
+                case AccountMovementResolution.Monthly:
+                    return query.GroupBy(obj => new
+                    {
+                        account = obj.AccountId,
+                        type = obj.Type,
+                        timepoint = obj.Transaction.DateTime.Year.ToString() + "-" + obj.Transaction.DateTime.Month.ToString()
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        AccountId = group.Key.account,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01", "yyyy-M-dd", CultureInfo.InvariantCulture),
+                        Total = group.Select(obj => obj.Transaction.Total).Sum(),
+                    });
+                case AccountMovementResolution.Yearly:
+                    return query.GroupBy(obj => new
+                    {
+                        account = obj.AccountId,
+                        type = obj.Type,
+                        timepoint = obj.Transaction.DateTime.Year.ToString()
+                    }).Select(group => new AccountMovementGroup
+                    {
+                        Type = group.Key.type,
+                        AccountId = group.Key.account,
+                        TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Total = group.Select(obj => obj.Transaction.Total).Sum(),
+                    });
+
+                default:
+                    throw new Exception($"Unknown resolution {resolution}");
+            }
+        }
+
+        [HttpPost()]
+        [Route("/[controller]/{id}/[action]")]
+        public List<object> CategorySummary(int id, ViewSearchGroup query)
+        {
+            return _context.Transactions
+                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+                .ApplySearch(query)
+                .GroupBy(transaction => transaction.Category != null ? transaction.Category.Name : "")
+                .Select(group => (object)new
+                {
+                    category = group.Key,
+                    revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
+                    expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
+                })
+                .ToList();
+        }
+
+        #endregion
     }
 }

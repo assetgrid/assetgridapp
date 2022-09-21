@@ -30,6 +30,11 @@ export type GetMovementResponse = {
     items: MovementItem[];
 }
 
+export type GetMovementAllResponse = {
+    accounts: Account[];
+    items: { [accountId: number]: GetMovementResponse };
+}
+
 export enum TimeResolution {
     Daily = 0,
     Weekly = 1,

@@ -53,4 +53,10 @@
         public string InitialBalanceString { get => InitialBalance.ToString(); set => InitialBalance = long.Parse(value); }
         public List<ViewAccountMovementItem> Items { get; set; } = null!;
     }
+
+    public class ViewGetMovementAllResponse
+    {
+        public Dictionary<int, ViewGetMovementResponse> Items { get; set; } = null!;
+        public List<ViewAccount> Accounts { get; set; } = null!;
+    }
 }

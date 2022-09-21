@@ -1,7 +1,7 @@
 import axios from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import { Account as AccountModel, CreateAccount, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
+import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction, Transaction } from "../models/transaction";
@@ -243,6 +243,39 @@ const Account = {
                     revenue: new Decimal(revenueString).div(new Decimal(10000)),
                 }))
             })).catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Calculate development in account balance, revenue and expenses over time
+     * @param from Start of period
+     * @param to End of period
+     * @param resolution The time resolution at which to aggregate the results
+     * @returns An object containing information about account movements
+     */
+     getMovementsAll: function (from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementAllResponse> {
+        return new Promise<GetMovementAllResponse>((resolve, reject) => {
+            axios.post<GetMovementAllResponse>(rootUrl + "/account/movements", {
+                from: from,
+                to: to,
+                resolution: resolution
+            }).then(result => {
+                Object.keys(result.data.items).forEach(key => {
+                    let accountId = Number(key);
+                    let item = result.data.items[accountId];
+                    item.initialBalance = new Decimal((item as any).initialBalanceString).div(new Decimal(10000));
+                    item.items = (item.items as (MovementItem & { revenueString: string, expensesString: string })[]).map(({ revenueString, expensesString, ...item }) => ({
+                        ...item,
+                        dateTime: DateTime.fromISO(item.dateTime as any as string),
+                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                        revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                    }))
+                });
+                resolve(result.data);
+            }).catch(error => {
                     console.log(error);
                     reject(error);
                 });
