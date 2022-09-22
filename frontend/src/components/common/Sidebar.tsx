@@ -9,12 +9,21 @@ import { preferencesContext } from "../App";
 
 interface Props {
     show: boolean;
+    onBlur?: React.FocusEventHandler<HTMLDivElement>;
 }
 
 export default function Sidebar(props: Props) {
     const { preferences } = React.useContext(preferencesContext);
+    const ref = React.useRef<HTMLDivElement>(null);
 
-    return <div className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
+    React.useEffect(() => {
+        if (props.show) {
+            ref.current?.focus();
+        }
+    }, [props.show]);
+
+    return <div tabIndex={0} ref={ref} onBlur={props.onBlur}
+        className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
         <img className="logo" src={logo}></img>
         <aside className="menu has-color-white m-5">
             <p className="menu-label">

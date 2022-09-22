@@ -30,7 +30,8 @@ interface PreferencesContext {
 export default function FairFitPortalApp () {
     const [preferences, setPreferences] = React.useState<Preferences | "fetching">("fetching");
     const modalContainer = React.useRef<HTMLDivElement>(null);
-    const [showSidebar, setShowSidebar] = React.useState(false); 
+    const [showSidebar, setShowSidebar] = React.useState(false);
+    const sidebarRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => updatePreferences(null), []);
 
@@ -40,7 +41,7 @@ export default function FairFitPortalApp () {
                 <div className="mobile-header-spacing"></div>
                 <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                 <div style={{display: "flex", flexGrow: 1}}>
-                    <Sidebar show={showSidebar} />
+                    <Sidebar show={showSidebar} onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setShowSidebar(false)}></Sidebar>
                     <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />

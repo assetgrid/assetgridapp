@@ -11,11 +11,15 @@ export default function (props: Props) {
         <img className="logo" src={logo}></img>
         <a role="button"
             className={"navbar-burger" + (props.sidebarVisible ? " is-active" : "")}
-            onClick={() => props.setShowSidebar(value => !value)}
+            onClick={toggleSidebar}
             aria-label="menu" aria-expanded={props.sidebarVisible}>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
         </a>
     </div>;
+
+    function toggleSidebar() {
+        props.setShowSidebar(value => !value);
+    }
 }
