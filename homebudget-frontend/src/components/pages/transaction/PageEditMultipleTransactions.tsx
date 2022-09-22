@@ -9,6 +9,7 @@ import { SearchGroup } from "../../../models/search";
 import { Transaction, TransactionLine, UpdateTransaction } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
+import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
@@ -88,22 +89,16 @@ export default function PageEditMultipleTransactions() {
     }, [action]);
 
         return<>
-        <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Modify multiple transactions
-                </p>
-            </div>
-        </section>
+        <Hero title="Edit transactions" subtitle="Modify multiple transaction at once" />
         <div className="p-3">
-            <Card title="Query" isNarrow={true}>
+            <Card title="Query" isNarrow={false}>
                 <TransactionFilterEditor query={query} setQuery={query => { setQuery(query) } } />
             </Card>
-            <Card title="Actions" isNarrow={true}>
+            <Card title="Actions" isNarrow={false}>
                 {renderAction(action, setAction, model, setModel, isUpdating)}
 
                 <div className="buttons">
-                    <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || model === null}>Apply changes</InputButton>
+                    <InputButton className="is-primary" onClick={() => update()} disabled={isUpdating || model === null}>Apply changes</InputButton>
                     {showBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>

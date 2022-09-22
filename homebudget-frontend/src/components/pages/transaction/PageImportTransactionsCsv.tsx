@@ -4,6 +4,7 @@ import { Api } from "../../../lib/ApiClient";
 import { Account } from "../../../models/account";
 import { Preferences } from "../../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../../models/search";
+import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import { Import } from "../../transaction/import/Import";
 import ImportCsv, { CsvImportOptions } from "../../transaction/import/ImportCsv";
@@ -76,13 +77,7 @@ export default function PageImportTransactionsCsv () {
     }); */
     
     return <>
-        <section className="hero has-background-primary">
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Import from CSV
-                </p>
-            </div>
-        </section>
+        <Hero title="Import" subtitle="From CSV file" />
         <div className="tabs has-background-white px-5">
             <ul>
                 <li className={currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>

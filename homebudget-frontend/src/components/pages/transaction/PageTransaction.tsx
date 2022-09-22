@@ -22,6 +22,7 @@ import Decimal from "decimal.js";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import Page404 from "../Page404";
 import PageError from "../PageError";
+import Hero from "../../common/Hero";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
@@ -42,14 +43,7 @@ export default function PageTransaction(): React.ReactElement {
     }
 
     return <>
-        <section className="hero has-background-primary">
-            <div className="hero-body">
-                <p className="title has-text-white">Transaction #{id}</p>
-                {transaction !== "fetching" && <p className="subtitle has-text-primary-light">
-                    {transaction.description}
-                </p>}
-            </div>
-        </section>
+        <Hero title={<>Transaction #{id}</>} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
         <div className="p-3">
             <div className="columns">
                 <div className="column p-0 is-narrow is-flex">

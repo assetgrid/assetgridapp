@@ -10,6 +10,7 @@ import { CreateTransaction, Transaction, TransactionLine } from "../../../models
 import InputAccount from "../../account/input/InputAccount";
 import { preferencesContext } from "../../App";
 import Card from "../../common/Card";
+import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
@@ -38,15 +39,9 @@ export default function () {
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
 
     return <>
-        <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Create new transaction
-                </p>
-            </div>
-        </section>
+        <Hero title="Create new transaction" />
         <div className="p-3">
-            <Card title="Create transaction" isNarrow={true}>
+            <Card title="Transaction details" isNarrow={true}>
                 { createdTransaction && <article className="message is-link">
                     <div className="message-body">
                         Transaction has been created: <TransactionLink transaction={createdTransaction} />

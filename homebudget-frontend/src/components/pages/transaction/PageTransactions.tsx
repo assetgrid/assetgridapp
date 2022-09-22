@@ -4,6 +4,7 @@ import { routes } from "../../../lib/routes";
 import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Card from "../../common/Card";
+import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
@@ -46,15 +47,11 @@ export default function PageTransactions() {
     }, [query]);
 
     return <>
-        <section className="hero has-background-primary">
-            <div className="hero-body">
-                <p className="title has-text-white">Transactions</p>
-            </div>
-        </section>
+        <Hero title="Transactions" subtitle="Browse transactions" />
         <div className="p-3">
             <Card title="Actions" isNarrow={false}>
                 <Link to={routes.transactionCreate()} state={{ allowBack: true }}
-                    className="button">
+                    className="button is-primary">
                     Create Transaction
                 </Link>
             </Card>

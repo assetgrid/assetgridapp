@@ -6,19 +6,19 @@
 
     & > .filter-group--header {
         padding: $size-7 $size-6;
-        background-color: $link;
+        background-color: $primary;
         color: white;
         display: flex;
         align-items: center;
 
         .button {
-            background: $link;
+            background: $primary;
             border: 2px solid white;
             color: white;
             margin-right: $size-7;
 
             &:hover {
-                color: $link;
+                color: $primary;
                 background-color: white;
             }
         }
@@ -45,7 +45,7 @@
         }
     }
 
-    border: 2px solid $link;
+    border: 2px solid $primary;
     border-radius: $radius;
     margin-bottom: $size-6;
 }

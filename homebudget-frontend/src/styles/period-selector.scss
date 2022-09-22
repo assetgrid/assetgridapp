@@ -5,8 +5,16 @@
 
     .button {
         background-color: transparent;
-        border-color: $primary-light;
-        color: white;
+        border-color: #DDD;
+        color: black;
+    }
+
+    .date-display > button {
+        min-width: 200px;
+        display: flex;
+        .text {
+            flex: 1;
+        }
     }
 
     .dropdown {

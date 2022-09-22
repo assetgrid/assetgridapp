@@ -6,6 +6,7 @@ import { Account, CreateAccount } from "../../../models/account";
 import AccountLink from "../../account/AccountLink";
 import { preferencesContext } from "../../App";
 import Card from "../../common/Card";
+import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import InputCheckbox from "../../input/InputCheckbox";
 import InputText from "../../input/InputText";
@@ -28,15 +29,9 @@ export default function () {
     const allowBack = window.history.state.usr?.allowBack === true;
 
     return <>
-        <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Create new account
-                </p>
-            </div>
-        </section>
+        <Hero title="Create new account" />
         <div className="p-3">
-            <Card title="Create account" isNarrow={true}>
+            <Card title="Account details" isNarrow={true}>
                 {createdAccount && <article className="message is-link">
                     <div className="message-body">
                     Account has been created: <AccountLink account={createdAccount} />

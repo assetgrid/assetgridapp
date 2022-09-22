@@ -95,7 +95,7 @@ export default function Condition(props: ConditionProps) {
         </div>
 
         {/* Operator */}
-        <div className="column">
+        <div className="column is-narrow">
             <InputSelect isFullwidth={true} items={[
                 { key: "equals", value: "Equals" },
                 { key: "not-equals", value: "Does not equal" },
@@ -123,7 +123,7 @@ export default function Condition(props: ConditionProps) {
             } as ConditionModel} />
         </div>
 
-        <div className="column">
+        <div className="column is-narrow">
             <InputIconButton icon={faTrashCan}  onClick={() => props.setQuery(null)}/>
         </div>
     </div>;

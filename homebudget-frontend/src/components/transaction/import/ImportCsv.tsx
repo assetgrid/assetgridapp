@@ -61,7 +61,7 @@ export default function ImportCsv(props: Props) {
                     { key: "\r", value: "\\r" },
                     { key: "\r\n", value: "\\r\\n" }
                 ]} />
-            <div className={"file " + (props.csvFile != null ? " has-name" : "")}>
+            <div className={"file mb-3 " + (props.csvFile != null ? " has-name" : "")}>
                 <label className="file-label">
                     <input className="file-input" type="file" name="resume" onChange={e => fileUploaded(e)} />
                     <span className="file-cta">
@@ -77,6 +77,8 @@ export default function ImportCsv(props: Props) {
                     </span>}
                 </label>
             </div>
+
+            <p>If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <a href="https://github.com/Assetgrid/assetgridapp/issues/new?assignees=&labels=CSV+issue&template=csv-file-cannot-be-imported.md&title=" target="_blank">Github page</a></p>
         </Card>
 
         {props.csvFile != null && <Card title="CSV data" isNarrow={false}>

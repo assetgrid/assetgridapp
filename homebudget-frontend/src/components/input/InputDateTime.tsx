@@ -28,11 +28,10 @@ export default function InputDateTime (props: Props) {
         value = formatDateTimeWithPrefs(props.value, preferences);
     }
     
-    return <div className="field input-datetime" tabIndex={0}
-        onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
-        >
+    return <div className="field input-datetime">
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && ! props.disabled ? " is-active" : "")}>
+        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && !props.disabled ? " is-active" : "")}
+            tabIndex={0} onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}>
             <div className="dropdown-trigger">
                 <button className="button" aria-haspopup="true" onClick={e => setOpen(true) } disabled={props.disabled}>
                     <span>{value}</span>

@@ -65,13 +65,16 @@ $transition-short: 0.2s;
 
 // General SCSS can be placed here
 .card {
-    border: 2px solid #DDD;
+    border: 1px solid #DDD;
     box-shadow: none;
 
     .card-header {
         border-bottom: 0;
         box-shadow: none;
     }
+}
+.hero.has-background-white {
+    border-bottom: 1px solid #DDD;
 }
 
 body {

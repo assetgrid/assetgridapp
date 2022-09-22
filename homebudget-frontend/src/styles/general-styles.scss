@@ -98,9 +98,11 @@ html, body {
 
 @media screen and (max-width: 1800px){
     .sidebar {
-        display: none;
+        display: block;
+        transform: translateX(-300px);
+        transition: transform 0.2s;
         &.shown {
-            display: block;
+            transform: translateX(0);
         }
         .logo {
             display: none;
@@ -116,8 +118,5 @@ html, body {
     }
     .mobile-header-spacing {
         height: 50px;
-    }
-    .main-content.sidebar-shown {
-        margin-left: 300px;
     }
 }

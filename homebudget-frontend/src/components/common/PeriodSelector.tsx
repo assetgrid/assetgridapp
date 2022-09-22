@@ -31,12 +31,12 @@ export default class PeriodSelector extends React.Component<Props, State> {
                     </span>
                 </button>
             </p>
-            <p className="control">
+            <p className="control date-display">
                 <button className="button" onClick={() => this.state.down ? this.up() : this.down()}>
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={solid.faCalendarAlt} />
                     </span>
-                    {PeriodFunctions.print(this.props.period)}
+                    <span className="text">{PeriodFunctions.print(this.props.period)}</span>
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={this.state.down ? solid.faAngleUp : solid.faAngleDown} />
                     </span>

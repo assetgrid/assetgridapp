@@ -9,6 +9,7 @@ import { formatDateTimeWithPrefs, formatDateWithPrefs, formatNumber, formatNumbe
 import { Preferences } from "../../models/preferences";
 import { preferencesContext } from "../App";
 import Card from "../common/Card";
+import Hero from "../common/Hero";
 import InputButton from "../input/InputButton";
 import InputNumber from "../input/InputNumber";
 import InputText from "../input/InputText";
@@ -28,14 +29,7 @@ export default function PagePreferences(): React.ReactElement {
     const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), [])
 
     return <>
-        <section className="hero has-background-primary">
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Preferences
-                </p>
-            </div>
-        </section>
-
+        <Hero title="Preferences" subtitle="Modify preferences" />
         <div className="t-3">
             {renderContent()}
         </div>

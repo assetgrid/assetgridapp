@@ -26,6 +26,7 @@ import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/se
 import Page404 from "../Page404";
 import PageError from "../PageError";
 import AccountDetailsCard from "../../account/AccountDetailsCard";
+import Hero from "../../common/Hero";
 
 const pageSize = 20;
 
@@ -80,11 +81,7 @@ export default function () {
 
     if (account === "fetching") {
         return layout(period,
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    #{id} &hellip;
-                </p>
-            </div>,
+            <Hero title={<>#{id} &hellip;</>} subtitle={<>&hellip;</>} />,
             <Card title="Account details" isNarrow={false} style={{flexGrow: 1}}>
                 <>Please wait&hellip;</>
             </Card>,
@@ -100,26 +97,18 @@ export default function () {
         return <Page404 />;
     }
 
-    return layout(period, <>
-        <div className="hero-body">
-            <p className="title has-text-white">
-                {updatingFavorite
-                    ? <span className="icon">
-                        <FontAwesomeIcon icon={solid.faSpinner} pulse />
-                    </span>
-                    : <span className="icon" onClick={() => toggleFavorite()} style={{ cursor: "pointer" }}>
-                        {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
-                    </span>} #{account.id} {account.name}
-            </p>
-            {(account.description?.trim() ?? "") !== "" &&
-                <p className="subtitle has-text-primary-light">
-                    {account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
-                </p>}
-        </div>
-        <div>
-            <PeriodSelector period={period} onChange={period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }} />
-        </div>
-    </>,
+    return layout(period,
+        <Hero title={<>
+            {updatingFavorite
+                ? <span className="icon">
+                    <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                </span>
+                : <span className="icon" onClick={() => toggleFavorite()} style={{ cursor: "pointer" }}>
+                    {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                </span>} #{account.id} {account.name}
+        </>}
+            subtitle={account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
+            period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
         <AccountDetailsCard account={account}
             updatingFavorite={updatingFavorite}
             toggleFavorite={toggleFavorite}
@@ -234,16 +223,14 @@ export default function () {
 
 function layout(
     period: Period,
-    header: React.ReactElement,
+    hero: React.ReactElement,
     accountDetails: React.ReactElement,
     categoryChart: React.ReactElement,
     balanceChart: React.ReactElement,
     transactions: React.ReactElement): React.ReactElement {
     
     return <>
-        <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
-            {header}
-        </section>
+        {hero}
         <div className="p-3">
             <div className="columns m-0 is-multiline">
                 <div className="column p-0 is-narrow-tablet is-flex">

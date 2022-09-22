@@ -8,6 +8,7 @@ import AccountList from "../account/AccountList";
 import CreateAccountModal from "../account/input/CreateAccountModal";
 import NetWorthChart from "../account/NetWorthChart";
 import Card from "../common/Card";
+import Hero from "../common/Hero";
 import PeriodSelector from "../common/PeriodSelector";
 import TransactionList from "../transaction/TransactionList";
 
@@ -18,16 +19,7 @@ export default function PageDashboard() {
     });
 
     return <>
-        <section className="hero has-background-primary" style={{ flexDirection: "row", alignItems: "center" }}>
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Dashboard
-                </p>
-            </div>
-            <div>
-                <PeriodSelector period={period} onChange={period => { setPeriod(period); }} />
-            </div>
-        </section>
+        <Hero title="Dashboard" subtitle="Overview of your finances" period={[period, setPeriod]} />
         <div className="p-3">
             <NetWorthChart period={period} showTable={true} />
         </div>

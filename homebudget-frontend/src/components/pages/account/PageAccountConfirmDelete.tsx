@@ -8,6 +8,7 @@ import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import { preferencesContext } from "../../App";
 import Card from "../../common/Card";
+import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import TransactionList from "../../transaction/TransactionList";
 import Page404 from "../Page404";
@@ -99,18 +100,9 @@ export default function PageAccountConfirmDelete() {
     };
 
     return <>
-        <section className="hero has-background-info" style={{ flexDirection: "row", alignItems: "center" }}>
-            <div className="hero-body">
-                <p className="title has-text-white">
-                    Delete account
-                </p>
-                <p className="subtitle has-text-white">
-                    #{account.id} {account.name}
-                </p>
-            </div>
-        </section>
+        <Hero title="Delete account" subtitle={<>#{account.id} {account.name}</>} isDanger={true} />
         <div className="p-3">
-            <Card title="Delete account" isNarrow={true}>
+            <Card title="Delete account" isNarrow={false}>
                 <p>Are you sure you want to delete this account? This action is irreversible!</p>
                 <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
                 <div className="buttons mt-3">
