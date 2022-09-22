@@ -59,3 +59,4 @@
 - [ ] Github readme
 - [ ] Documentation page
 - [ ] Github sponsors og Patreon
+- [ ] Demo data and screenshots
