@@ -55,3 +55,7 @@
 - [x] Add delete to transaction multi editor
 - [ ] License
 - [ ] Website
+- [ ] Docker image
+- [ ] Github readme
+- [ ] Documentation page
+- [ ] Github sponsors og Patreon
