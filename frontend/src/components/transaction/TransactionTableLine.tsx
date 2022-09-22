@@ -119,7 +119,7 @@ function TableTransaction(props: TableTransactionProps) {
                 deleted={() => props.updateItem(null)}
                 transaction={props.transaction} />}
         </div>}
-        {expandSplit && < div className="transaction-lines split">
+        {expandSplit && <div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
                 <div style={{ gridColumn: "colstart/innerstart" }}></div>
                 <div className="description">
