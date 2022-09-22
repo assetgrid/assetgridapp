@@ -9,7 +9,7 @@ import { preferencesContext } from "../App";
 
 interface Props {
     show: boolean;
-    onBlur?: React.FocusEventHandler<HTMLDivElement>;
+    setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function Sidebar(props: Props) {
@@ -22,7 +22,7 @@ export default function Sidebar(props: Props) {
         }
     }, [props.show]);
 
-    return <div tabIndex={0} ref={ref} onBlur={props.onBlur}
+    return <div tabIndex={0} ref={ref} onBlur={onBlur}
         className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
         <img className="logo" src={logo}></img>
         <aside className="menu has-color-white m-5">
@@ -58,4 +58,10 @@ export default function Sidebar(props: Props) {
             </ul>
         </aside>
     </div>;
+    
+    function onBlur(e: React.FocusEvent<HTMLDivElement>) {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && (e.relatedTarget === null || e.relatedTarget.closest(".navbar-burger") === null)) {
+            props.setShowSidebar(false);
+        }
+    }
 }

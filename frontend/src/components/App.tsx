@@ -41,7 +41,7 @@ export default function FairFitPortalApp () {
                 <div className="mobile-header-spacing"></div>
                 <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                 <div style={{display: "flex", flexGrow: 1}}>
-                    <Sidebar show={showSidebar} onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setShowSidebar(false)}></Sidebar>
+                    <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
                     <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
                         <Routes>
                             <Route path={routes.dashboard()} element={<PageDashboard />} />
