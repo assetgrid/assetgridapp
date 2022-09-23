@@ -58,11 +58,22 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@v3
     - uses: actions/download-artifact@v3
       with:
         name: frontend
+        path: frontend/dist.production
     - uses: actions/download-artifact@v3
       with:
         name: backend
+        path: backend: backend/bin/Release/net6.0
     - name: Display structure of downloaded files
       run: ls -R
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dockerfile
+        path: |
+          frontend/dist.production
+          backend/bin/Release/net6.0
+          Dockerfile
