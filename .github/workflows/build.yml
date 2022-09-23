@@ -26,6 +26,11 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
       working-directory: ./backend
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: backend
+        path: backend/bin/Release/net6.0
 
 
   build-frontend:
@@ -33,25 +38,31 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
-
     - name: Use Node.js 18.x
       uses: actions/setup-node@v3
       with:
         node-version: 18.x
-
     - name: Build
       working-directory: ./frontend
       run: |
         npm install
         npx webpack --config ./webpack.production.config.js
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend
+        path: frontend/dist.production
         
-  upload-artifacts:
+  combine-artifacts:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     
     steps:
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
+    - uses: actions/download-artifact@v3
       with:
-        name: dist
-        path: frontend
+        name: frontend
+    - uses: actions/download-artifact@v3
+      with:
+        name: backend
+    - name: Display structure of downloaded files
+      run: ls -R
