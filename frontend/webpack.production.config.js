@@ -2,6 +2,8 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 const path = require("path");
 
 module.exports = {
@@ -18,7 +20,12 @@ module.exports = {
     },
     plugins: [
         new MiniCssExtractPlugin(),
-        new BundleAnalyzerPlugin()
+        // new BundleAnalyzerPlugin()
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: './index.production.html', to: './index.production.html' }
+            ]
+        })
     ],
 
     optimization: {

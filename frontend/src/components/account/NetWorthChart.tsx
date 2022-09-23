@@ -12,11 +12,13 @@ import {
     LinearScale,
     TimeScale,
     PointElement,
+    LineController,
     LineElement,
     Title,
     Tooltip,
     Legend,
-    BarElement
+    BarElement,
+    BarController,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
 import { preferencesContext } from "../App";
@@ -27,7 +29,9 @@ ChartJS.register(
     LinearScale,
     PointElement,
     TimeScale,
+    LineController,
     LineElement,
+    BarController,
     BarElement,
     Title,
     Tooltip,

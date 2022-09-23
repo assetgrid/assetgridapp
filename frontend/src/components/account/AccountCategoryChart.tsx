@@ -12,6 +12,7 @@ import {
     Title,
     Tooltip,
     Legend,
+    BarController,
     BarElement
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
@@ -24,6 +25,7 @@ ChartJS.register(
     BarElement,
     Title,
     Tooltip,
+    BarController,
     Legend
 )
 interface Props {

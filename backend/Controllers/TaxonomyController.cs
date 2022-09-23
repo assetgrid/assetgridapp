@@ -17,7 +17,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpGet]
-        [Route("/[controller]/[action]/{prefix}")]
+        [Route("/api/v1/[controller]/[action]/{prefix}")]
         public string[] CategoryAutocomplete(string prefix)
         {
             return _context.Categories

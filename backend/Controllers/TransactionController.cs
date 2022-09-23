@@ -10,7 +10,7 @@ namespace assetgrid_backend.Controllers
 {
     [ApiController]
     [EnableCors("AllowAll")]
-    [Route("[controller]")]
+    [Route("/api/v1[controller]")]
     public class TransactionController : ControllerBase
     {
         private readonly ILogger<TransactionController> _logger;
@@ -23,7 +23,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpGet()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public ViewTransaction? Get(int id)
         {
             var result = _context.Transactions
@@ -125,7 +125,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPut()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public ViewTransaction Update(int id, ViewUpdateTransaction model)
         {
             if (ModelState.IsValid)
@@ -146,7 +146,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/[Action]")]
+        [Route("/api/v1/[controller]/[Action]")]
         public void UpdateMultiple(ViewUpdateMultipleTransactions request)
         {
             if (ModelState.IsValid)
@@ -303,7 +303,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpDelete()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public void Delete(int id)
         {
             using (var transaction = _context.Database.BeginTransaction())
@@ -331,7 +331,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpDelete()]
-        [Route("/[controller]/[Action]")]
+        [Route("/api/v1/[controller]/[Action]")]
         public void DeleteMultiple(ViewSearchGroup query)
         {
             if (ModelState.IsValid)
@@ -359,7 +359,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)
         {
             var result = _context.Transactions
@@ -377,7 +377,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public List<string> FindDuplicates(List<string> identifiers)
         {
             return _context.Transactions
@@ -387,7 +387,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public ViewTransactionCreateManyResponse CreateMany(List<ViewCreateTransaction> transactions)
         {
             var failed = new List<ViewCreateTransaction>();

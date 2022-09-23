@@ -61,3 +61,4 @@
 - [ ] Github sponsors og Patreon
 - [ ] Demo data and screenshots
 - [ ] Clicking on a category should link to a transaction page with only transactions in that category
+- [ ] Don't allow all CORS in production

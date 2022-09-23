@@ -8,6 +8,7 @@ namespace assetgrid_backend.Controllers
 {
     [ApiController]
     [EnableCors("AllowAll")]
+    [Route("/api/v1/[controller]")]
     public class UserController : Controller
     {
         private readonly HomebudgetContext _context;
@@ -17,7 +18,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPut]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public ViewPreferences Preferences(ViewPreferences model)
         {
             var favoriteAccounts = _context.Accounts
@@ -58,7 +59,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpGet]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public ViewPreferences Preferences()
         {
             var favoriteAccounts = _context.Accounts

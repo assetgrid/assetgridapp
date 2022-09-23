@@ -10,12 +10,19 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+if (connectionString == null)
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+}
+
 builder.Services.AddDbContext<HomebudgetContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
         .EnableSensitiveDataLogging()
         .EnableDetailedErrors()
     );
+
+#if DEBUG
 
 builder.Services.AddCors(options =>
 {
@@ -28,6 +35,13 @@ builder.Services.AddCors(options =>
         });
 });
 
+#else
+
+builder.Services.AddDbContext<HomebudgetContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+#endif
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -37,11 +51,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
+app.UseRouting();
 app.UseCors();
 app.UseAuthorization();
-
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapFallbackToFile("/dist/index.production.html");
+});
 
 app.Run();

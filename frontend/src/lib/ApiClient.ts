@@ -6,8 +6,13 @@ import { Preferences as PreferencesModel } from "../models/preferences";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction, Transaction } from "../models/transaction";
 
-const rootUrl = 'https://localhost:7262';
-
+let rootUrl = 'https://localhost:7262';
+if (process.env.NODE_ENV === 'production') {
+    rootUrl = "";
+}
+console.log(process.env.NODE_ENV);
+console.log(rootUrl);
+  
 const Preferences = {
 
     /**
@@ -16,7 +21,7 @@ const Preferences = {
      */
     get: function (): Promise<PreferencesModel> {
         return new Promise<PreferencesModel>((resolve, reject) => {
-            axios.get<PreferencesModel>(rootUrl + '/user/preferences')
+            axios.get<PreferencesModel>(rootUrl + '/api/v1/user/preferences')
                 .then(result => {
                     resolve(result.data);
                 })
@@ -41,7 +46,7 @@ const Preferences = {
             }))
         };
         return new Promise<PreferencesModel>((resolve, reject) => {
-            axios.put<PreferencesModel>(rootUrl + '/user/preferences', model)
+            axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', model)
                 .then(result => {
                     resolve(result.data);
                 }).catch(e => {
@@ -60,7 +65,7 @@ const Account = {
      */
     search: function (request: SearchRequest): Promise<SearchResponse<AccountModel>> {
         return new Promise<SearchResponse<AccountModel>>((resolve, reject) => {
-            axios.post<SearchResponse<AccountModel>>(rootUrl + "/account/search", request)
+            axios.post<SearchResponse<AccountModel>>(rootUrl + "/api/v1/account/search", request)
                 .then(result => {
                     resolve(result.data);
                 })
@@ -78,7 +83,7 @@ const Account = {
      */
     get: function (id: number): Promise<AccountModel | null> {
         return new Promise<AccountModel | null>((resolve, reject) => {
-            axios.get<AccountModel>(rootUrl + '/account/' + Number(id))
+            axios.get<AccountModel>(rootUrl + '/api/v1/account/' + Number(id))
                 .then(result => {
                     const data = result.data as AccountModel & { balanceString?: string };
                     if (data) {
@@ -104,7 +109,7 @@ const Account = {
      */
     update: function (id: number, updatedAccount: CreateAccount): Promise<AccountModel> {
         return new Promise<AccountModel>((resolve, reject) => {
-            axios.put<AccountModel>(rootUrl + '/account/' + Number(id), updatedAccount)
+            axios.put<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), updatedAccount)
                 .then(result => {
                     resolve(result.data);
                 })
@@ -122,7 +127,7 @@ const Account = {
      */
     create: function (account: CreateAccount): Promise<AccountModel> {
         return new Promise<AccountModel>((resolve, reject) => {
-            axios.post<AccountModel>(rootUrl + "/account", account)
+            axios.post<AccountModel>(rootUrl + "/api/v1/account", account)
                 .then(result => {
                     resolve(result.data);
                 })
@@ -139,7 +144,7 @@ const Account = {
      */
      delete: function (id: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<void>(rootUrl + "/account/" + id)
+            axios.delete<void>(rootUrl + "/api/v1/account/" + id)
                 .then(() => resolve())
                 .catch(e => {
                     console.log(e);
@@ -158,7 +163,7 @@ const Account = {
      */
     listTransactions: function (id: number, from: number, to: number, descending: boolean, query?: SearchGroup): Promise<TransactionListResponse> {
         return new Promise<TransactionListResponse>((resolve, reject) => {
-            axios.post<TransactionListResponse>(rootUrl + "/account/" + id + "/transactions", {
+            axios.post<TransactionListResponse>(rootUrl + "/api/v1/account/" + id + "/transactions", {
                 from: from,
                 to: to,
                 descending: descending,
@@ -190,7 +195,7 @@ const Account = {
      */
      countTransactions: function (id: number, query?: SearchGroup): Promise<number> {
         return new Promise<number>((resolve, reject) => {
-            axios.post<number>(rootUrl + "/account/" + id + "/counttransactions", query).then(result => resolve(result.data))
+            axios.post<number>(rootUrl + "/api/v1/account/" + id + "/counttransactions", query).then(result => resolve(result.data))
                 .catch(error => {
                     console.log(error);
                     reject(error);
@@ -206,7 +211,7 @@ const Account = {
      */
     getCategorySummary: function (accountId: number, query: SearchGroup): Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]> {
         return new Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]>((resolve, reject) => {
-            axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/account/" + accountId + "/categorysummary", query)
+            axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/api/v1/account/" + accountId + "/categorysummary", query)
             .then(result => resolve(result.data.map(obj => ({
                 category: obj.category,
                 revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
@@ -229,7 +234,7 @@ const Account = {
      */
     getMovements: function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
         return new Promise<GetMovementResponse>((resolve, reject) => {
-            axios.post<GetMovementResponse>(rootUrl + "/account/" + accountId + "/movements", {
+            axios.post<GetMovementResponse>(rootUrl + "/api/v1/account/" + accountId + "/movements", {
                 from: from,
                 to: to,
                 resolution: resolution
@@ -258,7 +263,7 @@ const Account = {
      */
      getMovementsAll: function (from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementAllResponse> {
         return new Promise<GetMovementAllResponse>((resolve, reject) => {
-            axios.post<GetMovementAllResponse>(rootUrl + "/account/movements", {
+            axios.post<GetMovementAllResponse>(rootUrl + "/api/v1/account/movements", {
                 from: from,
                 to: to,
                 resolution: resolution
@@ -291,7 +296,7 @@ const Transaction = {
      */
      get: function (id: number): Promise<Transaction | null> {
         return new Promise<Transaction | null>((resolve, reject) => {
-            axios.get<Transaction>(rootUrl + '/transaction/' + Number(id))
+            axios.get<Transaction>(rootUrl + '/api/v1/transaction/' + Number(id))
                 .then(result => {
                     if (result.data) {
                         resolve(fixTransaction(result.data));
@@ -314,7 +319,7 @@ const Transaction = {
     create: function (transaction: CreateTransaction): Promise<TransactionModel> {
         return new Promise<TransactionModel>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.post<TransactionModel>(rootUrl + '/transaction', {
+            axios.post<TransactionModel>(rootUrl + '/api/v1/transaction', {
                 ...model,
                 totalString: total.mul(new Decimal(10000)).round().toString(),
                 dateTime: DateTime.fromISO(transaction.dateTime as any as string),
@@ -363,7 +368,7 @@ const Transaction = {
     update: function (id: number, transaction: UpdateTransaction): Promise<Transaction> {
         return new Promise<Transaction>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.put<Transaction>(rootUrl + "/transaction/" + id, {
+            axios.put<Transaction>(rootUrl + "/api/v1/transaction/" + id, {
                 ...model,
                 hasUniqueIdentifier: model.identifier !== undefined,
                 totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
@@ -388,7 +393,7 @@ const Transaction = {
      updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.post<Transaction>(rootUrl + "/transaction/updateMultiple", {
+            axios.post<Transaction>(rootUrl + "/api/v1/transaction/updateMultiple", {
                 query: query,
                 model: {
                     ...model,
@@ -414,7 +419,7 @@ const Transaction = {
      */
     delete: function (id: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<void>(rootUrl + "/transaction/" + id)
+            axios.delete<void>(rootUrl + "/api/v1/transaction/" + id)
                 .then(() => resolve())
                 .catch(e => {
                     console.log(e);
@@ -429,7 +434,7 @@ const Transaction = {
      */
      deleteMultiple: function (query: SearchGroup): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<Transaction>(rootUrl + "/transaction/deleteMultiple", { data: query })
+            axios.delete<Transaction>(rootUrl + "/api/v1/transaction/deleteMultiple", { data: query })
                 .then(result => resolve())
                 .catch(e => {
                     console.log(e);
@@ -445,7 +450,7 @@ const Transaction = {
      */
     findDuplicates: function (identifiers: string[]): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            axios.post(rootUrl + "/transaction/findduplicates", identifiers)
+            axios.post(rootUrl + "/api/v1/transaction/findduplicates", identifiers)
                 .then(result => resolve(result.data))
                 .catch(error => {
                     console.log(error);
@@ -460,7 +465,7 @@ const Transaction = {
             if (query.query) {
                 query.query = fixQuery(query.query);
             }
-            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/transaction/search", fixedQuery)
+            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/api/v1/transaction/search", fixedQuery)
                 .then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
                 .catch(error => {
                     console.log(error);
@@ -522,7 +527,7 @@ const Taxonomy = {
      */
     categoryAutocomplete: function (prefix: string): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            axios.get<string[]>(rootUrl + "/taxonomy/categoryautocomplete/" + prefix)
+            axios.get<string[]>(rootUrl + "/api/v1/taxonomy/categoryautocomplete/" + prefix)
                 .then(result => {
                     resolve(result.data);
                 })

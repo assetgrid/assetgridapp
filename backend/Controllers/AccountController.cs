@@ -10,7 +10,7 @@ namespace assetgrid_backend.Controllers
 {
     [ApiController]
     [EnableCors("AllowAll")]
-    [Route("[controller]")]
+    [Route("/api/v1/[controller]")]
     public class AccountController : Controller
     {
         private readonly ILogger<TransactionController> _logger;
@@ -55,7 +55,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpGet()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public ViewAccount? Get(int id)
         {
             var result = _context.Accounts
@@ -75,7 +75,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPut()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public ViewAccount? Update(int id, ViewAccount model)
         {
             var result = _context.Accounts
@@ -106,7 +106,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpDelete()]
-        [Route("/[controller]/{id}")]
+        [Route("/api/v1/[controller]/{id}")]
         public void Delete(int id)
         {
             using (var transaction = _context.Database.BeginTransaction())
@@ -133,7 +133,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/[action]")]
+        [Route("/api/v1/[controller]/[action]")]
         public ViewSearchResponse<ViewAccount> Search(ViewSearch query)
         {
             var result = _context.Accounts
@@ -151,7 +151,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/{id}/[action]")]
+        [Route("/api/v1/[controller]/{id}/[action]")]
         public ViewTransactionList Transactions(int id, ViewTransactionListRequest request)
         {
             var query = _context.Transactions
@@ -200,7 +200,7 @@ namespace assetgrid_backend.Controllers
         /// Used to figure out which page is the last without requesting any page
         /// </summary>
         [HttpPost()]
-        [Route("/[controller]/{id}/[action]")]
+        [Route("/api/v1/[controller]/{id}/[action]")]
         public int CountTransactions(int id, ViewSearchGroup? requestQuery)
         {
             var query = _context.Transactions
@@ -241,7 +241,7 @@ namespace assetgrid_backend.Controllers
         /// <param name="request">An object representing the period and the interval to group by</param>
         /// <returns>The initial balance as well as a list of revenue and expenses for each interval</returns>
         [HttpPost()]
-        [Route("/[controller]/{id}/Movements")]
+        [Route("/api/v1/[controller]/{id}/Movements")]
         public ViewGetMovementResponse GetMovement(int id, ViewGetMovementRequest request)
         {
             var initialBalance = request.From == null ? 0 : _context.Transactions
@@ -296,7 +296,7 @@ namespace assetgrid_backend.Controllers
         /// <param name="request">An object representing the period and the interval to group by</param>
         /// <returns>The initial balance as well as a list of revenue and expenses for each interval</returns>
         [HttpPost()]
-        [Route("/[controller]/Movements")]
+        [Route("/api/v1/[controller]/Movements")]
         public ViewGetMovementAllResponse GetMovementAll(ViewGetMovementRequest request)
         {
             List<ViewAccount> accounts = _context.Accounts.Where(account => account.IncludeInNetWorth).SelectView().ToList();
@@ -442,7 +442,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        [Route("/[controller]/{id}/[action]")]
+        [Route("/api/v1/[controller]/{id}/[action]")]
         public List<object> CategorySummary(int id, ViewSearchGroup query)
         {
             return _context.Transactions
