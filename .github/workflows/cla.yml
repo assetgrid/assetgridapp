@@ -19,10 +19,10 @@ jobs:
           PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
-          path-to-document: 'https://assetgrid.app/cla'
+          path-to-document: 'https://github.com/cla-assistant/github-action/blob/master/SAPCLA.md'
           # branch should not be protected
-          branch: 'main'
-          allowlist: user1,bot*
+          branch: 'signatures'
+          allowlist: none
 
          #below are the optional inputs - If the optional inputs are not given, then default values will be taken
           #remote-organization-name: assetgrid
