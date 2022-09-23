@@ -1,4 +1,4 @@
-name: .NET
+name: Build
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
         npm install
         npx webpack --config ./webpack.production.config.js
         
-  upload-artefacts:
+  upload-artifacts:
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     
@@ -54,4 +54,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: dist
-        path: ./
+        path: frontend
