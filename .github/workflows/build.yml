@@ -66,7 +66,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: backend
-        path: backend: backend/bin/Release/net6.0
+        path: backend/bin/Release/net6.0
     - name: Display structure of downloaded files
       run: ls -R
     - name: Upload artifacts
