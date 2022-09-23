@@ -64,4 +64,11 @@ app.UseEndpoints(endpoints =>
     endpoints.MapFallbackToFile("/dist/index.production.html");
 });
 
+// migrate any database changes on startup (includes initial db creation)
+using (var scope = app.Services.CreateScope())
+{
+    var dataContext = scope.ServiceProvider.GetRequiredService<HomebudgetContext>();
+    dataContext.Database.Migrate();
+}
+
 app.Run();

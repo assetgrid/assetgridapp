@@ -1,6 +1,6 @@
 {
   "name": "typescript-react-redux-bulma-boilerplate",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Boilerplate application using Typescript, React, Redux and Bulma",
   "main": "index.tsx",
   "scripts": {
