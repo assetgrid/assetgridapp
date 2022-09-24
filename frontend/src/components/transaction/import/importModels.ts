@@ -3,7 +3,7 @@ import { DateTime } from "luxon";
 import { Account } from "../../../models/account";
 import { TransactionLine } from "../../../models/transaction";
 
-export type AccountIdentifier = "id" | "name" | "accountNumber";
+export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
 
 export type CsvCreateTransaction = {
     rowNumber: number;
@@ -27,10 +27,13 @@ export type CsvCreateTransaction = {
     amount: Decimal | "invalid";
 }
 
-export type AccountReference = {
-    identifier: AccountIdentifier;
+export type AccountReference = ({
+    identifier: "id";
+    value: number;
+} | {
+    identifier: "name" | "accountNumber";
     value: string;
-}
+});
 
 export function castFieldValue(value: string, identifier: AccountIdentifier) {
     if (identifier == "id") {
