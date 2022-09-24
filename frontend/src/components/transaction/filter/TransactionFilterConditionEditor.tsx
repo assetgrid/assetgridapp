@@ -6,6 +6,7 @@ import { Account } from "../../../models/account";
 import { SearchOperator, SearchQuery } from "../../../models/search";
 import InputAccount from "../../account/input/InputAccount";
 import InputButton from "../../input/InputButton";
+import InputDateTime from "../../input/InputDateTime";
 import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputNumbers from "../../input/InputNumbers";
@@ -235,6 +236,8 @@ export default function Condition(props: ConditionProps) {
                 case "string[]":
                     value = [];
                     break;
+                case "datetime":
+                    value = DateTime.now()
             }
         }
 
@@ -301,6 +304,8 @@ function ConditionValueEditor(props: {condition: ConditionModel}): React.ReactEl
                 ...props.condition,
                 onChange: ((account: Account) => (props.condition.onChange as (id: number) => void)(account?.id ?? null)) as any
             }} />;
+        case "DateTime":
+            return <ConditionValueEditorDateTime condition={props.condition} />;
         default:
             throw "Uknown column";
     }
@@ -403,5 +408,29 @@ function ConditionValueEditorAccount(props: { condition: ConditionModel }) {
                 disabled={false}
                 allowCreateNewAccount={false} 
                 allowNull={true} />
+    }
+}
+
+function ConditionValueEditorDateTime(props: { condition: ConditionModel }) {
+    switch (props.condition.column) {
+        case "DateTime":
+            break;
+        default:
+            throw "Invalid column";
+    }
+
+    let condition = props.condition;
+    switch (props.condition.operator) {
+        case "equals":
+        case "not-equals":
+        case "greater-than":
+        case "greater-than-or-equal":
+        case "less-than":
+        case "less-than-or-equal":
+            return <InputDateTime
+                value={condition.value}
+                onChange={value => condition.onChange(value)}
+                disabled={false}
+                fullwidth={false} />
     }
 }
