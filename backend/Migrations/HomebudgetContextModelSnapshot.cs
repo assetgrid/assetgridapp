@@ -101,6 +101,8 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("DateTime");
+
                     b.HasIndex("DestinationAccountId");
 
                     b.HasIndex("Identifier")

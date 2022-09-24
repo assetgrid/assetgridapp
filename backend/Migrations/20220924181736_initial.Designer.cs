@@ -11,8 +11,8 @@ using assetgrid_backend.Data;
 namespace assetgrid_backend.Migrations
 {
     [DbContext(typeof(HomebudgetContext))]
-    [Migration("20220916063504_Initial")]
-    partial class Initial
+    [Migration("20220924181736_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -102,6 +102,8 @@ namespace assetgrid_backend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("DateTime");
 
                     b.HasIndex("DestinationAccountId");
 

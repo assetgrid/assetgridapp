@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace assetgrid_backend.Migrations
 {
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -149,6 +149,11 @@ namespace assetgrid_backend.Migrations
                 name: "IX_Transactions_CategoryId",
                 table: "Transactions",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_DateTime",
+                table: "Transactions",
+                column: "DateTime");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_DestinationAccountId",
