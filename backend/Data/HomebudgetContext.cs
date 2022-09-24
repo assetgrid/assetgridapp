@@ -15,6 +15,7 @@ namespace assetgrid_backend.Data
 
             builder.Entity<Transaction>(entity => {
                 entity.HasIndex(e => e.Identifier).IsUnique();
+                entity.HasIndex(e => e.DateTime);
             });
             builder.Entity<Category>(entity =>
             {
