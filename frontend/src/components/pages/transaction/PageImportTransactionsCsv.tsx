@@ -55,6 +55,8 @@ export default function PageImportTransactionsCsv () {
         dateFormat: "yyyy-MM-dd",
         descriptionColumn: null,
         descriptionParseOptions: defaultParseOptions,
+        categoryColumn: null,
+        categoryParseOptions: defaultParseOptions,
     });
 
     /* const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
@@ -188,9 +190,28 @@ export default function PageImportTransactionsCsv () {
                 }
             }
         }
+
+        // If explicit accounts have been selected, these need to be added to the AccountsBy object as well
+        if (options.sourceAccount !== null) {
+            for (const identifier of Object.keys(options.sourceAccount)) {
+                if (newAccountsBy[identifier] === undefined) {
+                    newAccountsBy[identifier] = {};
+                }
+                newAccountsBy[identifier][(options.sourceAccount as any)[identifier]] = options.sourceAccount;
+            };
+        }
+        if (options.destinationAccount !== null) {
+            for (const identifier of Object.keys(options.destinationAccount)) {
+                if (newAccountsBy[identifier] === undefined) {
+                    newAccountsBy[identifier] = {};
+                }
+                newAccountsBy[identifier][(options.destinationAccount as any)[identifier]] = options.destinationAccount;
+            };
+        }
+
+        setAccountsBy(newAccountsBy);
         setTransactions(newTransactions);
         setMappingOptions(options);
-        setAccountsBy(newAccountsBy);
 
         // Find every unique account reference in the transactions that has not been loaded
         let uniqueAccountReferences = ([
@@ -253,6 +274,7 @@ export default function PageImportTransactionsCsv () {
                     }
                 }
             }
+
             setAccountsBy(newAccountsBy);
         });
     }

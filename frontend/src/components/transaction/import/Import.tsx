@@ -102,7 +102,7 @@ export function Import (props: Props) {
                 sourceId: getAccount(transaction.source)?.id,
                 destinationId: getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
-                category: "",
+                category: transaction.category,
                 total: transaction.amount,
                 lines: []
             } as CreateTransaction
@@ -124,7 +124,7 @@ export function Import (props: Props) {
                 sourceId: getAccount(transaction.source)?.id,
                 destinationId: getAccount(transaction.destination)?.id,
                 identifier: transaction.identifier,
-                category: "",
+                category: transaction.category,
                 total: transaction.amount,
                 lines: []
             } as CreateTransaction

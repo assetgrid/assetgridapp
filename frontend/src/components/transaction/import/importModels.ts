@@ -20,6 +20,9 @@ export type CsvCreateTransaction = {
     descriptionText: string;
     description: string;
 
+    categoryText: string;
+    category: string;
+
     identifierText: string;
     identifier: string | null;
 

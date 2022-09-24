@@ -44,6 +44,9 @@ export interface MappingOptions {
     descriptionColumn: string | null;
     descriptionParseOptions: ParseOptions;
 
+    categoryColumn: string | null;
+    categoryParseOptions: ParseOptions;
+
     sourceAccountColumn: string | null;
     sourceAccount: Account | null;
     sourceAccountIdentifier: AccountIdentifier;
@@ -216,10 +219,13 @@ export default function MapCsvFields(props: Props) {
                             value={props.options.sourceAccountColumn}
                             placeholder={"Select column"}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountIdentifier, result, null, props.options.sourceAccountParseOptions)}
-                            items={Object.keys(props.data[0]).map(item => ({
+                            items={[
+                                { key: "___NULL___", value: "No source account" },
+                                ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
                                 value: item,
-                            }))}
+                                }))
+                            ]}
                             addOnAfter={
                                 props.options.sourceAccountColumn ? <div className="control">
                                     <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
@@ -268,10 +274,13 @@ export default function MapCsvFields(props: Props) {
                             value={props.options.destinationAccountColumn}
                             placeholder={"Select column"}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountIdentifier, result, null, props.options.destinationAccountParseOptions)}
-                            items={Object.keys(props.data[0]).map(item => ({
-                                key: item,
-                                value: item,
-                            }))}
+                            items={[
+                                { key: "___NULL___", value: "No destination account" },
+                                ...Object.keys(props.data[0]).map(item => ({
+                                    key: item,
+                                    value: item,
+                                }))
+                            ]}
                             addOnAfter={
                                 props.options.destinationAccountColumn ? <div className="control">
                                     <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
@@ -331,18 +340,49 @@ export default function MapCsvFields(props: Props) {
                         value={props.options.descriptionColumn}
                         placeholder={"Select column"}
                         onChange={result => updateDescriptionMapping(result, props.options.descriptionParseOptions)}
-                        items={Object.keys(props.data[0]).map(item => {
-                            return {
+                            items={[{ key: "___NULL___", value: "No description" },
+                            ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
                                 value: item,
-                            }
-                        })}
+                            }))
+                        ]}
                         addOnAfter={
                             props.options.descriptionColumn ? <div className="control">
                                     <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.descriptionParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
                                             onChange={options => updateDescriptionMapping(props.options.descriptionColumn, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true}
+                                        /> )}>
+                                    Parse Options
+                                </a>
+                            </div> : undefined
+                        } />
+                </div>
+                <div className="column"></div>
+            </div>
+
+            <div className="columns">
+                <div className="column">
+                    <InputSelect label="Category column"
+                        isFullwidth={true}
+                        value={props.options.categoryColumn}
+                        placeholder={"Select column"}
+                        onChange={result => updateCategoryMapping(result, props.options.categoryParseOptions)}
+                        items={[
+                            { key: "___NULL___", value: "No category" },
+                            ...Object.keys(props.data[0]).map(item => ({
+                                key: item,
+                                value: item,
+                            })
+                        )]}
+                        addOnAfter={
+                            props.options.categoryColumn ? <div className="control">
+                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
+                                            value={props.options.descriptionParseOptions}
+                                            previewData={props.data.map(row => getValue(row, props.options.categoryColumn))}
+                                            onChange={options => updateCategoryMapping(props.options.categoryColumn, options)}
                                             close={() => setModal(null)}
                                             closeOnChange={true}
                                         /> )}>
@@ -408,6 +448,10 @@ export default function MapCsvFields(props: Props) {
      * Updates how the description is parsed from the raw CSV data and recalculates it for all transactions
      */
     function updateDescriptionMapping(newValue: string | null, parseOptions: ParseOptions) {
+        if (newValue === "___NULL___") {
+            newValue = null;
+        }
+
         props.onChange([
             ...props.data.map((row, i) => ({
                 ...props.transactions![i],
@@ -417,6 +461,26 @@ export default function MapCsvFields(props: Props) {
             ...props.options,
             descriptionColumn: newValue,
             descriptionParseOptions: parseOptions,
+        });
+    }
+
+    /**
+     * Updates how the category is parsed from the raw CSV data and recalculates it for all transactions
+     */
+    function updateCategoryMapping(newValue: string | null, parseOptions: ParseOptions) {
+        if (newValue === "___NULL___") {
+            newValue = null;
+        }
+
+        props.onChange([
+            ...props.data.map((row, i) => ({
+                ...props.transactions![i],
+                category: parseWithOptions(getValue(row, newValue), parseOptions)
+            }))
+        ], {
+            ...props.options,
+            categoryColumn: newValue,
+            categoryParseOptions: parseOptions,
         });
     }
 
@@ -476,6 +540,10 @@ export default function MapCsvFields(props: Props) {
             column = null;
         } else {
             value = null;
+        }
+
+        if (column === "___NULL___") {
+            column = null;
         }
 
         let newTransactions: CsvCreateTransaction[];
@@ -564,6 +632,7 @@ function parseTransactions(data: any[], options: MappingOptions): CsvCreateTrans
             dateText: dateText,
             dateTime: DateTime.fromFormat(dateText, options.dateFormat),
             description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
+            category: parseWithOptions(getValue(row, options.categoryColumn), options.categoryParseOptions),
             source: isNullOrWhitespace(getValue(row, options.sourceAccountColumn)) ? null : {
                 identifier: options.sourceAccountIdentifier,
                 value: parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions),

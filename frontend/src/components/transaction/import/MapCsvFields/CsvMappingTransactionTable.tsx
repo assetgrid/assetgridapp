@@ -73,6 +73,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
             <th className="has-text-right">Amount</th>
             <th>Source</th>
             <th>Destination</th>
+            <th>Category</th>
         </tr>}
         draw={props.tableDraw}
         type="sync"
@@ -102,6 +103,9 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
                 </td>
                 <td>
                     <TableAccount reference={transaction.destination} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />
+                </td>
+                <td>
+                    {transaction.category}
                 </td>
             </tr>}
     />;
