@@ -17,6 +17,7 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputSelect from "../../input/InputSelect";
 import InputText from "../../input/InputText";
+import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
 import TransactionList from "../../transaction/TransactionList";
 
@@ -38,7 +39,7 @@ export default function PageEditMultipleTransactions() {
     const [draw, setDraw] = React.useState(0);
     const [model, setModel] = React.useState<UpdateTransaction | null>(null);
     const [query, setQuery] = React.useState<SearchGroup>(window.history.state.usr?.query
-        ? window.history.state.usr.query
+        ? deserializeQueryForHistory(window.history.state.usr.query)
         : emptyQuery);
     
     // The table query is modified separately and debounced from the main query to prevent excessive redraws when modifying the query
@@ -113,7 +114,7 @@ export default function PageEditMultipleTransactions() {
         window.history.replaceState({
             ...window.history.state,
             usr: {
-                query: query,
+                query: serializeQueryForHistory(query),
                 showBack: showBack
             }
         }, "");

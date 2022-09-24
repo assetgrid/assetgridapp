@@ -10,6 +10,7 @@ import { preferencesContext } from "../App";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
+import { serializeQueryForHistory } from "./filter/FilterHelpers";
 
 interface Props {
     draw?: number;
@@ -192,7 +193,7 @@ export default function AccountTransactionList(props: Props) {
         
         navigate(routes.transactionEditMultiple(), {
             state: {
-                query: query,
+                query: serializeQueryForHistory(query),
                 showBack: true,
             }
         });

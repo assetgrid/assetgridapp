@@ -9,11 +9,12 @@ import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
 import TransactionList from "../../transaction/TransactionList";
+import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 
 export default function PageTransactions() {
     const [draw, setDraw] = React.useState(0);
     const history = window.history.state.usr;
-    const [query, setQuery] = React.useState<SearchGroup>(history?.query ? history.query : emptyQuery);
+    const [query, setQuery] = React.useState<SearchGroup>(history?.query ? deserializeQueryForHistory(history.query) : emptyQuery);
     const [searchString, setSearchString] = React.useState<string>(typeof(history?.searchString) === "string" ? history.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(history?.orderBy ? history.orderBy : { column: "DateTime", descending: true });
@@ -88,7 +89,7 @@ export default function PageTransactions() {
         window.history.replaceState({
             ...window.history.state,
             usr: {
-                query,
+                query: serializeQueryForHistory(query),
                 searchMode,
                 page,
                 orderBy,
