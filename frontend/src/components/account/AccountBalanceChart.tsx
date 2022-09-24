@@ -128,12 +128,13 @@ export default function AccountBalanceChart(props: Props) {
             </div>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
-            <p>Showing (click to change):</p>&nbsp;
-            <span style={{ cursor: "pointer" }} className="tag is-dark"
-                onClick={() => {
-                    let options = ["day", "week", "month", "year"];
-                    setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
-                }}>{["Daily", "Weekly", "Monthly", "Yearly"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
+            <p>Aggregate by:</p>&nbsp;
+            {["day", "week", "month", "year"].map(option =>
+                <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer"}}
+                    className={option === resolution ? "tag is-primary" : "tag is-dark"}
+                    onClick={() => setResolution(option as any)}>
+                    {["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(option as any)]}
+                </span>)}
         </div>
     </>;
 }

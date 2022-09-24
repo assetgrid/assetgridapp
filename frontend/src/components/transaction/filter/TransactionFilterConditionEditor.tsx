@@ -6,6 +6,7 @@ import { Account } from "../../../models/account";
 import { SearchOperator, SearchQuery } from "../../../models/search";
 import InputAccount from "../../account/input/InputAccount";
 import InputButton from "../../input/InputButton";
+import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
 import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
@@ -139,7 +140,7 @@ function ConditionValueEditor(props: {condition: FilterHelpers.ConditionModel}):
     }
 }
 
-function ConditionValueEditorNumeric(props: { condition: FilterHelpers.ConditionModel }) {
+function ConditionValueEditorNumeric(props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
     switch (props.condition.valueType) {
         case "number":
         case "decimal":
@@ -152,40 +153,45 @@ function ConditionValueEditorNumeric(props: { condition: FilterHelpers.Condition
 
     switch (props.condition.operator) {
         case SearchOperator.In:
-            if (props.condition.valueType === "number[]") {
-                let condition = props.condition;
-                return <InputNumbers
-                    allowDecimal={props.condition.column !== "Id"}
-                    value={props.condition.value.map(number => new Decimal(number))}
-                    onChange={value => condition.onChange(value.map(number => number.toNumber()))} />
-            } else if (props.condition.valueType === "decimal[]") {
-                let condition = props.condition;
-                return <InputNumbers
-                    value={props.condition.value}
-                    allowDecimal={true}
-                    onChange={value => condition.onChange(value)} />
+            switch (props.condition.valueType) {
+                case "number[]":
+                    let intArrayCondition = props.condition;
+                    return <InputNumbers
+                        allowDecimal={props.condition.column !== "Id"}
+                        value={props.condition.value.map(number => new Decimal(number))}
+                        onChange={value => intArrayCondition.onChange(value.map(number => number.toNumber()))} />
+                case "decimal[]":
+                    let decimalArrayCondition = props.condition;
+                    return <InputNumbers
+                        value={props.condition.value}
+                        allowDecimal={true}
+                        onChange={value => decimalArrayCondition.onChange(value)} />
             }
         default:
-            if (props.condition.valueType === "number") {
-                let condition = props.condition;
-                return <InputNumber
-                    allowNull={false}
-                    value={new Decimal(props.condition.value)}
-                    onChange={value => condition.onChange(props.condition.column === "Id" ? Math.round(value.toNumber()) : value.toNumber())} />
-            } else if (props.condition.valueType === "decimal") {
-                let condition = props.condition;
-                return <InputNumber
-                    allowNull={false}
-                    value={props.condition.value}
-                    onChange={value => condition.onChange(new Decimal(value))} />
+            switch (props.condition.valueType) {
+                case "number":
+                    let intCondition = props.condition;
+                    return <InputNumber
+                        allowNull={false}
+                        value={new Decimal(props.condition.value)}
+                        onChange={value => intCondition.onChange(props.condition.column === "Id" ? Math.round(value.toNumber()) : value.toNumber())} />
+                case "decimal":
+                    let decimalCondtition = props.condition;
+                    return <InputNumber
+                        allowNull={false}
+                        value={props.condition.value}
+                        onChange={value => decimalCondtition.onChange(new Decimal(value))} />
             }
     }
-    throw "";
 }
 
 function ConditionValueEditorText(props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
     switch (props.condition.column) {
         case "Category":
+            if (props.condition.operator === SearchOperator.Equals) {
+                const condition = props.condition;
+                return <InputCategory value={condition.value} onChange={value => condition.onChange(value)} disabled={false} />;
+            }
         case "Identifier":
         case "Description":
             break;
@@ -200,12 +206,11 @@ function ConditionValueEditorText(props: { condition: FilterHelpers.ConditionMod
             return <InputText value={conditionScalar.value} onChange={e => conditionScalar.onChange(e.target.value)} />;
         case SearchOperator.In:
             let conditionArray = props.condition;
-            return <InputTextMultiple value={conditionArray.value} onChange={value => conditionArray.onChange(value)}/>;
+            return <InputTextMultiple value={conditionArray.value} onChange={value => conditionArray.onChange(value)} />;
     }
 }
 
 function ConditionValueEditorAccount(props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
-    type test = (FilterHelpers.ConditionModel & { valueType: "account" })["column"];
     switch (props.condition.column) {
         case "SourceAccountId":
         case "DestinationAccountId":

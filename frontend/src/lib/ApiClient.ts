@@ -10,8 +10,6 @@ let rootUrl = 'https://localhost:7262';
 if (process.env.NODE_ENV === 'production') {
     rootUrl = "";
 }
-console.log(process.env.NODE_ENV);
-console.log(rootUrl);
   
 const Preferences = {
 

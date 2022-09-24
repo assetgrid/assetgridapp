@@ -53,12 +53,13 @@
 - ~~[ ] Add property to transaction called type that can be deposit, withdrawal or transfer. Depends on whether source, destination or both are included in net worth. Transactions should be colored according to type on transaction page and it should be possible to filter transactions based on type~~
 - [x] Add set lines transaction multi editor 
 - [x] Add delete to transaction multi editor
-- [ ] License
+- [x] License
 - [ ] Website
-- [ ] Docker image
+- [x] Docker image
 - [ ] Github readme
 - [ ] Documentation page
 - [ ] Github sponsors og Patreon
 - [ ] Demo data and screenshots
 - [ ] Clicking on a category should link to a transaction page with only transactions in that category
-- [ ] Don't allow all CORS in production
+- [x] Don't allow all CORS in production
+- [ ] Add page for categories

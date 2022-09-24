@@ -36,8 +36,8 @@ export function Import (props: Props) {
     switch (state) {
         case "waiting":
             return <Card isNarrow={true} title="Begin import">
-                <InputButton onClick={() => importTransactions()}>Import Transactions</InputButton>
                 <div className="buttons mt-3">
+                    <InputButton className="is-primary" onClick={() => importTransactions()}>Import Transactions</InputButton>
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
             </Card>;

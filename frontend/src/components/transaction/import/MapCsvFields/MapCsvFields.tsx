@@ -86,6 +86,11 @@ export default function MapCsvFields(props: Props) {
         {modal !== null && modal}
 
         <Card title="Mapping options" isNarrow={true}>
+
+            <div className="content">
+                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference#csv-import">reference documentation</a></p>
+            </div>
+
             <div className="columns">
                 <div className="column">
                     <InputSelect label="Duplicate handling"
@@ -144,7 +149,7 @@ export default function MapCsvFields(props: Props) {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Date column"
+                    <InputSelect label="Timestamp column"
                         isFullwidth={true}
                         value={props.options.dateColumn}
                         placeholder={"Select column"}
@@ -561,7 +566,7 @@ function parseTransactions(data: any[], options: MappingOptions): CsvCreateTrans
             description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
             source: isNullOrWhitespace(getValue(row, options.sourceAccountColumn)) ? null : {
                 identifier: options.sourceAccountIdentifier,
-                value: parseWithOptions(getValue(row, options.descriptionColumn), options.sourceAccountParseOptions),
+                value: parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions),
             } as AccountReference,
             destination: isNullOrWhitespace(getValue(row, options.destinationAccountColumn)) ? null : {
                 identifier: options.destinationAccountIdentifier,

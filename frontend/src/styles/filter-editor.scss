@@ -12,7 +12,7 @@
         align-items: center;
 
         .button {
-            background: $primary;
+            background-color: $primary;
             border: 2px solid white;
             color: white;
             margin-right: $size-7;
@@ -21,6 +21,13 @@
                 color: $primary;
                 background-color: white;
             }
+        }
+        .button.btn-delete {
+            background-color: transparent;
+            color: white;
+            border: 0;
+            margin-left: auto;
+            margin-right: 0;
         }
 
         & > div > span {

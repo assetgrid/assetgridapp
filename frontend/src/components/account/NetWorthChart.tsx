@@ -187,12 +187,12 @@ export default function (props: Props) {
                     </div>
                 </div>
                 <div className="tags" style={{ alignItems: "baseline" }}>
-                    <p>Showing (click to change):</p>&nbsp;
+                    <p>Aggregate by (click to change):</p>&nbsp;
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
                         onClick={() => {
                             let options = ["day", "week", "month", "year"];
                             setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
-                        }}>{["Daily", "Weekly", "Monthly", "Yearly"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
+                        }}>{["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
                         onClick={() => setPerAccount(value => !value)}>{perAccount ? "Per account" : "All accounts"}</span>
                 </div>

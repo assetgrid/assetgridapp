@@ -23,6 +23,9 @@ import InputIconButton from "../input/InputIconButton";
 import { preferencesContext } from "../App";
 import DeleteTransactionModal from "./input/DeleteTransactionModal";
 import InputCheckbox from "../input/InputCheckbox";
+import { Link } from "react-router-dom";
+import { routes } from "../../lib/routes";
+import { SearchGroupType, SearchOperator } from "../../models/search";
 
 type Props  = {
     transaction: Transaction;
@@ -106,7 +109,12 @@ function TableTransaction(props: TableTransactionProps) {
         {props.accountId === undefined && <div>
             {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={! (props.allowLinks ?? true)} />}
         </div>}
-        <div>{props.transaction.category}</div>
+        <div>
+            <Link to={routes.transactions()}
+                state={{ searchMode: "advanced", query: { type: SearchGroupType.Query, query: { operator: SearchOperator.Equals, not: false, column: "Category", value: props.transaction.category } } }}>
+                {props.transaction.category}
+            </Link>
+        </div>
         {props.allowEditing && <div>
             {!props.disabled && <>
                 <InputIconButton icon={solid.faPen} onClick={() => props.setState("editing")} />
