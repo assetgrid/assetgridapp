@@ -23,9 +23,12 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       working-directory: ./backend
+    - name: Build test
+      run: dotnet build --no-restore --configuration Release
+      working-directory: ./backend.unittests
     - name: Test
       run: dotnet test --no-build --verbosity normal
-      working-directory: ./backend
+      working-directory: ./backend.unittests
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
