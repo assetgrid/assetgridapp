@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, Routes  } from "react-router";
+import { Navigate, Route, Routes, useNavigate  } from "react-router";
 import { routes } from "../lib/routes";
 import PageTransactions from "./pages/transaction/PageTransactions";
 import PageCreateTransaction from "./pages/transaction/PageCreateTransaction";
@@ -10,7 +10,7 @@ import { Preferences } from "../models/preferences";
 import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./pages/account/PageAccountOverview";
-import { Api } from "../lib/ApiClient";
+import * as Api from "../lib/ApiClient";
 import Sidebar from "./common/Sidebar";
 import PageTransaction from "./pages/transaction/PageTransaction";
 import PageEditMultipleTransactions from "./pages/transaction/PageEditMultipleTransactions";
@@ -18,66 +18,100 @@ import PageAccountConfirmDelete from "./pages/account/PageAccountConfirmDelete";
 import Page404 from "./pages/Page404";
 import PageCreateAccount from "./pages/account/PageCreateAccount";
 import MobileHeader from "./common/MobileHeader";
+import { User } from "../models/user";
+import { Account } from "../models/account";
+import PageLogin from "./pages/PageLogin";
+import PageSignup from "./pages/PageSignup";
 
-export const preferencesContext = React.createContext<PreferencesContext>({ preferences: "fetching", updatePreferences: () => 0 });
+export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
 
-interface PreferencesContext {
-    preferences: Preferences | "fetching";
-    updatePreferences: (newPreferences: Preferences | null) => void;
+interface UserContext {
+    user: User | "fetching";
+    updatePreferences: (newPreferences: Preferences) => void;
+    updateFavoriteAccounts: (newFavoriteAccounts: Account[]) => void;
+    setUser: (user: User | null) => void;
 }
 
 export default function FairFitPortalApp () {
-    const [preferences, setPreferences] = React.useState<Preferences | "fetching">("fetching");
+    const [user, setUser] = React.useState<User | "fetching">("fetching");
     const modalContainer = React.useRef<HTMLDivElement>(null);
     const [showSidebar, setShowSidebar] = React.useState(false);
-    const sidebarRef = React.useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
-    React.useEffect(() => updatePreferences(null), []);
+    React.useEffect(() => { authenticate(); }, []);
 
     return <React.StrictMode>
-        <modalContainerContext.Provider value={{ container: modalContainer.current }}>
-            <preferencesContext.Provider value={{ preferences: preferences, updatePreferences }}>
-                <div className="mobile-header-spacing"></div>
-                <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
-                <div style={{display: "flex", flexGrow: 1}}>
-                    <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
-                    <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
-                        <Routes>
-                            <Route path={routes.dashboard()} element={<PageDashboard />} />
-                            <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>
-                            <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
-                            <Route path={routes.transactions()} element={<PageTransactions />}/>
-                            <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
-                            <Route path={routes.transactionCreate()} element={<PageCreateTransaction />} />
-                            <Route path={routes.accounts()} element={<PageAccountOverview />} />
-                            <Route path={routes.account(":id")} element={<PageAccount />} />
-                            <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
-                            <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
-                            <Route path={routes.preferences()} element={<PagePreferences />} />
+        <userContext.Provider value={{ user: user, updatePreferences, updateFavoriteAccounts, setUser: updateUser }}>
+            <Routes>
+                <Route path={routes.login()} element={<PageLogin />} />
+                <Route path={routes.signup()} element={<PageSignup />} />
+                <Route path='*' element={<>
+                    <modalContainerContext.Provider value={{ container: modalContainer.current }}>
+                        <div className="mobile-header-spacing"></div>
+                        <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
+                        <div style={{display: "flex", flexGrow: 1}}>
+                            <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
+                            <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
+                                <Routes>
+                                    <Route path={routes.dashboard()} element={<PageDashboard />} />
+                                    <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>
+                                    <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
+                                    <Route path={routes.transactions()} element={<PageTransactions />}/>
+                                    <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
+                                    <Route path={routes.transactionCreate()} element={<PageCreateTransaction />} />
+                                    <Route path={routes.accounts()} element={<PageAccountOverview />} />
+                                    <Route path={routes.account(":id")} element={<PageAccount />} />
+                                    <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
+                                    <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
+                                    <Route path={routes.preferences()} element={<PagePreferences />} />
 
-                            <Route path='*' element={<Page404 />} />
-                        </Routes>
-                    </div>
-                </div>
-            </preferencesContext.Provider>
-        </modalContainerContext.Provider>
-        <div ref={modalContainer}></div>
+                                    <Route path='*' element={<Page404 />} />
+                                </Routes>
+                            </div>
+                        </div>
+                    </modalContainerContext.Provider>
+                    <div ref={modalContainer}></div>
+                </>} />
+            </Routes>
+        </userContext.Provider>
     </React.StrictMode>;
 
-    function updatePreferences(newPreferences: Preferences | null) {
-        if (newPreferences !== null) {
-            setPreferences(newPreferences);
+    async function authenticate() {
+        var user = await Api.getUser();
+        if (user === null) {
+            // Navigate to the login page
+            navigate(routes.login());
         } else {
-            setPreferences("fetching");
-            Api.Preferences.get()
-                .then(result => {
-                    setPreferences(result);
-                })
-                .catch(e => {
-                    console.log(e);
-                    setPreferences("fetching");
-                });
+            setUser(user);
+        }
+    }
+    
+    function updatePreferences(newPreferences: Preferences) {
+        if (user === "fetching") return;
+        
+        setUser({
+            ...user,
+            preferences: newPreferences
+        });
+    }
+
+    function updateFavoriteAccounts(newFavoriteAccounts: Account[]) {
+        if (user === "fetching") return;
+
+        setUser({
+            ...user,
+            favoriteAccounts: newFavoriteAccounts
+        });
+    }
+
+    function updateUser(newUser: User | null) {
+        if (newUser === null) {
+            localStorage.removeItem("token");
+            setUser("fetching");
+            navigate(routes.login());
+        } else {
+            setUser(newUser);
         }
     }
 }

@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../lib/Utils";
+import { formatDateTimeWithUser, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { Preferences } from "../../models/preferences";
 import { Transaction, TransactionLine } from "../../models/transaction";
@@ -14,13 +14,13 @@ import TransactionLink from "./TransactionLink";
 import * as regular from "@fortawesome/free-regular-svg-icons"
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import Modal from "../common/Modal";
-import { Api } from "../../lib/ApiClient";
+import { Api, useApi } from "../../lib/ApiClient";
 import AccountLink from "../account/AccountLink";
 import InputButton from "../input/InputButton";
 import InputNumber from "../input/InputNumber";
 import Tooltip from "../common/Tooltip";
 import InputIconButton from "../input/InputIconButton";
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 import DeleteTransactionModal from "./input/DeleteTransactionModal";
 import InputCheckbox from "../input/InputCheckbox";
 import { Link } from "react-router-dom";
@@ -80,7 +80,7 @@ function TableTransaction(props: TableTransactionProps) {
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     const [expandSplit, setExpandSplit] = React.useState(false);
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
 
     return <div key={props.transaction.id} className="table-row">
         <div>
@@ -91,15 +91,15 @@ function TableTransaction(props: TableTransactionProps) {
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
             </Tooltip>}
         </div>
-        <div>{formatDateTimeWithPrefs(props.transaction.dateTime, preferences)}</div>
+        <div>{formatDateTimeWithUser(props.transaction.dateTime, user)}</div>
         <div>{props.transaction.description.length < 50
             ? props.transaction.description
             : <Tooltip content={props.transaction.description}>{props.transaction.description.substring(0, 50)}&hellip;</Tooltip>}</div>
         <div className={"number-total " + totalClass}>
-            {formatNumberWithPrefs(total, preferences)}
+            {formatNumberWithUser(total, user)}
         </div>
         {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>
-            {formatNumberWithPrefs(props.balance, preferences)}
+            {formatNumberWithUser(props.balance, user)}
         </div>}
         <div>
             {props.accountId !== undefined
@@ -134,7 +134,7 @@ function TableTransaction(props: TableTransactionProps) {
                     {line.description}
                 </div>
                 <div className="total">
-                    {formatNumberWithPrefs(line.amount, preferences)}
+                    {formatNumberWithUser(line.amount, user)}
                 </div>
                 <div style={{ gridColumn: "innerend/colend" }}></div>
             </div>)}
@@ -165,7 +165,8 @@ function TransactionEditor(props: TransactionEditorProps) {
         lines: props.transaction.lines.length > 0 ? props.transaction.lines : null,
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
+    const api = useApi();
 
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
@@ -202,10 +203,10 @@ function TransactionEditor(props: TransactionEditorProps) {
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
-                {formatNumberWithPrefs(model.total.times(amountMultiplier), preferences)}
+                {formatNumberWithUser(model.total.times(amountMultiplier), user)}
             </div>
         }
-        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithPrefs(props.balance, preferences)}</div>}
+        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithUser(props.balance, user)}</div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <div>
             <InputAccount
                 value={model.source}
@@ -229,7 +230,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                 onChange={category => setModel({ ...model, category: category })} />
         </div>
         <div>
-            {! props.disabled && <>
+            {! props.disabled && api !== null && <>
                 <InputIconButton icon={solid.faSave} onClick={() => saveChanges()} />
                 <InputIconButton icon={solid.faXmark} onClick={() => props.stopEditing()} />
             </>}
@@ -265,11 +266,11 @@ function TransactionEditor(props: TransactionEditorProps) {
     function saveChanges() {
         props.setDisabled(true);
 
-        if (model === null) {
+        if (model === null || api === null) {
             return;
         }
 
-        Api.Transaction.update(props.transaction.id, {
+        api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
             description: model.description,
             sourceId: model.source?.id ?? -1,

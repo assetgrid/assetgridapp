@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import Modal from "../../common/Modal";
 import InputModifyAccount from "./InputModifyAccount";
 
@@ -15,32 +15,30 @@ interface Props {
 export default function CreateAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.preset);
     const [isCreating, setIsCreating] = React.useState(false);
-    const { preferences, updatePreferences } = React.useContext(preferencesContext);
+    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const api = useApi();
 
     return <Modal
         active={true}
         title={"Create account"}
         close={() => props.close()}
         footer={<>
-            <button className="button is-success" onClick={() => create()} disabled={isCreating}>Create account</button>
+            <button className="button is-success" onClick={() => create()} disabled={isCreating || api === null}>Create account</button>
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <InputModifyAccount value={model} disabled={isCreating} onChange={account => setModel(account)}/>
     </Modal>;
 
     async function create() {
+        if (api === null) return;
+
         setIsCreating(true);
-        const result = await Api.Account.create(model);
+        const result = await api.Account.create(model);
         setModel(props.preset);
         setIsCreating(false);
         if (result.favorite) {
-            if (preferences === "fetching") {
-                updatePreferences(null);
-            } else {
-                updatePreferences({
-                    ...preferences,
-                    favoriteAccounts: [...preferences.favoriteAccounts, result]
-                });
+            if (user !== "fetching") {
+                updateFavoriteAccounts([...user.favoriteAccounts, result]);
             }
         }
         if (props.created !== undefined) {

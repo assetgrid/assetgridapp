@@ -1,5 +1,3 @@
-import { Account } from "./account";
-
 export type Preferences = {
     id: number;
     decimalSeparator: string;
@@ -7,5 +5,4 @@ export type Preferences = {
     thousandsSeparator: string;
     dateFormat: string | null;
     dateTimeFormat: string | null;
-    favoriteAccounts: Account[];
 }

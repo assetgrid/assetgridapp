@@ -4,10 +4,11 @@ interface Props {
     label?: string,
     value: string,
     disabled?: boolean,
-    error?: string,
+    error?: string | boolean,
     addOnAfter?: React.ReactElement,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
     isSmall?: boolean;
+    password?: boolean;
 }
 
 export default function InputText (props: Props) {
@@ -17,13 +18,13 @@ export default function InputText (props: Props) {
             <div className="control is-expanded">
                 <input
                     className={"input" + (props.error ? " is-danger" : "") + (props.isSmall ? " is-small" : "")}
-                    type="text"
+                    type={props.password === true ? "password" : "text"}
                     placeholder={props.label}
                     value={props.value}
                     disabled={props.disabled}
                     onChange={event => props.onChange(event)}
                 />
-                {props.error !== undefined && <p className="help has-text-danger">
+                {typeof props.error === "string" && <p className="help has-text-danger">
                     {props.error}
                 </p>}
             </div>

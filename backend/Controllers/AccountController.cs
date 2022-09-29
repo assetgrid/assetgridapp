@@ -1,6 +1,8 @@
 ﻿using assetgrid_backend.Data;
+using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,17 +11,17 @@ using System.Globalization;
 namespace assetgrid_backend.Controllers
 {
     [ApiController]
-    [EnableCors("AllowAll")]
+    [Authorize]
     [Route("/api/v1/[controller]")]
     public class AccountController : Controller
     {
-        private readonly ILogger<TransactionController> _logger;
-        private readonly HomebudgetContext _context;
+        private readonly AssetgridDbContext _context;
+        private readonly IUserService _user;
 
-        public AccountController(ILogger<TransactionController> logger, HomebudgetContext context)
+        public AccountController(AssetgridDbContext context, IUserService userService)
         {
-            _logger = logger;
             _context = context;
+            _user = userService;
         }
 
         /// <summary>
@@ -30,26 +32,44 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         public ViewAccount Create(ViewCreateAccount model)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
-                var result = new Account
+                using (var transaction = _context.Database.BeginTransaction())
                 {
-                    Name = model.Name,
-                    Description = model.Description,
-                    AccountNumber = model.AccountNumber,
-                    IncludeInNetWorth = model.IncludeInNetWorth,
-                    Favorite = model.Favorite,
-                };
-                _context.Accounts.Add(result);
-                _context.SaveChanges();
-                return new ViewAccount
-                {
-                    Id = result.Id,
-                    AccountNumber = result.AccountNumber,
-                    Description = result.Description,
-                    Name = result.Name,
-                    Favorite = model.Favorite,
-                };
+                    var result = new Account
+                    {
+                        Name = model.Name,
+                        Description = model.Description,
+                        AccountNumber = model.AccountNumber,
+                    };
+                    _context.Accounts.Add(result);
+                    _context.SaveChanges();
+
+                    var userAccount = new UserAccount
+                    {
+                        AccountId = result.Id,
+                        Favorite = model.Favorite,
+                        IncludeInNetWorth = model.IncludeInNetWorth,
+                        Permissions = UserAccountPermissions.All,
+                        UserId = user.Id,
+                    };
+                    _context.UserAccounts.Add(userAccount);
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    return new ViewAccount(
+                        id: result.Id,
+                        accountNumber: result.AccountNumber,
+                        description: result.Description,
+                        name: result.Name,
+                        favorite: model.Favorite,
+                        includeInNetWorth: model.IncludeInNetWorth,
+                        balance: 0,
+                        permissions: ViewAccount.AccountPermissions.All
+                    );
+                }
             }
             throw new Exception();
         }
@@ -58,9 +78,11 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}")]
         public ViewAccount? Get(int id)
         {
-            var result = _context.Accounts
+            var user = _user.GetCurrent(HttpContext)!;
+            var result = _context.UserAccounts
+                .Where(account => account.UserId == user.Id && account.AccountId == id)
                 .SelectView()
-                .SingleOrDefault(account => account.Id == id);
+                .SingleOrDefault();
 
             if (result == null) return null;
 
@@ -76,53 +98,76 @@ namespace assetgrid_backend.Controllers
 
         [HttpPut()]
         [Route("/api/v1/[controller]/{id}")]
-        public ViewAccount? Update(int id, ViewAccount model)
+        public ViewAccount Update(int id, ViewAccount model)
         {
-            var result = _context.Accounts
-                .SingleOrDefault(account => account.Id == id);
+            var user = _user.GetCurrent(HttpContext)!;
+            var result = _context.UserAccounts
+                .Include(account => account.Account)
+                .SingleOrDefault(account => account.UserId == user.Id && account.AccountId == id && account.Permissions == UserAccountPermissions.All);
 
             if (result == null)
             {
                 throw new Exception($"Account not found with id {id}");
             }
 
-            result.AccountNumber = model.AccountNumber;
-            result.Description = model.Description;
-            result.Name = model.Name;
+            result.Account.AccountNumber = model.AccountNumber;
+            result.Account.Description = model.Description;
+            result.Account.Name = model.Name;
             result.Favorite = model.Favorite;
             result.IncludeInNetWorth = model.IncludeInNetWorth;
 
             _context.SaveChanges();
 
-            return new ViewAccount
-            {
-                Id = result.Id,
-                Name = result.Name,
-                Description = result.Description,
-                AccountNumber = result.AccountNumber,
-                Favorite = result.Favorite,
-                IncludeInNetWorth = result.IncludeInNetWorth,
-            };
+            return new ViewAccount(
+                id: result.Id,
+                name: result.Account.Name,
+                description: result.Account.Description,
+                accountNumber: result.Account.AccountNumber,
+                favorite: result.Favorite,
+                includeInNetWorth: result.IncludeInNetWorth,
+                permissions: ViewAccount.PermissionsFromDbPermissions(result.Permissions),
+                balance: 0
+            );
         }
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/{id}")]
         public void Delete(int id)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var dbObject = _context.Accounts
-                    .Single(t => t.Id == id);
+                var dbObject = _context.UserAccounts
+                    .Where(account => account.AccountId == id && account.UserId == user.Id && account.Permissions == UserAccountPermissions.All)
+                    .Select(account => account.Account)
+                    .SingleOrDefault();
 
-                // Remove all references to this account on transactions
-                _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET SourceAccountId = null WHERE SourceAccountId = {id}");
-                _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET DestinationAccountId = null WHERE DestinationAccountId = {id}");
-                // Delete transactions that do not have any accounts
-                _context.Database.ExecuteSqlInterpolated($"DELETE FROM Transactions WHERE SourceAccountId IS NULL AND DestinationAccountId IS NULL");
-                _context.Accounts.Remove(dbObject);
-                _context.SaveChanges();
-                // Delete all categories that are unused by transactions
-                _context.Categories.RemoveRange(_context.Categories.Where(category => !_context.Transactions.Any(transaction => transaction.CategoryId == category.Id)));
+                if (dbObject == null)
+                {
+                    throw new Exception("Not found");
+                }
+
+                if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+                {
+                    // InMemory database does not support raw SQL
+                    _context.Transactions.Where(transaction => transaction.SourceAccountId == id).ToList().ForEach(transaction => transaction.SourceAccountId = null);
+                    _context.Transactions.Where(transaction => transaction.DestinationAccountId == id).ToList().ForEach(transaction => transaction.DestinationAccountId = null);
+                    _context.Transactions.RemoveRange(
+                        _context.Transactions.Where(transaction => transaction.DestinationAccountId == null && transaction.SourceAccountId == null));
+                    _context.Accounts.RemoveRange(
+                        _context.Accounts.Where(account => account.Id == id));
+                }
+                else
+                {
+                    // Remove all references to this account on transactions
+                    _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET SourceAccountId = null WHERE SourceAccountId = {id}");
+                    _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET DestinationAccountId = null WHERE DestinationAccountId = {id}");
+                    // Delete transactions that do not have any accounts
+                    _context.Database.ExecuteSqlInterpolated($"DELETE FROM Transactions WHERE SourceAccountId IS NULL AND DestinationAccountId IS NULL");
+                    // Delete UserAccounts referencing this account
+                    _context.Database.ExecuteSqlInterpolated($"DELETE FROM UserAccounts WHERE AccountId = {id}");
+                    _context.Accounts.Remove(dbObject);
+                }
                 _context.SaveChanges();
 
                 transaction.Commit();
@@ -136,7 +181,9 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[action]")]
         public ViewSearchResponse<ViewAccount> Search(ViewSearch query)
         {
-            var result = _context.Accounts
+            var user = _user.GetCurrent(HttpContext)!;
+            var result = _context.UserAccounts
+                .Where(account => account.UserId == user.Id)
                 .ApplySearch(query, true)
                 .Skip(query.From)
                 .Take(query.To - query.From)
@@ -146,7 +193,9 @@ namespace assetgrid_backend.Controllers
             return new ViewSearchResponse<ViewAccount>
             {
                 Data = result,
-                TotalItems = _context.Accounts.ApplySearch(query, false).Count()
+                TotalItems = _context.UserAccounts
+                    .Where(account => account.UserId == user.Id)
+                    .ApplySearch(query, false).Count()
             };
         }
 
@@ -154,6 +203,12 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         public ViewTransactionList Transactions(int id, ViewTransactionListRequest request)
         {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            {
+                throw new Exception("Not authorized to view this account");
+            }
+
             var query = _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
 
@@ -176,13 +231,12 @@ namespace assetgrid_backend.Controllers
             var result = query
                 .Skip(request.From)
                 .Take(request.To - request.From)
-                .SelectView()
+                .SelectView(user.Id)
                 .ToList();
             var firstTransaction = result
                 .OrderBy(transaction => transaction.DateTime)
                 .ThenBy(transaction => transaction.Id).FirstOrDefault();
-            var total = firstTransaction == null ? 0 : _context.Transactions
-                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+            var total = firstTransaction == null ? 0 : query
                 .Where(transaction => transaction.DateTime < firstTransaction.DateTime || (transaction.DateTime == firstTransaction.DateTime && transaction.Id < firstTransaction.Id))
                 .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
                 .Sum();
@@ -203,6 +257,12 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         public int CountTransactions(int id, ViewSearchGroup? requestQuery)
         {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            {
+                throw new Exception("Not authorized to view this account");
+            }
+
             var query = _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
 
@@ -244,6 +304,12 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/Movements")]
         public ViewGetMovementResponse GetMovement(int id, ViewGetMovementRequest request)
         {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            {
+                throw new Exception("Not authorized to view this account");
+            }
+
             var initialBalance = request.From == null ? 0 : _context.Transactions
                 .Where(transaction => transaction.DateTime < request.From)
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
@@ -299,7 +365,13 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/Movements")]
         public ViewGetMovementAllResponse GetMovementAll(ViewGetMovementRequest request)
         {
-            List<ViewAccount> accounts = _context.Accounts.Where(account => account.IncludeInNetWorth).SelectView().ToList();
+            var user = _user.GetCurrent(HttpContext)!;
+            List<ViewAccount> accounts = _context.UserAccounts
+                .Where(account => account.IncludeInNetWorth)
+                .Where(account => account.UserId == user.Id)
+                .SelectView()
+                .ToList();
+            var netWorthAccountIds = accounts.Where(account => account.IncludeInNetWorth).Select(account => account.Id).ToList();
 
             var query = _context.Transactions
                 .Where(transaction => request.From == null || transaction.DateTime >= request.From)
@@ -307,7 +379,7 @@ namespace assetgrid_backend.Controllers
 
             // Calculate revenue and expenses for each account separately
             var revenueQuery = ApplyIntervalGrouping(request.From, request.Resolution,
-                query.Where(transaction => transaction.DestinationAccount!.IncludeInNetWorth)
+                query.Where(transaction => netWorthAccountIds.Contains(transaction.DestinationAccountId ?? -1) && !netWorthAccountIds.Contains(transaction.SourceAccountId ?? -1))
                 .Select(transaction => new MovementItem
                 {
                     AccountId = transaction.DestinationAccountId!.Value,
@@ -317,7 +389,7 @@ namespace assetgrid_backend.Controllers
 
             // Calculate revenue and expenses for each account separately
             var expensesQuery = ApplyIntervalGrouping(request.From, request.Resolution,
-                query.Where(transaction => transaction.SourceAccount!.IncludeInNetWorth)
+                query.Where(transaction => netWorthAccountIds.Contains(transaction.SourceAccountId ?? -1) && !netWorthAccountIds.Contains(transaction.DestinationAccountId ?? -1))
                 .Select(transaction => new MovementItem
                 {
                     AccountId = transaction.SourceAccountId!.Value,
@@ -443,17 +515,23 @@ namespace assetgrid_backend.Controllers
 
         [HttpPost()]
         [Route("/api/v1/[controller]/{id}/[action]")]
-        public List<object> CategorySummary(int id, ViewSearchGroup query)
+        public List<ViewCategorySummary> CategorySummary(int id, ViewSearchGroup? query)
         {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (!_context.UserAccounts.Any(u => u.UserId == user.Id && u.AccountId == id))
+            {
+                throw new Exception("You do not have permission to perform this action");
+            }
+
             return _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
                 .ApplySearch(query)
-                .GroupBy(transaction => transaction.Category != null ? transaction.Category.Name : "")
-                .Select(group => (object)new
+                .GroupBy(transaction => transaction.Category)
+                .Select(group => new ViewCategorySummary
                 {
-                    category = group.Key,
-                    revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
-                    expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
+                    Category = group.Key,
+                    Revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
+                    Expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
                 })
                 .ToList();
         }

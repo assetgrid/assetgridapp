@@ -13,9 +13,9 @@ interface Props {
     draw?: number;
 }
 
-function fetchItems(from: number, to: number, draw: number): Promise<{ items: Account[], totalItems: number, offset: number, draw: number }> {
+function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: Account[], totalItems: number, offset: number, draw: number }> {
     return new Promise(resolve => {
-        Api.Account.search({
+        api.Account.search({
             from: from,
             to: to,
             descending: false,

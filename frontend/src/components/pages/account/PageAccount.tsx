@@ -7,8 +7,8 @@ import { Account } from "../../../models/account";
 import axios from "axios";
 import AccountTransactionList from "../../transaction/AccountTransactionList";
 import { Preferences } from "../../../models/preferences";
-import { Api } from "../../../lib/ApiClient";
-import { debounce, formatNumber, formatNumberWithPrefs } from "../../../lib/Utils";
+import { Api, useApi } from "../../../lib/ApiClient";
+import { debounce, formatNumber, formatNumberWithUser } from "../../../lib/Utils";
 import AccountBalanceChart from "../../account/AccountBalanceChart";
 import { useNavigate, useParams } from "react-router";
 import PeriodSelector from "../../common/PeriodSelector";
@@ -18,7 +18,7 @@ import AccountCategoryChart from "../../account/AccountCategoryChart";
 import InputIconButton from "../../input/InputIconButton";
 import YesNoDisplay from "../../input/YesNoDisplay";
 import { routes } from "../../../lib/routes";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
 import InputCheckbox from "../../input/InputCheckbox";
@@ -50,11 +50,12 @@ export default function () {
 
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
-    const { preferences, updatePreferences } = React.useContext(preferencesContext);
+    const { user, updateFavoriteAccounts } = React.useContext(userContext);
     const [page, setPage] = React.useState(typeof(window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
     const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
     const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(window.history.state.usr?.selectedTransactions ? window.history.state.usr?.selectedTransactions : {});
+    const api = useApi();
 
     // Keep state updated
     const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
@@ -67,8 +68,8 @@ export default function () {
         setAccount("fetching");
         if (isNaN(id)) {
             setAccount("error");
-        } else {
-            Api.Account.get(id)
+        } else if (api !== null) {
+            api.Account.get(id)
                 .then(result => {
                     setAccount(result);
                 })
@@ -77,7 +78,7 @@ export default function () {
                     setAccount("error");
                 });
         }
-    }, [id])
+    }, [api, id])
 
     if (account === "fetching") {
         return layout(period,
@@ -99,7 +100,7 @@ export default function () {
 
     return layout(period,
         <Hero title={<>
-            {updatingFavorite
+            {updatingFavorite || api === null
                 ? <span className="icon">
                     <FontAwesomeIcon icon={solid.faSpinner} pulse />
                 </span>
@@ -110,13 +111,13 @@ export default function () {
             subtitle={account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
             period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
         <AccountDetailsCard account={account}
-            updatingFavorite={updatingFavorite}
+            updatingFavorite={updatingFavorite || api === null}
             toggleFavorite={toggleFavorite}
             onChange={setAccount}
             updateAccountFavoriteInPreferences={updateAccountFavoriteInPreferences}
         />,
-        <AccountCategoryChart id={id} preferences={preferences} period={period} />,
-        <AccountBalanceChart id={id} preferences={preferences} period={period} />,
+        <AccountCategoryChart id={id} period={period} />,
+        <AccountBalanceChart id={id} period={period} />,
         <AccountTransactionList
             accountId={id}
             period={period}
@@ -140,9 +141,11 @@ export default function () {
     }
     
     async function goToPage(page: number | "increment" | "decrement") {
+        if (api === null) return;
+
         if (page === "increment") {
             const nextPeriod = PeriodFunctions.increment(period);
-            const transactionCount = await countTransactions(nextPeriod);
+            const transactionCount = await countTransactions(api, nextPeriod);
             const lastPage = Math.max(1, Math.ceil(transactionCount / pageSize));
             setPeriod(nextPeriod);
             setPage(lastPage);
@@ -156,21 +159,17 @@ export default function () {
     }
 
     function updateAccountFavoriteInPreferences(account: Account, favorite: boolean) {
-        if (preferences === "fetching") {
-            // Refetch preferences. Can't modify them as they aren't fetched.
-            updatePreferences(null);
-            return;
-        }
-
-        if (favorite) {
-            updatePreferences({ ...preferences, favoriteAccounts: [...preferences.favoriteAccounts, account]});
-        } else {
-            updatePreferences({ ...preferences, favoriteAccounts: preferences.favoriteAccounts.filter(fav => fav.id !== account.id)});
+        if (user !== "fetching") {
+            if (favorite) {
+                updateFavoriteAccounts([...user.favoriteAccounts, account]);
+            } else {
+                updateFavoriteAccounts(user.favoriteAccounts.filter(fav => fav.id !== account.id));
+            }
         }
     }
 
     function toggleFavorite() {
-        if (account === "error" || account === "fetching" || account === null) {
+        if (account === "error" || account === "fetching" || account === null || api === null) {
             throw "error";
         }
 
@@ -180,7 +179,7 @@ export default function () {
 
         setUpdatingFavorite(true);
 
-        Api.Account.update(Number(id), newAccount)
+        api.Account.update(Number(id), newAccount)
             .then(result => {
                 setUpdatingFavorite(false);
                 result.balance = account.balance;
@@ -192,7 +191,7 @@ export default function () {
             });
     }
 
-    function countTransactions(period: Period): Promise<number> {
+    function countTransactions(api: Api, period: Period): Promise<number> {
         let [start, end] = PeriodFunctions.getRange(period);
         let query: SearchGroup = {
             type: SearchGroupType.And,
@@ -215,7 +214,7 @@ export default function () {
             }]
         };
         return new Promise(resolve => {
-            Api.Account.countTransactions(id, query)
+            api.Account.countTransactions(id, query)
                 .then(result => resolve(result));
         });
     }

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { Account, CreateAccount } from "../../../models/account";
 import AccountLink from "../../account/AccountLink";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
@@ -22,9 +22,10 @@ const defaultAccount = {
 export default function () {
     const [value, setValue] = React.useState<CreateAccount>(defaultAccount);
     const [isCreating, setIsCreating] = React.useState(false);
-    const { preferences, updatePreferences } = React.useContext(preferencesContext);
+    const { user, updateFavoriteAccounts } = React.useContext(userContext);
     const navigate = useNavigate();
     const [createdAccount, setCreatedAccount] = React.useState<Account | null>(null);
+    const api = useApi();
 
     const allowBack = window.history.state.usr?.allowBack === true;
 
@@ -60,8 +61,8 @@ export default function () {
                     disabled={isCreating} />  
 
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={() => create(true)} disabled={isCreating}>Create and stay</InputButton>
-                    <InputButton className="is-primary" onClick={() => create(false)} disabled={isCreating}>Create and view account</InputButton>
+                    <InputButton className="is-primary" onClick={() => create(true)} disabled={isCreating || api === null}>Create and stay</InputButton>
+                    <InputButton className="is-primary" onClick={() => create(false)} disabled={isCreating || api === null}>Create and view account</InputButton>
                     {allowBack && <InputButton onClick={() => navigate(-1)}>Cancel</InputButton>}
                 </div>
             </Card>
@@ -69,18 +70,15 @@ export default function () {
     </>;
 
     async function create(stay: boolean) {
+        if (api === null) return;
+
         setIsCreating(true);
         setCreatedAccount(null);
-        const result = await Api.Account.create(value);
+        const result = await api.Account.create(value);
         setIsCreating(false);
         if (result.favorite) {
-            if (preferences === "fetching") {
-                updatePreferences(null);
-            } else {
-                updatePreferences({
-                    ...preferences,
-                    favoriteAccounts: [...preferences.favoriteAccounts, result]
-                });
+            if (user !== "fetching") {
+                updateFavoriteAccounts([...user.favoriteAccounts, result]);
             }
         }
         

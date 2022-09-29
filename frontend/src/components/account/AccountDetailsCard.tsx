@@ -1,11 +1,11 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { Api } from "../../lib/ApiClient";
+import { Api, useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { formatNumberWithPrefs } from "../../lib/Utils";
+import { formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 import Card from "../common/Card";
 import InputButton from "../input/InputButton";
 import InputCheckbox from "../input/InputCheckbox";
@@ -27,8 +27,9 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
     
     const [editingModel, setEditingModel] = React.useState<Account | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
     const navigate = useNavigate();
+    const api = useApi();
 
     if (editingModel === null) {
         return <Card
@@ -53,7 +54,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                 <tbody>
                     <tr>
                         <td>Balance</td>
-                        <td>{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                        <td>{formatNumberWithUser(props.account.balance!, user)}</td>
                     </tr>
                     <tr>
                         <td>Name</td>
@@ -88,7 +89,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                 <tbody>
                     <tr>
                         <td>Balance</td>
-                        <td>{formatNumberWithPrefs(props.account.balance!, preferences)}</td>
+                        <td>{formatNumberWithUser(props.account.balance!, user)}</td>
                     </tr>
                     <tr>
                         <td>Name</td>
@@ -138,18 +139,18 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                 </tbody>
             </table>
             <div className="buttons">
-                <InputButton disabled={isUpdating} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
+                <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
                 <InputButton onClick={() => setEditingModel(null)}>Cancel</InputButton>
             </div>
         </Card>
     }
 
     async function saveChanges() {
-        if (editingModel === null) return;
+        if (editingModel === null || api === null) return;
 
         setIsUpdating(true);
         const { balance, ...updateModel } = editingModel;
-        const result = await Api.Account.update(props.account.id, updateModel);
+        const result = await api.Account.update(props.account.id, updateModel);
         result.balance = props.account.balance;
         setEditingModel(null);
         setIsUpdating(false);

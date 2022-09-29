@@ -1,10 +1,6 @@
 import * as React from "react";
 import { GetMovementResponse, TimeResolution } from "../../models/account";
-import { Api } from "../../lib/ApiClient";
-import { DateTime, Duration, DurationLike } from "luxon";
-import { Preferences } from "../../models/preferences";
-import Utils, { formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
-import Decimal from "decimal.js";
+import { Api, useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import 'chartjs-adapter-luxon';
 import {
@@ -21,6 +17,7 @@ import {
     BarController,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
+import { userContext } from "../App";
   
 ChartJS.register(
     LinearScale,
@@ -37,7 +34,6 @@ ChartJS.register(
 
 interface Props {
     id: number;
-    preferences: Preferences | "fetching";
     period: Period;
 }
 
@@ -45,10 +41,13 @@ export default function AccountBalanceChart(props: Props) {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
+    const api = useApi();
 
     React.useEffect(() => {
-        updateData(props.id, props.period, setDisplayingPeriod, resolution, setMovements);
-    }, [props.period, resolution])
+        if (api !== null) {
+            updateData(api, props.id, props.period, setDisplayingPeriod, resolution, setMovements);
+        }
+    }, [api, props.period, resolution])
 
     if (movements === "fetching") {
         return <>Please wait&hellip;</>;
@@ -139,9 +138,9 @@ export default function AccountBalanceChart(props: Props) {
     </>;
 }
 
-function updateData(id: number, period: Period, setDisplayingPeriod: (period: Period) => void,
+function updateData(api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,    
     resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
-    
+
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
@@ -159,7 +158,7 @@ function updateData(id: number, period: Period, setDisplayingPeriod: (period: Pe
             break;
     }
 
-    Api.Account.getMovements(id, start, end, resolution)
+    api.Account.getMovements(id, start, end, resolution)
         .then(result => {
             setDisplayingPeriod(period);
             setData(result);

@@ -10,4 +10,6 @@ export const routes = {
     accountCreate: () => "/account/create",
     accountDelete: (id: string) => "/account/" + id + "/delete",
     preferences: () => "/preferences",
+    login: () => "/login",
+    signup: () => "/signup"
 };

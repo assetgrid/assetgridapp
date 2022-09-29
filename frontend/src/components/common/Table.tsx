@@ -1,6 +1,7 @@
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import { Api, useApi } from "../../lib/ApiClient";
 
 export type Props<T> = {
     pageSize: number;
@@ -20,7 +21,7 @@ export type Props<T> = {
     } | {
         /* An API request to fetch items will be used. Only the current page is fetched */
         type: "async";
-        fetchItems: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
         goToPage: (page: number) => void;
     } | {
         /* 
@@ -29,7 +30,7 @@ export type Props<T> = {
          * This type of table will only redraw explicitely and not on page changes, as page changes are needed to handle period transitions
          */
         type: "async-increment";
-        fetchItems: (from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
+        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
         goToPage: (page: number | "increment" | "decrement") => void;
     }
 ) & (
@@ -58,6 +59,7 @@ export default function Table<T>(props: Props<T>) {
 
     const [displayingPage, setDisplayingPage] = React.useState<number>(1);
     const [totalItems, setTotalItems] = React.useState<number>(0);
+    const api = useApi();
 
     let paginatedItems = items
         .map((item, index) => ({ item: item, index: index + (props.page - 1) * props.pageSize }));
@@ -68,8 +70,10 @@ export default function Table<T>(props: Props<T>) {
     }
 
     React.useEffect(() => {
-        fetchItems(props.page, props.draw);
-    }, props.type === "async-increment" ? [props.draw] : [props.draw, props.page]);
+        if (api !== null) {
+            fetchItems(api, props.page, props.draw);
+        }
+    }, props.type === "async-increment" ? [api, props.draw] : [api, props.draw, props.page]);
 
     if (props.renderType === "custom")
     {
@@ -220,7 +224,7 @@ export default function Table<T>(props: Props<T>) {
         }
     }
 
-    async function fetchItems(page: number, draw?: number): Promise<void> {
+    async function fetchItems(api: Api, page: number, draw?: number): Promise<void> {
         const from = (page - 1) * props.pageSize;
         const to = page * props.pageSize;
 
@@ -230,7 +234,7 @@ export default function Table<T>(props: Props<T>) {
             setDisplayingPage(props.page);
             props.afterDraw && props.afterDraw(props.items.slice(from, to));
         } else {
-            props.fetchItems(from, to, draw ?? 0)
+            props.fetchItems(api, from, to, draw ?? 0)
                 .then(result => {
                     if (result.draw === (props.draw ?? 0)) {
                         setItems(result.items);

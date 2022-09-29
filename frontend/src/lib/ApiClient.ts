@@ -3,48 +3,86 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
+import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction, Transaction } from "../models/transaction";
+import { useContext } from "react";
+import { userContext } from "../components/App";
+import * as React from "react";
 
 let rootUrl = 'https://localhost:7262';
 if (process.env.NODE_ENV === 'production') {
     rootUrl = "";
 }
-  
-const Preferences = {
 
-    /**
-     * Get preferences for the current user
-     * @returns The preferences for the current user
-     */
-    get: function (): Promise<PreferencesModel> {
-        return new Promise<PreferencesModel>((resolve, reject) => {
-            axios.get<PreferencesModel>(rootUrl + '/api/v1/user/preferences')
-                .then(result => {
-                    resolve(result.data);
+/**
+ * Get the currently signed in user
+ */
+export function getUser(): Promise<UserModel | null> {
+    const token = localStorage.getItem("token");
+    return new Promise<UserModel | null>((resolve, reject) => {
+        if (token === null) {
+            resolve(null);
+        } else {
+            axios.get<UserModel | null | "">(rootUrl + '/api/v1/user', {
+                    headers: { authorization: "Bearer: " + token }
                 })
-                .catch(e => {
+                .then(result => {
+                    resolve(result.data === "" || result.data === null ? null : { ...result.data, token: token });
+                }).catch(e => {
                     console.log(e);
                     reject();
                 });
-        })
-    },
+        }
+    })
+}
 
+/**
+ * Sign in to new user
+ */
+export function authenticate(email: string, password: string): Promise<UserModel | null> {
+    return new Promise<UserModel | null>((resolve, reject) => {
+        axios.post<UserModel | null | "">(rootUrl + '/api/v1/user/authenticate', {
+                email: email,
+                password: password
+        }).then(result => {
+                if (result.data !== "" && result.data !== null) {
+                    localStorage.setItem("token", result.data.token);
+                    resolve(result.data);
+                } else {
+                    resolve(null);
+                }
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+    })
+}
+
+/**
+ * Returns whether any users exist in this installation
+ */
+export function anyUsers(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        axios.get<boolean>(rootUrl + '/api/v1/user/any').then(result => resolve(result.data))
+            .catch(e => {
+                console.log(e);
+                reject();
+            });
+    });
+}
+
+const User = (token: string) => ({
     /**
      * Update preferences for the current user
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    update: function (preferences: PreferencesModel): Promise<PreferencesModel> {
-        const model = {
-            ...preferences,
-            favoriteAccounts: preferences.favoriteAccounts.map(account => ({
-                ...account,
-                balance: undefined
-            }))
-        };
+    updatePreferences: function (preferences: PreferencesModel): Promise<PreferencesModel> {
         return new Promise<PreferencesModel>((resolve, reject) => {
-            axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', model)
+            axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', preferences, {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     resolve(result.data);
                 }).catch(e => {
@@ -53,9 +91,9 @@ const Preferences = {
                 });
         })
     }
-};
+});
 
-const Account = {
+const Account = (token: string) => ({
     /**
      * Search for accounts
      * @param request Search request specifying which accounts to return
@@ -63,7 +101,9 @@ const Account = {
      */
     search: function (request: SearchRequest): Promise<SearchResponse<AccountModel>> {
         return new Promise<SearchResponse<AccountModel>>((resolve, reject) => {
-            axios.post<SearchResponse<AccountModel>>(rootUrl + "/api/v1/account/search", request)
+            axios.post<SearchResponse<AccountModel>>(rootUrl + "/api/v1/account/search", request, {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     resolve(result.data);
                 })
@@ -81,7 +121,9 @@ const Account = {
      */
     get: function (id: number): Promise<AccountModel | null> {
         return new Promise<AccountModel | null>((resolve, reject) => {
-            axios.get<AccountModel>(rootUrl + '/api/v1/account/' + Number(id))
+            axios.get<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     const data = result.data as AccountModel & { balanceString?: string };
                     if (data) {
@@ -107,7 +149,9 @@ const Account = {
      */
     update: function (id: number, updatedAccount: CreateAccount): Promise<AccountModel> {
         return new Promise<AccountModel>((resolve, reject) => {
-            axios.put<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), updatedAccount)
+            axios.put<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), updatedAccount, {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     resolve(result.data);
                 })
@@ -125,7 +169,9 @@ const Account = {
      */
     create: function (account: CreateAccount): Promise<AccountModel> {
         return new Promise<AccountModel>((resolve, reject) => {
-            axios.post<AccountModel>(rootUrl + "/api/v1/account", account)
+            axios.post<AccountModel>(rootUrl + "/api/v1/account", account, {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     resolve(result.data);
                 })
@@ -142,7 +188,9 @@ const Account = {
      */
      delete: function (id: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<void>(rootUrl + "/api/v1/account/" + id)
+            axios.delete<void>(rootUrl + "/api/v1/account/" + id, {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(() => resolve())
                 .catch(e => {
                     console.log(e);
@@ -166,6 +214,8 @@ const Account = {
                 to: to,
                 descending: descending,
                 query: query,
+            }, {
+                headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
                 ...result.data,
                 total: new Decimal((result.data as any).totalString).div(new Decimal(10000)),
@@ -193,7 +243,9 @@ const Account = {
      */
      countTransactions: function (id: number, query?: SearchGroup): Promise<number> {
         return new Promise<number>((resolve, reject) => {
-            axios.post<number>(rootUrl + "/api/v1/account/" + id + "/counttransactions", query).then(result => resolve(result.data))
+            axios.post<number>(rootUrl + "/api/v1/account/" + id + "/counttransactions", query, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve(result.data))
                 .catch(error => {
                     console.log(error);
                     reject(error);
@@ -209,7 +261,9 @@ const Account = {
      */
     getCategorySummary: function (accountId: number, query: SearchGroup): Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]> {
         return new Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]>((resolve, reject) => {
-            axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/api/v1/account/" + accountId + "/categorysummary", query)
+            axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/api/v1/account/" + accountId + "/categorysummary", query, {
+                headers: { authorization: "Bearer: " + token }
+            })
             .then(result => resolve(result.data.map(obj => ({
                 category: obj.category,
                 revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
@@ -236,6 +290,8 @@ const Account = {
                 from: from,
                 to: to,
                 resolution: resolution
+            }, {
+                headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
                 ...result.data,
                 initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
@@ -265,6 +321,8 @@ const Account = {
                 from: from,
                 to: to,
                 resolution: resolution
+            }, {
+                headers: { authorization: "Bearer: " + token }
             }).then(result => {
                 Object.keys(result.data.items).forEach(key => {
                     let accountId = Number(key);
@@ -279,14 +337,14 @@ const Account = {
                 });
                 resolve(result.data);
             }).catch(error => {
-                    console.log(error);
-                    reject(error);
-                });
+                console.log(error);
+                reject(error);
+            });
         });
     }
-}
+});
 
-const Transaction = {
+const Transaction = (token: string) => ({
     /**
      * Get a single transaction
      * @param id Transaction id
@@ -294,7 +352,9 @@ const Transaction = {
      */
      get: function (id: number): Promise<Transaction | null> {
         return new Promise<Transaction | null>((resolve, reject) => {
-            axios.get<Transaction>(rootUrl + '/api/v1/transaction/' + Number(id))
+            axios.get<Transaction>(rootUrl + '/api/v1/transaction/' + Number(id), {
+                    headers: { authorization: "Bearer: " + token }
+                })
                 .then(result => {
                     if (result.data) {
                         resolve(fixTransaction(result.data));
@@ -322,8 +382,9 @@ const Transaction = {
                 totalString: total.mul(new Decimal(10000)).round().toString(),
                 dateTime: DateTime.fromISO(transaction.dateTime as any as string),
                 lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
-            })
-                .then(result => resolve(fixTransaction(result.data)))
+            }, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -344,8 +405,9 @@ const Transaction = {
                     total: undefined,
                     totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
                     lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
-                }))
-            ).then(result => resolve({
+                })), {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({
                     succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as CreateTransaction),
                     failed: result.data.failed.map(t => fixTransaction(t) as any as CreateTransaction),
                     duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as CreateTransaction),
@@ -375,6 +437,8 @@ const Transaction = {
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
                 })) : undefined
+            }, {
+                headers: { authorization: "Bearer: " + token }
             }).then(result => resolve(fixTransaction(result.data)))
                 .catch(e => {
                     console.log(e);
@@ -403,6 +467,8 @@ const Transaction = {
                         amount: undefined
                     })) : undefined
                 }
+            }, {
+                headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
                     console.log(e);
@@ -417,8 +483,9 @@ const Transaction = {
      */
     delete: function (id: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<void>(rootUrl + "/api/v1/transaction/" + id)
-                .then(() => resolve())
+            axios.delete<void>(rootUrl + "/api/v1/transaction/" + id, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(() => resolve())
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -432,8 +499,10 @@ const Transaction = {
      */
      deleteMultiple: function (query: SearchGroup): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            axios.delete<Transaction>(rootUrl + "/api/v1/transaction/deleteMultiple", { data: query })
-                .then(result => resolve())
+            axios.delete<Transaction>(rootUrl + "/api/v1/transaction/deleteMultiple", {
+                data: query,
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve())
                 .catch(e => {
                     console.log(e);
                     reject();
@@ -448,8 +517,9 @@ const Transaction = {
      */
     findDuplicates: function (identifiers: string[]): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            axios.post(rootUrl + "/api/v1/transaction/findduplicates", identifiers)
-                .then(result => resolve(result.data))
+            axios.post(rootUrl + "/api/v1/transaction/findduplicates", identifiers, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve(result.data))
                 .catch(error => {
                     console.log(error);
                     reject(error);
@@ -463,8 +533,9 @@ const Transaction = {
             if (query.query) {
                 query.query = fixQuery(query.query);
             }
-            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/api/v1/transaction/search", fixedQuery)
-                .then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
+            axios.post<SearchResponse<TransactionModel>>(rootUrl + "/api/v1/transaction/search", fixedQuery, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
                 .catch(error => {
                     console.log(error);
                     reject();
@@ -497,7 +568,7 @@ const Transaction = {
             }
         }
     }
-};
+});
 
 /**
  * Converts fields from RAW json into complex javascript types
@@ -517,7 +588,7 @@ function fixTransaction(transaction: Transaction | CreateTransaction): Transacti
     };
 }
 
-const Taxonomy = {
+const Taxonomy = (token: string) => ({
     /**
      * Search for accounts
      * @param request Search request specifying which accounts to return
@@ -525,8 +596,9 @@ const Taxonomy = {
      */
     categoryAutocomplete: function (prefix: string): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            axios.get<string[]>(rootUrl + "/api/v1/taxonomy/categoryautocomplete/" + prefix)
-                .then(result => {
+            axios.get<string[]>(rootUrl + "/api/v1/taxonomy/categoryautocomplete/" + prefix, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
                     resolve(result.data);
                 })
                 .catch(e => {
@@ -535,13 +607,25 @@ const Taxonomy = {
                 });
         });
     }
+});
+
+const ApiClient = (token: string) => ({
+    User: User(token),
+    Account: Account(token),
+    Transaction: Transaction(token),
+    Taxonomy: Taxonomy(token),
+});
+export default ApiClient;
+
+export function useApi() {
+    const { user } = useContext(userContext);
+    return React.useMemo(() => {
+        if (user === "fetching") {
+            return null;
+        } else {
+            return ApiClient(user.token);
+        }
+    }, [user === "fetching" ? "fetching" : user.token]);
 }
 
-const Api = {
-    Preferences,
-    Account,
-    Transaction,
-    Taxonomy,
-};
-
-export { Api };
+export type Api = ReturnType<typeof ApiClient>;

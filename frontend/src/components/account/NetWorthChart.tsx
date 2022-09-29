@@ -1,9 +1,9 @@
 import * as React from "react";
 import { Account, GetMovementAllResponse, GetMovementResponse, TimeResolution } from "../../models/account";
-import { Api } from "../../lib/ApiClient";
+import { Api, useApi } from "../../lib/ApiClient";
 import { DateTime, Duration, DurationLike } from "luxon";
 import { Preferences } from "../../models/preferences";
-import Utils, { formatDateWithPrefs, formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import Utils, { formatDateWithUser, formatNumber, formatNumberWithUser } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Period, PeriodFunctions } from "../../models/period";
 import 'chartjs-adapter-luxon';
@@ -21,7 +21,7 @@ import {
     BarController,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 import Card from "../common/Card";
 import AccountLink from "./AccountLink";
   
@@ -50,10 +50,13 @@ export default function (props: Props) {
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
 
     const colors = ["#7eb0d5", "#fd7f6f", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"];
+    const api = useApi();
 
     React.useEffect(() => {
-        updateData(props.period, setDisplayingPeriod, resolution, setMovements);
-    }, [props.period, resolution])
+        if (api !== null) {
+            updateData(api, props.period, setDisplayingPeriod, resolution, setMovements);
+        }
+    }, [api, props.period, resolution])
 
     if (movements === "fetching") {
         return <div className="columns m-0 is-multiline">
@@ -71,7 +74,9 @@ export default function (props: Props) {
     }
 
     let [start, end] = PeriodFunctions.getRange(displayingPeriod);
-    let timepoints = Object.keys(movements.items).flatMap(key => movements.items[Number(key)].items.map(item => item.dateTime));
+    let timepoints = Object.keys(movements.items)
+        .flatMap(key => movements.items[Number(key)].items.map(item => item.dateTime))
+        .sort((a, b) => a.diff(b).valueOf());
     if (timepoints.length === 0 || timepoints[0].diff(start, "days").days > 1) {
         timepoints = [start, ...timepoints];
     }
@@ -201,7 +206,7 @@ export default function (props: Props) {
     </div>;
 }
 
-function updateData(period: Period, setDisplayingPeriod: (period: Period) => void,
+function updateData(api: Api, period: Period, setDisplayingPeriod: (period: Period) => void,
     resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementAllResponse>) {
     let resolution: TimeResolution;
     let [start, end] = PeriodFunctions.getRange(period);
@@ -220,7 +225,7 @@ function updateData(period: Period, setDisplayingPeriod: (period: Period) => voi
             break;
     }
 
-    Api.Account.getMovementsAll(start, end, resolution)
+    api.Account.getMovementsAll(start, end, resolution)
         .then(result => {
             setDisplayingPeriod(period);
             setData(result);
@@ -232,28 +237,29 @@ interface NetWorthTableProps {
     accountBalances: { account: Account, balance: number, revenue: number, expenses: number }[];
 }
 function NetWorthTable(props: NetWorthTableProps) {
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
+    
     return <Card isNarrow={true} title="Net worth">
         <table className="table">
             <thead>
                 <tr>
                     <th>Account</th>
                     <th>Balance</th>
-                    <th>Change since <br /> {formatDateWithPrefs(props.period.start, preferences)}</th>
+                    <th>Change since <br /> {formatDateWithUser(props.period.start, user)}</th>
                 </tr>
             </thead>
             <tbody>
                 {props.accountBalances.map(obj => <tr key={obj.account.id}>
                     <td><AccountLink account={obj.account} /></td>
-                    <td>{formatNumberWithPrefs(new Decimal(obj.balance), preferences)}</td>
-                    <td>{formatNumberWithPrefs(new Decimal(obj.revenue - obj.expenses), preferences)}</td>
+                    <td>{formatNumberWithUser(new Decimal(obj.balance), user)}</td>
+                    <td>{formatNumberWithUser(new Decimal(obj.revenue - obj.expenses), user)}</td>
                 </tr>)}
             </tbody>
             <tfoot>
                 <tr>
                     <th>Net worth</th>
-                    <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.balance + sum, 0)), preferences)}</th>
-                    <th>{formatNumberWithPrefs(new Decimal(props.accountBalances.reduce((sum, item) => item.revenue - item.expenses + sum, 0)), preferences)}</th>
+                    <th>{formatNumberWithUser(new Decimal(props.accountBalances.reduce((sum, item) => item.balance + sum, 0)), user)}</th>
+                    <th>{formatNumberWithUser(new Decimal(props.accountBalances.reduce((sum, item) => item.revenue - item.expenses + sum, 0)), user)}</th>
                 </tr>
             </tfoot>
         </table>

@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { DateTime } from "luxon";
 import { Calendar } from "react-date-range";
-import { formatDateTimeWithPrefs, formatDateWithPrefs } from "../../lib/Utils";
-import { preferencesContext } from "../App";
+import { formatDateTimeWithUser, formatDateWithUser } from "../../lib/Utils";
+import { userContext } from "../App";
 import InputNumber from "./InputNumber";
 import Decimal from "decimal.js";
 
@@ -19,13 +19,13 @@ export interface Props {
 
 export default function InputDateTime (props: Props) {
     const [open, setOpen] = React.useState(false);
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
 
     var value: string;
     if (props.value == null) {
         value = "Select date";
     } else {
-        value = formatDateTimeWithPrefs(props.value, preferences);
+        value = formatDateTimeWithUser(props.value, user);
     }
     
     return <div className="field input-datetime">

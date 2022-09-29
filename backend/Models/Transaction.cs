@@ -14,8 +14,7 @@ namespace assetgrid_backend.Models
         public string? Identifier { get; set; }
         public string Description { get; set; } = null!;
         public long Total { get; set; }
-        public int? CategoryId { get; set; }
-        public virtual Category? Category { get; set; } = null!;
+        public string Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
 
@@ -45,7 +44,7 @@ namespace assetgrid_backend.Models
 
     public static class TransactionQueryableExtensions
     {
-        public static IQueryable<ViewTransaction> SelectView(this IQueryable<Transaction> query)
+        public static IQueryable<ViewTransaction> SelectView(this IQueryable<Transaction> query, int userId)
         {
             return query.Select(transaction => new ViewTransaction
             {
@@ -53,30 +52,33 @@ namespace assetgrid_backend.Models
                 DateTime = transaction.DateTime,
                 Description = transaction.Description,
                 Source = transaction.SourceAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.SourceAccount.Id,
-                            Description = transaction.SourceAccount.Description,
-                            Name = transaction.SourceAccount.Name,
-                            AccountNumber = transaction.SourceAccount.AccountNumber
-                        } : null,
+                        ? transaction.SourceAccount.Users!.SingleOrDefault(user => user.UserId == userId) == null ? ViewAccount.GetNoReadAccess(transaction.SourceAccount.Id) : new ViewAccount(
+                            transaction.SourceAccount.Id,
+                            transaction.SourceAccount.Name,
+                            transaction.SourceAccount.Description,
+                            transaction.SourceAccount.AccountNumber,
+                            transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Favorite,
+                            transaction.SourceAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
+                            ViewAccount.PermissionsFromDbPermissions(transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Permissions),
+                            0
+                        ) : null,
                 Destination = transaction.DestinationAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = transaction.DestinationAccount.Id,
-                            Description = transaction.DestinationAccount.Description,
-                            Name = transaction.DestinationAccount.Name,
-                            AccountNumber = transaction.DestinationAccount.AccountNumber
-                        } : null,
+                        ? transaction.DestinationAccount.Users!.SingleOrDefault(user => user.UserId == userId) == null ? ViewAccount.GetNoReadAccess(transaction.DestinationAccount.Id) : new ViewAccount(
+                            transaction.DestinationAccount.Id,
+                            transaction.DestinationAccount.Name,
+                            transaction.DestinationAccount.Description,
+                            transaction.DestinationAccount.AccountNumber,
+                            transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Favorite,
+                            transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
+                            ViewAccount.PermissionsFromDbPermissions(transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Permissions),
+                            0
+                        ) : null,
                 Identifier = transaction.Identifier,
-                Category = transaction.Category == null ? "" : transaction.Category.Name,
+                Category = transaction.Category,
                 Lines = transaction.TransactionLines
                     .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine
-                    {
-                        Amount = line.Amount,
-                        Description = line.Description,
-                    }).ToList(),
+                    .Select(line => new ViewTransactionLine(line.Amount, line.Description))
+                    .ToList(),
                 Total = transaction.Total
             });
         }

@@ -59,9 +59,9 @@ function TransactionList(props: Props) {
         />
     </>;
     
-    function fetchItems(from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
+    function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
         return new Promise(resolve => {
-            Api.Transaction.search({
+            api.Transaction.search({
                 from: from,
                 to: to,
                 query: props.query,

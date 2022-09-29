@@ -3,12 +3,12 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
-import { formatNumberWithPrefs } from "../../../lib/Utils";
+import { formatNumberWithUser } from "../../../lib/Utils";
 import { CreateTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
@@ -37,6 +37,7 @@ export default function () {
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
+    const api = useApi();
 
     return <>
         <Hero title="Create new transaction" />
@@ -135,8 +136,8 @@ export default function () {
 
             <Card title="Actions" isNarrow={true}>
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={() => create("stay")}>Create and stay</InputButton>
-                    <InputButton className="is-primary" onClick={() => create("view")}>Create and view transaction</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={() => create("stay")}>Create and stay</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={() => create("view")}>Create and view transaction</InputButton>
                     {allowBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>
@@ -178,9 +179,11 @@ export default function () {
     }
 
     async function create(action: "stay" | "view") {
+        if (api === null) return;
+
         setCreating(true);
         setCreatedTransaction(null);
-        const result = await Api.Transaction.create(model);
+        const result = await api.Transaction.create(model);
         if (action === "stay") {
             setModel(defaultModel);
             setCreating(false);

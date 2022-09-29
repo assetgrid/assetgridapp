@@ -1,7 +1,7 @@
 import * as React from "react";
-import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../../../lib/Utils";
+import { formatDateTimeWithUser, formatNumberWithUser } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
-import { preferencesContext } from "../../../App";
+import { userContext } from "../../../App";
 import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
 import { AccountReference, CsvCreateTransaction } from "../importModels";
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function CsvMappingTransactionTable(props: Props): React.ReactElement {
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
     const [page, setPage] = React.useState(1);
 
     if (props.transactions === null) {
@@ -91,12 +91,12 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
                 }</td>
                 <td>
                     <Tooltip content={<>Parsed from: "{transaction.dateText}"</>}>
-                        {formatDateTimeWithPrefs(transaction.dateTime, preferences)}
+                        {formatDateTimeWithUser(transaction.dateTime, user)}
                     </Tooltip>
                 </td>
                 <td>{transaction.description}</td>
                 <td style={{ textAlign: "right" }}>
-                    {transaction.amount === "invalid" ? "invalid amount" : formatNumberWithPrefs(transaction.amount, preferences)}
+                    {transaction.amount === "invalid" ? "invalid amount" : formatNumberWithUser(transaction.amount, user)}
                 </td>
                 <td>
                     <TableAccount reference={transaction.source} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />

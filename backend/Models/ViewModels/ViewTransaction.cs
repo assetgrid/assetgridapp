@@ -91,6 +91,12 @@ namespace assetgrid_backend.Models.ViewModels
         public long Amount { get; set; }
         public string AmountString { get => Amount.ToString(); set => Amount = long.Parse(value); }
         public string Description { get; set; } = null!;
+
+        public ViewTransactionLine(long amount, string description)
+        {
+            Amount = amount;
+            Description = description;
+        }
     }
 
     public class ViewTransactionList : ViewSearchResponse<ViewTransaction>

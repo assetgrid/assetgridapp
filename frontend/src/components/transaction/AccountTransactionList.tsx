@@ -6,7 +6,7 @@ import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import TransactionTableLine from "./TransactionTableLine";
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
@@ -48,7 +48,7 @@ export default function AccountTransactionList(props: Props) {
         render={renderTable}
     />;
 
-    function fetchItems(from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
+    function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
         let [start, end] = PeriodFunctions.getRange(props.period);
         let query: SearchGroup = {
             type: SearchGroupType.And,
@@ -71,7 +71,7 @@ export default function AccountTransactionList(props: Props) {
             }]
         };
         return new Promise(resolve => {
-            Api.Account.listTransactions(props.accountId, from, to, descending, query).then(result => {
+            api.Account.listTransactions(props.accountId, from, to, descending, query).then(result => {
                 const transactions: Transaction[] = result.data;
                 let balances: Decimal[] = [];
                 if (descending) {

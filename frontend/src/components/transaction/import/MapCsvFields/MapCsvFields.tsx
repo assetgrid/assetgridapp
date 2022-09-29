@@ -25,6 +25,7 @@ interface Props {
     accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
     options: MappingOptions;
+    apiReady: boolean;
     onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
     goToNext: () => void;
     goToPrevious: () => void;
@@ -77,8 +78,10 @@ export default function MapCsvFields(props: Props) {
     // Update transactions whenever the raw data changes
     React.useEffect(() => {
         const newTransactions = parseTransactions(props.data, props.options);
-        props.onChange(newTransactions, props.options);
-    }, [props.data]);
+        if (props.apiReady) {
+            props.onChange(newTransactions, props.options);
+        }
+    }, [props.apiReady, props.data]);
 
     // Redraw the table whenever the parsed transactions change
     React.useEffect(() => {
@@ -99,6 +102,7 @@ export default function MapCsvFields(props: Props) {
                     <InputSelect label="Duplicate handling"
                         isFullwidth={true}
                         value={props.options.duplicateHandling}
+                        disabled={! props.apiReady}
                         onChange={result => updateDuplicateHandling(result as DuplicateHandlingOptions, props.options.identifierColumn, props.options.identifierParseOptions)}
                         items={[
                             { key: "identifier", value: "Colum" },
@@ -113,6 +117,7 @@ export default function MapCsvFields(props: Props) {
                             isFullwidth={true}
                             value={props.options.identifierColumn}
                             placeholder={"Select column"}
+                            disabled={! props.apiReady}
                             onChange={result => updateDuplicateHandling(props.options.duplicateHandling, result, props.options.identifierParseOptions)}
                             items={Object.keys(props.data[0]).map(item => {
                                 return {
@@ -122,15 +127,17 @@ export default function MapCsvFields(props: Props) {
                             })}
                             addOnAfter={
                                 props.options.identifierColumn ? <div className="control">
-                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
+                                    <button className="button is-primary"
+                                        disabled={! props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.identifierParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.identifierColumn))}
                                             onChange={options => updateDuplicateHandling(props.options.duplicateHandling, props.options.identifierColumn, options)}
                                             close={() => setModal(null)}
-                                            closeOnChange={true}
-                                        />)}>
+                                            closeOnChange={true} />
+                                        )}>
                                         Parse Options
-                                    </a>
+                                    </button>
                                 </div> : undefined
                             } />
                     }
@@ -156,6 +163,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.dateColumn}
                         placeholder={"Select column"}
+                        disabled={! props.apiReady}
                         onChange={result => updateDateMapping(result, props.options.dateFormat, props.options.dateParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
@@ -165,22 +173,24 @@ export default function MapCsvFields(props: Props) {
                         })}
                         addOnAfter={
                             props.options.dateColumn ? <div className="control">
-                                <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
-                                            value={props.options.dateParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.dateColumn))}
-                                            onChange={regex => updateDateMapping(props.options.dateColumn, props.options.dateFormat, regex)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true}
-                                        />
+                                <button className="button is-primary"
+                                    disabled={! props.apiReady}
+                                    onClick={() => setModal(<InputParseOptionsModal
+                                        value={props.options.dateParseOptions}
+                                        previewData={props.data.map(row => getValue(row, props.options.dateColumn))}
+                                        onChange={regex => updateDateMapping(props.options.dateColumn, props.options.dateFormat, regex)}
+                                        close={() => setModal(null)}
+                                        closeOnChange={true} />
                                     )}>
                                     Parse Options
-                                </a>
+                                </button>
                             </div> : undefined
                         } />
                 </div>
                 {props.options.dateColumn !== null && <div className="column">
                     <InputText label="Timestamp format"
                         value={props.options.dateFormat}
+                        disabled={! props.apiReady}
                         onChange={e => updateDateMapping(props.options.dateColumn, e.target.value, props.options.dateParseOptions)}
                     />
                     <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
@@ -193,6 +203,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.sourceAccountIdentifier}
                         placeholder={"Select variable"}
+                        disabled={! props.apiReady}
                         onChange={result => updateAccountMapping("source",
                             result as AccountIdentifier,
                             props.options.sourceAccountColumn,
@@ -210,7 +221,7 @@ export default function MapCsvFields(props: Props) {
                         ? <InputAccount label="Source account"
                             allowNull={true}
                             allowCreateNewAccount={true}
-                            disabled={false}
+                            disabled={! props.apiReady}
                             nullSelectedText={"No account"}
                             value={props.options.sourceAccount}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountIdentifier, null, result, props.options.sourceAccountParseOptions)}/>
@@ -218,6 +229,7 @@ export default function MapCsvFields(props: Props) {
                             isFullwidth={true}
                             value={props.options.sourceAccountColumn}
                             placeholder={"Select column"}
+                            disabled={! props.apiReady}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountIdentifier, result, null, props.options.sourceAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No source account" },
@@ -228,15 +240,17 @@ export default function MapCsvFields(props: Props) {
                             ]}
                             addOnAfter={
                                 props.options.sourceAccountColumn ? <div className="control">
-                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
+                                    <button className="button is-primary"
+                                        disabled={! props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
                                         value={props.options.sourceAccountParseOptions}
-                                        previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
-                                        onChange={options => updateAccountMapping("source", props.options.sourceAccountIdentifier, props.options.sourceAccountColumn, null, options)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true}
-                                    />)}>
+                                            previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
+                                            onChange={options => updateAccountMapping("source", props.options.sourceAccountIdentifier, props.options.sourceAccountColumn, null, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                        )}>
                                         Parse Options
-                                    </a>
+                                    </button>
                                 </div> : undefined
                             } /> }
                 </div>
@@ -248,6 +262,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.destinationAccountIdentifier}
                         placeholder={"Select variable"}
+                        disabled={! props.apiReady}
                         onChange={result => updateAccountMapping("destination",
                             result as AccountIdentifier,
                             props.options.destinationAccountColumn,
@@ -265,7 +280,7 @@ export default function MapCsvFields(props: Props) {
                         ? <InputAccount label="Destination account"
                             allowNull={true}
                             allowCreateNewAccount={true}
-                            disabled={false}
+                            disabled={! props.apiReady}
                             nullSelectedText={"No account"}
                             value={props.options.destinationAccount}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountIdentifier, null, result, props.options.destinationAccountParseOptions)} />
@@ -273,6 +288,7 @@ export default function MapCsvFields(props: Props) {
                             isFullwidth={true}
                             value={props.options.destinationAccountColumn}
                             placeholder={"Select column"}
+                            disabled={! props.apiReady}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountIdentifier, result, null, props.options.destinationAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No destination account" },
@@ -283,15 +299,17 @@ export default function MapCsvFields(props: Props) {
                             ]}
                             addOnAfter={
                                 props.options.destinationAccountColumn ? <div className="control">
-                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
-                                        value={props.options.destinationAccountParseOptions}
-                                        previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
-                                        onChange={options => updateAccountMapping("destination", props.options.destinationAccountIdentifier, props.options.destinationAccountColumn, null, options)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true}
-                                    />)}>
+                                    <button className="button is-primary"
+                                        disabled={! props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            value={props.options.destinationAccountParseOptions}
+                                            previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
+                                            onChange={options => updateAccountMapping("destination", props.options.destinationAccountIdentifier, props.options.destinationAccountColumn, null, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                    )}>
                                         Parse Options
-                                    </a>
+                                    </button>
                                 </div> : undefined
                             } />}
                 </div>
@@ -303,6 +321,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.amountColumn}
                         placeholder={"Select column"}
+                        disabled={! props.apiReady}
                         onChange={result => updateAmountMapping(result, props.options.decimalSeparator, props.options.amountParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
@@ -312,15 +331,17 @@ export default function MapCsvFields(props: Props) {
                         })}
                         addOnAfter={
                             props.options.amountColumn ? <div className="control">
-                                <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
-                                    previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
-                                    value={props.options.amountParseOptions}
-                                    onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
-                                    close={() => setModal(null)}
-                                    closeOnChange={true}
-                                />)}>
+                                <button className="button is-primary"
+                                    disabled={! props.apiReady}
+                                    onClick={() => setModal(<InputParseOptionsModal
+                                        previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
+                                        value={props.options.amountParseOptions}
+                                        onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
+                                        close={() => setModal(null)}
+                                        closeOnChange={true} />
+                                    )}>
                                     Parse Options
-                                </a>
+                                </button>
                             </div> : undefined
                         } />
                 </div>
@@ -328,6 +349,7 @@ export default function MapCsvFields(props: Props) {
                     {props.options.dateColumn !== null && 
                         <InputText label="Decimal separator"
                             value={props.options.decimalSeparator}
+                            disabled={! props.apiReady}
                             onChange={e => updateAmountMapping(props.options.amountColumn, e.target.value, props.options.amountParseOptions)}
                         />}
                 </div>
@@ -339,6 +361,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.descriptionColumn}
                         placeholder={"Select column"}
+                        disabled={! props.apiReady}
                         onChange={result => updateDescriptionMapping(result, props.options.descriptionParseOptions)}
                             items={[{ key: "___NULL___", value: "No description" },
                             ...Object.keys(props.data[0]).map(item => ({
@@ -348,15 +371,17 @@ export default function MapCsvFields(props: Props) {
                         ]}
                         addOnAfter={
                             props.options.descriptionColumn ? <div className="control">
-                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
-                                            value={props.options.descriptionParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
-                                            onChange={options => updateDescriptionMapping(props.options.descriptionColumn, options)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true}
-                                        /> )}>
+                                <button className="button is-primary"
+                                    disabled={! props.apiReady}
+                                    onClick={() => setModal(<InputParseOptionsModal
+                                        value={props.options.descriptionParseOptions}
+                                        previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
+                                        onChange={options => updateDescriptionMapping(props.options.descriptionColumn, options)}
+                                        close={() => setModal(null)}
+                                        closeOnChange={true} />
+                                    )}>
                                     Parse Options
-                                </a>
+                                </button>
                             </div> : undefined
                         } />
                 </div>
@@ -369,6 +394,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.categoryColumn}
                         placeholder={"Select column"}
+                        disabled={! props.apiReady}
                         onChange={result => updateCategoryMapping(result, props.options.categoryParseOptions)}
                         items={[
                             { key: "___NULL___", value: "No category" },
@@ -379,15 +405,17 @@ export default function MapCsvFields(props: Props) {
                         )]}
                         addOnAfter={
                             props.options.categoryColumn ? <div className="control">
-                                    <a className="button is-primary" onClick={() => setModal(<InputParseOptionsModal
-                                            value={props.options.descriptionParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.categoryColumn))}
-                                            onChange={options => updateCategoryMapping(props.options.categoryColumn, options)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true}
-                                        /> )}>
+                                <button className="button is-primary"
+                                    disabled={! props.apiReady}
+                                    onClick={() => setModal(<InputParseOptionsModal
+                                        value={props.options.descriptionParseOptions}
+                                        previewData={props.data.map(row => getValue(row, props.options.categoryColumn))}
+                                        onChange={options => updateCategoryMapping(props.options.categoryColumn, options)}
+                                        close={() => setModal(null)}
+                                        closeOnChange={true}
+                                    /> )}>
                                     Parse Options
-                                </a>
+                                </button>
                             </div> : undefined
                         } />
                 </div>

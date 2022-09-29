@@ -2,7 +2,7 @@ import axios from "axios";
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { Api } from "../../lib/ApiClient";
+import { Api, useApi } from "../../lib/ApiClient";
 import { debounce } from "../../lib/Utils";
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
 export default function InputCategory (props: Props) {
     const [open, setOpen] = React.useState(false);
     const [autocompleteSuggestions, setAutocompleteSuggestions] = React.useState<string[] | null>(null);
+    const api = useApi();
 
     React.useEffect(() => {
         if (props.value === "") {
@@ -24,7 +25,7 @@ export default function InputCategory (props: Props) {
         } else {
             refreshSuggestionsDebounced(props.value)
         }
-    }, [props.value]);
+    }, [api, props.value]);
     const refreshSuggestionsDebounced = React.useCallback(debounce(refreshSuggestions, 300), []);
 
     return <div className="field" tabIndex={0} onBlur={lostFocus}>
@@ -73,12 +74,11 @@ export default function InputCategory (props: Props) {
         }
     }
 
-    function refreshSuggestions(prefix: string)
-    {
-        if (prefix !== "") {
-            Api.Taxonomy.categoryAutocomplete(prefix).then(result => {
+    function refreshSuggestions(prefix: string) {
+        if (prefix !== "" && api !== null) {
+            api.Taxonomy.categoryAutocomplete(prefix).then(result => {
                 setAutocompleteSuggestions(result);
-            })
+            });
         }
     }
 }

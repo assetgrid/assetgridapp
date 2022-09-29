@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
@@ -15,13 +15,14 @@ interface Props {
 export default function ModifyAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.account);
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const api = useApi();
 
     return <Modal
         active={true}
         title={"Modify account"}
         close={() => props.close()}
         footer={<>
-            <InputButton className="is-success" onClick={() => update()} disabled={isUpdating}>Save changes</InputButton>
+            <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || api === null}>Save changes</InputButton>
             <InputButton onClick={() => props.close()}>Cancel</InputButton>
         </>}>
         <InputModifyAccount value={model} disabled={isUpdating} onChange={account => setModel({
@@ -35,8 +36,10 @@ export default function ModifyAccountModal(props: Props) {
     </Modal>;
 
     async function update() {
+        if (api === null) return;
+
         setIsUpdating(true);
-        const result = await Api.Account.update(props.account.id, model);
+        const result = await api.Account.update(props.account.id, model);
         setModel(result);
         setIsUpdating(false);
         if (props.updated !== undefined) {

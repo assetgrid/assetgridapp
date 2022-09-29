@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using assetgrid_backend.Data;
 
@@ -9,14 +10,15 @@ using assetgrid_backend.Data;
 
 namespace assetgrid_backend.Migrations
 {
-    [DbContext(typeof(HomebudgetContext))]
-    partial class HomebudgetContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AssetgridDbContext))]
+    [Migration("20220925171506_initial")]
+    partial class initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.4")
+                .HasAnnotation("ProductVersion", "6.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("assetgrid_backend.Models.Account", b =>
@@ -31,12 +33,6 @@ namespace assetgrid_backend.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<bool>("Favorite")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IncludeInNetWorth")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -139,6 +135,62 @@ namespace assetgrid_backend.Migrations
                     b.ToTable("TransactionLines");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.UserAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Favorite")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IncludeInNetWorth")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserAccounts");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.UserPreferences", b =>
                 {
                     b.Property<int>("Id")
@@ -162,7 +214,13 @@ namespace assetgrid_backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("UserPreferences");
                 });
@@ -199,9 +257,52 @@ namespace assetgrid_backend.Migrations
                     b.Navigation("Transaction");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.Models.UserAccount", b =>
+                {
+                    b.HasOne("assetgrid_backend.Models.Account", "Account")
+                        .WithMany("Users")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany("Accounts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.UserPreferences", b =>
+                {
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithOne("Preferences")
+                        .HasForeignKey("assetgrid_backend.Models.UserPreferences", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.Account", b =>
+                {
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
                     b.Navigation("TransactionLines");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.User", b =>
+                {
+                    b.Navigation("Accounts");
+
+                    b.Navigation("Preferences")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

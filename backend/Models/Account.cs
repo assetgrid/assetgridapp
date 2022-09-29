@@ -8,23 +8,6 @@ namespace assetgrid_backend.Models
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string? AccountNumber { get; set; }
-        public bool Favorite { get; set; }
-        public bool IncludeInNetWorth { get; set; }
-    }
-
-    public static class AccountQueryableExtensions
-    {
-        public static IQueryable<ViewAccount> SelectView(this IQueryable<Account> query)
-        {
-            return query.Select(account => new ViewAccount
-            {
-                Id = account.Id,
-                Name = account.Name,
-                AccountNumber = account.AccountNumber,
-                Description = account.Description,
-                Favorite = account.Favorite,
-                IncludeInNetWorth = account.IncludeInNetWorth,
-            });
-        }
+        public virtual List<UserAccount>? Users { get; set; }
     }
 }

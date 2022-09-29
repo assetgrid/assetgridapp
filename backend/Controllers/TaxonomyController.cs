@@ -1,28 +1,36 @@
 ﻿using assetgrid_backend.Data;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.Helpers;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using assetgrid_backend.Services;
 
 namespace assetgrid_backend.Controllers
 {
     [ApiController]
-    [EnableCors("AllowAll")]
+    [Authorize]
     public class TaxonomyController : Controller
     {
-        private readonly HomebudgetContext _context;
-        public TaxonomyController(HomebudgetContext context)
+        private readonly AssetgridDbContext _context;
+        private readonly IUserService _user;
+        public TaxonomyController(AssetgridDbContext context, IUserService userService)
         {
             _context = context;
+            _user = userService;
         }
 
         [HttpGet]
         [Route("/api/v1/[controller]/[action]/{prefix}")]
         public string[] CategoryAutocomplete(string prefix)
         {
-            return _context.Categories
-                .Where(category => category.NormalizedName.Contains(Category.Normalize(prefix)))
-                .Select(category => category.Name)
+            var user = _user.GetCurrent(HttpContext)!;
+            var normalizedPrefix = prefix.ToLower();
+            return _context.Transactions
+                .Where(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
+                .Where(transaction => transaction.Category.ToLower().Contains(normalizedPrefix))
+                .Select(transaction => transaction.Category)
+                .Distinct()
                 .ToArray();
         }
     }

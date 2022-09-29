@@ -3,11 +3,11 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Api } from "../../lib/ApiClient";
+import { Api, useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { formatDateTimeWithPrefs, formatDateWithPrefs, formatNumber, formatNumberWithPrefs } from "../../lib/Utils";
+import { formatDateTimeWithPreferences, formatDateTimeWithUser, formatDateWithPreferences, formatDateWithUser, formatNumber, formatNumberWithPreferences, formatNumberWithUser } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
 import InputButton from "../input/InputButton";
@@ -16,16 +16,17 @@ import InputText from "../input/InputText";
 import InputTextOrNull from "../input/InputTextOrNull";
 
 export default function PagePreferences(): React.ReactElement {
-    const { preferences, updatePreferences } = React.useContext(preferencesContext);
-    const [model, setModel] = React.useState<Preferences | "fetching">(preferences);
+    const { user, updatePreferences } = React.useContext(userContext);
+    const [model, setModel] = React.useState<Preferences | "fetching">(user === "fetching" ? "fetching" : user.preferences);
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const api = useApi();
 
     React.useEffect(() => {
         // Whenever global preferences change, update this component to match
-        if (preferences !== "fetching") {
-            setModel(preferences);
+        if (user !== "fetching") {
+            setModel(user.preferences);
         }
-    }, [preferences]);
+    }, [user === "fetching" ? "fetching" : user.preferences]);
     const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), [])
 
     return <>
@@ -77,7 +78,7 @@ export default function PagePreferences(): React.ReactElement {
             </div>
                 
             <p className="pb-3 pt-1">Example: {
-                formatNumberWithPrefs(new Decimal("123456789.123456789"), model)}
+                formatNumberWithPreferences(new Decimal("123456789.123456789"), model)}
             </p>
                 
             <div className="columns pt-3">
@@ -90,7 +91,7 @@ export default function PagePreferences(): React.ReactElement {
                             ...model,
                             dateFormat: value
                         }))} />
-                    <p>Example: {formatDateWithPrefs(exampleDateTime, model)}</p>
+                    <p>Example: {formatDateWithPreferences(exampleDateTime, model)}</p>
                 </div>
                 <div className="column">
                     <InputTextOrNull value={model.dateTimeFormat}
@@ -101,14 +102,14 @@ export default function PagePreferences(): React.ReactElement {
                             ...model,
                             dateTimeFormat: value
                         }))} />
-                    <p>Example: {formatDateTimeWithPrefs(exampleDateTime, model)}</p>
+                    <p>Example: {formatDateTimeWithPreferences(exampleDateTime, model)}</p>
                 </div>
             </div>
             <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank">More information on date formats</a>
 
             <div className="buttons mt-5">
                 <InputButton
-                    disabled={isUpdating}
+                    disabled={isUpdating || api === null}
                     className="is-primary"
                     onClick={saveChanges}>
                     Save changes
@@ -118,21 +119,15 @@ export default function PagePreferences(): React.ReactElement {
     }
     
     function saveChanges() {
-        if (isUpdating || model === "fetching") {
+        if (isUpdating || model === "fetching" || api === null) {
             return;
         }
 
         setIsUpdating(true);
-        Api.Preferences.update(model)
+        api.User.updatePreferences(model)
             .then(result => {
                 setIsUpdating(false);
-
-                if (preferences === "fetching") {
-                    updatePreferences(null);
-                } else {
-                    const { favoriteAccounts, ...updatedPreferences } = result;
-                    updatePreferences({ ...preferences, ...updatedPreferences });
-                }
+                updatePreferences(result);
             })
             .catch(e => {
                 console.log(e);

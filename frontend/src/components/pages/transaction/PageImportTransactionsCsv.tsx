@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as React from "react";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { Account } from "../../../models/account";
 import { Preferences } from "../../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../../models/search";
@@ -79,6 +79,8 @@ export default function PageImportTransactionsCsv () {
         descriptionColumn: "Tekst",
         descriptionParseOptions: defaultParseOptions,
     }); */
+
+    const api = useApi();
     
     return <>
         <Hero title="Import" subtitle="From CSV file" />
@@ -125,6 +127,7 @@ export default function PageImportTransactionsCsv () {
                         onChange={(transactions, options) => mappingsChanged(transactions, options)}
                         goToPrevious={() => setCurrentTab("parse-csv")}
                         goToNext={() => setCurrentTab("process")}
+                        apiReady={api !== null}
                     />;
             case "process":
                 if (Object.keys(accountsBy).some(identifier =>
@@ -146,6 +149,9 @@ export default function PageImportTransactionsCsv () {
     }
 
     function mappingsChanged(newTransactions: CsvCreateTransaction[], options: MappingOptions): void {
+        // The CSV mapping window is disabled until the API is loaded to prevent the mappings from changing and triggering an API call
+        if (api === null) return;
+
         // Update duplicates
         if ((transactions === null && newTransactions !== null)
             || newTransactions.length !== transactions?.length
@@ -160,7 +166,7 @@ export default function PageImportTransactionsCsv () {
             }
             setDuplicateIdentifiers("fetching");
 
-            Api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1))
+            api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1))
                 .then(result => setDuplicateIdentifiers(new Set([
                     ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
                     ...result
@@ -228,7 +234,7 @@ export default function PageImportTransactionsCsv () {
             .map(account => account.identifier)
             .filter((a, index, array) => array.findIndex(b => a == b) == index);
         
-        Api.Account.search({
+        api.Account.search({
             from: 0,
             to: uniqueAccountReferences.length,
             query: {

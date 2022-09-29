@@ -1,33 +1,36 @@
 using assetgrid_backend.Data;
+using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
-using Microsoft.AspNetCore.Cors;
+using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace assetgrid_backend.Controllers
 {
     [ApiController]
-    [EnableCors("AllowAll")]
-    [Route("/api/v1[controller]")]
+    [Authorize]
+    [Route("/api/v1/[controller]")]
     public class TransactionController : ControllerBase
     {
-        private readonly ILogger<TransactionController> _logger;
-        private readonly HomebudgetContext _context;
+        private readonly AssetgridDbContext _context;
+        private readonly IUserService _user;
 
-        public TransactionController(ILogger<TransactionController> logger, HomebudgetContext context)
+        public TransactionController(AssetgridDbContext context, IUserService userService)
         {
-            _logger = logger;
             _context = context;
+            _user = userService;
         }
 
         [HttpGet()]
         [Route("/api/v1/[controller]/{id}")]
         public ViewTransaction? Get(int id)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             var result = _context.Transactions
-                .SelectView()
+                .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
+                    (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
+                .SelectView(user.Id)
                 .SingleOrDefault(transaction => transaction.Id == id);
 
             if (result == null) return null;
@@ -38,6 +41,7 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         public ViewTransaction Create(ViewCreateTransaction model)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             if (string.IsNullOrWhiteSpace(model.Identifier))
             {
                 model.Identifier = null;
@@ -45,33 +49,44 @@ namespace assetgrid_backend.Controllers
 
             if (ModelState.IsValid)
             {
+                if (model.Identifier != null)
+                {
+                    var otherTransactionsWithSameIdentifier = _context.Transactions
+                        .Where(t => t.Identifier == model.Identifier.Trim())
+                        .Any(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id));
+                    if (otherTransactionsWithSameIdentifier)
+                    {
+                        throw new Exception("Duplicate transaction");
+                    }
+                }
+
                 using (var transaction = _context.Database.BeginTransaction())
                 {
-                    // Set category
-                    Category? category = null;
-                    if (Category.Normalize(model.Category) != "")
+                    // Make sure that the user has permission to create transactions on both accounts referenced by this transaction
+                    UserAccountPermissions[] writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
+                    var userAccountSource = model.SourceId == null ? null : _context.UserAccounts
+                        .Where(account => account.UserId == user.Id && account.AccountId == model.SourceId)
+                        .SingleOrDefault();
+                    var userAccountDestination = model.DestinationId == null ? null : _context.UserAccounts
+                        .Where(account => account.UserId == user.Id && account.AccountId == model.DestinationId)
+                        .SingleOrDefault();
+                    if ((model.SourceId != null && (userAccountSource == null || ! writePermissions.Contains(userAccountSource.Permissions))) ||
+                        (model.DestinationId != null && (userAccountDestination == null || ! writePermissions.Contains(userAccountDestination.Permissions))))
                     {
-                        category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
-                        if (category == null)
-                        {
-                            category = new Category
-                            {
-                                Name = model.Category,
-                                NormalizedName = Category.Normalize(model.Category),
-                            };
-                        }
+                        throw new Exception("Not authorized to perform this action");
                     }
 
-                    var result = new Models.Transaction
+
+                    var result = new Transaction
                     {
                         DateTime = model.DateTime,
                         SourceAccountId = model.SourceId,
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
-                        Identifier = model.Identifier,
+                        Identifier = model.Identifier?.Trim(),
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
-                        Category = category,
-                        TransactionLines = model.Lines.Select((line, i) => new Models.TransactionLine
+                        Category = string.IsNullOrWhiteSpace(model.Category) ? "" : model.Category,
+                        TransactionLines = model.Lines.Select((line, i) => new TransactionLine
                         {
                             Amount = line.Amount,
                             Description = line.Description,
@@ -83,9 +98,17 @@ namespace assetgrid_backend.Controllers
                     if (result.Total < 0)
                     {
                         result.Total = -result.Total;
+
+                        // Swap accounts
                         var sourceId = result.SourceAccountId;
                         result.SourceAccountId = result.DestinationAccountId;
                         result.DestinationAccountId = sourceId;
+
+                        // Also swap UserAccounts
+                        var temp = userAccountDestination;
+                        userAccountDestination = userAccountSource;
+                        userAccountSource = temp;
+
                         result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                     }
 
@@ -97,47 +120,74 @@ namespace assetgrid_backend.Controllers
                         Identifier = result.Identifier,
                         DateTime = result.DateTime,
                         Description = result.Description,
-                        Category = result.Category?.Name ?? "",
+                        Category = result.Category,
+                        Total = result.Total,
                         Source = result.SourceAccount != null
-                            ? new ViewAccount
-                            {
-                                Id = result.SourceAccount.Id,
-                                Name = result.SourceAccount.Name,
-                                Description = result.SourceAccount.Description,
-                            } : null,
+                            ? userAccountSource == null ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
+                                id: result.SourceAccount.Id,
+                                name: result.SourceAccount.Name,
+                                description: result.SourceAccount.Description,
+                                accountNumber: result.SourceAccount.AccountNumber,
+                                favorite: userAccountSource!.Favorite,
+                                includeInNetWorth: userAccountSource!.IncludeInNetWorth,
+                                permissions: ViewAccount.PermissionsFromDbPermissions(userAccountSource!.Permissions),
+                                balance: 0
+                            ) : null,
                         Destination = result.DestinationAccount != null
-                            ? new ViewAccount
-                            {
-                                Id = result.DestinationAccount.Id,
-                                Name = result.DestinationAccount.Name,
-                                Description = result.DestinationAccount.Description,
-                            } : null,
+                             ? userAccountDestination == null ? ViewAccount.GetNoReadAccess(result.DestinationAccount.Id) : new ViewAccount(
+                                id: result.DestinationAccount.Id,
+                                name: result.DestinationAccount.Name,
+                                description: result.DestinationAccount.Description,
+                                accountNumber: result.DestinationAccount.AccountNumber,
+                                favorite: userAccountDestination!.Favorite,
+                                includeInNetWorth: userAccountDestination!.IncludeInNetWorth,
+                                permissions: ViewAccount.PermissionsFromDbPermissions(userAccountDestination!.Permissions),
+                                balance: 0
+                            ) : null,
                         Lines = result.TransactionLines
                             .OrderBy(line => line.Order)
-                            .Select(line => new ViewTransactionLine
-                            {
-                                Amount = line.Amount,
-                            }).ToList(),
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                            .ToList(),
                     };
                 }
             }
             throw new Exception();
         }
 
+        #region Update transactions
+
         [HttpPut()]
         [Route("/api/v1/[controller]/{id}")]
-        public ViewTransaction Update(int id, ViewUpdateTransaction model)
+        public ViewTransaction? Update(int id, ViewUpdateTransaction model)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
                     var dbObject = _context.Transactions
-                        .Include(t => t.SourceAccount)
-                        .Include(t => t.DestinationAccount)
+                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
+                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
                         .Include(t => t.TransactionLines)
+                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
+                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
                         .Single(t => t.Id == id);
-                    var result = UpdateTransaction(dbObject, model);
+
+                    if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
+                    {
+                        // The user has read permissions to neither source nor destination
+                        return null;
+                    }
+
+                    var writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
+                    if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id && writePermissions.Contains(x.Permissions)) == null &&
+                        dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id && writePermissions.Contains(x.Permissions)) == null)
+                    {
+                        // User does not have write permission to this transaction, but they can read it
+                        throw new Exception("Not authorized to perform this action");
+                    }
+
+                    var result = UpdateTransaction(dbObject, user, model);
                     transaction.Commit();
                     return result;
                 }
@@ -149,20 +199,28 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[Action]")]
         public void UpdateMultiple(ViewUpdateMultipleTransactions request)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
+                    // Get a list of all accounts the user can write to
+                    var writeAccountIds = _context.UserAccounts
+                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                        .Select(account => account.AccountId)
+                        .ToList();
+
                     var query = _context.Transactions
-                        .Include(t => t.SourceAccount)
-                        .Include(t => t.DestinationAccount)
+                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
+                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
                         .Include(t => t.TransactionLines)
+                        .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(request.query);
 
                     var transactions = query.ToList();
                     foreach (var dbObject in transactions)
                     {
-                        UpdateTransaction(dbObject, request.model);
+                        UpdateTransaction(dbObject, user, request.model);
                     }
                     transaction.Commit();
                 }
@@ -171,8 +229,52 @@ namespace assetgrid_backend.Controllers
             throw new Exception();
         }
 
-        private ViewTransaction UpdateTransaction(Transaction dbObject, ViewUpdateTransaction model)
+        private ViewTransaction UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
         {
+            // Update accounts
+            var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
+            if (model.SourceId != null && dbObject.SourceAccountId != model.SourceId)
+            {
+                if (model.SourceId == -1)
+                {
+                    dbObject.SourceAccountId = null;
+                    dbObject.SourceAccount = null;
+                }
+                else
+                {
+                    var newSourceUserAccount = _context.UserAccounts
+                    .Include(x => x.Account)
+                    .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
+                    if (newSourceUserAccount == null)
+                    {
+                        throw new Exception("Not authorized to perform this action");
+                    }
+                    dbObject.SourceAccountId = newSourceUserAccount.Id;
+                    dbObject.SourceAccount = newSourceUserAccount.Account;
+                }
+            }
+            if (model.DestinationId != null && dbObject.DestinationAccountId != model.DestinationId)
+            {
+                if (model.DestinationId == -1)
+                {
+                    dbObject.DestinationAccountId = null;
+                    dbObject.DestinationAccount = null;
+                }
+                else
+                {
+                    var newDestinationUserAccount = _context.UserAccounts
+                        .Include(x => x.Account)
+                        .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
+                    if (newDestinationUserAccount == null)
+                    {
+                        throw new Exception("Not authorized to perform this action");
+                    }
+                    dbObject.DestinationAccountId = newDestinationUserAccount.Id;
+                    dbObject.DestinationAccount = newDestinationUserAccount.Account;
+                }
+            }
+
+            // Update remaining properties
             if (model.DateTime != null)
             {
                 dbObject.DateTime = model.DateTime.Value;
@@ -183,42 +285,12 @@ namespace assetgrid_backend.Controllers
             }
             if (model.HasUniqueIdentifier)
             {
-                dbObject.Identifier = model.Identifier;
-            }
-            if (model.DestinationId != null)
-            {
-                dbObject.DestinationAccountId = model.DestinationId == -1 ? null : model.DestinationId;
-            }
-            if (model.SourceId != null)
-            {
-                dbObject.SourceAccountId = model.SourceId == -1 ? null : model.SourceId;
+                if (string.IsNullOrWhiteSpace(model.Identifier)) model.Identifier = null;
+                dbObject.Identifier = model.Identifier?.Trim();
             }
             if (model.Category != null)
             {
-                var previousCategoryId = dbObject.CategoryId;
-                if (Category.Normalize(model.Category) != "")
-                {
-                    dbObject.Category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(model.Category));
-                    if (dbObject.Category == null)
-                    {
-                        dbObject.Category = new Category
-                        {
-                            Name = model.Category,
-                            NormalizedName = Category.Normalize(model.Category),
-                        };
-                    }
-                }
-                else
-                {
-                    dbObject.Category = null;
-                    dbObject.CategoryId = null;
-                }
-
-                _context.SaveChanges();
-                if (previousCategoryId.HasValue && ! _context.Transactions.Any(transaction => transaction.CategoryId == previousCategoryId)) {
-                    // Remove categories that are not referenced by any transactions
-                    _context.Categories.Remove(_context.Categories.Single(category => category.Id == previousCategoryId));
-                }
+                dbObject.Category = model.Category;
             }
             if (model.Total != null && dbObject.TransactionLines.Count == 0)
             {
@@ -263,9 +335,13 @@ namespace assetgrid_backend.Controllers
             }
 
             ModelState.Clear();
-            if (TryValidateModel(dbObject))
+            TryValidateModel(dbObject);
+            if (ModelState.IsValid)
             {
                 _context.SaveChanges();
+
+                var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
+                var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
 
                 return new ViewTransaction
                 {
@@ -273,57 +349,65 @@ namespace assetgrid_backend.Controllers
                     Identifier = dbObject.Identifier,
                     DateTime = dbObject.DateTime,
                     Description = dbObject.Description,
-                    Category = dbObject.Category?.Name ?? "",
+                    Category = dbObject.Category,
                     Total = dbObject.Total,
                     Source = dbObject.SourceAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = dbObject.SourceAccount.Id,
-                            Name = dbObject.SourceAccount.Name,
-                            Description = dbObject.SourceAccount.Description,
-                        } : null,
+                        ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
+                            id: dbObject.SourceAccount.Id,
+                            name: dbObject.SourceAccount.Name,
+                            description: dbObject.SourceAccount.Description,
+                            accountNumber: dbObject.SourceAccount.AccountNumber,
+                            favorite: sourceUserAccount.Favorite,
+                            includeInNetWorth: sourceUserAccount.IncludeInNetWorth,
+                            permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount.Permissions),
+                            balance: 0
+                        ) : null,
                     Destination = dbObject.DestinationAccount != null
-                        ? new ViewAccount
-                        {
-                            Id = dbObject.DestinationAccount.Id,
-                            Name = dbObject.DestinationAccount.Name,
-                            Description = dbObject.DestinationAccount.Description,
-                        } : null,
+                        ? destinationUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.DestinationAccount.Id) : new ViewAccount(
+                            id: dbObject.DestinationAccount.Id,
+                            name: dbObject.DestinationAccount.Name,
+                            description: dbObject.DestinationAccount.Description,
+                            accountNumber: dbObject.DestinationAccount.AccountNumber,
+                            favorite: destinationUserAccount.Favorite,
+                            includeInNetWorth: destinationUserAccount.IncludeInNetWorth,
+                            permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount.Permissions),
+                            balance: 0
+                        ) : null,
                     Lines = dbObject.TransactionLines
                         .OrderBy(line => line.Order)
-                        .Select(line => new ViewTransactionLine
-                        {
-                            Description = line.Description,
-                            Amount = line.Amount,
-                        }).ToList(),
+                        .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                        .ToList(),
                 };
             }
 
             throw new Exception();
         }
 
+        #endregion
+
         [HttpDelete()]
         [Route("/api/v1/[controller]/{id}")]
         public void Delete(int id)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
             {
                 var dbObject = _context.Transactions
                     .Single(t => t.Id == id);
 
-                var categoryId = dbObject.CategoryId;
+                // Make sure that the user has write permissions to an account this transaction references
+                if (!_context.UserAccounts.Any(
+                    account => account.UserId == user.Id &&
+                   (account.AccountId == dbObject.DestinationAccountId || account.AccountId == dbObject.SourceAccountId) &&
+                   new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions)
+                ))
+                {
+                    throw new Exception("Not authorized to perform this action");
+                }
 
                 _context.Transactions.Remove(dbObject);
                 _context.SaveChanges();
-
-                if (categoryId.HasValue && ! _context.Transactions.Any(transaction => transaction.CategoryId == categoryId))
-                {
-                    // Remove categories that are not referenced by any transactions
-                    _context.Categories.Remove(_context.Categories.Single(category => category.Id == categoryId));
-                }
-
                 transaction.Commit();
-                _context.SaveChanges();
 
                 return;
             }
@@ -334,22 +418,25 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[Action]")]
         public void DeleteMultiple(ViewSearchGroup query)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
+                    // Get a list of all accounts the user can write to
+                    var writeAccountIds = _context.UserAccounts
+                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                        .Select(account => account.AccountId)
+                        .ToList();
+
                     var transactions = _context.Transactions
                         .Include(t => t.TransactionLines)
+                        .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(query)
                         .ToList();
 
                     _context.RemoveRange(transactions.SelectMany(transaction => transaction.TransactionLines));
                     _context.RemoveRange(transactions);
-                    _context.SaveChanges();
-
-                    // Delete all categories that are unused by transactions
-                    _context.Categories.RemoveRange(_context.Categories.Where(category => !_context.Transactions.Any(transaction => transaction.CategoryId == category.Id)));
-
                     _context.SaveChanges();
                     transaction.Commit();
                 }
@@ -362,11 +449,14 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[action]")]
         public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             var result = _context.Transactions
+                .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
+                    (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
                 .ApplySearch(query, true)
                 .Skip(query.From)
                 .Take(query.To - query.From)
-                .SelectView()
+                .SelectView(user.Id)
                 .ToList();
 
             return new ViewSearchResponse<ViewTransaction>
@@ -380,7 +470,9 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[action]")]
         public List<string> FindDuplicates(List<string> identifiers)
         {
+            var user = _user.GetCurrent(HttpContext)!;
             return _context.Transactions
+                .Where(transaction => transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
                 .Where(transaction => transaction.Identifier != null && identifiers.Contains(transaction.Identifier))
                 .Select(transaction => transaction.Identifier!)
                 .ToList();
@@ -390,13 +482,33 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/[action]")]
         public ViewTransactionCreateManyResponse CreateMany(List<ViewCreateTransaction> transactions)
         {
+            var user = _user.GetCurrent(HttpContext)!;
+
             var failed = new List<ViewCreateTransaction>();
             var duplicate = new List<ViewCreateTransaction>();
             var success = new List<ViewCreateTransaction>();
 
+            var writeAccountIds = _context.UserAccounts
+                .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                .Select(account => account.AccountId)
+                .ToList();
+
+            var identifiers = transactions
+                .Select(t => string.IsNullOrWhiteSpace(t.Identifier) ? null : t.Identifier.Trim())
+                .Where(x => x != null)
+                .ToArray();
+            var duplicateIdentifiers = _context.Transactions
+                .Where(x => writeAccountIds.Contains(x.SourceAccountId ?? -1) || writeAccountIds.Contains(x.DestinationAccountId ?? -1))
+                .Where(x => identifiers.Contains(x.Identifier))
+                .Select(x => x.Identifier)
+                .ToHashSet();
+
             foreach (var transaction in transactions)
             {
-                if (! string.IsNullOrWhiteSpace(transaction.Identifier) && _context.Transactions.Any(dbTransaction => dbTransaction.Identifier == transaction.Identifier))
+                if (string.IsNullOrWhiteSpace(transaction.Identifier)) transaction.Identifier = null;
+                transaction.Identifier = transaction.Identifier?.Trim();
+
+                if (duplicateIdentifiers.Contains(transaction.Identifier))
                 {
                     duplicate.Add(transaction);
                 }
@@ -404,20 +516,13 @@ namespace assetgrid_backend.Controllers
                 {
                     try
                     {
-                        // Set category
-                        Category? category = null;
-                        if (Category.Normalize(transaction.Category) != "")
+                        if ((transaction.SourceId.HasValue && ! writeAccountIds.Contains(transaction.SourceId.Value)) ||
+                            (transaction.DestinationId.HasValue && !writeAccountIds.Contains(transaction.DestinationId.Value)))
                         {
-                            category = _context.Categories.SingleOrDefault(category => category.NormalizedName == Category.Normalize(transaction.Category));
-                            if (category == null)
-                            {
-                                category = new Category
-                                {
-                                    Name = transaction.Category,
-                                    NormalizedName = Category.Normalize(transaction.Category),
-                                };
-                            }
+                            throw new Exception("Cannot write to this account");
                         }
+
+                        if (transaction.Identifier != null) duplicateIdentifiers.Add(transaction.Identifier);
 
                         var result = new Models.Transaction
                         {
@@ -425,9 +530,9 @@ namespace assetgrid_backend.Controllers
                             SourceAccountId = transaction.SourceId,
                             Description = transaction.Description,
                             DestinationAccountId = transaction.DestinationId,
-                            Identifier = transaction.Identifier,
+                            Identifier = transaction.Identifier?.Trim(),
                             Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                            Category = category,
+                            Category = transaction.Category,
                             TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
                             {
                                 Amount = line.Amount,

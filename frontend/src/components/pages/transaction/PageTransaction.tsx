@@ -1,10 +1,10 @@
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Api } from "../../../lib/ApiClient";
-import { formatDateTimeWithPrefs, formatNumberWithPrefs } from "../../../lib/Utils";
+import { Api, useApi } from "../../../lib/ApiClient";
+import { formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
 import { Transaction, TransactionLine } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import Card from "../../common/Card";
 import InputIconButton from "../../input/InputIconButton";
 import * as solid from "@fortawesome/free-solid-svg-icons"
@@ -27,11 +27,12 @@ import Hero from "../../common/Hero";
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
     const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null | "error">("fetching");
-    const { preferences } = React.useContext(preferencesContext);
+    const { user: preferences } = React.useContext(userContext);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const navigate = useNavigate();
+    const api = useApi();
 
     React.useEffect(fetchTransaction, [id]);
 
@@ -78,18 +79,18 @@ export default function PageTransaction(): React.ReactElement {
 
         if (isNaN(id)) {
             setTransaction("error");
-        } else {
-            Api.Transaction.get(id)
+        } else if (api !== null) {
+            api.Transaction.get(id)
                 .then(transaction => setTransaction(transaction))
                 .catch(() => setTransaction("error"));
         }
     }
 
     async function update() {
-        if (editModel === null) return;
+        if (editModel === null || api === null) return;
 
         setIsUpdating(true);
-        const result = await Api.Transaction.update(id, {
+        const result = await api.Transaction.update(id, {
             ...editModel,
             sourceId: editModel.source?.id ?? -1,
             destinationId: editModel.destination?.id ?? -1
@@ -108,7 +109,7 @@ function transactionDetails(
     beginDelete: () => void,
     saveChanges: () => void,
 ): React.ReactElement {
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
 
     if (transaction === "fetching") {
         return <Card title="Transaction details" isNarrow={false}>
@@ -173,11 +174,11 @@ function transactionDetails(
                     </tr>
                     <tr>
                         <td>Timestamp</td>
-                        <td>{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
+                        <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                     </tr>
                     <tr>
                         <td>Total</td>
-                        <td>{formatNumberWithPrefs(transaction.total, preferences)}</td>
+                        <td>{formatNumberWithUser(transaction.total, user)}</td>
                     </tr>
                     <tr>
                         <td>Source</td>
@@ -246,7 +247,7 @@ function transactionDetails(
                                 onChange={value => onChange({ ...editModel, total: value })}
                                 allowNull={false}
                                 disabled={isUpdating} /></td>
-                            : <td>{formatNumberWithPrefs(editModel.total, preferences)}</td>}
+                            : <td>{formatNumberWithUser(editModel.total, user)}</td>}
                     </tr>
                     <tr>
                         <td>Source</td>
@@ -297,7 +298,7 @@ function transactionLines(
     beginDelete: () => void,
     saveChanges: () => void,
 ): React.ReactElement {
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
 
     if (transaction === "fetching") {
         return <Card title="Transaction lines" isNarrow={false}>
@@ -331,7 +332,7 @@ function transactionLines(
                     <tbody>
                         {transaction.lines.map((line, i) => <tr key={i}>
                             <td>{ line.description }</td>
-                            <td className="has-text-right">{formatNumberWithPrefs(line.amount, preferences)}</td>
+                            <td className="has-text-right">{formatNumberWithUser(line.amount, user)}</td>
                         </tr>)}
                     </tbody>
                 </table>

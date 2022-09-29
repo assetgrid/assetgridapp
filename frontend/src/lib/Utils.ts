@@ -1,9 +1,10 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { preferencesContext } from "../components/App";
+import { userContext } from "../components/App";
 import { Preferences } from "../models/preferences";
 import { SearchGroup, SearchGroupType } from "../models/search";
+import { User } from "../models/user";
 
 const Utils = {
     arrayToObject,
@@ -58,25 +59,44 @@ function range(start: number, end: number) {
 /**
  * Formats a date to a string based on the user preferences
  * @param date The date to format
+ * @param user The user whose preferences to use
+ * @returns A string representation of the date
+ */
+export function formatDateWithUser(date: DateTime, user: User | "fetching"): string {
+    return formatDateWithPreferences(date, user === "fetching" ? "fetching" : user.preferences);
+}
+
+/**
+ * Formats a date to a string based on preferences
+ * @param date The date to format
  * @param preferences The preferences to use
  * @returns A string representation of the date
  */
-export function formatDateWithPrefs(date: DateTime, preferences?: Preferences | "fetching"): string {
-    const prefs = preferences ?? React.useContext(preferencesContext).preferences;
-    if (prefs === "fetching" || prefs.dateFormat === null) {
+ export function formatDateWithPreferences(date: DateTime, preferences: Preferences | "fetching"): string {
+    if (preferences === "fetching" || preferences.dateFormat === null) {
         return date.toJSDate().toLocaleDateString();
     } else {
-        return date.toFormat(prefs.dateFormat);
+        return date.toFormat(preferences.dateFormat);
     }
 }
 
 /**
  * Formats a dateTime to a string based on the user preferences
  * @param dateTime The dateTime to format
- * @param preferences The preferences to use
+ * @param user The user whose preferences to use
  * @returns A string representation of the dateTime
  */
-export function formatDateTimeWithPrefs(dateTime: DateTime, preferences: Preferences | "fetching"): string {
+export function formatDateTimeWithUser(dateTime: DateTime, user: User | "fetching"): string {
+    return formatDateTimeWithPreferences(dateTime, user === "fetching" ? "fetching" : user.preferences);
+}
+
+/**
+ * Formats a date to a string based on preferences
+ * @param dateTime The date to format
+ * @param preferences The preferences to use
+ * @returns A string representation of the date
+ */
+ export function formatDateTimeWithPreferences(dateTime: DateTime, preferences: Preferences | "fetching"): string {
     if (preferences === "fetching" || preferences.dateTimeFormat === null) {
         return dateTime.toJSDate().toLocaleString();
     } else {
@@ -84,7 +104,11 @@ export function formatDateTimeWithPrefs(dateTime: DateTime, preferences: Prefere
     }
 }
 
-export function formatNumberWithPrefs(number: Decimal, preferences: Preferences | "fetching"): string {
+export function formatNumberWithUser(number: Decimal, user: User | "fetching"): string {
+    return formatNumberWithPreferences(number, user === "fetching" ? "fetching" : user.preferences);
+}
+
+export function formatNumberWithPreferences(number: Decimal, preferences: Preferences | "fetching"): string {
     let decimalDigits: number = 2;
     let decimalSeparator: string = ".";
     let thousandsSeparator: string = ",";

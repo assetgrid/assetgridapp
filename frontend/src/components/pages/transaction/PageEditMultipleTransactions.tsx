@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce, emptyQuery } from "../../../lib/Utils";
 import { SearchGroup } from "../../../models/search";
 import { Transaction, TransactionLine, UpdateTransaction } from "../../../models/transaction";
@@ -51,6 +51,7 @@ export default function PageEditMultipleTransactions() {
     // Keep history state updated
     const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
     const setTableQueryDebounced = React.useCallback(debounce((query: SearchGroup) => { setTableQuery(query); setDraw(draw => draw + 1); }, 300), []);
+    const api = useApi();
     const first = React.useRef(true);
     React.useEffect(() => {
         updateHistoryDebounced(query);
@@ -99,7 +100,7 @@ export default function PageEditMultipleTransactions() {
                 {renderAction(action, setAction, model, setModel, isUpdating)}
 
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={() => update()} disabled={isUpdating || model === null}>Apply changes</InputButton>
+                    <InputButton className="is-primary" onClick={() => update()} disabled={isUpdating || model === null || api === null}>Apply changes</InputButton>
                     {showBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>
@@ -122,14 +123,14 @@ export default function PageEditMultipleTransactions() {
     
     async function update() {
         setIsUpdating(true);
-        if (model === null) {
+        if (model === null || api === null) {
             return;
         }
 
         if (action === "delete") {
-            await Api.Transaction.deleteMultiple(query);
+            await api.Transaction.deleteMultiple(query);
         } else {
-            await Api.Transaction.updateMultiple(query, model);
+            await api.Transaction.updateMultiple(query, model);
         }
         setIsUpdating(false);
         setDraw(draw => draw + 1);

@@ -4,7 +4,7 @@ import { Account } from "../../../models/account";
 import { SearchGroup, SearchRequest, SearchResponse } from "../../../models/search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { Api } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
 import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
@@ -40,6 +40,7 @@ export default function InputAccount(props: Props) {
     const [searchQuery, setSearchQuery] = React.useState("");
     const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null);
     const selectedAccountId = account?.id ?? props.value as number;
+    const api = useApi();
 
     // Fetch the account based on the id in the props, if none is available
     React.useEffect(() => {
@@ -47,7 +48,7 @@ export default function InputAccount(props: Props) {
             // An id was provided. Fetch the account
             updateAccount();
         }
-    }, [props.value]);
+    }, [api, props.value]);
 
     // Fetch dropdown options
     React.useEffect(() => {
@@ -86,7 +87,7 @@ export default function InputAccount(props: Props) {
                         type="text"
                         placeholder="Search for account"
                         value={searchQuery}
-                        disabled={props.disabled}
+                        disabled={props.disabled || api === null}
                         onChange={e => setSearchQuery(e.target.value ) }
                     />
                     <hr className="dropdown-divider" />
@@ -100,7 +101,10 @@ export default function InputAccount(props: Props) {
                     {props.allowCreateNewAccount && <>
                         <hr className="dropdown-divider" />
                         <div className="dropdown-item">
-                            <InputButton className="is-small is-fullwidth" onClick={() => setCreatingAccount(true)}>New Account</InputButton>
+                            <InputButton
+                                disabled={props.disabled || api === null}
+                                className="is-small is-fullwidth"
+                                onClick={() => setCreatingAccount(true)}>New Account</InputButton>
                         </div>
                     </>}
                 </div>
@@ -129,6 +133,8 @@ export default function InputAccount(props: Props) {
     }
 
     function refreshDropdown(searchQuery: string) {
+        if (api === null) return;
+
         var query: any = searchQuery == ""
             ? null
             : {
@@ -152,7 +158,7 @@ export default function InputAccount(props: Props) {
                     }
                 ]
             } as SearchGroup;
-        Api.Account.search({
+        api.Account.search({
             from: 0,
             to: 5,
             query: query
@@ -165,7 +171,9 @@ export default function InputAccount(props: Props) {
      * Fetch the selected account, if it hasn't yet been fetched
      */
     function updateAccount() {
-        Api.Account.search({
+        if (api === null) return;
+
+        api.Account.search({
             from: 0,
             to: 1,
             query: {

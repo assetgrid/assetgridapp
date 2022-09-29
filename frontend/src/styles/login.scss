@@ -1,0 +1,11 @@
+.page-login {
+    flex-grow: 1;
+    background-color: $dark;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .card {
+        max-width: 20rem;
+    }
+}

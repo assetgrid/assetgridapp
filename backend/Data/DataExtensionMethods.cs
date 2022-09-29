@@ -7,7 +7,7 @@ namespace assetgrid_backend.Data
 {
     public static class DataExtensionMethods
     {
-        public static IQueryable<Account> ApplySearch(this IQueryable<Account> items, ViewSearch query, bool applyOrder)
+        public static IQueryable<UserAccount> ApplySearch(this IQueryable<UserAccount> items, ViewSearch query, bool applyOrder)
         {
             var columns = new[] {
                 ("Id", typeof(int), false),
@@ -15,14 +15,15 @@ namespace assetgrid_backend.Data
                 ("Description", typeof(string), false),
                 ("AccountNumber", typeof(string), false)
             };
-            var parameter = Expression.Parameter(typeof(Account), "account");
+            var parameter = Expression.Parameter(typeof(UserAccount), "account");
+            var property = Expression.Property(parameter, "Account");
 
             if (query.Query != null)
             {
-                var expression = SearchGroupToExpression(query.Query, columns, parameter);
+                var expression = SearchGroupToExpression(query.Query, columns, property);
                 if (expression != null)
                 {
-                    return items.Where(Expression.Lambda<Func<Account, bool>>(expression, parameter));
+                    return items.Where(Expression.Lambda<Func<UserAccount, bool>>(expression, parameter));
                 }
             }
 
@@ -32,10 +33,10 @@ namespace assetgrid_backend.Data
                 var orderColumn = query.OrderByColumn;
                 var orderColumnType = columns.First(column => column.Item1 == orderColumn).Item2;
                 string command = (query.Descending ?? false) ? "OrderByDescending" : "OrderBy";
-                var orderByExpression = Expression.Lambda(Expression.Property(parameter, orderColumn), parameter);
-                var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Account), orderColumnType },
+                var orderByExpression = Expression.Lambda(Expression.Property(property, orderColumn), parameter);
+                var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(UserAccount), orderColumnType },
                                               items.Expression, Expression.Quote(orderByExpression));
-                items = items.Provider.CreateQuery<Account>(resultExpression);
+                items = items.Provider.CreateQuery<UserAccount>(resultExpression);
             }
 
             return items;
@@ -91,8 +92,10 @@ namespace assetgrid_backend.Data
         /// <summary>
         /// Applies a search group but does not apply ordering
         /// </summary>
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup query)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup? query)
         {
+            if (query == null) return items;
+
             return items.ApplySearch(new ViewSearch
             {
                 Descending = null,
@@ -103,7 +106,7 @@ namespace assetgrid_backend.Data
             }, false);
         }
 
-        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type, bool allowNull)[] columns, ParameterExpression parameter)
+        private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type, bool allowNull)[] columns, Expression parameter)
         {
             Expression? result = null;
             switch (group.Type)

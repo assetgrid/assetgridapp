@@ -2,12 +2,12 @@ import axios from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Api } from "../../../lib/ApiClient";
-import { formatDateTimeWithPrefs } from "../../../lib/Utils";
+import { Api, useApi } from "../../../lib/ApiClient";
+import { formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CreateTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
-import { preferencesContext } from "../../App";
+import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Table from "../../common/Table";
 import InputButton from "../../input/InputButton";
@@ -30,14 +30,15 @@ export function Import (props: Props) {
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
     const [page, setPage] = React.useState(1);
+    const api = useApi();
 
-    const { preferences } = React.useContext(preferencesContext);
+    const { user } = React.useContext(userContext);
 
     switch (state) {
         case "waiting":
             return <Card isNarrow={true} title="Begin import">
                 <div className="buttons mt-3">
-                    <InputButton className="is-primary" onClick={() => importTransactions()}>Import Transactions</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={() => importTransactions()}>Import Transactions</InputButton>
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
             </Card>;
@@ -68,7 +69,7 @@ export function Import (props: Props) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifier}</td>
-                <td>{formatDateTimeWithPrefs(transaction.dateTime, preferences)}</td>
+                <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                 <td>{transaction.description}</td>
                 <td>{transaction.sourceId && <AccountLink account={props.accountsBy["id"][transaction.sourceId]} />}</td>
                 <td>{transaction.destinationId && <AccountLink account={props.accountsBy["id"][transaction.destinationId]} />}</td>
@@ -87,6 +88,8 @@ export function Import (props: Props) {
     }
 
     async function importTransactions() {
+        if (api === null) return;
+
         setState("importing");
 
         // Don't send transactions with known errors to the server
@@ -131,7 +134,7 @@ export function Import (props: Props) {
         });
 
         while (progress - invalidTransactions.length < createModels.length - 1) {
-            let result = await Api.Transaction.createMany(
+            let result = await api.Transaction.createMany(
                 createModels.slice(progress - invalidTransactions.length, progress - invalidTransactions.length + props.batchSize)
             );
             

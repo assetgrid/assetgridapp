@@ -2,10 +2,10 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar } from "@fortawesome/free-solid-svg-icons"
+import { faStar, faUser } from "@fortawesome/free-solid-svg-icons"
 import logo from "../../assets/logo.svg";
 import { Preferences } from "../../models/preferences";
-import { preferencesContext } from "../App";
+import { userContext } from "../App";
 
 interface Props {
     show: boolean;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function Sidebar(props: Props) {
-    const { preferences } = React.useContext(preferencesContext);
+    const { user, setUser } = React.useContext(userContext);
     const ref = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -27,6 +27,13 @@ export default function Sidebar(props: Props) {
         <img className="logo" src={logo}></img>
         <aside className="menu has-color-white m-5">
             <p className="menu-label">
+                <FontAwesomeIcon icon={faUser} /> {user === "fetching" ? <>&hellip;</> : user.email}
+            </p>
+            <ul className="menu-list">
+                <li><a>Profile</a></li>
+                <li><a onClick={signOut}>Sign out</a></li>
+            </ul>
+            <p className="menu-label">
                 General
             </p>
             <ul className="menu-list">
@@ -38,9 +45,9 @@ export default function Sidebar(props: Props) {
             </p>
             <ul className="menu-list">
                 <li><Link to={routes.accounts()}>Manage Accounts</Link></li>
-                {preferences === "fetching"
+                {user === "fetching"
                     ? <li><p>Please wait&hellip;</p></li>
-                    : preferences.favoriteAccounts.map(account =>
+                    : user.favoriteAccounts.map(account =>
                         <li key={account.id}><Link to={routes.account(account.id.toString())}>
                             <span className="icon">
                                 <FontAwesomeIcon icon={faStar} style={{ color: "#648195" }} />
@@ -63,5 +70,9 @@ export default function Sidebar(props: Props) {
         if (!e.currentTarget.contains(e.relatedTarget as Node) && (e.relatedTarget === null || e.relatedTarget.closest(".navbar-burger") === null)) {
             props.setShowSidebar(false);
         }
+    }
+
+    function signOut() {
+        setUser(null);
     }
 }
