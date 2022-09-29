@@ -45,7 +45,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       working-directory: ./backend.unittests
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal --configuration Release
       working-directory: ./backend.unittests
       
   build-frontend:
