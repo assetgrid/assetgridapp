@@ -36,12 +36,12 @@ export default function (): React.ReactElement {
         setState("signing-in");
         let result = await Api.authenticate(email, password);
         setPassword("");
-        if (result === null) {
-            setState("error");
-        } else {
+        if (result.status === 200) {
             setState("waiting");
-            setUser(result);
+            setUser(result.data);
             navigate(routes.dashboard());
+        } else {
+            setState("error");
         }
     }
 }

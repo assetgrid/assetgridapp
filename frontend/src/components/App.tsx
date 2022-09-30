@@ -78,12 +78,12 @@ export default function FairFitPortalApp () {
     </React.StrictMode>;
 
     async function authenticate() {
-        var user = await Api.getUser();
-        if (user === null) {
+        var result = await Api.getUser();
+        if (result.status === 200) {
+            setUser(result.data);
+        } else {
             // Navigate to the login page
             navigate(routes.login());
-        } else {
-            setUser(user);
         }
     }
     

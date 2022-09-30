@@ -9,7 +9,7 @@ import { Transaction as TransactionModel, CreateTransaction, TransactionListResp
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
-import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok } from "../models/api";
+import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 
 let rootUrl = 'https://localhost:7262';
 if (process.env.NODE_ENV === 'production') {
@@ -19,21 +19,25 @@ if (process.env.NODE_ENV === 'production') {
 /**
  * Get the currently signed in user
  */
-export function getUser(): Promise<UserModel | null> {
+export function getUser(): Promise<Ok<UserModel> | Unauthorized> {
     const token = localStorage.getItem("token");
-    return new Promise<UserModel | null>((resolve, reject) => {
+    return new Promise<Ok<UserModel> | Unauthorized>((resolve, reject) => {
         if (token === null) {
-            resolve(null);
+            resolve(UnauthorizedResult);
         } else {
-            axios.get<UserModel | null | "">(rootUrl + '/api/v1/user', {
-                    headers: { authorization: "Bearer: " + token }
-                })
-                .then(result => {
-                    resolve(result.data === "" || result.data === null ? null : { ...result.data, token: token });
-                }).catch(e => {
-                    console.log(e);
-                    reject();
-                });
+            axios.get<UserModel>(rootUrl + '/api/v1/user', {
+                headers: { authorization: "Bearer: " + token }
+            })
+            .then(result => {
+                resolve({ status: 200, data: { ...result.data, token: token } });
+            }).catch((e: AxiosError) => {
+                if (e.response?.status == 401) {
+                    resolve(UnauthorizedResult);
+                    return;
+                }
+                console.log(e);
+                reject();
+            });
         }
     })
 }
@@ -41,44 +45,44 @@ export function getUser(): Promise<UserModel | null> {
 /**
  * Sign in to new user
  */
-export function authenticate(email: string, password: string): Promise<UserModel | null> {
-    return new Promise<UserModel | null>((resolve, reject) => {
-        axios.post<UserModel | null | "">(rootUrl + '/api/v1/user/authenticate', {
+export function authenticate(email: string, password: string): Promise<Ok<UserModel> | BadRequest> {
+    return new Promise<Ok<UserModel> | BadRequest>((resolve, reject) => {
+        axios.post<UserModel>(rootUrl + '/api/v1/user/authenticate', {
                 email: email,
                 password: password
         }).then(result => {
-                if (result.data !== "" && result.data !== null) {
-                    localStorage.setItem("token", result.data.token);
-                    resolve(result.data);
-                } else {
-                    resolve(null);
-                }
-            }).catch(e => {
-                console.log(e);
-                reject();
-            });
+            localStorage.setItem("token", result.data.token);
+            resolve({ status: 200, data: result.data });
+        }).catch(e => {
+            if (e.response?.status == 400) {
+                resolve(e.response.data as BadRequest);
+                return;
+            }
+            console.log(e);
+            reject();
+        });
     })
 }
 
 /**
  * Sign up new user
  */
- export function signup(email: string, password: string): Promise<UserModel | null> {
-    return new Promise<UserModel | null>((resolve, reject) => {
-        axios.post<UserModel | null | "">(rootUrl + '/api/v1/user/createinitial', {
-                email: email,
-                password: password
+ export function signup(email: string, password: string): Promise<Ok<UserModel> | BadRequest> {
+    return new Promise<Ok<UserModel> | BadRequest>((resolve, reject) => {
+        axios.post<UserModel>(rootUrl + '/api/v1/user/createinitial', {
+            email: email,
+            password: password
         }).then(result => {
-                if (result.data !== "" && result.data !== null) {
-                    localStorage.setItem("token", result.data.token);
-                    resolve(result.data);
-                } else {
-                    resolve(null);
-                }
-            }).catch(e => {
-                console.log(e);
-                reject();
-            });
+            localStorage.setItem("token", result.data.token);
+            resolve({ status: 200, data: result.data });
+        }).catch(e => {
+            if (e.response?.status == 400) {
+                resolve(e.response.data as BadRequest);
+                return;
+            }
+            console.log(e);
+            reject();
+        });
     })
 }
 

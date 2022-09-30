@@ -6,6 +6,7 @@ using assetgrid_backend.Helpers;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace assetgrid_backend.Controllers
 {
@@ -14,30 +15,42 @@ namespace assetgrid_backend.Controllers
     public class UserController : Controller
     {
         private IUserService _userService;
+        private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly AssetgridDbContext _context;
-        public UserController(AssetgridDbContext context, IUserService userService)
+        public UserController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
         {
             _context = context;
             _userService = userService;
+            _apiBehaviorOptions = apiBehaviorOptions;
         }
 
         [HttpPost("/api/v1/[controller]/[action]")]
-        public UserAuthenticatedResponse? Authenticate(AuthenticateModel model)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserAuthenticatedResponse))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(UserAuthenticatedResponse))]
+        public IActionResult Authenticate(AuthenticateModel model)
         {
             if (ModelState.IsValid)
             {
-                return _userService.Authenticate(model.Email, model.Password);
+                var result = _userService.Authenticate(model.Email, model.Password);
+                if (result == null)
+                {
+                    ModelState.AddModelError(nameof(model.Password), "Invalid username or password");
+                    return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+                }
+                return Ok(result);
             }
-            throw new Exception();
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         [HttpGet("/api/v1/[controller]")]
-        public UserAuthenticatedResponse? GetUser()
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserAuthenticatedResponse))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult GetUser()
         {
             var signedInUser = _userService.GetCurrent(HttpContext);
             if (signedInUser == null)
             {
-                return null;
+                return Unauthorized();
             }
 
             var user = _context.Users
@@ -52,7 +65,7 @@ namespace assetgrid_backend.Controllers
 
             if (user == null)
             {
-                return null;
+                return Unauthorized();
             }
 
             var response = new UserAuthenticatedResponse(
@@ -70,22 +83,26 @@ namespace assetgrid_backend.Controllers
                     0)
                 ).ToList(),
                 "");
-            return response;
+            return Ok(response);
         }
 
         /// <summary>
         /// Create the first user for this installation
         /// </summary>
         [HttpPost("/api/v1/[controller]/[action]")]
-        public void CreateInitial(AuthenticateModel model)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CreateInitial(AuthenticateModel model)
         {
             if (! _context.Users.Any())
             {
                 _userService.CreateUser(model.Email, model.Password);
+                return Ok();
             }
             else
             {
-                throw new InvalidOperationException("A user already exists");
+                ModelState.AddModelError(nameof(model.Email), "A user already exists");
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
             }
         }
 
@@ -93,15 +110,17 @@ namespace assetgrid_backend.Controllers
         /// Returns whether any users exist
         /// </summary>
         [HttpGet("/api/v1/[controller]/[action]")]
-        public bool Any()
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
+        public IActionResult Any()
         {
-            return _context.Users.Any();
+            return Ok(_context.Users.Any());
         }
 
         [HttpPut]
         [Authorize]
         [Route("/api/v1/[controller]/[action]")]
-        public ViewPreferences Preferences(ViewPreferences model)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewPreferences))]
+        public IActionResult Preferences(ViewPreferences model)
         {
             var user = _userService.GetCurrent(HttpContext)!;
 
@@ -127,7 +146,7 @@ namespace assetgrid_backend.Controllers
             }
             _context.SaveChanges();
 
-            return new ViewPreferences(preferences);
+            return Ok(new ViewPreferences(preferences));
         }
     }
 }

@@ -24,3 +24,10 @@ export type BadRequest = {
     title: string;
     errors: { [key: string]: string[] };
 }
+
+export type Unauthorized = {
+    status: 401;
+}
+export const UnauthorizedResult = {
+    status: 401,
+} as const;
