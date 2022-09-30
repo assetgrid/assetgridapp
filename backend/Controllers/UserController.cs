@@ -77,11 +77,11 @@ namespace assetgrid_backend.Controllers
         /// Create the first user for this installation
         /// </summary>
         [HttpPost("/api/v1/[controller]/[action]")]
-        public void CreateInitial(string email, string password)
+        public void CreateInitial(AuthenticateModel model)
         {
             if (! _context.Users.Any())
             {
-                _userService.CreateUser(email, password);
+                _userService.CreateUser(model.Email, model.Password);
             }
             else
             {

@@ -45,7 +45,7 @@ namespace backend.unittests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             UserController = new UserController(Context, UserService);
-            UserController.CreateInitial("test", "test");
+            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" })!;
             UserService.MockUser = UserService.GetById(User.Id);
 

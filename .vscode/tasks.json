@@ -11,7 +11,8 @@
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": "build"
         },
         {
             "label": "watch backend",
@@ -26,7 +27,7 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "Test backend",
+            "label": "test backend",
             "dependsOn": [],
             "command": "dotnet",
             "type": "process",
@@ -42,6 +43,20 @@
                 "kind": "test",
                 "isDefault": true
             }
-        }
+        },
+        {
+            "label": "watch frontend",
+            "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack",
+            "windows": {
+                "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack.cmd"
+            },
+            "args": [
+                "serve"
+            ],
+            "options": {
+                "cwd": "./frontend"
+            }, 
+            "problemMatcher": []
+        },
     ]
 }

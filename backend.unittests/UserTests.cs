@@ -26,10 +26,10 @@ namespace backend.unittests
                 var userService = new UserService(JwtSecret.Get(), context);
                 var controller = new UserController(context, userService);
 
-                controller.CreateInitial("test", "test");
+                controller.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
 
                 // Only one user can be created with this method
-                Assert.Throws<InvalidOperationException>(() => controller.CreateInitial("test", "test"));
+                Assert.Throws<InvalidOperationException>(() => controller.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }));
 
                 // Cannot get user before signing in
                 Assert.Null(controller.GetUser());
@@ -63,7 +63,7 @@ namespace backend.unittests
                 var controller = new UserController(context, userService);
 
                 // Create user and sign in
-                controller.CreateInitial("test", "test");
+                controller.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
                 var user = controller.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
                 userService.MockUser = userService.GetById(user!.Id);
 

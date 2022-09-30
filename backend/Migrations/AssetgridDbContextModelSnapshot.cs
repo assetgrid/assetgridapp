@@ -41,36 +41,15 @@ namespace assetgrid_backend.Migrations
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("assetgrid_backend.Models.Category", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("NormalizedName")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique();
-
-                    b.ToTable("Categories");
-                });
-
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
@@ -93,14 +72,14 @@ namespace assetgrid_backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("Category")
+                        .HasFilter("Category IS NOT NULL");
 
                     b.HasIndex("DateTime");
 
                     b.HasIndex("DestinationAccountId");
 
-                    b.HasIndex("Identifier")
-                        .IsUnique();
+                    b.HasIndex("Identifier");
 
                     b.HasIndex("SourceAccountId");
 
@@ -225,10 +204,6 @@ namespace assetgrid_backend.Migrations
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
-                    b.HasOne("assetgrid_backend.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId");
-
                     b.HasOne("assetgrid_backend.Models.Account", "DestinationAccount")
                         .WithMany()
                         .HasForeignKey("DestinationAccountId");
@@ -236,8 +211,6 @@ namespace assetgrid_backend.Migrations
                     b.HasOne("assetgrid_backend.Models.Account", "SourceAccount")
                         .WithMany()
                         .HasForeignKey("SourceAccountId");
-
-                    b.Navigation("Category");
 
                     b.Navigation("DestinationAccount");
 

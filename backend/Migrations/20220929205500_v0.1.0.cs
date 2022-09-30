@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace assetgrid_backend.Migrations
 {
-    public partial class initial : Migration
+    public partial class v010 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -29,23 +29,6 @@ namespace assetgrid_backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Accounts", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Categories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    NormalizedName = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -82,7 +65,8 @@ namespace assetgrid_backend.Migrations
                     Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Total = table.Column<long>(type: "bigint", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: true)
+                    Category = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
@@ -96,11 +80,6 @@ namespace assetgrid_backend.Migrations
                         name: "FK_Transactions_Accounts_SourceAccountId",
                         column: x => x.SourceAccountId,
                         principalTable: "Accounts",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Transactions_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
                         principalColumn: "Id");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
@@ -189,20 +168,15 @@ namespace assetgrid_backend.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_NormalizedName",
-                table: "Categories",
-                column: "NormalizedName",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TransactionLines_TransactionId",
                 table: "TransactionLines",
                 column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_CategoryId",
+                name: "IX_Transactions_Category",
                 table: "Transactions",
-                column: "CategoryId");
+                column: "Category",
+                filter: "Category IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_DateTime",
@@ -217,8 +191,7 @@ namespace assetgrid_backend.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_Identifier",
                 table: "Transactions",
-                column: "Identifier",
-                unique: true);
+                column: "Identifier");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_SourceAccountId",
@@ -267,9 +240,6 @@ namespace assetgrid_backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Accounts");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
         }
     }
 }

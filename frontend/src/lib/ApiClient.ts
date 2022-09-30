@@ -60,6 +60,28 @@ export function authenticate(email: string, password: string): Promise<UserModel
 }
 
 /**
+ * Sign up new user
+ */
+ export function signup(email: string, password: string): Promise<UserModel | null> {
+    return new Promise<UserModel | null>((resolve, reject) => {
+        axios.post<UserModel | null | "">(rootUrl + '/api/v1/user/createinitial', {
+                email: email,
+                password: password
+        }).then(result => {
+                if (result.data !== "" && result.data !== null) {
+                    localStorage.setItem("token", result.data.token);
+                    resolve(result.data);
+                } else {
+                    resolve(null);
+                }
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+    })
+}
+
+/**
  * Returns whether any users exist in this installation
  */
 export function anyUsers(): Promise<boolean> {

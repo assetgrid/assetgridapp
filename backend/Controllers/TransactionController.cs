@@ -334,51 +334,55 @@ namespace assetgrid_backend.Controllers
                 }
             }
 
-            ModelState.Clear();
-            TryValidateModel(dbObject);
-            if (ModelState.IsValid)
+            if (dbObject.SourceAccountId == null && dbObject.DestinationAccountId == null)
             {
-                _context.SaveChanges();
-
-                var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
-                var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
-
-                return new ViewTransaction
-                {
-                    Id = dbObject.Id,
-                    Identifier = dbObject.Identifier,
-                    DateTime = dbObject.DateTime,
-                    Description = dbObject.Description,
-                    Category = dbObject.Category,
-                    Total = dbObject.Total,
-                    Source = dbObject.SourceAccount != null
-                        ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
-                            id: dbObject.SourceAccount.Id,
-                            name: dbObject.SourceAccount.Name,
-                            description: dbObject.SourceAccount.Description,
-                            accountNumber: dbObject.SourceAccount.AccountNumber,
-                            favorite: sourceUserAccount.Favorite,
-                            includeInNetWorth: sourceUserAccount.IncludeInNetWorth,
-                            permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount.Permissions),
-                            balance: 0
-                        ) : null,
-                    Destination = dbObject.DestinationAccount != null
-                        ? destinationUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.DestinationAccount.Id) : new ViewAccount(
-                            id: dbObject.DestinationAccount.Id,
-                            name: dbObject.DestinationAccount.Name,
-                            description: dbObject.DestinationAccount.Description,
-                            accountNumber: dbObject.DestinationAccount.AccountNumber,
-                            favorite: destinationUserAccount.Favorite,
-                            includeInNetWorth: destinationUserAccount.IncludeInNetWorth,
-                            permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount.Permissions),
-                            balance: 0
-                        ) : null,
-                    Lines = dbObject.TransactionLines
-                        .OrderBy(line => line.Order)
-                        .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
-                        .ToList(),
-                };
+                throw new Exception("Source or destination account must be set");
             }
+            if (dbObject.SourceAccountId == dbObject.DestinationAccountId)
+            {
+                throw new Exception("Source and destination cannot be the same account");
+            }
+
+            _context.SaveChanges();
+
+            var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
+            var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
+
+            return new ViewTransaction
+            {
+                Id = dbObject.Id,
+                Identifier = dbObject.Identifier,
+                DateTime = dbObject.DateTime,
+                Description = dbObject.Description,
+                Category = dbObject.Category,
+                Total = dbObject.Total,
+                Source = dbObject.SourceAccount != null
+                    ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
+                        id: dbObject.SourceAccount.Id,
+                        name: dbObject.SourceAccount.Name,
+                        description: dbObject.SourceAccount.Description,
+                        accountNumber: dbObject.SourceAccount.AccountNumber,
+                        favorite: sourceUserAccount.Favorite,
+                        includeInNetWorth: sourceUserAccount.IncludeInNetWorth,
+                        permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount.Permissions),
+                        balance: 0
+                    ) : null,
+                Destination = dbObject.DestinationAccount != null
+                    ? destinationUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.DestinationAccount.Id) : new ViewAccount(
+                        id: dbObject.DestinationAccount.Id,
+                        name: dbObject.DestinationAccount.Name,
+                        description: dbObject.DestinationAccount.Description,
+                        accountNumber: dbObject.DestinationAccount.AccountNumber,
+                        favorite: destinationUserAccount.Favorite,
+                        includeInNetWorth: destinationUserAccount.IncludeInNetWorth,
+                        permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount.Permissions),
+                        balance: 0
+                    ) : null,
+                Lines = dbObject.TransactionLines
+                    .OrderBy(line => line.Order)
+                    .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                    .ToList(),
+            };
 
             throw new Exception();
         }

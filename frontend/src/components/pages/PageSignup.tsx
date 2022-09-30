@@ -33,7 +33,7 @@ export default function (): React.ReactElement {
 
     async function signUp() {
         setState("signing-up");
-        await Api.authenticate(email, password);
+        await Api.signup(email, password);
         setPassword("");
         navigate(routes.login());
     }

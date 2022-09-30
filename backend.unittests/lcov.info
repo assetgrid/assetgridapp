@@ -1,4 +1,4 @@
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Program.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Program.cs
 FN:10,System.Void Program::<Main>$(System.String[])
 FNDA:0,System.Void Program::<Main>$(System.String[])
 DA:11,0
@@ -80,16 +80,16 @@ BRH:0
 FNF:1
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\AppSettings.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\AppSettings.cs
 FN:14,System.String assetgrid_backend.JwtSecret::get_Value()
-FNDA:150,System.String assetgrid_backend.JwtSecret::get_Value()
-DA:15,150
+FNDA:0,System.String assetgrid_backend.JwtSecret::get_Value()
+DA:15,0
 FN:17,assetgrid_backend.JwtSecret assetgrid_backend.JwtSecret::Get(System.String)
-FNDA:50,assetgrid_backend.JwtSecret assetgrid_backend.JwtSecret::Get(System.String)
-DA:18,50
-DA:19,50
-DA:20,50
-DA:21,50
+FNDA:0,assetgrid_backend.JwtSecret assetgrid_backend.JwtSecret::Get(System.String)
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
 DA:22,0
 DA:23,0
 DA:24,0
@@ -100,69 +100,69 @@ DA:28,0
 DA:29,0
 DA:30,0
 DA:31,0
-DA:33,50
-DA:34,50
-DA:35,50
-DA:37,50
+DA:33,0
+DA:34,0
+DA:35,0
+DA:37,0
 DA:38,0
 DA:39,0
 DA:40,0
-DA:41,50
-DA:43,50
-DA:44,50
-DA:45,50
+DA:41,0
+DA:43,0
+DA:44,0
+DA:45,0
 BRDA:21,15,0,0
-BRDA:21,15,1,50
+BRDA:21,15,1,0
 BRDA:21,28,0,0
 BRDA:25,57,0,0
 BRDA:25,57,1,0
-BRDA:21,28,1,50
-BRDA:33,101,0,50
+BRDA:21,28,1,0
+BRDA:33,101,0,0
 BRDA:37,124,0,0
-BRDA:37,124,1,50
-BRDA:33,101,1,50
+BRDA:37,124,1,0
+BRDA:33,101,1,0
 FN:9,System.Void assetgrid_backend.JwtSecret::.ctor(System.String)
-FNDA:50,System.Void assetgrid_backend.JwtSecret::.ctor(System.String)
-DA:10,50
-DA:11,50
-DA:12,50
-DA:13,50
+FNDA:0,System.Void assetgrid_backend.JwtSecret::.ctor(System.String)
+DA:10,0
+DA:11,0
+DA:12,0
+DA:13,0
 LF:30
-LH:17
+LH:0
 BRF:10
-BRH:5
+BRH:0
 FNF:3
-FNH:3
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Services\UserService.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Services\UserService.cs
 FN:28,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::get_MockUser()
-FNDA:3015,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::get_MockUser()
-DA:29,3015
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::get_MockUser()
+DA:29,0
 FN:36,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Services.UserService::Authenticate(System.String,System.String)
-FNDA:51,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Services.UserService::Authenticate(System.String,System.String)
-DA:37,51
-DA:39,51
-DA:40,51
-DA:41,51
-DA:42,51
-DA:43,51
-DA:44,51
-DA:45,51
-DA:46,51
-DA:49,51
-DA:52,51
-DA:53,51
-DA:54,51
+FNDA:0,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Services.UserService::Authenticate(System.String,System.String)
+DA:37,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:42,0
+DA:43,0
+DA:44,0
+DA:45,0
+DA:46,0
+DA:49,0
+DA:52,0
+DA:53,0
+DA:54,0
 DA:57,0
 DA:58,0
 DA:59,0
-DA:61,50
-DA:63,1
-DA:67,50
-DA:69,50
-DA:70,50
-DA:71,50
-DA:72,50
+DA:61,0
+DA:63,0
+DA:67,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
 DA:73,0
 DA:74,0
 DA:75,0
@@ -172,33 +172,33 @@ DA:78,0
 DA:79,0
 DA:80,0
 DA:81,0
-DA:82,50
-DA:83,51
+DA:82,0
+DA:83,0
 BRDA:49,702,0,0
-BRDA:49,702,1,51
-BRDA:54,759,0,1
+BRDA:49,702,1,0
+BRDA:54,759,0,0
 BRDA:54,766,1,0
-BRDA:54,766,0,1
-BRDA:54,759,1,50
+BRDA:54,766,0,0
+BRDA:54,759,1,0
 FN:85,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::CreateUser(System.String,System.String)
-FNDA:60,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::CreateUser(System.String,System.String)
-DA:86,60
-DA:87,60
-DA:88,60
-DA:89,60
-DA:90,60
-DA:91,60
-DA:92,60
-DA:93,60
-DA:94,60
-DA:95,60
-DA:97,60
-DA:98,60
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::CreateUser(System.String,System.String)
+DA:86,0
+DA:87,0
+DA:88,0
+DA:89,0
+DA:90,0
+DA:91,0
+DA:92,0
+DA:93,0
+DA:94,0
+DA:95,0
+DA:97,0
+DA:98,0
 FN:100,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::GetPreferences(assetgrid_backend.Models.User)
-FNDA:56,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::GetPreferences(assetgrid_backend.Models.User)
-DA:101,56
-DA:102,56
-DA:103,56
+FNDA:0,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::GetPreferences(assetgrid_backend.Models.User)
+DA:101,0
+DA:102,0
+DA:103,0
 FN:105,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::GetPreferences(System.Int32)
 FNDA:0,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::GetPreferences(System.Int32)
 DA:106,0
@@ -206,122 +206,122 @@ DA:107,0
 DA:108,0
 DA:109,0
 FN:111,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::preferencesOrDefault(assetgrid_backend.Models.UserPreferences)
-FNDA:56,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::preferencesOrDefault(assetgrid_backend.Models.UserPreferences)
-DA:112,56
-DA:113,56
-DA:114,56
-DA:115,56
-DA:116,56
-DA:117,56
-DA:118,56
-DA:119,56
-DA:120,56
-DA:121,56
-BRDA:113,3,0,51
-BRDA:113,3,1,56
+FNDA:0,assetgrid_backend.Models.UserPreferences assetgrid_backend.Services.UserService::preferencesOrDefault(assetgrid_backend.Models.UserPreferences)
+DA:112,0
+DA:113,0
+DA:114,0
+DA:115,0
+DA:116,0
+DA:117,0
+DA:118,0
+DA:119,0
+DA:120,0
+DA:121,0
+BRDA:113,3,0,0
+BRDA:113,3,1,0
 FN:123,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetById(System.Int32)
-FNDA:60,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetById(System.Int32)
-DA:124,60
-DA:125,60
-DA:126,60
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetById(System.Int32)
+DA:124,0
+DA:125,0
+DA:126,0
 FN:128,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetCurrent(Microsoft.AspNetCore.Http.HttpContext)
-FNDA:1471,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetCurrent(Microsoft.AspNetCore.Http.HttpContext)
-DA:129,1471
-DA:130,1471
-DA:131,1470
-DA:132,1470
-DA:135,1
-DA:136,1
-DA:138,1471
-BRDA:130,12,0,1470
-BRDA:130,12,1,1
-BRDA:136,26,0,1
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Services.UserService::GetCurrent(Microsoft.AspNetCore.Http.HttpContext)
+DA:129,0
+DA:130,0
+DA:131,0
+DA:132,0
+DA:135,0
+DA:136,0
+DA:138,0
+BRDA:130,12,0,0
+BRDA:130,12,1,0
+BRDA:136,26,0,0
 BRDA:136,26,1,0
 FN:140,System.String assetgrid_backend.Services.UserService::generateJwtToken(assetgrid_backend.Models.User)
-FNDA:50,System.String assetgrid_backend.Services.UserService::generateJwtToken(assetgrid_backend.Models.User)
-DA:141,50
-DA:143,50
-DA:144,50
-DA:145,50
-DA:146,50
-DA:147,50
-DA:148,50
-DA:149,50
-DA:150,50
-DA:151,50
-DA:152,50
-DA:153,50
+FNDA:0,System.String assetgrid_backend.Services.UserService::generateJwtToken(assetgrid_backend.Models.User)
+DA:141,0
+DA:143,0
+DA:144,0
+DA:145,0
+DA:146,0
+DA:147,0
+DA:148,0
+DA:149,0
+DA:150,0
+DA:151,0
+DA:152,0
+DA:153,0
 FN:29,System.Void assetgrid_backend.Services.UserService::.ctor(assetgrid_backend.JwtSecret,assetgrid_backend.Data.AssetgridDbContext)
-FNDA:50,System.Void assetgrid_backend.Services.UserService::.ctor(assetgrid_backend.JwtSecret,assetgrid_backend.Data.AssetgridDbContext)
-DA:30,50
-DA:31,50
-DA:32,50
-DA:33,50
-DA:34,50
+FNDA:0,System.Void assetgrid_backend.Services.UserService::.ctor(assetgrid_backend.JwtSecret,assetgrid_backend.Data.AssetgridDbContext)
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
 LF:91
-LH:75
+LH:0
 BRF:12
-BRH:9
+BRH:0
 FNF:10
-FNH:9
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\Account.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\Account.cs
 FN:6,System.Int32 assetgrid_backend.Models.Account::get_Id()
-FNDA:1458,System.Int32 assetgrid_backend.Models.Account::get_Id()
-DA:7,1458
+FNDA:0,System.Int32 assetgrid_backend.Models.Account::get_Id()
+DA:7,0
 FN:7,System.String assetgrid_backend.Models.Account::get_Name()
-FNDA:1556,System.String assetgrid_backend.Models.Account::get_Name()
-DA:8,1556
+FNDA:0,System.String assetgrid_backend.Models.Account::get_Name()
+DA:8,0
 FN:8,System.String assetgrid_backend.Models.Account::get_Description()
-FNDA:1556,System.String assetgrid_backend.Models.Account::get_Description()
-DA:9,1556
+FNDA:0,System.String assetgrid_backend.Models.Account::get_Description()
+DA:9,0
 FN:9,System.String assetgrid_backend.Models.Account::get_AccountNumber()
-FNDA:1459,System.String assetgrid_backend.Models.Account::get_AccountNumber()
-DA:10,1459
+FNDA:0,System.String assetgrid_backend.Models.Account::get_AccountNumber()
+DA:10,0
 FN:10,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.Account::get_Users()
-FNDA:103,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.Account::get_Users()
-DA:11,103
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.Account::get_Users()
+DA:11,0
 LF:5
-LH:5
+LH:0
 BRF:0
 BRH:0
 FNF:5
-FNH:5
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\Transaction.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\Transaction.cs
 FN:7,System.Int32 assetgrid_backend.Models.Transaction::get_Id()
-FNDA:1214,System.Int32 assetgrid_backend.Models.Transaction::get_Id()
-DA:8,1214
+FNDA:0,System.Int32 assetgrid_backend.Models.Transaction::get_Id()
+DA:8,0
 FN:8,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_SourceAccountId()
-FNDA:2323,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_SourceAccountId()
-DA:9,2323
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_SourceAccountId()
+DA:9,0
 FN:9,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_SourceAccount()
-FNDA:3740,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_SourceAccount()
-DA:10,3740
+FNDA:0,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_SourceAccount()
+DA:10,0
 FN:10,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_DestinationAccountId()
-FNDA:2321,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_DestinationAccountId()
-DA:11,2321
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.Transaction::get_DestinationAccountId()
+DA:11,0
 FN:11,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_DestinationAccount()
-FNDA:3841,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_DestinationAccount()
-DA:12,3841
+FNDA:0,assetgrid_backend.Models.Account assetgrid_backend.Models.Transaction::get_DestinationAccount()
+DA:12,0
 FN:12,System.DateTime assetgrid_backend.Models.Transaction::get_DateTime()
-FNDA:2397,System.DateTime assetgrid_backend.Models.Transaction::get_DateTime()
-DA:13,2397
+FNDA:0,System.DateTime assetgrid_backend.Models.Transaction::get_DateTime()
+DA:13,0
 FN:13,System.String assetgrid_backend.Models.Transaction::get_Identifier()
-FNDA:2396,System.String assetgrid_backend.Models.Transaction::get_Identifier()
-DA:14,2396
+FNDA:0,System.String assetgrid_backend.Models.Transaction::get_Identifier()
+DA:14,0
 FN:14,System.String assetgrid_backend.Models.Transaction::get_Description()
-FNDA:3605,System.String assetgrid_backend.Models.Transaction::get_Description()
-DA:15,3605
+FNDA:0,System.String assetgrid_backend.Models.Transaction::get_Description()
+DA:15,0
 FN:15,System.Int64 assetgrid_backend.Models.Transaction::get_Total()
-FNDA:4694,System.Int64 assetgrid_backend.Models.Transaction::get_Total()
-DA:16,4694
+FNDA:0,System.Int64 assetgrid_backend.Models.Transaction::get_Total()
+DA:16,0
 FN:16,System.String assetgrid_backend.Models.Transaction::get_Category()
-FNDA:3581,System.String assetgrid_backend.Models.Transaction::get_Category()
-DA:17,3581
+FNDA:0,System.String assetgrid_backend.Models.Transaction::get_Category()
+DA:17,0
 FN:18,System.Collections.Generic.List`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Models.Transaction::get_TransactionLines()
-FNDA:4148,System.Collections.Generic.List`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Models.Transaction::get_TransactionLines()
-DA:19,4148
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Models.Transaction::get_TransactionLines()
+DA:19,0
 FN:35,System.Int64 assetgrid_backend.Models.Transaction/<>c::<System.ComponentModel.DataAnnotations.IValidatableObject.Validate>b__44_0(assetgrid_backend.Models.TransactionLine)
 FNDA:0,System.Int64 assetgrid_backend.Models.Transaction/<>c::<System.ComponentModel.DataAnnotations.IValidatableObject.Validate>b__44_0(assetgrid_backend.Models.TransactionLine)
 DA:36,0
@@ -357,336 +357,336 @@ BRDA:36,298,1,0
 BRDA:36,375,0,0
 BRDA:36,375,1,0
 FN:47,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Models.TransactionQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,System.Int32)
-FNDA:61,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Models.TransactionQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,System.Int32)
-DA:48,61
-DA:49,61
-DA:50,61
-DA:51,61
-DA:52,61
-DA:53,61
-DA:54,61
-DA:55,61
-DA:56,61
-DA:57,61
-DA:58,61
-DA:59,61
-DA:60,61
-DA:61,61
-DA:62,61
-DA:63,61
-DA:64,61
-DA:65,61
-DA:66,61
-DA:67,61
-DA:68,61
-DA:69,61
-DA:70,61
-DA:71,61
-DA:72,61
-DA:73,61
-DA:74,61
-DA:75,61
-DA:76,61
-DA:77,61
-DA:78,61
-DA:79,61
-DA:80,61
-DA:81,61
-DA:82,61
-DA:83,61
-DA:84,61
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Models.TransactionQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,System.Int32)
+DA:48,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
+DA:62,0
+DA:63,0
+DA:64,0
+DA:65,0
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+DA:75,0
+DA:76,0
+DA:77,0
+DA:78,0
+DA:79,0
+DA:80,0
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
 LF:68
-LH:48
+LH:0
 BRF:10
 BRH:0
 FNF:14
-FNH:12
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\TransactionLine.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\TransactionLine.cs
 FN:4,System.Int32 assetgrid_backend.Models.TransactionLine::get_Id()
 FNDA:0,System.Int32 assetgrid_backend.Models.TransactionLine::get_Id()
 DA:5,0
 FN:5,System.Int32 assetgrid_backend.Models.TransactionLine::get_TransactionId()
-FNDA:2,System.Int32 assetgrid_backend.Models.TransactionLine::get_TransactionId()
-DA:6,2
+FNDA:0,System.Int32 assetgrid_backend.Models.TransactionLine::get_TransactionId()
+DA:6,0
 FN:6,System.Int32 assetgrid_backend.Models.TransactionLine::get_Order()
-FNDA:84,System.Int32 assetgrid_backend.Models.TransactionLine::get_Order()
-DA:7,84
+FNDA:0,System.Int32 assetgrid_backend.Models.TransactionLine::get_Order()
+DA:7,0
 FN:7,assetgrid_backend.Models.Transaction assetgrid_backend.Models.TransactionLine::get_Transaction()
-FNDA:46,assetgrid_backend.Models.Transaction assetgrid_backend.Models.TransactionLine::get_Transaction()
-DA:8,46
+FNDA:0,assetgrid_backend.Models.Transaction assetgrid_backend.Models.TransactionLine::get_Transaction()
+DA:8,0
 FN:8,System.Int64 assetgrid_backend.Models.TransactionLine::get_Amount()
-FNDA:100,System.Int64 assetgrid_backend.Models.TransactionLine::get_Amount()
-DA:9,100
+FNDA:0,System.Int64 assetgrid_backend.Models.TransactionLine::get_Amount()
+DA:9,0
 FN:9,System.String assetgrid_backend.Models.TransactionLine::get_Description()
-FNDA:128,System.String assetgrid_backend.Models.TransactionLine::get_Description()
-DA:10,128
+FNDA:0,System.String assetgrid_backend.Models.TransactionLine::get_Description()
+DA:10,0
 LF:6
-LH:5
+LH:0
 BRF:0
 BRH:0
 FNF:6
-FNH:5
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\User.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\User.cs
 FN:4,System.Int32 assetgrid_backend.Models.User::get_Id()
-FNDA:1838,System.Int32 assetgrid_backend.Models.User::get_Id()
-DA:5,1838
+FNDA:0,System.Int32 assetgrid_backend.Models.User::get_Id()
+DA:5,0
 FN:5,System.String assetgrid_backend.Models.User::get_Email()
-FNDA:176,System.String assetgrid_backend.Models.User::get_Email()
-DA:6,176
+FNDA:0,System.String assetgrid_backend.Models.User::get_Email()
+DA:6,0
 FN:6,System.String assetgrid_backend.Models.User::get_NormalizedEmail()
-FNDA:120,System.String assetgrid_backend.Models.User::get_NormalizedEmail()
-DA:7,120
+FNDA:0,System.String assetgrid_backend.Models.User::get_NormalizedEmail()
+DA:7,0
 FN:7,System.String assetgrid_backend.Models.User::get_HashedPassword()
-FNDA:171,System.String assetgrid_backend.Models.User::get_HashedPassword()
-DA:8,171
+FNDA:0,System.String assetgrid_backend.Models.User::get_HashedPassword()
+DA:8,0
 FN:8,assetgrid_backend.Models.UserPreferences assetgrid_backend.Models.User::get_Preferences()
-FNDA:116,assetgrid_backend.Models.UserPreferences assetgrid_backend.Models.User::get_Preferences()
-DA:9,116
+FNDA:0,assetgrid_backend.Models.UserPreferences assetgrid_backend.Models.User::get_Preferences()
+DA:9,0
 FN:9,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.User::get_Accounts()
-FNDA:60,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.User::get_Accounts()
-DA:10,60
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Models.User::get_Accounts()
+DA:10,0
 LF:6
-LH:6
+LH:0
 BRF:0
 BRH:0
 FNF:6
-FNH:6
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\UserAccount.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\UserAccount.cs
 FN:6,System.Int32 assetgrid_backend.Models.UserAccount::get_Id()
-FNDA:6,System.Int32 assetgrid_backend.Models.UserAccount::get_Id()
-DA:7,6
+FNDA:0,System.Int32 assetgrid_backend.Models.UserAccount::get_Id()
+DA:7,0
 FN:7,System.Int32 assetgrid_backend.Models.UserAccount::get_UserId()
-FNDA:242,System.Int32 assetgrid_backend.Models.UserAccount::get_UserId()
-DA:8,242
+FNDA:0,System.Int32 assetgrid_backend.Models.UserAccount::get_UserId()
+DA:8,0
 FN:8,assetgrid_backend.Models.User assetgrid_backend.Models.UserAccount::get_User()
-FNDA:108,assetgrid_backend.Models.User assetgrid_backend.Models.UserAccount::get_User()
-DA:9,108
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Models.UserAccount::get_User()
+DA:9,0
 FN:9,System.Int32 assetgrid_backend.Models.UserAccount::get_AccountId()
-FNDA:108,System.Int32 assetgrid_backend.Models.UserAccount::get_AccountId()
-DA:10,108
+FNDA:0,System.Int32 assetgrid_backend.Models.UserAccount::get_AccountId()
+DA:10,0
 FN:10,assetgrid_backend.Models.Account assetgrid_backend.Models.UserAccount::get_Account()
-FNDA:135,assetgrid_backend.Models.Account assetgrid_backend.Models.UserAccount::get_Account()
-DA:11,135
+FNDA:0,assetgrid_backend.Models.Account assetgrid_backend.Models.UserAccount::get_Account()
+DA:11,0
 FN:11,assetgrid_backend.Models.UserAccountPermissions assetgrid_backend.Models.UserAccount::get_Permissions()
-FNDA:2644,assetgrid_backend.Models.UserAccountPermissions assetgrid_backend.Models.UserAccount::get_Permissions()
-DA:12,2644
+FNDA:0,assetgrid_backend.Models.UserAccountPermissions assetgrid_backend.Models.UserAccount::get_Permissions()
+DA:12,0
 FN:12,System.Boolean assetgrid_backend.Models.UserAccount::get_Favorite()
-FNDA:1363,System.Boolean assetgrid_backend.Models.UserAccount::get_Favorite()
-DA:13,1363
+FNDA:0,System.Boolean assetgrid_backend.Models.UserAccount::get_Favorite()
+DA:13,0
 FN:13,System.Boolean assetgrid_backend.Models.UserAccount::get_IncludeInNetWorth()
-FNDA:1363,System.Boolean assetgrid_backend.Models.UserAccount::get_IncludeInNetWorth()
-DA:14,1363
+FNDA:0,System.Boolean assetgrid_backend.Models.UserAccount::get_IncludeInNetWorth()
+DA:14,0
 FN:19,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.AccountQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>)
-FNDA:14,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.AccountQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>)
-DA:20,14
-DA:21,14
-DA:22,14
-DA:23,14
-DA:24,14
-DA:25,14
-DA:26,14
-DA:27,14
-DA:28,14
-DA:29,14
-DA:30,14
-DA:31,14
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.AccountQueryableExtensions::SelectView(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>)
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
 LF:20
-LH:20
+LH:0
 BRF:0
 BRH:0
 FNF:9
-FNH:9
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\UserPreferences.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\UserPreferences.cs
 FN:4,System.Int32 assetgrid_backend.Models.UserPreferences::get_Id()
 FNDA:0,System.Int32 assetgrid_backend.Models.UserPreferences::get_Id()
 DA:5,0
 FN:5,System.Int32 assetgrid_backend.Models.UserPreferences::get_UserId()
-FNDA:1,System.Int32 assetgrid_backend.Models.UserPreferences::get_UserId()
-DA:6,1
+FNDA:0,System.Int32 assetgrid_backend.Models.UserPreferences::get_UserId()
+DA:6,0
 FN:6,assetgrid_backend.Models.User assetgrid_backend.Models.UserPreferences::get_User()
-FNDA:52,assetgrid_backend.Models.User assetgrid_backend.Models.UserPreferences::get_User()
-DA:7,52
+FNDA:0,assetgrid_backend.Models.User assetgrid_backend.Models.UserPreferences::get_User()
+DA:7,0
 FN:7,System.String assetgrid_backend.Models.UserPreferences::get_DecimalSeparator()
-FNDA:169,System.String assetgrid_backend.Models.UserPreferences::get_DecimalSeparator()
-DA:8,169
+FNDA:0,System.String assetgrid_backend.Models.UserPreferences::get_DecimalSeparator()
+DA:8,0
 FN:8,System.Int32 assetgrid_backend.Models.UserPreferences::get_DecimalDigits()
-FNDA:117,System.Int32 assetgrid_backend.Models.UserPreferences::get_DecimalDigits()
-DA:9,117
+FNDA:0,System.Int32 assetgrid_backend.Models.UserPreferences::get_DecimalDigits()
+DA:9,0
 FN:9,System.String assetgrid_backend.Models.UserPreferences::get_ThousandsSeparator()
-FNDA:169,System.String assetgrid_backend.Models.UserPreferences::get_ThousandsSeparator()
-DA:10,169
+FNDA:0,System.String assetgrid_backend.Models.UserPreferences::get_ThousandsSeparator()
+DA:10,0
 FN:10,System.String assetgrid_backend.Models.UserPreferences::get_DateFormat()
-FNDA:169,System.String assetgrid_backend.Models.UserPreferences::get_DateFormat()
-DA:11,169
+FNDA:0,System.String assetgrid_backend.Models.UserPreferences::get_DateFormat()
+DA:11,0
 FN:11,System.String assetgrid_backend.Models.UserPreferences::get_DateTimeFormat()
-FNDA:169,System.String assetgrid_backend.Models.UserPreferences::get_DateTimeFormat()
-DA:12,169
+FNDA:0,System.String assetgrid_backend.Models.UserPreferences::get_DateTimeFormat()
+DA:12,0
 LF:8
-LH:7
+LH:0
 BRF:0
 BRH:0
 FNF:8
-FNH:7
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewAccount.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewAccount.cs
 FN:4,System.Int32 assetgrid_backend.Models.ViewModels.ViewAccount::get_Id()
-FNDA:5704,System.Int32 assetgrid_backend.Models.ViewModels.ViewAccount::get_Id()
-DA:5,5704
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewAccount::get_Id()
+DA:5,0
 FN:5,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Name()
-FNDA:1669,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Name()
-DA:6,1669
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Name()
+DA:6,0
 FN:6,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Description()
-FNDA:1665,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Description()
-DA:7,1665
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_Description()
+DA:7,0
 FN:7,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_AccountNumber()
-FNDA:1665,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_AccountNumber()
-DA:8,1665
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_AccountNumber()
+DA:8,0
 FN:8,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_Favorite()
-FNDA:1666,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_Favorite()
-DA:9,1666
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_Favorite()
+DA:9,0
 FN:9,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccount::get_Balance()
-FNDA:1863,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccount::get_Balance()
-DA:10,1863
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccount::get_Balance()
+DA:10,0
 FN:10,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_BalanceString()
-FNDA:200,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_BalanceString()
-DA:11,200
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccount::get_BalanceString()
+DA:11,0
 FN:11,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_IncludeInNetWorth()
-FNDA:1671,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_IncludeInNetWorth()
-DA:12,1671
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewAccount::get_IncludeInNetWorth()
+DA:12,0
 FN:12,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::get_Permissions()
-FNDA:1709,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::get_Permissions()
-DA:13,1709
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::get_Permissions()
+DA:13,0
 FN:44,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::PermissionsFromDbPermissions(assetgrid_backend.Models.UserAccountPermissions)
-FNDA:1380,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::PermissionsFromDbPermissions(assetgrid_backend.Models.UserAccountPermissions)
-DA:45,1380
-DA:46,1380
-DA:47,1380
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions assetgrid_backend.Models.ViewModels.ViewAccount::PermissionsFromDbPermissions(assetgrid_backend.Models.UserAccountPermissions)
+DA:45,0
+DA:46,0
+DA:47,0
 FN:49,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewAccount::GetNoReadAccess(System.Int32)
-FNDA:16,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewAccount::GetNoReadAccess(System.Int32)
-DA:50,16
-DA:51,16
-DA:52,16
-DA:53,16
-DA:54,16
-DA:55,16
-DA:56,16
-DA:57,16
-DA:58,16
-DA:59,16
-DA:60,16
-DA:61,16
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewAccount::GetNoReadAccess(System.Int32)
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
 FN:14,System.Void assetgrid_backend.Models.ViewModels.ViewAccount::.ctor(System.Int32,System.String,System.String,System.String,System.Boolean,System.Boolean,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions,System.Int64)
-FNDA:1459,System.Void assetgrid_backend.Models.ViewModels.ViewAccount::.ctor(System.Int32,System.String,System.String,System.String,System.Boolean,System.Boolean,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions,System.Int64)
-DA:15,1459
-DA:16,1459
-DA:17,1459
-DA:18,1459
-DA:19,1459
-DA:20,1459
-DA:21,1459
-DA:22,1459
-DA:23,1459
-DA:24,1459
-DA:25,1459
-DA:26,1459
-DA:27,1459
-DA:28,1459
-DA:29,1459
-DA:30,1459
-DA:31,1459
-DA:32,1459
-DA:33,1459
-DA:34,1459
+FNDA:0,System.Void assetgrid_backend.Models.ViewModels.ViewAccount::.ctor(System.Int32,System.String,System.String,System.String,System.Boolean,System.Boolean,assetgrid_backend.Models.ViewModels.ViewAccount/AccountPermissions,System.Int64)
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
 FN:65,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Name()
-FNDA:247,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Name()
-DA:66,247
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Name()
+DA:66,0
 FN:66,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Description()
-FNDA:210,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Description()
-DA:67,210
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Description()
+DA:67,0
 FN:67,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_AccountNumber()
-FNDA:154,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_AccountNumber()
-DA:68,154
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_AccountNumber()
+DA:68,0
 FN:68,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_IncludeInNetWorth()
-FNDA:254,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_IncludeInNetWorth()
-DA:69,254
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_IncludeInNetWorth()
+DA:69,0
 FN:69,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Favorite()
-FNDA:252,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Favorite()
-DA:70,252
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateAccount::get_Favorite()
+DA:70,0
 FN:82,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_From()
-FNDA:81794,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_From()
-DA:83,81794
+FNDA:0,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_From()
+DA:83,0
 FN:83,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_To()
-FNDA:47088,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_To()
-DA:84,47088
+FNDA:0,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_To()
+DA:84,0
 FN:84,assetgrid_backend.Models.ViewModels.AccountMovementResolution assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_Resolution()
-FNDA:15,assetgrid_backend.Models.ViewModels.AccountMovementResolution assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_Resolution()
-DA:85,15
+FNDA:0,assetgrid_backend.Models.ViewModels.AccountMovementResolution assetgrid_backend.Models.ViewModels.ViewGetMovementRequest::get_Resolution()
+DA:85,0
 FN:89,System.DateTime assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_DateTime()
-FNDA:47523,System.DateTime assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_DateTime()
-DA:90,47523
+FNDA:0,System.DateTime assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_DateTime()
+DA:90,0
 FN:91,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Revenue()
-FNDA:450,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Revenue()
-DA:92,450
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Revenue()
+DA:92,0
 FN:92,System.String assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_RevenueString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_RevenueString()
 DA:93,0
 FN:94,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Expenses()
-FNDA:447,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Expenses()
-DA:95,447
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_Expenses()
+DA:95,0
 FN:95,System.String assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_ExpensesString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewAccountMovementItem::get_ExpensesString()
 DA:96,0
 FN:100,System.Int64 assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_InitialBalance()
-FNDA:10,System.Int64 assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_InitialBalance()
-DA:101,10
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_InitialBalance()
+DA:101,0
 FN:101,System.String assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_InitialBalanceString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_InitialBalanceString()
 DA:102,0
 FN:102,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccountMovementItem> assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_Items()
-FNDA:22,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccountMovementItem> assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_Items()
-DA:103,22
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccountMovementItem> assetgrid_backend.Models.ViewModels.ViewGetMovementResponse::get_Items()
+DA:103,0
 FN:107,System.Collections.Generic.Dictionary`2<System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Items()
-FNDA:14,System.Collections.Generic.Dictionary`2<System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Items()
-DA:108,14
+FNDA:0,System.Collections.Generic.Dictionary`2<System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Items()
+DA:108,0
 FN:108,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Accounts()
-FNDA:6,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Accounts()
-DA:109,6
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse::get_Accounts()
+DA:109,0
 FN:113,System.String assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Category()
-FNDA:12,System.String assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Category()
-DA:114,12
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Category()
+DA:114,0
 FN:114,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Expenses()
-FNDA:4,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Expenses()
-DA:115,4
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Expenses()
+DA:115,0
 FN:115,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Revenue()
-FNDA:4,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Revenue()
-DA:116,4
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewCategorySummary::get_Revenue()
+DA:116,0
 LF:65
-LH:62
+LH:0
 BRF:0
 BRH:0
 FNF:33
-FNH:30
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewPreferences.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewPreferences.cs
 FN:6,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalSeparator()
-FNDA:138,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalSeparator()
-DA:7,138
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalSeparator()
+DA:7,0
 FN:7,System.Int32 assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalDigits()
-FNDA:77,System.Int32 assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalDigits()
-DA:8,77
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewPreferences::get_DecimalDigits()
+DA:8,0
 FN:8,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_ThousandsSeparator()
-FNDA:138,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_ThousandsSeparator()
-DA:9,138
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_ThousandsSeparator()
+DA:9,0
 FN:9,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateFormat()
-FNDA:138,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateFormat()
-DA:10,138
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateFormat()
+DA:10,0
 FN:10,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateTimeFormat()
-FNDA:138,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateTimeFormat()
-DA:11,138
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewPreferences::get_DateTimeFormat()
+DA:11,0
 FN:13,System.Void assetgrid_backend.Models.ViewModels.ViewPreferences::.ctor(System.String,System.Int32,System.String,System.String,System.String)
 FNDA:0,System.Void assetgrid_backend.Models.ViewModels.ViewPreferences::.ctor(System.String,System.Int32,System.String,System.String,System.String)
 DA:14,0
@@ -698,50 +698,50 @@ DA:19,0
 DA:20,0
 DA:21,0
 FN:22,System.Void assetgrid_backend.Models.ViewModels.ViewPreferences::.ctor(assetgrid_backend.Models.UserPreferences)
-FNDA:61,System.Void assetgrid_backend.Models.ViewModels.ViewPreferences::.ctor(assetgrid_backend.Models.UserPreferences)
-DA:23,61
-DA:24,61
-DA:25,61
-DA:26,61
-DA:27,61
-DA:28,61
-DA:29,61
-DA:30,61
+FNDA:0,System.Void assetgrid_backend.Models.ViewModels.ViewPreferences::.ctor(assetgrid_backend.Models.UserPreferences)
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
 LF:21
-LH:13
+LH:0
 BRF:0
 BRH:0
 FNF:7
-FNH:6
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewSearch.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewSearch.cs
 FN:4,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewSearch::get_Query()
-FNDA:71,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewSearch::get_Query()
-DA:5,71
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewSearch::get_Query()
+DA:5,0
 FN:5,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_From()
-FNDA:29,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_From()
-DA:6,29
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_From()
+DA:6,0
 FN:6,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_To()
-FNDA:21,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_To()
-DA:7,21
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearch::get_To()
+DA:7,0
 FN:7,System.String assetgrid_backend.Models.ViewModels.ViewSearch::get_OrderByColumn()
-FNDA:13,System.String assetgrid_backend.Models.ViewModels.ViewSearch::get_OrderByColumn()
-DA:8,13
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewSearch::get_OrderByColumn()
+DA:8,0
 FN:8,System.Nullable`1<System.Boolean> assetgrid_backend.Models.ViewModels.ViewSearch::get_Descending()
-FNDA:12,System.Nullable`1<System.Boolean> assetgrid_backend.Models.ViewModels.ViewSearch::get_Descending()
-DA:9,12
+FNDA:0,System.Nullable`1<System.Boolean> assetgrid_backend.Models.ViewModels.ViewSearch::get_Descending()
+DA:9,0
 FN:13,System.String assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Column()
-FNDA:38,System.String assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Column()
-DA:14,38
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Column()
+DA:14,0
 FN:14,System.Object assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Value()
-FNDA:28,System.Object assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Value()
-DA:15,28
+FNDA:0,System.Object assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Value()
+DA:15,0
 FN:15,assetgrid_backend.Models.ViewModels.ViewSearchOperator assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Operator()
-FNDA:14,assetgrid_backend.Models.ViewModels.ViewSearchOperator assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Operator()
-DA:16,14
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchOperator assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Operator()
+DA:16,0
 FN:16,System.Boolean assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Not()
-FNDA:16,System.Boolean assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Not()
-DA:17,16
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_Not()
+DA:17,0
 FN:21,System.String assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_OperatorString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewSearchQuery::get_OperatorString()
 DA:22,0
@@ -770,14 +770,14 @@ BRDA:34,136,0,0
 BRDA:34,136,1,0
 BRDA:23,11,0,0
 FN:43,assetgrid_backend.Models.ViewModels.ViewSearchGroupType assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Type()
-FNDA:39,assetgrid_backend.Models.ViewModels.ViewSearchGroupType assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Type()
-DA:44,39
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchGroupType assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Type()
+DA:44,0
 FN:44,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewSearchGroup> assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Children()
-FNDA:40,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewSearchGroup> assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Children()
-DA:45,40
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewSearchGroup> assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Children()
+DA:45,0
 FN:45,assetgrid_backend.Models.ViewModels.ViewSearchQuery assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Query()
-FNDA:103,assetgrid_backend.Models.ViewModels.ViewSearchQuery assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Query()
-DA:46,103
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchQuery assetgrid_backend.Models.ViewModels.ViewSearchGroup::get_Query()
+DA:46,0
 FN:48,System.String assetgrid_backend.Models.ViewModels.ViewSearchGroup::ToString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewSearchGroup::ToString()
 DA:49,0
@@ -808,67 +808,67 @@ BRDA:61,242,1,0
 BRDA:61,254,0,0
 BRDA:61,254,1,0
 FN:67,System.Collections.Generic.List`1<T> assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_Data()
-FNDA:48,System.Collections.Generic.List`1<T> assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_Data()
-DA:68,48
+FNDA:0,System.Collections.Generic.List`1<T> assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_Data()
+DA:68,0
 FN:68,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_TotalItems()
-FNDA:24,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_TotalItems()
-DA:69,24
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewSearchResponse`1::get_TotalItems()
+DA:69,0
 LF:32
-LH:14
+LH:0
 BRF:34
 BRH:0
 FNF:16
-FNH:14
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewTransaction.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewTransaction.cs
 FN:6,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_SourceId()
-FNDA:3697,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_SourceId()
-DA:7,3697
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_SourceId()
+DA:7,0
 FN:7,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DestinationId()
-FNDA:5940,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DestinationId()
-DA:8,5940
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DestinationId()
+DA:8,0
 FN:8,System.DateTime assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DateTime()
-FNDA:2357,System.DateTime assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DateTime()
-DA:9,2357
+FNDA:0,System.DateTime assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_DateTime()
+DA:9,0
 FN:9,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Description()
-FNDA:3529,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Description()
-DA:10,3529
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Description()
+DA:10,0
 FN:10,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Identifier()
-FNDA:4845,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Identifier()
-DA:11,4845
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Identifier()
+DA:11,0
 FN:11,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Category()
-FNDA:3544,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Category()
-DA:12,3544
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Category()
+DA:12,0
 FN:12,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Total()
-FNDA:2382,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Total()
-DA:13,2382
+FNDA:0,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Total()
+DA:13,0
 FN:13,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_TotalString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_TotalString()
 DA:14,0
 BRDA:14,15,0,0
 BRDA:14,15,1,0
 FN:14,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Lines()
-FNDA:3531,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Lines()
-DA:15,3531
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewCreateTransaction::get_Lines()
+DA:15,0
 FN:37,System.Int64 assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<>c::<System.ComponentModel.DataAnnotations.IValidatableObject.Validate>b__35_0(assetgrid_backend.Models.ViewModels.ViewTransactionLine)
-FNDA:3,System.Int64 assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<>c::<System.ComponentModel.DataAnnotations.IValidatableObject.Validate>b__35_0(assetgrid_backend.Models.ViewModels.ViewTransactionLine)
-DA:38,3
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<>c::<System.ComponentModel.DataAnnotations.IValidatableObject.Validate>b__35_0(assetgrid_backend.Models.ViewModels.ViewTransactionLine)
+DA:38,0
 FN:17,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<System-ComponentModel-DataAnnotations-IValidatableObject-Validate>d__35::MoveNext()
-FNDA:3,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<System-ComponentModel-DataAnnotations-IValidatableObject-Validate>d__35::MoveNext()
-DA:18,3
-DA:19,3
-DA:20,1
-DA:21,1
-DA:22,1
-DA:23,1
-DA:24,1
-DA:25,2
-DA:26,1
-DA:27,1
-DA:28,1
-DA:29,1
-DA:30,1
-DA:32,3
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewCreateTransaction/<System-ComponentModel-DataAnnotations-IValidatableObject-Validate>d__35::MoveNext()
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:32,0
 DA:33,0
 DA:34,0
 DA:35,0
@@ -879,186 +879,186 @@ DA:40,0
 DA:41,0
 DA:42,0
 DA:43,0
-DA:44,3
-BRDA:19,83,0,1
-BRDA:19,83,1,2
-BRDA:19,112,0,1
-BRDA:19,112,1,2
-BRDA:25,232,0,1
-BRDA:25,232,1,3
+DA:44,0
+BRDA:19,83,0,0
+BRDA:19,83,1,0
+BRDA:19,112,0,0
+BRDA:19,112,1,0
+BRDA:25,232,0,0
+BRDA:25,232,1,0
 BRDA:32,310,0,0
-BRDA:32,310,1,3
+BRDA:32,310,1,0
 BRDA:32,338,0,0
-BRDA:32,338,1,3
-BRDA:38,413,0,3
+BRDA:32,338,1,0
+BRDA:38,413,0,0
 BRDA:38,432,0,0
-BRDA:38,413,1,3
-BRDA:38,432,1,3
+BRDA:38,413,1,0
+BRDA:38,432,1,0
 BRDA:38,530,0,0
-BRDA:38,530,1,3
+BRDA:38,530,1,0
 FN:48,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_SourceId()
-FNDA:62,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_SourceId()
-DA:49,62
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_SourceId()
+DA:49,0
 FN:49,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DestinationId()
-FNDA:51,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DestinationId()
-DA:50,51
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DestinationId()
+DA:50,0
 FN:50,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DateTime()
-FNDA:36,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DateTime()
-DA:51,36
+FNDA:0,System.Nullable`1<System.DateTime> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_DateTime()
+DA:51,0
 FN:51,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Description()
-FNDA:74,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Description()
-DA:52,74
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Description()
+DA:52,0
 FN:52,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Category()
-FNDA:36,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Category()
-DA:53,36
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Category()
+DA:53,0
 FN:53,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Lines()
-FNDA:38,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Lines()
-DA:54,38
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Lines()
+DA:54,0
 FN:54,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Total()
-FNDA:40,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Total()
-DA:55,40
+FNDA:0,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Total()
+DA:55,0
 FN:55,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_TotalString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_TotalString()
 DA:56,0
 BRDA:56,15,0,0
 BRDA:56,15,1,0
 FN:56,System.Boolean assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_HasUniqueIdentifier()
-FNDA:34,System.Boolean assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_HasUniqueIdentifier()
-DA:57,34
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_HasUniqueIdentifier()
+DA:57,0
 FN:57,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Identifier()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewUpdateTransaction::get_Identifier()
 DA:58,0
 FN:62,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_model()
-FNDA:37,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_model()
-DA:63,37
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_model()
+DA:63,0
 FN:63,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_query()
-FNDA:21,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_query()
-DA:64,21
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions::get_query()
+DA:64,0
 FN:68,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Id()
-FNDA:1539,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Id()
-DA:69,1539
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Id()
+DA:69,0
 FN:69,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Source()
-FNDA:2150,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Source()
-DA:70,2150
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Source()
+DA:70,0
 FN:70,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Destination()
-FNDA:2576,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Destination()
-DA:71,2576
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Models.ViewModels.ViewTransaction::get_Destination()
+DA:71,0
 FN:71,System.DateTime assetgrid_backend.Models.ViewModels.ViewTransaction::get_DateTime()
-FNDA:177347,System.DateTime assetgrid_backend.Models.ViewModels.ViewTransaction::get_DateTime()
-DA:72,177347
+FNDA:0,System.DateTime assetgrid_backend.Models.ViewModels.ViewTransaction::get_DateTime()
+DA:72,0
 FN:72,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Description()
-FNDA:2703,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Description()
-DA:73,2703
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Description()
+DA:73,0
 FN:73,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Identifier()
-FNDA:1408,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Identifier()
-DA:74,1408
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Identifier()
+DA:74,0
 FN:74,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Total()
-FNDA:2665,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Total()
-DA:75,2665
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransaction::get_Total()
+DA:75,0
 FN:76,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Category()
-FNDA:2692,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Category()
-DA:77,2692
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_Category()
+DA:77,0
 FN:77,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_TotalString()
-FNDA:134,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_TotalString()
-DA:78,134
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransaction::get_TotalString()
+DA:78,0
 FN:78,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewTransaction::get_Lines()
-FNDA:2685,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewTransaction::get_Lines()
-DA:79,2685
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewTransactionLine> assetgrid_backend.Models.ViewModels.ViewTransaction::get_Lines()
+DA:79,0
 FN:83,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Succeeded()
-FNDA:20,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Succeeded()
-DA:84,20
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Succeeded()
+DA:84,0
 FN:84,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Failed()
-FNDA:20,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Failed()
-DA:85,20
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Failed()
+DA:85,0
 FN:85,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Duplicate()
-FNDA:16,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Duplicate()
-DA:86,16
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction> assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse::get_Duplicate()
+DA:86,0
 FN:90,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Amount()
-FNDA:192,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Amount()
-DA:91,192
+FNDA:0,System.Int64 assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Amount()
+DA:91,0
 FN:91,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_AmountString()
-FNDA:24,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_AmountString()
-DA:92,24
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_AmountString()
+DA:92,0
 FN:92,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Description()
-FNDA:264,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Description()
-DA:93,264
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransactionLine::get_Description()
+DA:93,0
 FN:94,System.Void assetgrid_backend.Models.ViewModels.ViewTransactionLine::.ctor(System.Int64,System.String)
-FNDA:96,System.Void assetgrid_backend.Models.ViewModels.ViewTransactionLine::.ctor(System.Int64,System.String)
-DA:95,96
-DA:96,96
-DA:97,96
-DA:98,96
-DA:99,96
+FNDA:0,System.Void assetgrid_backend.Models.ViewModels.ViewTransactionLine::.ctor(System.Int64,System.String)
+DA:95,0
+DA:96,0
+DA:97,0
+DA:98,0
+DA:99,0
 FN:103,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewTransactionList::get_Total()
-FNDA:10,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewTransactionList::get_Total()
-DA:104,10
+FNDA:0,System.Nullable`1<System.Int64> assetgrid_backend.Models.ViewModels.ViewTransactionList::get_Total()
+DA:104,0
 FN:104,System.String assetgrid_backend.Models.ViewModels.ViewTransactionList::get_TotalString()
 FNDA:0,System.String assetgrid_backend.Models.ViewModels.ViewTransactionList::get_TotalString()
 DA:105,0
 FN:109,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_AccountId()
-FNDA:6,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_AccountId()
-DA:110,6
+FNDA:0,System.Nullable`1<System.Int32> assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_AccountId()
+DA:110,0
 FN:110,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_From()
-FNDA:16,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_From()
-DA:111,16
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_From()
+DA:111,0
 FN:111,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_To()
-FNDA:11,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_To()
-DA:112,11
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_To()
+DA:112,0
 FN:112,System.Boolean assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Descending()
-FNDA:5,System.Boolean assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Descending()
-DA:113,5
+FNDA:0,System.Boolean assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Descending()
+DA:113,0
 FN:114,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Query()
-FNDA:5,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Query()
-DA:115,5
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchGroup assetgrid_backend.Models.ViewModels.ViewTransactionListRequest::get_Query()
+DA:115,0
 LF:75
-LH:61
+LH:0
 BRF:22
-BRH:12
+BRH:0
 FNF:47
-FNH:43
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewUser.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Models\ViewModels\ViewUser.cs
 FN:4,System.Int32 assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Id()
-FNDA:171,System.Int32 assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Id()
-DA:5,171
+FNDA:0,System.Int32 assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Id()
+DA:5,0
 FN:5,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Email()
-FNDA:58,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Email()
-DA:6,58
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Email()
+DA:6,0
 FN:6,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Preferences()
-FNDA:76,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Preferences()
-DA:7,76
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Preferences()
+DA:7,0
 FN:7,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_FavoriteAccounts()
-FNDA:56,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_FavoriteAccounts()
-DA:8,56
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_FavoriteAccounts()
+DA:8,0
 FN:8,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Token()
-FNDA:56,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Token()
-DA:9,56
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::get_Token()
+DA:9,0
 FN:10,System.Void assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::.ctor(System.Int32,System.String,assetgrid_backend.Models.ViewModels.ViewPreferences,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount>,System.String)
-FNDA:56,System.Void assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::.ctor(System.Int32,System.String,assetgrid_backend.Models.ViewModels.ViewPreferences,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount>,System.String)
-DA:11,56
-DA:12,56
-DA:13,56
-DA:14,56
-DA:15,56
-DA:16,56
-DA:17,56
-DA:18,56
+FNDA:0,System.Void assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse::.ctor(System.Int32,System.String,assetgrid_backend.Models.ViewModels.ViewPreferences,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewAccount>,System.String)
+DA:11,0
+DA:12,0
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
 FN:22,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Email()
-FNDA:153,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Email()
-DA:23,153
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Email()
+DA:23,0
 FN:23,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Password()
-FNDA:153,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Password()
-DA:24,153
+FNDA:0,System.String assetgrid_backend.Models.ViewModels.AuthenticateModel::get_Password()
+DA:24,0
 LF:15
-LH:15
+LH:0
 BRF:0
 BRH:0
 FNF:8
-FNH:8
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\20220925171506_initial.cs
-FN:11,System.Void assetgrid_backend.Migrations.initial::Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
-FNDA:0,System.Void assetgrid_backend.Migrations.initial::Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\20220929205500_v0.1.0.cs
+FN:11,System.Void assetgrid_backend.Migrations.v010::Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
+FNDA:0,System.Void assetgrid_backend.Migrations.v010::Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
 DA:12,0
 DA:13,0
 DA:14,0
@@ -1096,8 +1096,8 @@ DA:47,0
 DA:48,0
 DA:49,0
 DA:50,0
+DA:51,0
 DA:52,0
-DA:53,0
 DA:54,0
 DA:55,0
 DA:56,0
@@ -1114,6 +1114,7 @@ DA:66,0
 DA:67,0
 DA:68,0
 DA:69,0
+DA:70,0
 DA:71,0
 DA:72,0
 DA:73,0
@@ -1129,7 +1130,6 @@ DA:82,0
 DA:83,0
 DA:84,0
 DA:85,0
-DA:86,0
 DA:87,0
 DA:88,0
 DA:89,0
@@ -1150,6 +1150,7 @@ DA:103,0
 DA:104,0
 DA:105,0
 DA:106,0
+DA:107,0
 DA:108,0
 DA:109,0
 DA:110,0
@@ -1158,7 +1159,6 @@ DA:112,0
 DA:113,0
 DA:114,0
 DA:115,0
-DA:116,0
 DA:117,0
 DA:118,0
 DA:119,0
@@ -1179,6 +1179,7 @@ DA:133,0
 DA:134,0
 DA:135,0
 DA:136,0
+DA:137,0
 DA:138,0
 DA:139,0
 DA:140,0
@@ -1186,7 +1187,6 @@ DA:141,0
 DA:142,0
 DA:143,0
 DA:144,0
-DA:145,0
 DA:146,0
 DA:147,0
 DA:148,0
@@ -1207,25 +1207,22 @@ DA:162,0
 DA:163,0
 DA:164,0
 DA:165,0
+DA:166,0
 DA:167,0
 DA:168,0
-DA:169,0
 DA:170,0
 DA:171,0
 DA:172,0
 DA:173,0
-DA:174,0
 DA:175,0
 DA:176,0
 DA:177,0
 DA:178,0
 DA:179,0
-DA:180,0
 DA:181,0
 DA:182,0
 DA:183,0
 DA:184,0
-DA:185,0
 DA:186,0
 DA:187,0
 DA:188,0
@@ -1234,19 +1231,19 @@ DA:191,0
 DA:192,0
 DA:193,0
 DA:194,0
-DA:195,0
+DA:196,0
 DA:197,0
 DA:198,0
 DA:199,0
-DA:200,0
+DA:201,0
 DA:202,0
 DA:203,0
 DA:204,0
-DA:205,0
+DA:206,0
 DA:207,0
 DA:208,0
 DA:209,0
-DA:210,0
+DA:211,0
 DA:212,0
 DA:213,0
 DA:214,0
@@ -1256,57 +1253,33 @@ DA:218,0
 DA:219,0
 DA:220,0
 DA:221,0
-DA:223,0
-DA:224,0
+DA:222,0
+FN:224,System.Void assetgrid_backend.Migrations.v010::Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
+FNDA:0,System.Void assetgrid_backend.Migrations.v010::Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
 DA:225,0
 DA:226,0
-DA:228,0
+DA:227,0
 DA:229,0
 DA:230,0
-DA:231,0
+DA:232,0
 DA:233,0
-DA:234,0
 DA:235,0
 DA:236,0
 DA:238,0
 DA:239,0
-DA:240,0
 DA:241,0
 DA:242,0
-DA:244,0
-DA:245,0
-DA:246,0
-DA:247,0
-DA:248,0
-DA:249,0
-FN:251,System.Void assetgrid_backend.Migrations.initial::Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
-FNDA:0,System.Void assetgrid_backend.Migrations.initial::Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)
-DA:252,0
-DA:253,0
-DA:254,0
-DA:256,0
-DA:257,0
-DA:259,0
-DA:260,0
-DA:262,0
-DA:263,0
-DA:265,0
-DA:266,0
-DA:268,0
-DA:269,0
-DA:271,0
-DA:272,0
-DA:273,0
-LF:236
+DA:243,0
+LF:209
 LH:0
 BRF:0
 BRH:0
 FNF:2
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\20220925171506_initial.Designer.cs
-FN:17,System.Void assetgrid_backend.Migrations.initial::BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)
-FNDA:0,System.Void assetgrid_backend.Migrations.initial::BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\20220929205500_v0.1.0.Designer.cs
+FN:17,System.Void assetgrid_backend.Migrations.v010::BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)
+FNDA:0,System.Void assetgrid_backend.Migrations.v010::BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)
 DA:18,0
 DA:20,0
 DA:21,0
@@ -1353,6 +1326,7 @@ DA:63,0
 DA:64,0
 DA:65,0
 DA:66,0
+DA:67,0
 DA:68,0
 DA:69,0
 DA:70,0
@@ -1375,7 +1349,6 @@ DA:86,0
 DA:87,0
 DA:88,0
 DA:89,0
-DA:90,0
 DA:91,0
 DA:92,0
 DA:93,0
@@ -1396,11 +1369,11 @@ DA:107,0
 DA:108,0
 DA:109,0
 DA:110,0
+DA:111,0
 DA:112,0
 DA:113,0
 DA:114,0
 DA:115,0
-DA:116,0
 DA:117,0
 DA:118,0
 DA:119,0
@@ -1421,11 +1394,11 @@ DA:133,0
 DA:134,0
 DA:135,0
 DA:136,0
+DA:137,0
 DA:138,0
 DA:139,0
 DA:140,0
 DA:141,0
-DA:142,0
 DA:143,0
 DA:144,0
 DA:145,0
@@ -1446,6 +1419,7 @@ DA:159,0
 DA:160,0
 DA:161,0
 DA:162,0
+DA:163,0
 DA:164,0
 DA:165,0
 DA:166,0
@@ -1454,7 +1428,6 @@ DA:168,0
 DA:169,0
 DA:170,0
 DA:171,0
-DA:172,0
 DA:173,0
 DA:174,0
 DA:175,0
@@ -1475,6 +1448,7 @@ DA:189,0
 DA:190,0
 DA:191,0
 DA:192,0
+DA:193,0
 DA:194,0
 DA:195,0
 DA:196,0
@@ -1487,7 +1461,6 @@ DA:202,0
 DA:203,0
 DA:204,0
 DA:205,0
-DA:206,0
 DA:207,0
 DA:208,0
 DA:209,0
@@ -1502,17 +1475,16 @@ DA:217,0
 DA:218,0
 DA:219,0
 DA:220,0
-DA:221,0
 DA:222,0
 DA:223,0
 DA:224,0
 DA:225,0
 DA:226,0
+DA:227,0
 DA:228,0
 DA:229,0
 DA:230,0
 DA:231,0
-DA:232,0
 DA:233,0
 DA:234,0
 DA:235,0
@@ -1528,9 +1500,9 @@ DA:244,0
 DA:245,0
 DA:246,0
 DA:247,0
+DA:248,0
 DA:249,0
 DA:250,0
-DA:251,0
 DA:252,0
 DA:253,0
 DA:254,0
@@ -1538,58 +1510,33 @@ DA:255,0
 DA:256,0
 DA:257,0
 DA:258,0
+DA:259,0
 DA:260,0
 DA:261,0
-DA:262,0
 DA:263,0
 DA:264,0
 DA:265,0
 DA:266,0
-DA:267,0
 DA:268,0
 DA:269,0
 DA:270,0
 DA:271,0
-DA:272,0
 DA:273,0
 DA:274,0
 DA:275,0
 DA:276,0
 DA:277,0
+DA:278,0
 DA:279,0
-DA:280,0
 DA:281,0
-DA:282,0
-DA:283,0
-DA:284,0
-DA:285,0
-DA:286,0
-DA:287,0
-DA:288,0
-DA:290,0
-DA:291,0
-DA:292,0
-DA:293,0
-DA:295,0
-DA:296,0
-DA:297,0
-DA:298,0
-DA:300,0
-DA:301,0
-DA:302,0
-DA:303,0
-DA:304,0
-DA:305,0
-DA:306,0
-DA:308,0
-LF:275
+LF:249
 LH:0
 BRF:0
 BRH:0
 FNF:1
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\AssetgridDbContextModelSnapshot.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Migrations\AssetgridDbContextModelSnapshot.cs
 FN:15,System.Void assetgrid_backend.Migrations.AssetgridDbContextModelSnapshot::BuildModel(Microsoft.EntityFrameworkCore.ModelBuilder)
 FNDA:0,System.Void assetgrid_backend.Migrations.AssetgridDbContextModelSnapshot::BuildModel(Microsoft.EntityFrameworkCore.ModelBuilder)
 DA:16,0
@@ -1638,6 +1585,7 @@ DA:61,0
 DA:62,0
 DA:63,0
 DA:64,0
+DA:65,0
 DA:66,0
 DA:67,0
 DA:68,0
@@ -1660,7 +1608,6 @@ DA:84,0
 DA:85,0
 DA:86,0
 DA:87,0
-DA:88,0
 DA:89,0
 DA:90,0
 DA:91,0
@@ -1681,11 +1628,11 @@ DA:105,0
 DA:106,0
 DA:107,0
 DA:108,0
+DA:109,0
 DA:110,0
 DA:111,0
 DA:112,0
 DA:113,0
-DA:114,0
 DA:115,0
 DA:116,0
 DA:117,0
@@ -1706,11 +1653,11 @@ DA:131,0
 DA:132,0
 DA:133,0
 DA:134,0
+DA:135,0
 DA:136,0
 DA:137,0
 DA:138,0
 DA:139,0
-DA:140,0
 DA:141,0
 DA:142,0
 DA:143,0
@@ -1731,6 +1678,7 @@ DA:157,0
 DA:158,0
 DA:159,0
 DA:160,0
+DA:161,0
 DA:162,0
 DA:163,0
 DA:164,0
@@ -1739,7 +1687,6 @@ DA:166,0
 DA:167,0
 DA:168,0
 DA:169,0
-DA:170,0
 DA:171,0
 DA:172,0
 DA:173,0
@@ -1760,6 +1707,7 @@ DA:187,0
 DA:188,0
 DA:189,0
 DA:190,0
+DA:191,0
 DA:192,0
 DA:193,0
 DA:194,0
@@ -1772,7 +1720,6 @@ DA:200,0
 DA:201,0
 DA:202,0
 DA:203,0
-DA:204,0
 DA:205,0
 DA:206,0
 DA:207,0
@@ -1787,17 +1734,16 @@ DA:215,0
 DA:216,0
 DA:217,0
 DA:218,0
-DA:219,0
 DA:220,0
 DA:221,0
 DA:222,0
 DA:223,0
 DA:224,0
+DA:225,0
 DA:226,0
 DA:227,0
 DA:228,0
 DA:229,0
-DA:230,0
 DA:231,0
 DA:232,0
 DA:233,0
@@ -1813,9 +1759,9 @@ DA:242,0
 DA:243,0
 DA:244,0
 DA:245,0
+DA:246,0
 DA:247,0
 DA:248,0
-DA:249,0
 DA:250,0
 DA:251,0
 DA:252,0
@@ -1823,58 +1769,33 @@ DA:253,0
 DA:254,0
 DA:255,0
 DA:256,0
+DA:257,0
 DA:258,0
 DA:259,0
-DA:260,0
 DA:261,0
 DA:262,0
 DA:263,0
 DA:264,0
-DA:265,0
 DA:266,0
 DA:267,0
 DA:268,0
 DA:269,0
-DA:270,0
 DA:271,0
 DA:272,0
 DA:273,0
 DA:274,0
 DA:275,0
+DA:276,0
 DA:277,0
-DA:278,0
 DA:279,0
-DA:280,0
-DA:281,0
-DA:282,0
-DA:283,0
-DA:284,0
-DA:285,0
-DA:286,0
-DA:288,0
-DA:289,0
-DA:290,0
-DA:291,0
-DA:293,0
-DA:294,0
-DA:295,0
-DA:296,0
-DA:298,0
-DA:299,0
-DA:300,0
-DA:301,0
-DA:302,0
-DA:303,0
-DA:304,0
-DA:306,0
-LF:275
+LF:249
 LH:0
 BRF:0
 BRH:0
 FNF:1
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Helpers\AuthorizeAttribute.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Helpers\AuthorizeAttribute.cs
 FN:10,System.Void assetgrid_backend.Helpers.AuthorizeAttribute::OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)
 FNDA:0,System.Void assetgrid_backend.Helpers.AuthorizeAttribute::OnAuthorization(Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)
 DA:11,0
@@ -1893,7 +1814,7 @@ BRH:0
 FNF:1
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Helpers\JwtMiddleware.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Helpers\JwtMiddleware.cs
 FN:31,System.Void assetgrid_backend.Helpers.JwtMiddleware::attachUserToContext(Microsoft.AspNetCore.Http.HttpContext,assetgrid_backend.Services.IUserService,System.String)
 FNDA:0,System.Void assetgrid_backend.Helpers.JwtMiddleware::attachUserToContext(Microsoft.AspNetCore.Http.HttpContext,assetgrid_backend.Services.IUserService,System.String)
 DA:32,0
@@ -1943,78 +1864,78 @@ BRH:0
 FNF:3
 FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Data\AssetgridDbContext.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Data\AssetgridDbContext.cs
 FN:12,System.Void assetgrid_backend.Data.AssetgridDbContext::OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)
-FNDA:2,System.Void assetgrid_backend.Data.AssetgridDbContext::OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)
-DA:13,2
-DA:14,2
-DA:16,2
-DA:17,2
-DA:18,2
-DA:19,2
-DA:20,2
-DA:21,2
-DA:22,2
-DA:23,4
-DA:25,2
-DA:26,2
-DA:27,2
-DA:28,2
-DA:29,4
-DA:31,4
-DA:32,2
-DA:33,2
-DA:34,2
-DA:35,4
-DA:36,2
+FNDA:0,System.Void assetgrid_backend.Data.AssetgridDbContext::OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)
+DA:13,0
+DA:14,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:25,0
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
+DA:35,0
+DA:36,0
 FN:37,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.User> assetgrid_backend.Data.AssetgridDbContext::get_Users()
-FNDA:328,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.User> assetgrid_backend.Data.AssetgridDbContext::get_Users()
-DA:38,328
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.User> assetgrid_backend.Data.AssetgridDbContext::get_Users()
+DA:38,0
 FN:38,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Account> assetgrid_backend.Data.AssetgridDbContext::get_Accounts()
-FNDA:203,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Account> assetgrid_backend.Data.AssetgridDbContext::get_Accounts()
-DA:39,203
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Account> assetgrid_backend.Data.AssetgridDbContext::get_Accounts()
+DA:39,0
 FN:39,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.AssetgridDbContext::get_UserAccounts()
-FNDA:1690,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.AssetgridDbContext::get_UserAccounts()
-DA:40,1690
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.AssetgridDbContext::get_UserAccounts()
+DA:40,0
 FN:40,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.AssetgridDbContext::get_Transactions()
-FNDA:1468,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.AssetgridDbContext::get_Transactions()
-DA:41,1468
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.AssetgridDbContext::get_Transactions()
+DA:41,0
 FN:41,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Data.AssetgridDbContext::get_TransactionLines()
-FNDA:100,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Data.AssetgridDbContext::get_TransactionLines()
-DA:42,100
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.TransactionLine> assetgrid_backend.Data.AssetgridDbContext::get_TransactionLines()
+DA:42,0
 FN:42,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserPreferences> assetgrid_backend.Data.AssetgridDbContext::get_UserPreferences()
-FNDA:106,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserPreferences> assetgrid_backend.Data.AssetgridDbContext::get_UserPreferences()
-DA:43,106
+FNDA:0,Microsoft.EntityFrameworkCore.DbSet`1<assetgrid_backend.Models.UserPreferences> assetgrid_backend.Data.AssetgridDbContext::get_UserPreferences()
+DA:43,0
 FN:7,System.Void assetgrid_backend.Data.AssetgridDbContext::.ctor(Microsoft.EntityFrameworkCore.DbContextOptions`1<assetgrid_backend.Data.AssetgridDbContext>)
-FNDA:50,System.Void assetgrid_backend.Data.AssetgridDbContext::.ctor(Microsoft.EntityFrameworkCore.DbContextOptions`1<assetgrid_backend.Data.AssetgridDbContext>)
-DA:8,50
-DA:9,50
-DA:10,50
+FNDA:0,System.Void assetgrid_backend.Data.AssetgridDbContext::.ctor(Microsoft.EntityFrameworkCore.DbContextOptions`1<assetgrid_backend.Data.AssetgridDbContext>)
+DA:8,0
+DA:9,0
+DA:10,0
 LF:30
-LH:30
+LH:0
 BRF:0
 BRH:0
 FNF:8
-FNH:8
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Data\DataExtensionMethods.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Data\DataExtensionMethods.cs
 FN:10,System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
-FNDA:12,System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
-DA:11,12
-DA:12,12
-DA:13,12
-DA:14,12
-DA:15,12
-DA:16,12
-DA:17,12
-DA:18,12
-DA:19,12
-DA:21,12
-DA:22,12
-DA:23,12
-DA:24,12
-DA:25,12
-DA:26,12
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.UserAccount>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
+DA:11,0
+DA:12,0
+DA:13,0
+DA:14,0
+DA:15,0
+DA:16,0
+DA:17,0
+DA:18,0
+DA:19,0
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
+DA:26,0
 DA:28,0
 DA:30,0
 DA:31,0
@@ -2027,9 +1948,9 @@ DA:38,0
 DA:39,0
 DA:40,0
 DA:42,0
-DA:43,12
-BRDA:21,164,0,12
-BRDA:24,191,0,12
+DA:43,0
+BRDA:21,164,0,0
+BRDA:24,191,0,0
 BRDA:24,191,1,0
 BRDA:21,164,1,0
 BRDA:30,226,0,0
@@ -2039,28 +1960,28 @@ BRDA:35,311,0,0
 BRDA:35,311,1,0
 BRDA:30,244,1,0
 FN:45,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
-FNDA:14,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
-DA:46,14
-DA:47,14
-DA:48,14
-DA:49,14
-DA:50,14
-DA:51,14
-DA:52,14
-DA:53,14
-DA:54,14
-DA:55,14
-DA:56,14
-DA:57,14
-DA:59,14
-DA:60,14
-DA:61,14
-DA:62,14
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearch,System.Boolean)
+DA:46,0
+DA:47,0
+DA:48,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:59,0
+DA:60,0
+DA:61,0
+DA:62,0
 DA:63,0
 DA:64,0
 DA:65,0
-DA:66,14
-DA:68,14
+DA:66,0
+DA:68,0
 DA:69,0
 DA:71,0
 DA:72,0
@@ -2079,14 +2000,14 @@ DA:84,0
 DA:85,0
 DA:86,0
 DA:87,0
-DA:89,14
-DA:90,14
-BRDA:59,264,0,14
+DA:89,0
+DA:90,0
+BRDA:59,264,0,0
 BRDA:62,289,0,0
-BRDA:62,289,1,14
-BRDA:59,264,1,14
-BRDA:68,319,0,2
-BRDA:68,319,1,12
+BRDA:62,289,1,0
+BRDA:59,264,1,0
+BRDA:68,319,0,0
+BRDA:68,319,1,0
 BRDA:68,337,0,0
 BRDA:73,404,0,0
 BRDA:73,404,1,0
@@ -2096,55 +2017,55 @@ BRDA:79,489,0,0
 BRDA:79,489,1,0
 BRDA:79,514,0,0
 BRDA:79,514,1,0
-BRDA:68,337,1,14
+BRDA:68,337,1,0
 FN:95,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-FNDA:11,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-DA:96,11
-DA:97,12
-DA:99,10
-DA:100,10
-DA:101,10
-DA:102,10
-DA:103,10
-DA:104,10
-DA:105,10
-DA:106,10
-DA:107,11
-BRDA:97,7,0,1
-BRDA:97,7,1,10
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction> assetgrid_backend.Data.DataExtensionMethods::ApplySearch(System.Linq.IQueryable`1<assetgrid_backend.Models.Transaction>,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
+DA:96,0
+DA:97,0
+DA:99,0
+DA:100,0
+DA:101,0
+DA:102,0
+DA:103,0
+DA:104,0
+DA:105,0
+DA:106,0
+DA:107,0
+BRDA:97,7,0,0
+BRDA:97,7,1,0
 FN:109,System.Linq.Expressions.Expression assetgrid_backend.Data.DataExtensionMethods::SearchGroupToExpression(assetgrid_backend.Models.ViewModels.ViewSearchGroup,System.ValueTuple`3<System.String,System.Type,System.Boolean>[],System.Linq.Expressions.Expression)
-FNDA:26,System.Linq.Expressions.Expression assetgrid_backend.Data.DataExtensionMethods::SearchGroupToExpression(assetgrid_backend.Models.ViewModels.ViewSearchGroup,System.ValueTuple`3<System.String,System.Type,System.Boolean>[],System.Linq.Expressions.Expression)
-DA:110,26
-DA:111,26
-DA:112,26
-DA:115,12
+FNDA:0,System.Linq.Expressions.Expression assetgrid_backend.Data.DataExtensionMethods::SearchGroupToExpression(assetgrid_backend.Models.ViewModels.ViewSearchGroup,System.ValueTuple`3<System.String,System.Type,System.Boolean>[],System.Linq.Expressions.Expression)
+DA:110,0
+DA:111,0
+DA:112,0
+DA:115,0
 DA:116,0
 DA:117,0
-DA:119,24
+DA:119,0
 DA:120,0
 DA:121,0
-DA:124,24
-DA:125,12
-DA:126,12
-DA:127,12
+DA:124,0
+DA:125,0
+DA:126,0
+DA:127,0
 DA:128,0
 DA:129,0
 DA:130,0
-DA:132,12
-DA:135,6
+DA:132,0
+DA:135,0
 DA:136,0
 DA:137,0
-DA:139,6
+DA:139,0
 DA:140,0
 DA:141,0
-DA:145,6
+DA:145,0
 DA:146,0
 DA:147,0
 DA:148,0
-DA:150,6
-DA:151,6
-DA:152,6
-DA:153,6
+DA:150,0
+DA:151,0
+DA:152,0
+DA:153,0
 DA:156,0
 DA:157,0
 DA:158,0
@@ -2166,25 +2087,25 @@ DA:178,0
 DA:179,0
 DA:182,0
 DA:183,0
-DA:187,6
+DA:187,0
 DA:188,0
 DA:189,0
-DA:192,6
-DA:193,6
-DA:194,6
-DA:195,6
-DA:196,1272
-DA:197,1272
-DA:198,1272
-DA:199,6
-DA:200,6
-DA:201,6
-DA:202,6
-DA:203,6
-DA:204,6
-DA:205,6
-DA:206,6
-DA:207,6
+DA:192,0
+DA:193,0
+DA:194,0
+DA:195,0
+DA:196,0
+DA:197,0
+DA:198,0
+DA:199,0
+DA:200,0
+DA:201,0
+DA:202,0
+DA:203,0
+DA:204,0
+DA:205,0
+DA:206,0
+DA:207,0
 DA:210,0
 DA:211,0
 DA:214,0
@@ -2204,15 +2125,15 @@ DA:233,0
 DA:235,0
 DA:236,0
 DA:238,0
-DA:241,12
-DA:242,4
-DA:243,4
-DA:246,8
-DA:247,8
-DA:251,14
+DA:241,0
+DA:242,0
+DA:243,0
+DA:246,0
+DA:247,0
+DA:251,0
 DA:252,0
 DA:253,0
-DA:255,42
+DA:255,0
 DA:256,0
 DA:257,0
 DA:258,0
@@ -2226,7 +2147,7 @@ DA:266,0
 DA:267,0
 DA:268,0
 DA:269,0
-DA:270,14
+DA:270,0
 DA:273,0
 DA:274,0
 DA:275,0
@@ -2246,31 +2167,31 @@ DA:290,0
 DA:291,0
 DA:292,0
 DA:295,0
-DA:297,26
-BRDA:112,35,3,12
+DA:297,0
+BRDA:112,35,3,0
 BRDA:115,75,0,0
-BRDA:115,75,1,12
+BRDA:115,75,1,0
 BRDA:119,114,0,0
-BRDA:119,114,1,12
+BRDA:119,114,1,0
 BRDA:125,189,0,0
-BRDA:125,189,1,12
+BRDA:125,189,1,0
 BRDA:127,271,0,0
-BRDA:127,271,1,12
-BRDA:132,313,1,6
+BRDA:127,271,1,0
+BRDA:132,313,1,0
 BRDA:135,344,0,0
-BRDA:135,344,1,6
+BRDA:135,344,1,0
 BRDA:135,362,0,0
-BRDA:135,362,1,6
-BRDA:139,466,0,6
+BRDA:135,362,1,0
+BRDA:139,466,0,0
 BRDA:139,466,1,0
 BRDA:139,492,0,0
-BRDA:139,492,1,6
+BRDA:139,492,1,0
 BRDA:145,625,0,0
 BRDA:145,634,0,0
 BRDA:145,634,1,0
-BRDA:145,625,1,6
+BRDA:145,625,1,0
 BRDA:145,659,0,0
-BRDA:145,659,1,6
+BRDA:145,659,1,0
 BRDA:132,313,2,0
 BRDA:156,724,0,0
 BRDA:156,724,1,0
@@ -2281,12 +2202,12 @@ BRDA:174,972,0,0
 BRDA:174,972,1,0
 BRDA:174,997,0,0
 BRDA:161,852,1,0
-BRDA:132,313,3,6
+BRDA:132,313,3,0
 BRDA:187,1131,0,0
-BRDA:187,1131,1,6
-BRDA:192,1245,0,6
+BRDA:187,1131,1,0
+BRDA:192,1245,0,0
 BRDA:192,1245,1,0
-BRDA:192,1276,0,6
+BRDA:192,1276,0,0
 BRDA:192,1276,1,0
 BRDA:132,313,4,0
 BRDA:214,1470,0,0
@@ -2299,18 +2220,18 @@ BRDA:226,1738,1,0
 BRDA:231,1862,0,0
 BRDA:231,1862,1,0
 BRDA:132,313,0,0
-BRDA:174,997,1,12
-BRDA:241,2088,0,4
-BRDA:241,2088,1,8
-BRDA:112,35,2,14
+BRDA:174,997,1,0
+BRDA:241,2088,0,0
+BRDA:241,2088,1,0
+BRDA:112,35,2,0
 BRDA:251,2131,0,0
-BRDA:251,2131,1,14
+BRDA:251,2131,1,0
 BRDA:255,2243,1,0
 BRDA:257,2184,0,0
 BRDA:257,2184,1,0
 BRDA:264,2221,0,0
 BRDA:264,2221,1,0
-BRDA:255,2243,0,14
+BRDA:255,2243,0,0
 BRDA:112,35,1,0
 BRDA:273,2288,0,0
 BRDA:273,2288,1,0
@@ -2321,34 +2242,34 @@ BRDA:286,2378,0,0
 BRDA:286,2378,1,0
 BRDA:277,2400,0,0
 BRDA:112,35,0,0
-BRDA:196,16,0,12
-BRDA:196,27,0,6
-BRDA:196,16,1,1266
-BRDA:196,27,1,1266
+BRDA:196,16,0,0
+BRDA:196,27,0,0
+BRDA:196,16,1,0
+BRDA:196,27,1,0
 FN:299,System.Object assetgrid_backend.Data.DataExtensionMethods::CastJsonElement(System.Text.Json.JsonElement,System.Type)
-FNDA:12,System.Object assetgrid_backend.Data.DataExtensionMethods::CastJsonElement(System.Text.Json.JsonElement,System.Type)
-DA:300,12
-DA:301,12
+FNDA:0,System.Object assetgrid_backend.Data.DataExtensionMethods::CastJsonElement(System.Text.Json.JsonElement,System.Type)
+DA:300,0
+DA:301,0
 DA:302,0
 DA:303,0
 DA:304,0
 DA:305,0
 DA:308,0
-DA:310,12
-DA:311,6
-DA:312,6
-DA:313,6
-DA:314,6
+DA:310,0
+DA:311,0
+DA:312,0
+DA:313,0
+DA:314,0
 DA:316,0
 DA:317,0
 DA:318,0
 DA:321,0
 DA:322,0
-DA:325,6
-DA:326,6
-DA:327,6
-DA:328,6
-DA:329,24
+DA:325,0
+DA:326,0
+DA:327,0
+DA:328,0
+DA:329,0
 DA:331,0
 DA:332,0
 DA:333,0
@@ -2360,19 +2281,19 @@ DA:340,0
 DA:341,0
 DA:343,0
 DA:345,0
-DA:346,12
+DA:346,0
 BRDA:301,13,0,0
 BRDA:303,34,0,0
 BRDA:303,34,1,0
-BRDA:301,13,1,12
-BRDA:310,80,0,6
-BRDA:312,103,0,6
+BRDA:301,13,1,0
+BRDA:310,80,0,0
+BRDA:312,103,0,0
 BRDA:312,103,1,0
 BRDA:316,144,0,0
 BRDA:316,144,1,0
-BRDA:310,80,1,6
-BRDA:325,198,0,6
-BRDA:327,224,0,6
+BRDA:310,80,1,0
+BRDA:325,198,0,0
+BRDA:327,224,0,0
 BRDA:327,224,1,0
 BRDA:331,306,0,0
 BRDA:331,306,1,0
@@ -2382,123 +2303,123 @@ BRDA:339,470,0,0
 BRDA:339,470,1,0
 BRDA:325,198,1,0
 LF:247
-LH:103
+LH:0
 BRF:126
-BRH:42
+BRH:0
 FNF:5
-FNH:5
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\AccountController.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\AccountController.cs
 FN:33,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Create(assetgrid_backend.Models.ViewModels.ViewCreateAccount)
-FNDA:97,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Create(assetgrid_backend.Models.ViewModels.ViewCreateAccount)
-DA:34,97
-DA:35,97
-DA:36,97
-DA:37,97
-DA:38,97
-DA:39,97
-DA:40,97
-DA:41,97
-DA:42,97
-DA:43,97
-DA:44,97
-DA:45,97
-DA:46,97
-DA:47,97
-DA:49,97
-DA:50,97
-DA:51,97
-DA:52,97
-DA:53,97
-DA:54,97
-DA:55,97
-DA:56,97
-DA:57,97
-DA:58,97
-DA:60,97
-DA:62,97
-DA:63,97
-DA:64,97
-DA:65,97
-DA:66,97
-DA:67,97
-DA:68,97
-DA:69,97
-DA:70,97
-DA:71,97
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Create(assetgrid_backend.Models.ViewModels.ViewCreateAccount)
+DA:34,0
+DA:35,0
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:41,0
+DA:42,0
+DA:43,0
+DA:44,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:60,0
+DA:62,0
+DA:63,0
+DA:64,0
+DA:65,0
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:70,0
+DA:71,0
 DA:74,0
-DA:75,97
-BRDA:36,32,0,97
+DA:75,0
+BRDA:36,32,0,0
 BRDA:36,32,1,0
 FN:79,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Get(System.Int32)
-FNDA:5,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Get(System.Int32)
-DA:80,5
-DA:81,5
-DA:82,5
-DA:83,5
-DA:84,5
-DA:85,5
-DA:87,6
-DA:89,4
-DA:90,4
-DA:91,4
-DA:92,4
-DA:94,4
-DA:96,4
-DA:97,5
-BRDA:87,247,0,1
-BRDA:87,247,1,4
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Get(System.Int32)
+DA:80,0
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
+DA:85,0
+DA:87,0
+DA:89,0
+DA:90,0
+DA:91,0
+DA:92,0
+DA:94,0
+DA:96,0
+DA:97,0
+BRDA:87,247,0,0
+BRDA:87,247,1,0
 FN:101,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewAccount)
-FNDA:7,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewAccount)
-DA:102,7
-DA:103,7
-DA:104,7
-DA:105,7
-DA:106,7
-DA:108,7
-DA:109,3
-DA:110,3
-DA:113,4
-DA:114,4
-DA:115,4
-DA:116,4
-DA:117,4
-DA:119,4
-DA:121,4
-DA:122,4
-DA:123,4
-DA:124,4
-DA:125,4
-DA:126,4
-DA:127,4
-DA:128,4
-DA:129,4
-DA:130,4
-DA:131,4
-BRDA:108,364,0,3
-BRDA:108,364,1,4
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewAccount assetgrid_backend.Controllers.AccountController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewAccount)
+DA:102,0
+DA:103,0
+DA:104,0
+DA:105,0
+DA:106,0
+DA:108,0
+DA:109,0
+DA:110,0
+DA:113,0
+DA:114,0
+DA:115,0
+DA:116,0
+DA:117,0
+DA:119,0
+DA:121,0
+DA:122,0
+DA:123,0
+DA:124,0
+DA:125,0
+DA:126,0
+DA:127,0
+DA:128,0
+DA:129,0
+DA:130,0
+DA:131,0
+BRDA:108,364,0,0
+BRDA:108,364,1,0
 FN:135,System.Void assetgrid_backend.Controllers.AccountController::Delete(System.Int32)
-FNDA:5,System.Void assetgrid_backend.Controllers.AccountController::Delete(System.Int32)
-DA:136,5
-DA:137,5
-DA:138,5
-DA:139,5
-DA:140,5
-DA:141,5
-DA:142,5
-DA:143,5
-DA:145,5
-DA:146,3
-DA:147,3
-DA:150,2
-DA:151,2
-DA:153,2
-DA:154,2
-DA:155,2
-DA:156,2
-DA:157,2
-DA:158,2
-DA:159,2
+FNDA:0,System.Void assetgrid_backend.Controllers.AccountController::Delete(System.Int32)
+DA:136,0
+DA:137,0
+DA:138,0
+DA:139,0
+DA:140,0
+DA:141,0
+DA:142,0
+DA:143,0
+DA:145,0
+DA:146,0
+DA:147,0
+DA:150,0
+DA:151,0
+DA:153,0
+DA:154,0
+DA:155,0
+DA:156,0
+DA:157,0
+DA:158,0
+DA:159,0
 DA:161,0
 DA:163,0
 DA:164,0
@@ -2506,258 +2427,258 @@ DA:166,0
 DA:168,0
 DA:169,0
 DA:170,0
-DA:171,2
-DA:173,2
-DA:175,2
-DA:178,2
-BRDA:145,389,0,3
-BRDA:145,389,1,2
-BRDA:150,433,0,2
+DA:171,0
+DA:173,0
+DA:175,0
+DA:178,0
+BRDA:145,389,0,0
+BRDA:145,389,1,0
+BRDA:150,433,0,0
 BRDA:150,433,1,0
 FN:182,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Controllers.AccountController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
-FNDA:6,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Controllers.AccountController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
-DA:183,6
-DA:184,6
-DA:185,6
-DA:186,6
-DA:187,6
-DA:188,6
-DA:189,6
-DA:190,6
-DA:191,6
-DA:193,6
-DA:194,6
-DA:195,6
-DA:196,6
-DA:197,6
-DA:198,6
-DA:199,6
-DA:200,6
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewAccount> assetgrid_backend.Controllers.AccountController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
+DA:183,0
+DA:184,0
+DA:185,0
+DA:186,0
+DA:187,0
+DA:188,0
+DA:189,0
+DA:190,0
+DA:191,0
+DA:193,0
+DA:194,0
+DA:195,0
+DA:196,0
+DA:197,0
+DA:198,0
+DA:199,0
+DA:200,0
 FN:204,assetgrid_backend.Models.ViewModels.ViewTransactionList assetgrid_backend.Controllers.AccountController::Transactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewTransactionListRequest)
-FNDA:6,assetgrid_backend.Models.ViewModels.ViewTransactionList assetgrid_backend.Controllers.AccountController::Transactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewTransactionListRequest)
-DA:205,6
-DA:206,6
-DA:207,6
-DA:208,1
-DA:209,1
-DA:212,5
-DA:213,5
-DA:215,5
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransactionList assetgrid_backend.Controllers.AccountController::Transactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewTransactionListRequest)
+DA:205,0
+DA:206,0
+DA:207,0
+DA:208,0
+DA:209,0
+DA:212,0
+DA:213,0
+DA:215,0
 DA:216,0
 DA:217,0
 DA:218,0
-DA:220,5
+DA:220,0
 DA:221,0
 DA:222,0
 DA:223,0
 DA:224,0
-DA:226,5
-DA:227,5
-DA:228,5
-DA:229,5
-DA:231,5
-DA:232,5
-DA:233,5
-DA:234,5
-DA:235,5
-DA:236,5
-DA:237,25
-DA:238,10
-DA:239,5
-DA:240,5
-DA:241,5
-DA:242,5
-DA:244,5
-DA:245,5
-DA:246,5
-DA:247,5
-DA:248,5
-DA:249,5
-DA:250,5
-BRDA:207,239,0,1
-BRDA:207,239,1,5
+DA:226,0
+DA:227,0
+DA:228,0
+DA:229,0
+DA:231,0
+DA:232,0
+DA:233,0
+DA:234,0
+DA:235,0
+DA:236,0
+DA:237,0
+DA:238,0
+DA:239,0
+DA:240,0
+DA:241,0
+DA:242,0
+DA:244,0
+DA:245,0
+DA:246,0
+DA:247,0
+DA:248,0
+DA:249,0
+DA:250,0
+BRDA:207,239,0,0
+BRDA:207,239,1,0
 BRDA:215,472,0,0
-BRDA:215,472,1,5
+BRDA:215,472,1,0
 BRDA:220,499,0,0
-BRDA:220,499,1,5
-BRDA:239,919,0,5
+BRDA:220,499,1,0
+BRDA:239,919,0,0
 BRDA:239,919,1,0
 FN:258,System.Int32 assetgrid_backend.Controllers.AccountController::CountTransactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-FNDA:1,System.Int32 assetgrid_backend.Controllers.AccountController::CountTransactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-DA:259,1
-DA:260,1
-DA:261,1
+FNDA:0,System.Int32 assetgrid_backend.Controllers.AccountController::CountTransactions(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
+DA:259,0
+DA:260,0
+DA:261,0
 DA:262,0
 DA:263,0
-DA:266,1
-DA:267,1
-DA:269,1
+DA:266,0
+DA:267,0
+DA:269,0
 DA:270,0
 DA:271,0
 DA:272,0
-DA:274,1
-DA:275,1
+DA:274,0
+DA:275,0
 BRDA:261,233,0,0
-BRDA:261,233,1,1
+BRDA:261,233,1,0
 BRDA:269,457,0,0
-BRDA:269,457,1,1
+BRDA:269,457,1,0
 FN:305,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse assetgrid_backend.Controllers.AccountController::GetMovement(System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
-FNDA:6,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse assetgrid_backend.Controllers.AccountController::GetMovement(System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
-DA:306,6
-DA:307,6
-DA:308,6
-DA:309,3
-DA:310,3
-DA:313,3
-DA:314,3
-DA:315,3
-DA:316,3
-DA:317,3
-DA:319,3
-DA:320,3
-DA:321,3
-DA:322,3
-DA:323,3
-DA:324,3
-DA:325,3
-DA:326,3
-DA:327,3
-DA:328,3
-DA:330,3
-DA:332,478
-DA:333,444
-DA:334,255
-DA:335,123
-DA:336,238
-DA:337,123
-DA:338,451
-DA:339,221
-DA:340,319
-DA:341,221
-DA:343,3
-DA:344,3
-DA:345,3
-DA:346,3
-DA:347,221
-DA:348,221
-DA:349,221
-DA:350,221
-DA:351,221
-DA:352,221
-DA:353,221
-DA:354,221
-DA:355,221
-DA:356,3
-DA:357,3
-BRDA:308,246,0,3
-BRDA:308,246,1,3
-BRDA:313,280,0,3
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewGetMovementResponse assetgrid_backend.Controllers.AccountController::GetMovement(System.Int32,assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
+DA:306,0
+DA:307,0
+DA:308,0
+DA:309,0
+DA:310,0
+DA:313,0
+DA:314,0
+DA:315,0
+DA:316,0
+DA:317,0
+DA:319,0
+DA:320,0
+DA:321,0
+DA:322,0
+DA:323,0
+DA:324,0
+DA:325,0
+DA:326,0
+DA:327,0
+DA:328,0
+DA:330,0
+DA:332,0
+DA:333,0
+DA:334,0
+DA:335,0
+DA:336,0
+DA:337,0
+DA:338,0
+DA:339,0
+DA:340,0
+DA:341,0
+DA:343,0
+DA:344,0
+DA:345,0
+DA:346,0
+DA:347,0
+DA:348,0
+DA:349,0
+DA:350,0
+DA:351,0
+DA:352,0
+DA:353,0
+DA:354,0
+DA:355,0
+DA:356,0
+DA:357,0
+BRDA:308,246,0,0
+BRDA:308,246,1,0
+BRDA:313,280,0,0
 BRDA:313,280,1,0
-BRDA:334,2147,1,123
-BRDA:336,2125,0,115
-BRDA:336,2125,1,123
-BRDA:334,2147,0,3
-BRDA:338,2231,1,221
-BRDA:340,2209,0,98
-BRDA:340,2209,1,221
-BRDA:338,2231,0,3
+BRDA:334,2147,1,0
+BRDA:336,2125,0,0
+BRDA:336,2125,1,0
+BRDA:334,2147,0,0
+BRDA:338,2231,1,0
+BRDA:340,2209,0,0
+BRDA:340,2209,1,0
+BRDA:338,2231,0,0
 FN:366,assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse assetgrid_backend.Controllers.AccountController::GetMovementAll(assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
-FNDA:3,assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse assetgrid_backend.Controllers.AccountController::GetMovementAll(assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
-DA:367,3
-DA:368,3
-DA:369,3
-DA:370,3
-DA:371,3
-DA:372,3
-DA:373,3
-DA:374,11
-DA:376,3
-DA:377,3
-DA:378,3
-DA:381,3
-DA:382,3
-DA:383,3
-DA:384,3
-DA:385,3
-DA:386,3
-DA:387,3
-DA:388,3
-DA:391,3
-DA:392,3
-DA:393,3
-DA:394,3
-DA:395,3
-DA:396,3
-DA:397,3
-DA:398,3
-DA:401,7
-DA:402,4
-DA:403,3
-DA:405,17
-DA:406,4
-DA:407,12
-DA:408,6
-DA:409,20
-DA:410,4
-DA:411,7
-DA:412,4
-DA:413,20
-DA:414,4
-DA:415,4
-DA:416,4
-DA:418,4
-DA:419,4
-DA:420,4
-DA:421,4
-DA:422,4
-DA:424,4
-DA:425,4
-DA:426,4
-DA:427,4
-DA:428,4
-DA:429,4
-DA:430,4
-DA:431,4
-DA:432,4
-DA:433,4
-DA:434,4
-DA:435,4
-DA:436,4
-DA:437,4
-DA:438,4
-DA:440,3
-DA:441,3
-DA:442,3
-DA:443,3
-DA:444,3
-DA:445,3
-BRDA:405,3176,1,4
-BRDA:409,2255,1,4
-BRDA:411,2233,0,3
-BRDA:411,2233,1,4
-BRDA:409,2255,0,4
-BRDA:413,2339,1,4
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewGetMovementAllResponse assetgrid_backend.Controllers.AccountController::GetMovementAll(assetgrid_backend.Models.ViewModels.ViewGetMovementRequest)
+DA:367,0
+DA:368,0
+DA:369,0
+DA:370,0
+DA:371,0
+DA:372,0
+DA:373,0
+DA:374,0
+DA:376,0
+DA:377,0
+DA:378,0
+DA:381,0
+DA:382,0
+DA:383,0
+DA:384,0
+DA:385,0
+DA:386,0
+DA:387,0
+DA:388,0
+DA:391,0
+DA:392,0
+DA:393,0
+DA:394,0
+DA:395,0
+DA:396,0
+DA:397,0
+DA:398,0
+DA:401,0
+DA:402,0
+DA:403,0
+DA:405,0
+DA:406,0
+DA:407,0
+DA:408,0
+DA:409,0
+DA:410,0
+DA:411,0
+DA:412,0
+DA:413,0
+DA:414,0
+DA:415,0
+DA:416,0
+DA:418,0
+DA:419,0
+DA:420,0
+DA:421,0
+DA:422,0
+DA:424,0
+DA:425,0
+DA:426,0
+DA:427,0
+DA:428,0
+DA:429,0
+DA:430,0
+DA:431,0
+DA:432,0
+DA:433,0
+DA:434,0
+DA:435,0
+DA:436,0
+DA:437,0
+DA:438,0
+DA:440,0
+DA:441,0
+DA:442,0
+DA:443,0
+DA:444,0
+DA:445,0
+BRDA:405,3176,1,0
+BRDA:409,2255,1,0
+BRDA:411,2233,0,0
+BRDA:411,2233,1,0
+BRDA:409,2255,0,0
+BRDA:413,2339,1,0
 BRDA:415,2317,0,0
-BRDA:415,2317,1,4
-BRDA:413,2339,0,4
+BRDA:415,2317,1,0
+BRDA:413,2339,0,0
 BRDA:418,2378,0,0
-BRDA:418,2378,1,4
-BRDA:405,3176,0,3
+BRDA:418,2378,1,0
+BRDA:405,3176,0,0
 FN:447,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/AccountMovementGroup> assetgrid_backend.Controllers.AccountController::ApplyIntervalGrouping(System.Nullable`1<System.DateTime>,assetgrid_backend.Models.ViewModels.AccountMovementResolution,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/MovementItem>)
-FNDA:9,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/AccountMovementGroup> assetgrid_backend.Controllers.AccountController::ApplyIntervalGrouping(System.Nullable`1<System.DateTime>,assetgrid_backend.Models.ViewModels.AccountMovementResolution,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/MovementItem>)
-DA:448,9
-DA:452,1
-DA:453,1
-DA:454,1
-DA:455,1
-DA:456,1
-DA:457,1
-DA:458,1
-DA:459,1
-DA:460,1
-DA:461,1
-DA:462,1
-DA:463,1
+FNDA:0,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/AccountMovementGroup> assetgrid_backend.Controllers.AccountController::ApplyIntervalGrouping(System.Nullable`1<System.DateTime>,assetgrid_backend.Models.ViewModels.AccountMovementResolution,System.Linq.IQueryable`1<assetgrid_backend.Controllers.AccountController/MovementItem>)
+DA:448,0
+DA:452,0
+DA:453,0
+DA:454,0
+DA:455,0
+DA:456,0
+DA:457,0
+DA:458,0
+DA:459,0
+DA:460,0
+DA:461,0
+DA:462,0
+DA:463,0
 DA:465,0
 DA:466,0
 DA:467,0
@@ -2777,79 +2698,79 @@ DA:480,0
 DA:481,0
 DA:482,0
 DA:483,0
-DA:485,1
-DA:486,1
-DA:487,1
-DA:488,1
-DA:489,1
-DA:490,1
-DA:491,1
-DA:492,1
-DA:493,1
-DA:494,1
-DA:495,1
-DA:496,1
-DA:498,7
-DA:499,7
-DA:500,7
-DA:501,7
-DA:502,7
-DA:503,7
-DA:504,7
-DA:505,7
-DA:506,7
-DA:507,7
-DA:508,7
-DA:509,7
+DA:485,0
+DA:486,0
+DA:487,0
+DA:488,0
+DA:489,0
+DA:490,0
+DA:491,0
+DA:492,0
+DA:493,0
+DA:494,0
+DA:495,0
+DA:496,0
+DA:498,0
+DA:499,0
+DA:500,0
+DA:501,0
+DA:502,0
+DA:503,0
+DA:504,0
+DA:505,0
+DA:506,0
+DA:507,0
+DA:508,0
+DA:509,0
 DA:512,0
-DA:514,9
-BRDA:448,12,1,1
+DA:514,0
+BRDA:448,12,1,0
 BRDA:448,12,2,0
 BRDA:465,1166,0,0
 BRDA:465,1166,1,0
-BRDA:448,12,3,1
-BRDA:448,12,4,7
+BRDA:448,12,3,0
+BRDA:448,12,4,0
 BRDA:448,12,0,0
 FN:518,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCategorySummary> assetgrid_backend.Controllers.AccountController::CategorySummary(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-FNDA:2,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCategorySummary> assetgrid_backend.Controllers.AccountController::CategorySummary(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-DA:519,2
-DA:520,2
-DA:521,2
-DA:522,1
-DA:523,1
-DA:526,1
-DA:527,1
-DA:528,1
-DA:529,1
-DA:530,1
-DA:531,1
-DA:532,1
-DA:533,1
-DA:534,1
-DA:535,1
-DA:536,1
-DA:537,1
-BRDA:521,233,0,1
-BRDA:521,233,1,1
+FNDA:0,System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCategorySummary> assetgrid_backend.Controllers.AccountController::CategorySummary(System.Int32,assetgrid_backend.Models.ViewModels.ViewSearchGroup)
+DA:519,0
+DA:520,0
+DA:521,0
+DA:522,0
+DA:523,0
+DA:526,0
+DA:527,0
+DA:528,0
+DA:529,0
+DA:530,0
+DA:531,0
+DA:532,0
+DA:533,0
+DA:534,0
+DA:535,0
+DA:536,0
+DA:537,0
+BRDA:521,233,0,0
+BRDA:521,233,1,0
 FN:20,System.Void assetgrid_backend.Controllers.AccountController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-FNDA:48,System.Void assetgrid_backend.Controllers.AccountController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-DA:21,48
-DA:22,48
-DA:23,48
-DA:24,48
-DA:25,48
+FNDA:0,System.Void assetgrid_backend.Controllers.AccountController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
+DA:21,0
+DA:22,0
+DA:23,0
+DA:24,0
+DA:25,0
 FN:283,System.Int32 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_AccountId()
-FNDA:239,System.Int32 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_AccountId()
-DA:284,239
+FNDA:0,System.Int32 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_AccountId()
+DA:284,0
 FN:284,System.DateTime assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_TimePoint()
-FNDA:468,System.DateTime assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_TimePoint()
-DA:285,468
+FNDA:0,System.DateTime assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_TimePoint()
+DA:285,0
 FN:285,System.String assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Type()
-FNDA:692,System.String assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Type()
-DA:286,692
+FNDA:0,System.String assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Type()
+DA:286,0
 FN:286,System.Int64 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Total()
-FNDA:468,System.Int64 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Total()
-DA:287,468
+FNDA:0,System.Int64 assetgrid_backend.Controllers.AccountController/AccountMovementGroup::get_Total()
+DA:287,0
 FN:291,System.Int32 assetgrid_backend.Controllers.AccountController/MovementItem::get_AccountId()
 FNDA:0,System.Int32 assetgrid_backend.Controllers.AccountController/MovementItem::get_AccountId()
 DA:292,0
@@ -2860,340 +2781,340 @@ FN:293,assetgrid_backend.Models.Transaction assetgrid_backend.Controllers.Accoun
 FNDA:0,assetgrid_backend.Models.Transaction assetgrid_backend.Controllers.AccountController/MovementItem::get_Transaction()
 DA:294,0
 LF:377
-LH:334
+LH:0
 BRF:55
-BRH:41
+BRH:0
 FNF:19
-FNH:16
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\TaxonomyController.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\TaxonomyController.cs
 FN:25,System.String[] assetgrid_backend.Controllers.TaxonomyController::CategoryAutocomplete(System.String)
-FNDA:8,System.String[] assetgrid_backend.Controllers.TaxonomyController::CategoryAutocomplete(System.String)
-DA:26,8
-DA:27,8
-DA:28,8
-DA:29,8
-DA:30,8
-DA:31,8
-DA:32,8
-DA:33,8
-DA:34,8
-DA:35,8
+FNDA:0,System.String[] assetgrid_backend.Controllers.TaxonomyController::CategoryAutocomplete(System.String)
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
+DA:35,0
 FN:16,System.Void assetgrid_backend.Controllers.TaxonomyController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-FNDA:1,System.Void assetgrid_backend.Controllers.TaxonomyController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-DA:17,1
-DA:18,1
-DA:19,1
-DA:20,1
-DA:21,1
+FNDA:0,System.Void assetgrid_backend.Controllers.TaxonomyController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
+DA:17,0
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
 LF:15
-LH:15
+LH:0
 BRF:0
 BRH:0
 FNF:2
-FNH:2
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\TransactionController.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\TransactionController.cs
 FN:27,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Get(System.Int32)
-FNDA:54,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Get(System.Int32)
-DA:28,54
-DA:29,54
-DA:30,54
-DA:31,54
-DA:32,54
-DA:33,54
-DA:34,54
-DA:36,74
-DA:38,34
-DA:39,54
-BRDA:36,555,0,20
-BRDA:36,555,1,34
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Get(System.Int32)
+DA:28,0
+DA:29,0
+DA:30,0
+DA:31,0
+DA:32,0
+DA:33,0
+DA:34,0
+DA:36,0
+DA:38,0
+DA:39,0
+BRDA:36,555,0,0
+BRDA:36,555,1,0
 FN:42,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Create(assetgrid_backend.Models.ViewModels.ViewCreateTransaction)
-FNDA:1190,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Create(assetgrid_backend.Models.ViewModels.ViewCreateTransaction)
-DA:43,1190
-DA:44,1190
-DA:45,1190
-DA:46,1184
-DA:47,1184
-DA:48,1184
-DA:50,1190
-DA:51,1190
-DA:52,1190
-DA:53,6
-DA:54,6
-DA:55,6
-DA:56,6
-DA:57,6
-DA:58,4
-DA:59,4
-DA:61,2
-DA:63,1186
-DA:64,1186
-DA:66,1186
-DA:67,1186
-DA:68,1186
-DA:69,1186
-DA:70,1186
-DA:71,1186
-DA:72,1186
-DA:73,1186
-DA:74,1186
-DA:75,8
-DA:76,8
-DA:80,1178
-DA:81,1178
-DA:82,1178
-DA:83,1178
-DA:84,1178
-DA:85,1178
-DA:86,1178
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Create(assetgrid_backend.Models.ViewModels.ViewCreateTransaction)
+DA:43,0
+DA:44,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:48,0
+DA:50,0
+DA:51,0
+DA:52,0
+DA:53,0
+DA:54,0
+DA:55,0
+DA:56,0
+DA:57,0
+DA:58,0
+DA:59,0
+DA:61,0
+DA:63,0
+DA:64,0
+DA:66,0
+DA:67,0
+DA:68,0
+DA:69,0
+DA:70,0
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+DA:75,0
+DA:76,0
+DA:80,0
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
+DA:85,0
+DA:86,0
 DA:87,0
-DA:88,1178
-DA:89,38
-DA:90,38
-DA:91,38
-DA:92,38
-DA:93,38
-DA:94,38
-DA:95,1178
-DA:98,1178
-DA:99,551
-DA:100,551
-DA:103,551
-DA:104,551
-DA:105,551
-DA:108,551
-DA:109,551
-DA:110,551
-DA:112,553
-DA:113,551
-DA:115,1178
-DA:116,1178
-DA:117,1178
-DA:118,1178
-DA:119,1178
-DA:120,1178
-DA:121,1178
-DA:122,1178
-DA:123,1178
-DA:124,1178
-DA:125,1178
-DA:126,1178
-DA:127,1178
-DA:128,1178
-DA:129,1178
-DA:130,1178
-DA:131,1178
-DA:132,1178
-DA:133,1178
-DA:134,1178
-DA:135,1178
-DA:136,1178
-DA:137,1178
-DA:138,1178
-DA:139,1178
-DA:140,1178
-DA:141,1178
-DA:142,1178
-DA:143,1178
-DA:144,1178
-DA:145,1178
-DA:146,1178
-DA:147,1178
-DA:148,38
-DA:149,38
-DA:150,1178
-DA:151,1178
+DA:88,0
+DA:89,0
+DA:90,0
+DA:91,0
+DA:92,0
+DA:93,0
+DA:94,0
+DA:95,0
+DA:98,0
+DA:99,0
+DA:100,0
+DA:103,0
+DA:104,0
+DA:105,0
+DA:108,0
+DA:109,0
+DA:110,0
+DA:112,0
+DA:113,0
+DA:115,0
+DA:116,0
+DA:117,0
+DA:118,0
+DA:119,0
+DA:120,0
+DA:121,0
+DA:122,0
+DA:123,0
+DA:124,0
+DA:125,0
+DA:126,0
+DA:127,0
+DA:128,0
+DA:129,0
+DA:130,0
+DA:131,0
+DA:132,0
+DA:133,0
+DA:134,0
+DA:135,0
+DA:136,0
+DA:137,0
+DA:138,0
+DA:139,0
+DA:140,0
+DA:141,0
+DA:142,0
+DA:143,0
+DA:144,0
+DA:145,0
+DA:146,0
+DA:147,0
+DA:148,0
+DA:149,0
+DA:150,0
+DA:151,0
 DA:154,0
-DA:155,1178
-BRDA:45,55,0,1184
-BRDA:45,55,1,1190
-BRDA:50,85,0,1190
-BRDA:52,107,0,6
-BRDA:57,708,0,4
-BRDA:57,708,1,2
-BRDA:52,107,1,1186
-BRDA:67,778,0,45
-BRDA:67,778,1,1141
-BRDA:70,1043,0,1177
-BRDA:70,1043,1,9
-BRDA:73,1308,0,45
-BRDA:73,1312,0,43
-BRDA:73,1308,1,1182
-BRDA:73,1328,0,1182
-BRDA:73,1350,0,1175
-BRDA:73,1354,0,1173
-BRDA:73,1354,1,2
-BRDA:73,1350,1,7
-BRDA:73,1312,1,4
-BRDA:73,1328,1,4
-BRDA:73,1386,0,8
-BRDA:73,1386,1,1178
-BRDA:80,1490,0,1176
-BRDA:80,1490,1,2
+DA:155,0
+BRDA:45,55,0,0
+BRDA:45,55,1,0
+BRDA:50,85,0,0
+BRDA:52,107,0,0
+BRDA:57,708,0,0
+BRDA:57,708,1,0
+BRDA:52,107,1,0
+BRDA:67,778,0,0
+BRDA:67,778,1,0
+BRDA:70,1043,0,0
+BRDA:70,1043,1,0
+BRDA:73,1308,0,0
+BRDA:73,1312,0,0
+BRDA:73,1308,1,0
+BRDA:73,1328,0,0
+BRDA:73,1350,0,0
+BRDA:73,1354,0,0
+BRDA:73,1354,1,0
+BRDA:73,1350,1,0
+BRDA:73,1312,1,0
+BRDA:73,1328,1,0
+BRDA:73,1386,0,0
+BRDA:73,1386,1,0
+BRDA:80,1490,0,0
+BRDA:80,1490,1,0
 BRDA:80,1528,0,0
-BRDA:80,1528,1,1178
-BRDA:80,1614,0,14
-BRDA:80,1614,1,1164
-BRDA:98,1716,0,551
-BRDA:98,1716,1,1178
-BRDA:118,1962,0,591
-BRDA:118,1962,1,587
-BRDA:118,1969,0,587
+BRDA:80,1528,1,0
+BRDA:80,1614,0,0
+BRDA:80,1614,1,0
+BRDA:98,1716,0,0
+BRDA:98,1716,1,0
+BRDA:118,1962,0,0
+BRDA:118,1962,1,0
+BRDA:118,1969,0,0
 BRDA:118,1969,1,0
-BRDA:118,2085,0,555
-BRDA:118,2085,1,623
-BRDA:118,2092,0,623
+BRDA:118,2085,0,0
+BRDA:118,2085,1,0
+BRDA:118,2092,0,0
 BRDA:118,2092,1,0
 BRDA:50,85,1,0
 FN:161,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
-FNDA:21,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
-DA:162,21
-DA:163,21
-DA:164,21
-DA:165,21
-DA:166,21
-DA:167,21
-DA:168,21
-DA:169,21
-DA:170,21
-DA:171,21
-DA:172,21
-DA:173,21
-DA:174,21
-DA:176,50
-DA:177,2
-DA:179,2
-DA:182,19
-DA:183,39
-DA:184,26
-DA:185,2
-DA:187,2
-DA:190,17
-DA:191,15
-DA:192,15
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::Update(System.Int32,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
+DA:162,0
+DA:163,0
+DA:164,0
+DA:165,0
+DA:166,0
+DA:167,0
+DA:168,0
+DA:169,0
+DA:170,0
+DA:171,0
+DA:172,0
+DA:173,0
+DA:174,0
+DA:176,0
+DA:177,0
+DA:179,0
+DA:182,0
+DA:183,0
+DA:184,0
+DA:185,0
+DA:187,0
+DA:190,0
+DA:191,0
+DA:192,0
 DA:195,0
-DA:196,17
-BRDA:164,50,0,21
+DA:196,0
+BRDA:164,50,0,0
 BRDA:176,1285,0,0
-BRDA:176,1285,1,21
+BRDA:176,1285,1,0
 BRDA:176,1297,0,0
-BRDA:176,1297,1,21
-BRDA:176,1325,0,6
-BRDA:176,1335,0,1
-BRDA:176,1335,1,5
+BRDA:176,1297,1,0
+BRDA:176,1325,0,0
+BRDA:176,1335,0,0
+BRDA:176,1335,1,0
 BRDA:176,1347,0,0
-BRDA:176,1347,1,5
-BRDA:176,1325,1,15
-BRDA:176,1385,0,2
-BRDA:176,1385,1,19
+BRDA:176,1347,1,0
+BRDA:176,1325,1,0
+BRDA:176,1385,0,0
+BRDA:176,1385,1,0
 BRDA:183,1424,0,0
-BRDA:183,1424,1,19
+BRDA:183,1424,1,0
 BRDA:183,1436,0,0
-BRDA:183,1436,1,19
-BRDA:183,1459,0,5
-BRDA:183,1469,0,1
-BRDA:183,1469,1,4
+BRDA:183,1436,1,0
+BRDA:183,1459,0,0
+BRDA:183,1469,0,0
+BRDA:183,1469,1,0
 BRDA:183,1481,0,0
-BRDA:183,1481,1,4
-BRDA:183,1459,1,14
-BRDA:183,1514,0,2
-BRDA:183,1514,1,17
+BRDA:183,1481,1,0
+BRDA:183,1459,1,0
+BRDA:183,1514,0,0
+BRDA:183,1514,1,0
 BRDA:164,50,1,0
-BRDA:183,22,0,15
-BRDA:183,22,1,5
-BRDA:184,22,0,4
-BRDA:184,22,1,3
+BRDA:183,22,0,0
+BRDA:183,22,1,0
+BRDA:184,22,0,0
+BRDA:184,22,1,0
 FN:200,System.Void assetgrid_backend.Controllers.TransactionController::UpdateMultiple(assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions)
-FNDA:7,System.Void assetgrid_backend.Controllers.TransactionController::UpdateMultiple(assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions)
-DA:201,7
-DA:202,7
-DA:203,7
-DA:204,7
-DA:205,7
-DA:206,7
-DA:208,7
-DA:209,7
-DA:210,7
-DA:211,7
-DA:213,7
-DA:214,7
-DA:215,7
-DA:216,7
-DA:217,7
-DA:218,7
-DA:220,7
-DA:221,63
-DA:222,23
-DA:223,23
-DA:224,19
-DA:225,3
-DA:226,3
-DA:227,3
+FNDA:0,System.Void assetgrid_backend.Controllers.TransactionController::UpdateMultiple(assetgrid_backend.Models.ViewModels.ViewUpdateMultipleTransactions)
+DA:201,0
+DA:202,0
+DA:203,0
+DA:204,0
+DA:205,0
+DA:206,0
+DA:208,0
+DA:209,0
+DA:210,0
+DA:211,0
+DA:213,0
+DA:214,0
+DA:215,0
+DA:216,0
+DA:217,0
+DA:218,0
+DA:220,0
+DA:221,0
+DA:222,0
+DA:223,0
+DA:224,0
+DA:225,0
+DA:226,0
+DA:227,0
 DA:229,0
-DA:230,3
-BRDA:203,43,0,7
-BRDA:221,1301,1,23
-BRDA:221,1301,0,3
+DA:230,0
+BRDA:203,43,0,0
+BRDA:221,1301,1,0
+BRDA:221,1301,0,0
 BRDA:203,43,1,0
 FN:232,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::UpdateTransaction(assetgrid_backend.Models.Transaction,assetgrid_backend.Models.User,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
-FNDA:40,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::UpdateTransaction(assetgrid_backend.Models.Transaction,assetgrid_backend.Models.User,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
-DA:233,40
-DA:235,40
-DA:236,40
-DA:237,5
-DA:238,5
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransaction assetgrid_backend.Controllers.TransactionController::UpdateTransaction(assetgrid_backend.Models.Transaction,assetgrid_backend.Models.User,assetgrid_backend.Models.ViewModels.ViewUpdateTransaction)
+DA:233,0
+DA:235,0
+DA:236,0
+DA:237,0
+DA:238,0
 DA:239,0
 DA:240,0
 DA:241,0
 DA:242,0
-DA:244,5
-DA:245,5
-DA:246,5
-DA:247,5
-DA:248,5
-DA:249,4
-DA:250,4
-DA:252,1
-DA:253,1
-DA:254,1
-DA:255,1
-DA:256,36
-DA:257,4
-DA:258,4
-DA:259,1
-DA:260,1
-DA:261,1
-DA:262,1
-DA:264,3
-DA:265,3
-DA:266,3
-DA:267,3
-DA:268,3
-DA:269,2
-DA:270,2
-DA:272,1
-DA:273,1
-DA:274,1
-DA:275,2
-DA:278,34
-DA:279,1
-DA:280,1
-DA:281,1
-DA:282,34
-DA:283,25
-DA:284,25
-DA:285,25
-DA:286,34
+DA:244,0
+DA:245,0
+DA:246,0
+DA:247,0
+DA:248,0
+DA:249,0
+DA:250,0
+DA:252,0
+DA:253,0
+DA:254,0
+DA:255,0
+DA:256,0
+DA:257,0
+DA:258,0
+DA:259,0
+DA:260,0
+DA:261,0
+DA:262,0
+DA:264,0
+DA:265,0
+DA:266,0
+DA:267,0
+DA:268,0
+DA:269,0
+DA:270,0
+DA:272,0
+DA:273,0
+DA:274,0
+DA:275,0
+DA:278,0
+DA:279,0
+DA:280,0
+DA:281,0
+DA:282,0
+DA:283,0
+DA:284,0
+DA:285,0
+DA:286,0
 DA:287,0
 DA:288,0
 DA:289,0
 DA:290,0
-DA:291,34
-DA:292,1
-DA:293,1
-DA:294,1
-DA:295,34
+DA:291,0
+DA:292,0
+DA:293,0
+DA:294,0
+DA:295,0
 DA:296,0
 DA:297,0
 DA:298,0
@@ -3204,361 +3125,361 @@ DA:303,0
 DA:304,0
 DA:305,0
 DA:306,0
-DA:307,34
-DA:308,2
-DA:309,2
-DA:310,2
-DA:311,2
-DA:312,2
-DA:314,2
-DA:315,2
-DA:316,2
-DA:317,2
-DA:318,2
-DA:319,2
-DA:320,2
-DA:321,2
-DA:322,2
-DA:323,2
-DA:324,2
-DA:326,2
-DA:327,2
-DA:329,2
-DA:330,2
-DA:331,2
-DA:332,2
-DA:333,4
-DA:334,2
-DA:335,2
-DA:337,34
-DA:338,34
-DA:339,34
-DA:340,34
-DA:341,34
-DA:343,79
-DA:344,68
-DA:346,34
-DA:347,34
-DA:348,34
-DA:349,34
-DA:350,34
-DA:351,34
-DA:352,34
-DA:353,34
-DA:354,34
-DA:355,34
-DA:356,34
-DA:357,34
-DA:358,34
-DA:359,34
-DA:360,34
-DA:361,34
-DA:362,34
-DA:363,34
-DA:364,34
-DA:365,34
-DA:366,34
-DA:367,34
-DA:368,34
-DA:369,34
-DA:370,34
-DA:371,34
-DA:372,34
-DA:373,34
-DA:374,34
-DA:375,34
-DA:376,34
-DA:377,2
-DA:378,2
-DA:379,34
-DA:380,34
-DA:383,0
-DA:384,34
-BRDA:236,67,0,7
-BRDA:236,67,1,33
-BRDA:236,134,0,5
+DA:307,0
+DA:308,0
+DA:309,0
+DA:310,0
+DA:311,0
+DA:312,0
+DA:314,0
+DA:315,0
+DA:316,0
+DA:317,0
+DA:318,0
+DA:319,0
+DA:320,0
+DA:321,0
+DA:322,0
+DA:323,0
+DA:324,0
+DA:326,0
+DA:327,0
+DA:329,0
+DA:330,0
+DA:331,0
+DA:332,0
+DA:333,0
+DA:334,0
+DA:335,0
+DA:338,0
+DA:339,0
+DA:340,0
+DA:341,0
+DA:342,0
+DA:344,0
+DA:345,0
+DA:347,0
+DA:348,0
+DA:349,0
+DA:350,0
+DA:351,0
+DA:352,0
+DA:353,0
+DA:354,0
+DA:355,0
+DA:356,0
+DA:357,0
+DA:358,0
+DA:359,0
+DA:360,0
+DA:361,0
+DA:362,0
+DA:363,0
+DA:364,0
+DA:365,0
+DA:366,0
+DA:367,0
+DA:368,0
+DA:369,0
+DA:370,0
+DA:371,0
+DA:372,0
+DA:373,0
+DA:374,0
+DA:375,0
+DA:376,0
+DA:377,0
+DA:378,0
+DA:379,0
+DA:380,0
+DA:381,0
+DA:384,0
+DA:385,0
+BRDA:236,67,0,0
+BRDA:236,67,1,0
+BRDA:236,134,0,0
 BRDA:238,178,0,0
-BRDA:238,178,1,5
-BRDA:248,619,0,4
-BRDA:248,619,1,1
-BRDA:236,134,1,36
-BRDA:256,697,0,4
-BRDA:256,697,1,32
-BRDA:256,766,0,4
-BRDA:258,810,0,1
-BRDA:258,810,1,3
-BRDA:268,1251,0,2
-BRDA:268,1251,1,1
-BRDA:256,766,1,34
-BRDA:278,1334,0,1
-BRDA:278,1334,1,34
-BRDA:282,1388,0,25
-BRDA:282,1388,1,34
+BRDA:238,178,1,0
+BRDA:248,619,0,0
+BRDA:248,619,1,0
+BRDA:236,134,1,0
+BRDA:256,697,0,0
+BRDA:256,697,1,0
+BRDA:256,766,0,0
+BRDA:258,810,0,0
+BRDA:258,810,1,0
+BRDA:268,1251,0,0
+BRDA:268,1251,1,0
+BRDA:256,766,1,0
+BRDA:278,1334,0,0
+BRDA:278,1334,1,0
+BRDA:282,1388,0,0
+BRDA:282,1388,1,0
 BRDA:286,1430,0,0
 BRDA:288,1453,0,0
 BRDA:288,1453,1,0
 BRDA:289,1486,0,0
 BRDA:289,1486,1,0
-BRDA:286,1430,1,34
-BRDA:291,1522,0,1
-BRDA:291,1522,1,34
-BRDA:295,1569,0,2
-BRDA:295,1569,1,32
+BRDA:286,1430,1,0
+BRDA:291,1522,0,0
+BRDA:291,1522,1,0
+BRDA:295,1569,0,0
+BRDA:295,1569,1,0
 BRDA:295,1597,0,0
 BRDA:298,1654,0,0
 BRDA:298,1654,1,0
-BRDA:295,1597,1,34
-BRDA:307,1751,0,2
-BRDA:309,1781,0,2
-BRDA:309,1781,1,2
-BRDA:326,1904,0,2
-BRDA:326,1904,1,2
-BRDA:307,1751,1,34
-BRDA:339,2071,0,34
-BRDA:343,2101,0,4
-BRDA:343,2101,1,30
-BRDA:343,2113,0,0
-BRDA:343,2113,1,30
-BRDA:344,2150,0,10
-BRDA:344,2150,1,24
-BRDA:344,2162,0,0
-BRDA:344,2162,1,24
-BRDA:346,2312,0,4
-BRDA:346,2312,1,30
-BRDA:346,2319,0,25
-BRDA:346,2319,1,5
-BRDA:346,2459,0,10
-BRDA:346,2459,1,24
-BRDA:346,2466,0,22
-BRDA:346,2466,1,2
-BRDA:339,2071,1,0
-FN:390,System.Void assetgrid_backend.Controllers.TransactionController::Delete(System.Int32)
-FNDA:21,System.Void assetgrid_backend.Controllers.TransactionController::Delete(System.Int32)
-DA:391,21
-DA:392,21
-DA:393,21
-DA:394,21
-DA:395,21
-DA:396,21
-DA:399,21
-DA:400,21
-DA:401,21
-DA:402,21
-DA:403,21
-DA:404,6
-DA:405,6
-DA:408,15
-DA:409,15
-DA:410,15
-DA:412,15
-DA:415,15
-BRDA:399,671,0,6
-BRDA:399,671,1,15
-FN:419,System.Void assetgrid_backend.Controllers.TransactionController::DeleteMultiple(assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-FNDA:3,System.Void assetgrid_backend.Controllers.TransactionController::DeleteMultiple(assetgrid_backend.Models.ViewModels.ViewSearchGroup)
-DA:420,3
-DA:421,3
-DA:422,3
-DA:423,3
-DA:424,3
-DA:425,3
-DA:427,3
-DA:428,3
-DA:429,3
-DA:430,3
-DA:432,3
-DA:433,3
-DA:434,3
-DA:435,3
-DA:436,3
-DA:438,10
-DA:439,3
-DA:440,3
-DA:441,3
-DA:442,3
-DA:443,3
-DA:445,0
-DA:446,3
-BRDA:422,43,0,3
-BRDA:422,43,1,0
-FN:450,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Controllers.TransactionController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
-FNDA:2,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Controllers.TransactionController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
-DA:451,2
-DA:452,2
-DA:453,2
-DA:454,2
-DA:455,2
-DA:456,2
-DA:457,2
-DA:458,2
-DA:459,2
-DA:460,2
-DA:462,2
-DA:463,2
-DA:464,2
-DA:465,2
-DA:466,2
-DA:467,2
-FN:471,System.Collections.Generic.List`1<System.String> assetgrid_backend.Controllers.TransactionController::FindDuplicates(System.Collections.Generic.List`1<System.String>)
-FNDA:9,System.Collections.Generic.List`1<System.String> assetgrid_backend.Controllers.TransactionController::FindDuplicates(System.Collections.Generic.List`1<System.String>)
-DA:472,9
-DA:473,9
-DA:474,9
-DA:475,9
-DA:476,9
-DA:477,9
-DA:478,9
-DA:479,9
-FN:483,assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse assetgrid_backend.Controllers.TransactionController::CreateMany(System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction>)
-FNDA:6,assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse assetgrid_backend.Controllers.TransactionController::CreateMany(System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction>)
-DA:484,6
-DA:485,6
-DA:487,6
-DA:488,6
-DA:489,6
-DA:491,6
-DA:492,6
-DA:493,6
-DA:494,6
-DA:496,6
-DA:497,11
-DA:498,11
-DA:499,6
-DA:500,6
-DA:501,6
-DA:502,6
-DA:503,6
-DA:504,6
-DA:506,40
-DA:507,11
-DA:508,16
-DA:509,11
-DA:511,11
-DA:512,2
-DA:513,2
-DA:514,2
-DA:516,9
-DA:518,9
-DA:519,9
-DA:520,9
-DA:521,3
-DA:522,3
-DA:525,9
-DA:527,6
-DA:528,6
-DA:529,6
-DA:530,6
-DA:531,6
-DA:532,6
-DA:533,6
+BRDA:295,1597,1,0
+BRDA:307,1751,0,0
+BRDA:309,1781,0,0
+BRDA:309,1781,1,0
+BRDA:326,1904,0,0
+BRDA:326,1904,1,0
+BRDA:307,1751,1,0
+BRDA:340,2071,0,0
+BRDA:344,2101,0,0
+BRDA:344,2101,1,0
+BRDA:344,2113,0,0
+BRDA:344,2113,1,0
+BRDA:345,2150,0,0
+BRDA:345,2150,1,0
+BRDA:345,2162,0,0
+BRDA:345,2162,1,0
+BRDA:347,2312,0,0
+BRDA:347,2312,1,0
+BRDA:347,2319,0,0
+BRDA:347,2319,1,0
+BRDA:347,2459,0,0
+BRDA:347,2459,1,0
+BRDA:347,2466,0,0
+BRDA:347,2466,1,0
+BRDA:340,2071,1,0
+FN:391,System.Void assetgrid_backend.Controllers.TransactionController::Delete(System.Int32)
+FNDA:0,System.Void assetgrid_backend.Controllers.TransactionController::Delete(System.Int32)
+DA:392,0
+DA:393,0
+DA:394,0
+DA:395,0
+DA:396,0
+DA:397,0
+DA:400,0
+DA:401,0
+DA:402,0
+DA:403,0
+DA:404,0
+DA:405,0
+DA:406,0
+DA:409,0
+DA:410,0
+DA:411,0
+DA:413,0
+DA:416,0
+BRDA:400,671,0,0
+BRDA:400,671,1,0
+FN:420,System.Void assetgrid_backend.Controllers.TransactionController::DeleteMultiple(assetgrid_backend.Models.ViewModels.ViewSearchGroup)
+FNDA:0,System.Void assetgrid_backend.Controllers.TransactionController::DeleteMultiple(assetgrid_backend.Models.ViewModels.ViewSearchGroup)
+DA:421,0
+DA:422,0
+DA:423,0
+DA:424,0
+DA:425,0
+DA:426,0
+DA:428,0
+DA:429,0
+DA:430,0
+DA:431,0
+DA:433,0
+DA:434,0
+DA:435,0
+DA:436,0
+DA:437,0
+DA:439,0
+DA:440,0
+DA:441,0
+DA:442,0
+DA:443,0
+DA:444,0
+DA:446,0
+DA:447,0
+BRDA:423,43,0,0
+BRDA:423,43,1,0
+FN:451,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Controllers.TransactionController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewSearchResponse`1<assetgrid_backend.Models.ViewModels.ViewTransaction> assetgrid_backend.Controllers.TransactionController::Search(assetgrid_backend.Models.ViewModels.ViewSearch)
+DA:452,0
+DA:453,0
+DA:454,0
+DA:455,0
+DA:456,0
+DA:457,0
+DA:458,0
+DA:459,0
+DA:460,0
+DA:461,0
+DA:463,0
+DA:464,0
+DA:465,0
+DA:466,0
+DA:467,0
+DA:468,0
+FN:472,System.Collections.Generic.List`1<System.String> assetgrid_backend.Controllers.TransactionController::FindDuplicates(System.Collections.Generic.List`1<System.String>)
+FNDA:0,System.Collections.Generic.List`1<System.String> assetgrid_backend.Controllers.TransactionController::FindDuplicates(System.Collections.Generic.List`1<System.String>)
+DA:473,0
+DA:474,0
+DA:475,0
+DA:476,0
+DA:477,0
+DA:478,0
+DA:479,0
+DA:480,0
+FN:484,assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse assetgrid_backend.Controllers.TransactionController::CreateMany(System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction>)
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewTransactionCreateManyResponse assetgrid_backend.Controllers.TransactionController::CreateMany(System.Collections.Generic.List`1<assetgrid_backend.Models.ViewModels.ViewCreateTransaction>)
+DA:485,0
+DA:486,0
+DA:488,0
+DA:489,0
+DA:490,0
+DA:492,0
+DA:493,0
+DA:494,0
+DA:495,0
+DA:497,0
+DA:498,0
+DA:499,0
+DA:500,0
+DA:501,0
+DA:502,0
+DA:503,0
+DA:504,0
+DA:505,0
+DA:507,0
+DA:508,0
+DA:509,0
+DA:510,0
+DA:512,0
+DA:513,0
+DA:514,0
+DA:515,0
+DA:517,0
+DA:519,0
+DA:520,0
+DA:521,0
+DA:522,0
+DA:523,0
+DA:526,0
+DA:528,0
+DA:529,0
+DA:530,0
+DA:531,0
+DA:532,0
+DA:533,0
 DA:534,0
-DA:535,6
-DA:536,4
-DA:537,4
-DA:538,4
-DA:539,4
-DA:540,4
-DA:541,4
-DA:542,6
-DA:545,6
-DA:546,2
-DA:547,2
-DA:548,2
-DA:549,2
-DA:550,2
-DA:551,6
-DA:552,2
-DA:554,6
-DA:555,6
-DA:556,6
-DA:557,6
-DA:558,3
-DA:559,3
-DA:560,3
-DA:561,3
-DA:562,9
-DA:563,11
-DA:565,6
-DA:566,6
-DA:567,6
-DA:568,6
-DA:569,6
-DA:570,6
-DA:571,6
-BRDA:506,1640,1,11
-BRDA:508,995,0,5
-BRDA:508,995,1,11
-BRDA:509,1016,0,5
-BRDA:509,1016,1,6
-BRDA:511,1051,0,2
-BRDA:511,1051,1,9
-BRDA:519,1087,0,9
-BRDA:519,1087,1,7
-BRDA:519,1116,0,7
-BRDA:519,1134,0,6
-BRDA:519,1134,1,1
-BRDA:519,1116,1,2
-BRDA:519,1176,0,3
-BRDA:519,1176,1,6
-BRDA:525,1204,0,3
-BRDA:525,1204,1,6
-BRDA:527,1291,0,3
-BRDA:527,1291,1,3
-BRDA:527,1325,0,0
-BRDA:527,1325,1,6
-BRDA:545,1476,0,2
-BRDA:545,1476,1,6
-BRDA:506,1640,0,6
-BRDA:497,11,0,6
-BRDA:497,11,1,5
+DA:535,0
+DA:536,0
+DA:537,0
+DA:538,0
+DA:539,0
+DA:540,0
+DA:541,0
+DA:542,0
+DA:543,0
+DA:546,0
+DA:547,0
+DA:548,0
+DA:549,0
+DA:550,0
+DA:551,0
+DA:552,0
+DA:553,0
+DA:555,0
+DA:556,0
+DA:557,0
+DA:558,0
+DA:559,0
+DA:560,0
+DA:561,0
+DA:562,0
+DA:563,0
+DA:564,0
+DA:566,0
+DA:567,0
+DA:568,0
+DA:569,0
+DA:570,0
+DA:571,0
+DA:572,0
+BRDA:507,1640,1,0
+BRDA:509,995,0,0
+BRDA:509,995,1,0
+BRDA:510,1016,0,0
+BRDA:510,1016,1,0
+BRDA:512,1051,0,0
+BRDA:512,1051,1,0
+BRDA:520,1087,0,0
+BRDA:520,1087,1,0
+BRDA:520,1116,0,0
+BRDA:520,1134,0,0
+BRDA:520,1134,1,0
+BRDA:520,1116,1,0
+BRDA:520,1176,0,0
+BRDA:520,1176,1,0
+BRDA:526,1204,0,0
+BRDA:526,1204,1,0
+BRDA:528,1291,0,0
+BRDA:528,1291,1,0
+BRDA:528,1325,0,0
+BRDA:528,1325,1,0
+BRDA:546,1476,0,0
+BRDA:546,1476,1,0
+BRDA:507,1640,0,0
+BRDA:498,11,0,0
+BRDA:498,11,1,0
 FN:18,System.Void assetgrid_backend.Controllers.TransactionController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-FNDA:48,System.Void assetgrid_backend.Controllers.TransactionController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-DA:19,48
-DA:20,48
-DA:21,48
-DA:22,48
-DA:23,48
+FNDA:0,System.Void assetgrid_backend.Controllers.TransactionController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
+DA:23,0
 LF:438
-LH:413
+LH:0
 BRF:164
-BRH:138
+BRH:0
 FNF:11
-FNH:11
+FNH:0
 end_of_record
-SF:C:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\UserController.cs
+SF:c:\Users\Alex\Documents\GitHub\assetgridapp\backend\Controllers\UserController.cs
 FN:25,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::Authenticate(assetgrid_backend.Models.ViewModels.AuthenticateModel)
-FNDA:51,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::Authenticate(assetgrid_backend.Models.ViewModels.AuthenticateModel)
-DA:26,51
-DA:27,51
-DA:28,51
-DA:29,51
+FNDA:0,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::Authenticate(assetgrid_backend.Models.ViewModels.AuthenticateModel)
+DA:26,0
+DA:27,0
+DA:28,0
+DA:29,0
 DA:31,0
-DA:32,51
-BRDA:27,14,0,51
+DA:32,0
+BRDA:27,14,0,0
 BRDA:27,14,1,0
 FN:35,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::GetUser()
-FNDA:7,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::GetUser()
-DA:36,7
-DA:37,7
-DA:38,7
-DA:39,1
-DA:40,1
-DA:43,6
-DA:44,6
-DA:45,6
-DA:46,6
-DA:47,6
-DA:48,6
-DA:49,6
-DA:50,6
-DA:51,6
-DA:53,6
+FNDA:0,assetgrid_backend.Models.ViewModels.UserAuthenticatedResponse assetgrid_backend.Controllers.UserController::GetUser()
+DA:36,0
+DA:37,0
+DA:38,0
+DA:39,0
+DA:40,0
+DA:43,0
+DA:44,0
+DA:45,0
+DA:46,0
+DA:47,0
+DA:48,0
+DA:49,0
+DA:50,0
+DA:51,0
+DA:53,0
 DA:54,0
 DA:55,0
-DA:58,6
-DA:59,6
-DA:60,6
-DA:61,6
+DA:58,0
+DA:59,0
+DA:60,0
+DA:61,0
 DA:62,0
 DA:63,0
 DA:64,0
@@ -3568,71 +3489,71 @@ DA:67,0
 DA:68,0
 DA:69,0
 DA:70,0
-DA:71,6
-DA:72,6
-DA:73,6
-DA:74,7
-BRDA:38,48,0,1
-BRDA:38,48,1,6
+DA:71,0
+DA:72,0
+DA:73,0
+DA:74,0
+BRDA:38,48,0,0
+BRDA:38,48,1,0
 BRDA:53,735,0,0
-BRDA:53,735,1,6
-FN:80,System.Void assetgrid_backend.Controllers.UserController::CreateInitial(System.String,System.String)
-FNDA:51,System.Void assetgrid_backend.Controllers.UserController::CreateInitial(System.String,System.String)
-DA:81,51
-DA:82,51
-DA:83,50
-DA:84,50
-DA:85,50
-DA:87,1
-DA:88,1
-DA:90,50
-BRDA:82,22,0,50
-BRDA:82,22,1,1
+BRDA:53,735,1,0
+FN:80,System.Void assetgrid_backend.Controllers.UserController::CreateInitial(assetgrid_backend.Models.ViewModels.AuthenticateModel)
+FNDA:0,System.Void assetgrid_backend.Controllers.UserController::CreateInitial(assetgrid_backend.Models.ViewModels.AuthenticateModel)
+DA:81,0
+DA:82,0
+DA:83,0
+DA:84,0
+DA:85,0
+DA:87,0
+DA:88,0
+DA:90,0
+BRDA:82,22,0,0
+BRDA:82,22,1,0
 FN:96,System.Boolean assetgrid_backend.Controllers.UserController::Any()
 FNDA:0,System.Boolean assetgrid_backend.Controllers.UserController::Any()
 DA:97,0
 DA:98,0
 DA:99,0
 FN:104,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Controllers.UserController::Preferences(assetgrid_backend.Models.ViewModels.ViewPreferences)
-FNDA:5,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Controllers.UserController::Preferences(assetgrid_backend.Models.ViewModels.ViewPreferences)
-DA:105,5
-DA:106,5
-DA:108,5
-DA:109,5
-DA:110,5
-DA:111,5
-DA:112,1
-DA:113,1
-DA:114,1
-DA:115,1
-DA:116,1
-DA:118,5
-DA:119,5
-DA:120,5
-DA:121,5
-DA:122,5
-DA:124,5
-DA:125,1
-DA:126,1
-DA:127,1
-DA:128,5
-DA:130,5
-DA:131,5
-BRDA:111,170,0,1
-BRDA:111,170,1,5
-BRDA:124,273,0,1
-BRDA:124,273,1,5
+FNDA:0,assetgrid_backend.Models.ViewModels.ViewPreferences assetgrid_backend.Controllers.UserController::Preferences(assetgrid_backend.Models.ViewModels.ViewPreferences)
+DA:105,0
+DA:106,0
+DA:108,0
+DA:109,0
+DA:110,0
+DA:111,0
+DA:112,0
+DA:113,0
+DA:114,0
+DA:115,0
+DA:116,0
+DA:118,0
+DA:119,0
+DA:120,0
+DA:121,0
+DA:122,0
+DA:124,0
+DA:125,0
+DA:126,0
+DA:127,0
+DA:128,0
+DA:130,0
+DA:131,0
+BRDA:111,170,0,0
+BRDA:111,170,1,0
+BRDA:124,273,0,0
+BRDA:124,273,1,0
 FN:17,System.Void assetgrid_backend.Controllers.UserController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-FNDA:50,System.Void assetgrid_backend.Controllers.UserController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
-DA:18,50
-DA:19,50
-DA:20,50
-DA:21,50
-DA:22,50
+FNDA:0,System.Void assetgrid_backend.Controllers.UserController::.ctor(assetgrid_backend.Data.AssetgridDbContext,assetgrid_backend.Services.IUserService)
+DA:18,0
+DA:19,0
+DA:20,0
+DA:21,0
+DA:22,0
 LF:79
-LH:64
+LH:0
 BRF:12
-BRH:10
+BRH:0
 FNF:6
-FNH:5
+FNH:0
 end_of_record
