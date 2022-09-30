@@ -6,7 +6,7 @@ interface Props {
     label?: string,
     value: string | null,
     disabled?: boolean,
-    error?: string,
+    errors?: string[],
     addOnAfter?: React.ReactElement,
     onChange: (value: string | null) => void,
     isSmall?: boolean;
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function InputTextOrNull(props: Props): React.ReactElement {
+    const isError = props.errors !== undefined && props.errors.length > 0;
     const inputRef = React.useRef<HTMLInputElement>(null);
     React.useEffect(() => {
         if (inputRef.current && props.value === "") {
@@ -28,15 +29,15 @@ export default function InputTextOrNull(props: Props): React.ReactElement {
                 <div className="control is-expanded">
                     <input
                         ref={inputRef}
-                        className={"input" + (props.error ? " is-danger" : "") + (props.isSmall ? " is-small" : "")}
+                        className={"input" + (isError ? " is-danger" : "") + (props.isSmall ? " is-small" : "")}
                         type="text"
                         placeholder={props.label}
                         value={props.value}
                         disabled={props.disabled}
                         onChange={event => props.onChange(event.target.value)}
                     />
-                    {props.error !== undefined && <p className="help has-text-danger">
-                        {props.error}
+                    {isError && <p className="help has-text-danger">
+                        {props.errors![0]}
                     </p>}
                 </div>
                 <div className="control">

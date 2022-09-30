@@ -24,7 +24,7 @@ export default function (): React.ReactElement {
     return <section className="page-login">
         <Card title="Create a new account for Assetgrid" isNarrow={true}>
             <InputText value={email} label="Email" onChange={e => setEmail(e.target.value)} error={state === "error"} />
-            <InputText value={password} password={true} label="Password" onChange={e => setPassword(e.target.value)} error={state === "error" ? "Invalid username or password" : undefined} />
+            <InputText value={password} password={true} label="Password" onChange={e => setPassword(e.target.value)} errors={state === "error" ? ["Invalid username or password"] : undefined} />
             <InputButton className="is-primary" onClick={signUp}>
                 Sign up
             </InputButton>

@@ -6,7 +6,7 @@ interface Props {
     sidebarVisible: boolean;
 }
 
-export default function (props: Props) {
+export default function MobileHeader(props: Props) {
     return <div className="mobile-header has-background-dark">
         <img className="logo" src={logo}></img>
         <a role="button"

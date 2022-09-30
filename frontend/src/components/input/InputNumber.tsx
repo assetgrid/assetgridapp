@@ -5,6 +5,7 @@ type Props = {
     label?: string;
     disabled?: boolean;
     isSmall?: boolean;
+    errors?: string[],
 } & ({
     allowNull: false;
     value: Decimal;
@@ -17,18 +18,23 @@ type Props = {
 })
 
 export default function InputNumber (props: Props) {
+    const isError = props.errors !== undefined && props.errors.length > 0;
+
     return <div className="field">
         {props.label && <label className="label">{props.label}</label>}
         <div className="field has-addons">
             <div className="control is-expanded">
                 <input
-                    className={"input" + (props.isSmall ? " is-small" : "")}
+                    className={"input" + (isError ? " is-danger" : "") + (props.isSmall ? " is-small" : "")}
                     type="number"
                     placeholder={props.label}
                     value={props.value?.toString() ?? ""}
                     disabled={props.disabled}
                     onChange={onChange}
                 />
+                {isError && <p className="help has-text-danger">
+                    {props.errors![0]}
+                </p>}
             </div>
         </div>
     </div>;

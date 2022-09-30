@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -51,13 +52,13 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService);
-            TransactionController = new TransactionController(Context, UserService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
 
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
-                                              It.IsAny<ValidationStateDictionary>(),
-                                              It.IsAny<string>(),
-                                              It.IsAny<Object>()));
+                                            It.IsAny<ValidationStateDictionary>(),
+                                            It.IsAny<string>(),
+                                            It.IsAny<Object>()));
             TransactionController.ObjectValidator = objectValidator.Object;
 
             var accountModel = new ViewCreateAccount
@@ -87,7 +88,7 @@ namespace backend.unittests.Tests
                 Category = "My category",
                 Lines = new List<ViewTransactionLine>()
             };
-            var transaction = TransactionController.Create(model);
+            var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
             Assert.Equal(transaction.Total, model.Total);
             Assert.Equal(transaction.DateTime, model.DateTime);
@@ -179,13 +180,13 @@ namespace backend.unittests.Tests
             };
 
             model.SourceId = AccountA.Id;
-            var transaction = TransactionController.Create(model);
+            var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             model.SourceId = null;
             model.DestinationId = AccountA.Id;
-            transaction = TransactionController.Create(model);
+            transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
         }
@@ -218,11 +219,11 @@ namespace backend.unittests.Tests
             };
 
             model.SourceId = AccountA.Id;
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<ForbidResult>(TransactionController.Create(model));
 
             model.SourceId = null;
             model.DestinationId = AccountA.Id;
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<ForbidResult>(TransactionController.Create(model));
         }
 
         [Fact]
@@ -306,7 +307,7 @@ namespace backend.unittests.Tests
             var accountB = AccountController.Create(accountModel);
             transactionModel.SourceId = accountA.Id;
             transactionModel.DestinationId = accountB.Id;
-            var transactionAB = TransactionController.Create(transactionModel);
+            var transactionAB = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
 
             var otherUser = UserService.CreateUser("test2", "test");
             UserService.MockUser = otherUser;
@@ -315,7 +316,7 @@ namespace backend.unittests.Tests
             // Create transaction referencing only account C. Should succeed
             transactionModel.SourceId = null;
             transactionModel.DestinationId = accountC.Id;
-            var transactionC = TransactionController.Create(transactionModel);
+            var transactionC = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
             Assert.NotNull(transactionC);
 
             // Update transaction to reference account A. Should fail since no write permission to this account
@@ -385,18 +386,18 @@ namespace backend.unittests.Tests
 
             // Cannot create transaction yet as no write permission to the unknown account
             UserService.MockUser = UserService.GetById(User.Id);
-            Assert.Throws<Exception>(() => TransactionController.Create(transactionModel));
+            Assert.IsType<ForbidResult>(TransactionController.Create(transactionModel));
 
             // Give read permission. Still fails
             var userAccount = new UserAccount { AccountId = unknownAccount.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
             Context.UserAccounts.Add(userAccount);
             Context.SaveChanges();
-            Assert.Throws<Exception>(() => TransactionController.Create(transactionModel));
+            Assert.IsType<ForbidResult>(TransactionController.Create(transactionModel));
 
             // Change to write permission. Succeeds
             userAccount.Permissions = UserAccountPermissions.ModifyTransactions;
             Context.SaveChanges();
-            var transaction = TransactionController.Create(transactionModel);
+            var transaction = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
@@ -439,7 +440,7 @@ namespace backend.unittests.Tests
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
                 }
-            });
+            }).OkValue<ViewTransaction>();
             var oppositeTransaction = TransactionController.Create(new ViewCreateTransaction
             {
                 Category = "",
@@ -452,7 +453,7 @@ namespace backend.unittests.Tests
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
                 }
-            });
+            }).OkValue<ViewTransaction>();
 
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
             Assert.Equivalent(oppositeTransaction, TransactionController.Get(oppositeTransaction.Id).OkValue<ViewTransaction>());
@@ -470,7 +471,7 @@ namespace backend.unittests.Tests
                     new ViewTransactionLine(amount: -120, description: "Line 1"),
                     new ViewTransactionLine(amount: 20, description: "Line 2"),
                 }
-            });
+            }).OkValue<ViewTransaction>();
             // Update id so the equivalence check passes
             negativeTransaction.Id = oppositeTransaction.Id;
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
@@ -525,7 +526,7 @@ namespace backend.unittests.Tests
                 }
             };
 
-            var transaction = TransactionController.Create(model);
+            var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
             var aUserAccount = Context.UserAccounts.Single(a => a.AccountId == AccountA.Id && a.UserId == User.Id);
             var bUserAccount = Context.UserAccounts.Single(b => b.AccountId == AccountB.Id && b.UserId == User.Id);
             if (accountAPermissions == ViewAccount.AccountPermissions.None)
@@ -585,28 +586,28 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Lines = new List<ViewTransactionLine>()
             };
-            var transactionCA = TransactionController.Create(model);
+            var transactionCA = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
             model.DestinationId = accountC.Id;
-            var transactionAC = TransactionController.Create(model);
+            var transactionAC = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = accountC.Id;
             model.DestinationId = null;
-            var transactionC0 = TransactionController.Create(model);
+            var transactionC0 = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = null;
             model.DestinationId = accountC.Id;
-            var transaction0C = TransactionController.Create(model);
+            var transaction0C = TransactionController.Create(model).OkValue<ViewTransaction>();
 
             // Switch back to user A
             UserService.MockUser = UserService.GetById(User.Id);
             model.SourceId = AccountA.Id;
             model.DestinationId = AccountB.Id;
-            var transactionAB = TransactionController.Create(model);
+            var transactionAB = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
             model.DestinationId = null;
-            var transactionA0 = TransactionController.Create(model);
+            var transactionA0 = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = null;
             model.DestinationId = AccountB.Id;
-            var transaction0B = TransactionController.Create(model);
+            var transaction0B = TransactionController.Create(model).OkValue<ViewTransaction>();
 
             // Delete all transactions (query accepts all transactions)
             TransactionController.DeleteMultiple(new ViewSearchGroup
@@ -681,12 +682,15 @@ namespace backend.unittests.Tests
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
 
             // Second creation fails due to duplicate identifier
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<BadRequestResult>(TransactionController.Create(model));
+            TransactionController.ModelState.Clear();
             model.SourceId = null;
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<BadRequestResult>(TransactionController.Create(model));
+            TransactionController.ModelState.Clear();
             model.SourceId = AccountA.Id;
             model.DestinationId = null;
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<BadRequestResult>(TransactionController.Create(model));
+            TransactionController.ModelState.Clear();
 
             UserService.MockUser = otherUser;
             var accountC = AccountController.Create(new ViewCreateAccount
@@ -703,7 +707,7 @@ namespace backend.unittests.Tests
             Assert.Empty(TransactionController.FindDuplicates(new List<string> { model.Identifier }));
 
             // Other user can create transaction without issue
-            var transaction = TransactionController.Create(model);
+            var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
             TransactionController.Delete(transaction.Id);
 
@@ -713,7 +717,8 @@ namespace backend.unittests.Tests
 
             // Now creation fails, as otherUser can see the first users transaction with the same identifier
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
-            Assert.Throws<Exception>(() => TransactionController.Create(model));
+            Assert.IsType<BadRequestResult>(TransactionController.Create(model));
+            TransactionController.ModelState.Clear();
         }
 
         [Fact]
@@ -742,28 +747,28 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Lines = new List<ViewTransactionLine>()
             };
-            var transactionCA = TransactionController.Create(model);
+            var transactionCA = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
             model.DestinationId = accountC.Id;
-            var transactionAC = TransactionController.Create(model);
+            var transactionAC = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = accountC.Id;
             model.DestinationId = null;
-            var transactionC0 = TransactionController.Create(model);
+            var transactionC0 = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = null;
             model.DestinationId = accountC.Id;
-            var transaction0C = TransactionController.Create(model);
+            var transaction0C = TransactionController.Create(model).OkValue<ViewTransaction>();
 
             // Switch back to user A
             UserService.MockUser = UserService.GetById(User.Id);
             model.SourceId = AccountA.Id;
             model.DestinationId = AccountB.Id;
-            var transactionAB = TransactionController.Create(model);
+            var transactionAB = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
             model.DestinationId = null;
-            var transactionA0 = TransactionController.Create(model);
+            var transactionA0 = TransactionController.Create(model).OkValue<ViewTransaction>();
             model.SourceId = null;
             model.DestinationId = AccountB.Id;
-            var transaction0B = TransactionController.Create(model);
+            var transaction0B = TransactionController.Create(model).OkValue<ViewTransaction>();
 
             // Update all transactions (query accepts all transactions)
             TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {

@@ -9,7 +9,7 @@ interface Props {
     isNarrow: boolean;
 }
 
-export default function (props: Props) {
+export default function Card(props: Props) {
     return <div className={"card m-3" + (props.isNarrow ? " container" : "") + (props.className ? " " + props.className : "")} style={props.style}>
         <header className="card-header">
             <p className="card-header-title">

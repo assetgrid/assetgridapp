@@ -5,6 +5,7 @@ using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
@@ -43,7 +44,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService);
-            TransactionController = new TransactionController(Context, UserService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
         }
 
         public void Dispose()
@@ -273,7 +274,7 @@ namespace backend.unittests.Tests
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
                     Lines = new List<ViewTransactionLine>()
-                });
+                }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
 
@@ -364,7 +365,7 @@ namespace backend.unittests.Tests
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
                     Lines = new List<ViewTransactionLine>()
-                });
+                }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
 
@@ -404,7 +405,7 @@ namespace backend.unittests.Tests
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
                     Lines = new List<ViewTransactionLine>()
-                });
+                }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
 
@@ -546,15 +547,15 @@ namespace backend.unittests.Tests
 
             transactionModel.Category = "A";
             transactionModel.Total = 100;
-            var catA1 = TransactionController.Create(transactionModel);
+            var catA1 = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
             transactionModel.Total = -150;
-            var catA2 = TransactionController.Create(transactionModel);
+            var catA2 = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
 
             transactionModel.Category = "B";
             transactionModel.Total = 200;
-            var catB1 = TransactionController.Create(transactionModel);
+            var catB1 = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
             transactionModel.Total = -250;
-            var catB2 = TransactionController.Create(transactionModel);
+            var catB2 = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
 
             var result = AccountController.CategorySummary(account.Id, null);
             Assert.Equal(100, result.Single(x => x.Category == catA1.Category).Revenue);

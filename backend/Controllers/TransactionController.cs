@@ -5,6 +5,7 @@ using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace assetgrid_backend.Controllers
 {
@@ -15,11 +16,13 @@ namespace assetgrid_backend.Controllers
     {
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
+        private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService)
+        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
         {
             _context = context;
             _user = userService;
+            _apiBehaviorOptions = apiBehaviorOptions;
         }
 
         [HttpGet()]
@@ -41,7 +44,9 @@ namespace assetgrid_backend.Controllers
         }
 
         [HttpPost()]
-        public ViewTransaction Create(ViewCreateTransaction model)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public IActionResult Create(ViewCreateTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (string.IsNullOrWhiteSpace(model.Identifier))
@@ -58,7 +63,8 @@ namespace assetgrid_backend.Controllers
                         .Any(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id));
                     if (otherTransactionsWithSameIdentifier)
                     {
-                        throw new Exception("Duplicate transaction");
+                        ModelState.AddModelError(nameof(model.Identifier), "Another transaction with this identifier exists");
+                        return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
                     }
                 }
 
@@ -75,7 +81,7 @@ namespace assetgrid_backend.Controllers
                     if ((model.SourceId != null && (userAccountSource == null || ! writePermissions.Contains(userAccountSource.Permissions))) ||
                         (model.DestinationId != null && (userAccountDestination == null || ! writePermissions.Contains(userAccountDestination.Permissions))))
                     {
-                        throw new Exception("Not authorized to perform this action");
+                        return Forbid();
                     }
 
 
@@ -117,7 +123,7 @@ namespace assetgrid_backend.Controllers
                     _context.Transactions.Add(result);
                     transaction.Commit();
                     _context.SaveChanges();
-                    return new ViewTransaction {
+                    return Ok(new ViewTransaction {
                         Id = result.Id,
                         Identifier = result.Identifier,
                         DateTime = result.DateTime,
@@ -150,7 +156,7 @@ namespace assetgrid_backend.Controllers
                             .OrderBy(line => line.Order)
                             .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
                             .ToList(),
-                    };
+                    });
                 }
             }
             throw new Exception();

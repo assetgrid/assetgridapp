@@ -15,11 +15,13 @@ export interface Props {
     disabled?: boolean,
     onChange: (date: DateTime) => void;
     fullwidth: boolean;
+    errors?: string[];
 }
 
 export default function InputDateTime (props: Props) {
     const [open, setOpen] = React.useState(false);
     const { user } = React.useContext(userContext);
+    const isError = props.errors !== undefined && props.errors.length > 0;
 
     var value: string;
     if (props.value == null) {
@@ -30,7 +32,7 @@ export default function InputDateTime (props: Props) {
     
     return <div className="field input-datetime">
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && !props.disabled ? " is-active" : "")}
+        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && !props.disabled ? " is-active" : "") + (isError ? " is-danger" : "")}
             tabIndex={0} onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}>
             <div className="dropdown-trigger">
                 <button className="button" aria-haspopup="true" onClick={e => setOpen(true) } disabled={props.disabled}>
@@ -62,5 +64,8 @@ export default function InputDateTime (props: Props) {
                 </div>
             </div>
         </div>
+        {isError && <p className="help has-text-danger">
+            {props.errors![0]}
+        </p>}
     </div>;
 }

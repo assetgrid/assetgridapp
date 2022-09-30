@@ -17,10 +17,12 @@ interface Props {
     onChange: (account: Account | null) => void;
     nullSelectedText?: string;
     allowCreateNewAccount: boolean;
+    errors?: string[];
 }
 
 export default function InputAccount(props: Props) {
     let text: string;
+    const isError = props.errors !== undefined && props.errors.length > 0;
     const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const [creatingAccount, setCreatingAccount] = React.useState(false);
 
@@ -52,8 +54,11 @@ export default function InputAccount(props: Props) {
 
     // Fetch dropdown options
     React.useEffect(() => {
-        refreshDropdownDebounced(searchQuery);
-    }, [searchQuery]);
+        if (api !== null)
+        {
+            refreshDropdownDebounced(api, searchQuery);
+        }
+    }, [searchQuery, api]);
 
     const refreshDropdownDebounced = React.useCallback(debounce(refreshDropdown, 300), []);
 
@@ -63,7 +68,7 @@ export default function InputAccount(props: Props) {
         {/* Label */}
         {props.label !== undefined && <label className="label">{props.label}</label>}
 
-        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "")}>
+        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
             <div className="dropdown-trigger">
                 <button className="button" aria-haspopup="true" onClick={() => setOpen(true) } disabled={props.disabled}>
                     <span>{text}</span>
@@ -110,6 +115,9 @@ export default function InputAccount(props: Props) {
                 </div>
             </div>
         </div>
+        {isError && <p className="help has-text-danger">
+            {props.errors![0]}
+        </p>}
         {creatingAccount && <CreateAccountModal close={() => setCreatingAccount(false)}
             closeOnChange={true}
             created={account => setSelectedAccount(account)}
@@ -132,9 +140,7 @@ export default function InputAccount(props: Props) {
         props.onChange(account)
     }
 
-    function refreshDropdown(searchQuery: string) {
-        if (api === null) return;
-
+    function refreshDropdown(api: Api, searchQuery: string) {
         var query: any = searchQuery == ""
             ? null
             : {

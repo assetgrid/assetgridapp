@@ -50,7 +50,7 @@ export default function InputParseOptions(props: InputParseOptionsProps) {
             {regexEnabled && <>
                 <InputText label="RegEx"
                     value={regexString}
-                    error={regexStringValid ? undefined : "Invalid regex"}
+                    errors={regexStringValid ? undefined : ["Invalid regex"]}
                     onChange={e => setRegex(e.target.value)} />
                 <InputText label="Pattern"
                     value={pattern}

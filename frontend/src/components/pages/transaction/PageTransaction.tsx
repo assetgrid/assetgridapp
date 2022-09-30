@@ -81,7 +81,18 @@ export default function PageTransaction(): React.ReactElement {
             setTransaction("error");
         } else if (api !== null) {
             api.Transaction.get(id)
-                .then(transaction => setTransaction(transaction))
+                .then(result => {
+                    switch (result.status) {
+                        case 200:
+                            setTransaction(result.data);
+                            break;
+                        case 404:
+                            setTransaction(null);
+                            break;
+                        default:
+                            setTransaction("error");
+                    }
+                })
                 .catch(() => setTransaction("error"));
         }
     }

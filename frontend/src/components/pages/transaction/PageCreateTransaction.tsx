@@ -31,8 +31,9 @@ const defaultModel: CreateTransaction = {
     total: new Decimal(0),
 };
 
-export default function () {
+export default function PageCreateTransaction() {
     const [model, setModel] = React.useState<CreateTransaction>(defaultModel);
+    const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
     const [creating, setCreating] = React.useState(false);
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
@@ -53,21 +54,25 @@ export default function () {
                     value={model.dateTime}
                     onChange={value => setModel({ ...model, dateTime: value })}
                     fullwidth={false}
-                    disabled={creating} />
+                    disabled={creating}
+                    errors={modelErrors?.["DateTime"]} />
                 <InputTextOrNull label="Unique identifier"
                     value={model.identifier}
                     noValueText="Ignore duplicates"
                     onChange={value => setModel({ ...model, identifier: value })}
-                    disabled={creating} />
+                    disabled={creating}
+                    errors={modelErrors?.["Identifier"]}/>
                 <InputNumber label={"Total"}
                     allowNull={false}
                     value={model.total}
                     disabled={model.lines.length > 0 || creating}
-                    onChange={value => setModel({...model, total: new Decimal(value) })} />
+                    onChange={value => setModel({ ...model, total: new Decimal(value) })}
+                    errors={modelErrors?.["Total"]}/>
                 <InputText label="Description"
                     value={model.description}
                     onChange={e => setModel({ ...model, description: e.target.value })}
-                    disabled={creating} />
+                    disabled={creating}
+                    errors={modelErrors?.["Description"]}/>
                 <div className="columns">
                     <div className="column is-6">
                         <InputAccount label="Source"
@@ -75,7 +80,8 @@ export default function () {
                             disabled={creating}
                             allowNull={true}
                             allowCreateNewAccount={true} 
-                            onChange={account => setModel({ ...model, sourceId: account?.id ?? null})} />
+                            onChange={account => setModel({ ...model, sourceId: account?.id ?? null })}
+                            errors={modelErrors?.["SourceId"]} />
                     </div>
                     <div className="column is-6">
                         <InputAccount label="Destination"
@@ -83,13 +89,15 @@ export default function () {
                             disabled={creating}
                             allowNull={true}
                             allowCreateNewAccount={true} 
-                            onChange={account => setModel({ ...model, destinationId: account?.id ?? null})} />
+                            onChange={account => setModel({ ...model, destinationId: account?.id ?? null })}
+                            errors={modelErrors?.["DestinationId"]} />
                     </div>
                 </div>
                 <InputCategory label="Category"
                     value={model.category}
                     disabled={creating}
-                    onChange={value => setModel({ ...model, category: value })} />
+                    onChange={value => setModel({ ...model, category: value })}
+                    errors={modelErrors?.["Category"]} />
             </Card>
 
             <Card title="Transaction lines" isNarrow={true}>
@@ -184,12 +192,17 @@ export default function () {
         setCreating(true);
         setCreatedTransaction(null);
         const result = await api.Transaction.create(model);
-        if (action === "stay") {
-            setModel(defaultModel);
+        if (result.status == 200) {
+            if (action === "stay") {
+                setModel(defaultModel);
+                setCreating(false);
+                setCreatedTransaction(result.data);
+            } else {
+                navigate(routes.transaction(result.data.id.toString()));
+            }
+        } else if (result.status == 400) {
             setCreating(false);
-            setCreatedTransaction(result);
-        } else {
-            navigate(routes.transaction(result.id.toString()));
+            setModelErrors(result.errors);
         }
     }
 }

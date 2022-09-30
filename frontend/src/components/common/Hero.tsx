@@ -10,7 +10,7 @@ interface Props {
     isDanger?: boolean;
 }
 
-export default function (props: Props): React.ReactElement {
+export default function Hero(props: Props): React.ReactElement {
     const [period, setPeriod] = props.period ?? [{ type: "month", start: DateTime.now() }, () => 0];
 
     return <section className="hero has-background-white" style={{ flexDirection: "row", alignItems: "center" }}>

@@ -10,12 +10,14 @@ interface Props {
     value: string;
     disabled: boolean;
     onChange: (value: string) => void;
+    errors?: string[];
 }
 
 export default function InputCategory (props: Props) {
     const [open, setOpen] = React.useState(false);
     const [autocompleteSuggestions, setAutocompleteSuggestions] = React.useState<string[] | null>(null);
     const api = useApi();
+    const isError = props.errors !== undefined && props.errors.length > 0;
 
     React.useEffect(() => {
         if (props.value === "") {
@@ -30,7 +32,7 @@ export default function InputCategory (props: Props) {
 
     return <div className="field" tabIndex={0} onBlur={lostFocus}>
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "")}>
+        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
             <div className="dropdown-trigger">
                 <input className="input"
                     value={props.value}
@@ -56,6 +58,9 @@ export default function InputCategory (props: Props) {
                 </div>
             </div>
         </div>
+        {isError && <p className="help has-text-danger">
+            {props.errors![0]}
+        </p>}
     </div>;
 
     function prefixChanged(e: React.ChangeEvent<HTMLInputElement>) {

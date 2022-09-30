@@ -9,6 +9,7 @@ import { Transaction as TransactionModel, CreateTransaction, TransactionListResp
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
+import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok } from "../models/api";
 
 let rootUrl = 'https://localhost:7262';
 if (process.env.NODE_ENV === 'production') {
@@ -372,17 +373,17 @@ const Transaction = (token: string) => ({
      * @param id Transaction id
      * @returns The transaction with the specified id
      */
-     get: function (id: number): Promise<Transaction | null> {
-        return new Promise<Transaction | null>((resolve, reject) => {
+     get: function (id: number): Promise<Ok<Transaction> | NotFound> {
+        return new Promise<Ok<Transaction> | NotFound>((resolve, reject) => {
             axios.get<Transaction>(rootUrl + '/api/v1/transaction/' + Number(id), {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    resolve(fixTransaction(result.data));
+                    resolve({ status: 200, data: fixTransaction(result.data) });
                 })
                 .catch((e: AxiosError) => {
                     if (e.response?.status == 404) {
-                        resolve(null);
+                        resolve(NotFoundResult);
                     } else {
                         console.log(e);
                         reject();
@@ -396,8 +397,8 @@ const Transaction = (token: string) => ({
      * @param transaction The transaction to be created
      * @returns The newly created transaction
      */
-    create: function (transaction: CreateTransaction): Promise<TransactionModel> {
-        return new Promise<TransactionModel>((resolve, reject) => {
+    create: function (transaction: CreateTransaction): Promise<Ok<TransactionModel> | BadRequest | Forbid> {
+        return new Promise<Ok<TransactionModel> | BadRequest | Forbid>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.post<TransactionModel>(rootUrl + '/api/v1/transaction', {
                 ...model,
@@ -406,11 +407,18 @@ const Transaction = (token: string) => ({
                 lines: transaction.lines.map(line => ({...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString()}))
             }, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve(fixTransaction(result.data)))
-                .catch(e => {
+            }).then(result => {
+                resolve({ status: 200, data: fixTransaction(result.data) });
+            }).catch((e: AxiosError) => {
+                if (e.response?.status == 400) {
+                    resolve(e.response.data as BadRequest);
+                } else if (e.response?.status == 403) {
+                    resolve(ForbidResult);
+                } else {
                     console.log(e);
                     reject();
-                });
+                }
+            });
         });
     },
 
