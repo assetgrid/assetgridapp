@@ -78,11 +78,11 @@ function decrement(period: Period): Period {
 
 function getRange(period: Period): [DateTime, DateTime] {
     if (period.type === "month") {
-        return [period.start, period.start.plus({ months: 1 }).minus({ days: 1 })];
+        return [period.start.startOf("day"), period.start.plus({ months: 1 }).minus({ days: 1 }).endOf("day")];
     } else if (period.type === "year") {
-        return [period.start, period.start.plus({ years: 1 }).minus({ days: 1 })];
+        return [period.start.startOf("day"), period.start.plus({ years: 1 }).minus({ days: 1 }).endOf("day")];
     } else if (period.type === "custom") {
-        return [period.start, period.end];
+        return [period.start.startOf("day"), period.end.endOf("day")];
     }
     throw "Unknown period type";
 }

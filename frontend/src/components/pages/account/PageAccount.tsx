@@ -27,6 +27,7 @@ import Page404 from "../Page404";
 import PageError from "../PageError";
 import AccountDetailsCard from "../../account/AccountDetailsCard";
 import Hero from "../../common/Hero";
+import { Link } from "react-router-dom";
 
 const pageSize = 20;
 
@@ -91,6 +92,10 @@ export default function () {
             <>Please wait&hellip;</>,
             <>Please wait&hellip;</>,
             <>Please wait&hellip;</>,
+            <>
+                <InputButton className="is-primary">Create deposit</InputButton>
+                <InputButton className="is-primary">Create withdrawal</InputButton>
+            </>
         );
     }
     if (account === "error") {
@@ -129,7 +134,12 @@ export default function () {
             draw={draw}
             selectedTransactions={selectedTransactions}
             setSelectedTransactions={setSelectedTransactions}
-        />);
+        />,
+        <>
+            <Link className="button is-primary" to={routes.transactionCreate()} state={{ allowBack: true, actionOnComplete: "back", destinationId: id }}>Create deposit</Link>
+            <Link className="button is-primary" to={routes.transactionCreate()} state={{ allowBack: true, actionOnComplete: "back", sourceId: id }}>Create withdrawal</Link>
+        </>
+    );
 
     function updateHistory(period: Period, page: number, selectedTransactions: { [id: number]: boolean }) {
         window.history.replaceState({
@@ -230,7 +240,8 @@ function layout(
     accountDetails: React.ReactElement,
     categoryChart: React.ReactElement,
     balanceChart: React.ReactElement,
-    transactions: React.ReactElement): React.ReactElement {
+    transactions: React.ReactElement,
+    actions: React.ReactElement): React.ReactElement {
     
     return <>
         {hero}
@@ -250,6 +261,11 @@ function layout(
                     </Card>
                 </div>
             </div>
+            <Card title={"Actions"} isNarrow={false}>
+                <div className="buttons">
+                    {actions}
+                </div>
+            </Card>
             <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"} isNarrow={false}>
                 {transactions}
             </Card>

@@ -20,23 +20,24 @@ import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionLink from "../../transaction/TransactionLink";
 
-const defaultModel: CreateTransaction = {
-    category: "",
-    dateTime: DateTime.now(),
-    description: "",
-    destinationId: null,
-    sourceId: null,
-    identifier: null,
-    lines: [],
-    total: new Decimal(0),
-};
-
 export default function PageCreateTransaction() {
+    const defaultModel: CreateTransaction = {
+        category: "",
+        dateTime: DateTime.now(),
+        description: "",
+        destinationId: window.history.state.usr?.destinationId ?? null,
+        sourceId: window.history.state.usr?.sourceId ?? null,
+        identifier: null,
+        lines: [],
+        total: new Decimal(0),
+    };
+
     const [model, setModel] = React.useState<CreateTransaction>(defaultModel);
     const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
     const [creating, setCreating] = React.useState(false);
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
+    const actionOnComplete: "back" | "chose" = window.history.state.usr?.actionOnComplete ?? "chose";
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
     const api = useApi();
 
@@ -144,8 +145,13 @@ export default function PageCreateTransaction() {
 
             <Card title="Actions" isNarrow={true}>
                 <div className="buttons">
-                    <InputButton className="is-primary" disabled={api === null} onClick={() => create("stay")}>Create and stay</InputButton>
-                    <InputButton className="is-primary" disabled={api === null} onClick={() => create("view")}>Create and view transaction</InputButton>
+                    {actionOnComplete == "chose" && <>
+                        <InputButton className="is-primary" disabled={api === null} onClick={() => create("stay")}>Create and stay</InputButton>
+                        <InputButton className="is-primary" disabled={api === null} onClick={() => create("view")}>Create and view transaction</InputButton>
+                    </>}
+                    {actionOnComplete == "back" && <>
+                        <InputButton className="is-primary" disabled={api === null} onClick={() => create("back")}>Create transaction</InputButton>
+                    </>}
                     {allowBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>
@@ -186,7 +192,7 @@ export default function PageCreateTransaction() {
         });
     }
 
-    async function create(action: "stay" | "view") {
+    async function create(action: "stay" | "view" | "back") {
         if (api === null) return;
 
         setCreating(true);
@@ -197,6 +203,8 @@ export default function PageCreateTransaction() {
                 setModel(defaultModel);
                 setCreating(false);
                 setCreatedTransaction(result.data);
+            } else if (action === "back") {
+                navigate(-1);
             } else {
                 navigate(routes.transaction(result.data.id.toString()));
             }
