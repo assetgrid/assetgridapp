@@ -169,7 +169,7 @@ export default function InputAccount(props: Props) {
             to: 5,
             query: query
         } as SearchRequest).then(result => {
-            setDropdownOptions(result.data);
+            setDropdownOptions(result.data.data);
         });
     }
 
@@ -191,14 +191,14 @@ export default function InputAccount(props: Props) {
                 }
             },
         } as SearchRequest).then(result => {
-            if (result.totalItems == 0)
+            if (result.data.totalItems == 0)
             {
                 // No items found. Reset the selection
                 props.onChange(null);
             }
             else
             {
-                setAccount(result.data[0]);
+                setAccount(result.data.data[0]);
             }
         })
     }

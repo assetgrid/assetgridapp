@@ -43,7 +43,7 @@ namespace backend.unittests.Tests
             UserService.MockUser = UserService.GetById(User.Id);
 
             // Setup account controller
-            AccountController = new AccountController(Context, UserService);
+            AccountController = new AccountController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
             TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
         }
 
@@ -65,7 +65,7 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var createResult = AccountController.Create(model);
+            var createResult = AccountController.Create(model).OkValue<ViewAccount>();
             Assert.NotNull(createResult);
             Assert.Equal(createResult.AccountNumber, model.AccountNumber);
             Assert.Equal(createResult.Description, model.Description);
@@ -83,7 +83,7 @@ namespace backend.unittests.Tests
                     account.IncludeInNetWorth == model.IncludeInNetWorth));
 
             // Get account
-            var getResult = AccountController.Get(createResult.Id);
+            var getResult = AccountController.Get(createResult.Id).OkValue<ViewAccount>();
             Assert.NotNull(getResult);
             Assert.Equal(JsonConvert.SerializeObject(createResult), JsonConvert.SerializeObject(getResult));
 
@@ -92,7 +92,7 @@ namespace backend.unittests.Tests
             getResult.Description = "New description";
             getResult.Name = "Another name";
 
-            var updateResult = AccountController.Update(getResult.Id, getResult)!;
+            var updateResult = AccountController.Update(getResult.Id, getResult).OkValue<ViewAccount>();
             Assert.NotNull(updateResult);
             Assert.Equivalent(getResult, updateResult);
 
@@ -100,7 +100,7 @@ namespace backend.unittests.Tests
             updateResult.Favorite = !updateResult.Favorite;
             updateResult.IncludeInNetWorth = !updateResult.IncludeInNetWorth;
 
-            var updateResult2 = AccountController.Update(updateResult.Id, updateResult)!;
+            var updateResult2 = AccountController.Update(updateResult.Id, updateResult).OkValue<ViewAccount>();
             Assert.NotNull(updateResult2);
             Assert.Equivalent(updateResult, updateResult2);
 
@@ -125,8 +125,8 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var testAccount = AccountController.Create(model);
-            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == User.Id && account.AccountId == testAccount.Id)!;
+            var testAccount = AccountController.Create(model).OkValue<ViewAccount>();
+            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == User.Id && account.AccountId == testAccount.Id);
             Assert.NotNull(userAccount);
 
             if (permissions == null)
@@ -142,12 +142,12 @@ namespace backend.unittests.Tests
             // Get the account
             if (permissions == null)
             {
-                Assert.Null(AccountController.Get(testAccount.Id));
+                Assert.IsType<NotFoundResult>(AccountController.Get(testAccount.Id));
             }
             else
             {
                 testAccount.Permissions = ViewAccount.PermissionsFromDbPermissions(permissions.Value);
-                Assert.Equivalent(testAccount, AccountController.Get(testAccount.Id));
+                Assert.Equivalent(testAccount, AccountController.Get(testAccount.Id).OkValue<ViewAccount>());
             }
 
             // Update the account
@@ -155,14 +155,22 @@ namespace backend.unittests.Tests
             if (permissions == UserAccountPermissions.All)
             {
 
-                var updateResult = AccountController.Update(testAccount.Id, testAccount)!;
+                var updateResult = AccountController.Update(testAccount.Id, testAccount).OkValue<ViewAccount>();
                 Assert.Equivalent(updateResult, testAccount);
                 AccountController.Delete(updateResult.Id);
             }
             else
             {
-                Assert.Throws<Exception>(() => AccountController.Update(testAccount.Id, testAccount));
-                Assert.Throws<Exception>(() => AccountController.Delete(testAccount.Id));
+                if (permissions == null)
+                {
+                    Assert.IsType<NotFoundResult>(AccountController.Update(testAccount.Id, testAccount));
+                    Assert.IsType<NotFoundResult>(AccountController.Delete(testAccount.Id));
+                }
+                else
+                {
+                    Assert.IsType<ForbidResult>(AccountController.Update(testAccount.Id, testAccount));
+                    Assert.IsType<ForbidResult>(AccountController.Delete(testAccount.Id));
+                }
             }
         }
 
@@ -179,11 +187,11 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var accountA = AccountController.Create(model);
+            var accountA = AccountController.Create(model).OkValue<ViewAccount>();
             model.Name = "B";
-            var accountB = AccountController.Create(model);
+            var accountB = AccountController.Create(model).OkValue<ViewAccount>();
             model.Name = "No permission";
-            var accountNoPermissions = AccountController.Create(model);
+            var accountNoPermissions = AccountController.Create(model).OkValue<ViewAccount>();
             var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == User.Id && account.AccountId == accountNoPermissions.Id)!;
             Context.Remove(userAccount);
             Context.SaveChanges();
@@ -207,13 +215,13 @@ namespace backend.unittests.Tests
                 }
             };
 
-            var result = AccountController.Search(query);
+            var result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(1, result.TotalItems);
             Assert.Single(result.Data);
             Assert.Equivalent(result.Data.First(), accountA);
 
             query.Query.Query.Not = true;
-            result = AccountController.Search(query);
+            result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(1, result.TotalItems);
             Assert.Single(result.Data);
             Assert.Equivalent(result.Data.First(), accountB);
@@ -221,27 +229,27 @@ namespace backend.unittests.Tests
             // Search for account without write permission
             query.Query.Query.Not = false;
             query.Query.Query.Value = System.Text.Json.JsonSerializer.Deserialize<object>(accountNoPermissions.Id.ToString());
-            result = AccountController.Search(query);
+            result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(0, result.TotalItems);
             Assert.Empty(result.Data);
 
             // Search for multiple accounts
             query.Query.Query.Operator = ViewSearchOperator.In;
             query.Query.Query.Value = System.Text.Json.JsonSerializer.Deserialize<object>($"[{accountA.Id}, {accountB.Id}, {accountNoPermissions.Id}]");
-            result = AccountController.Search(query);
+            result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(2, result.TotalItems);
             Assert.Equal(2, result.Data.Count);
             Assert.Equivalent(new object[] { accountA, accountB }, result.Data);
 
             query.Descending = true;
-            result = AccountController.Search(query);
+            result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(2, result.TotalItems);
             Assert.Equal(2, result.Data.Count);
             Assert.Equivalent(new object[] { accountB, accountA }, result.Data);
 
             // Search for multiple accounts
             query.Query.Query.Not = true;
-            result = AccountController.Search(query);
+            result = AccountController.Search(query).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(0, result.TotalItems);
             Assert.Empty(result.Data);
         }
@@ -259,7 +267,7 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var testAccount = AccountController.Create(model);
+            var testAccount = AccountController.Create(model).OkValue<ViewAccount>();
 
             // Create transactions
             var random = new Random();
@@ -283,7 +291,7 @@ namespace backend.unittests.Tests
                 AccountId = testAccount.Id,
                 From = 5,
                 To = 10,
-            });
+            }).OkValue<ViewTransactionList>();
             Assert.Equal(5, accountTransactions.Data.Count());
             Assert.Equal(15, accountTransactions.TotalItems);
             Assert.Equivalent(transactions.Skip(5).Take(5).ToList(), accountTransactions.Data);
@@ -295,7 +303,7 @@ namespace backend.unittests.Tests
                 AccountId = testAccount.Id,
                 From = 5,
                 To = 10,
-            });
+            }).OkValue<ViewTransactionList>();
             Assert.Equal(5, accountTransactions.Data.Count());
             Assert.Equal(15, accountTransactions.TotalItems);
             Assert.Equivalent(transactions.Skip(5).Take(5).Reverse().ToList(), accountTransactions.Data);
@@ -318,7 +326,7 @@ namespace backend.unittests.Tests
                     AccountId = testAccount.Id,
                     From = 5,
                     To = 10,
-                });
+                }).OkValue<ViewTransactionList>();
                 Assert.Equal(5, accountTransactions.Data.Count());
                 Assert.Equal(15, accountTransactions.TotalItems);
                 Assert.Equivalent(transactions.Skip(5).Take(5).ToList(), accountTransactions.Data);
@@ -329,7 +337,7 @@ namespace backend.unittests.Tests
             Context.Remove(userAccount);
             Context.SaveChanges();
 
-            Assert.Throws<Exception>(() => AccountController.Transactions(testAccount.Id, new ViewTransactionListRequest
+            Assert.IsType<NotFoundResult>(AccountController.Transactions(testAccount.Id, new ViewTransactionListRequest
             {
                 AccountId = testAccount.Id,
                 From = 5,
@@ -350,7 +358,7 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var testAccount = AccountController.Create(model);
+            var testAccount = AccountController.Create(model).OkValue<ViewAccount>();
 
             // Create transactions
             var random = new Random();
@@ -369,7 +377,7 @@ namespace backend.unittests.Tests
                 transactions.Add(createdTransaction);
             }
 
-            var result = AccountController.CountTransactions(testAccount.Id, null);
+            var result = AccountController.CountTransactions(testAccount.Id, null).OkValue<int>();
             Assert.Equal(15, result);
         }
 
@@ -390,7 +398,7 @@ namespace backend.unittests.Tests
             };
 
             // Create account
-            var testAccount = AccountController.Create(model);
+            var testAccount = AccountController.Create(model).OkValue<ViewAccount>();
 
             // Create transactions
             var random = new Random();
@@ -415,7 +423,7 @@ namespace backend.unittests.Tests
                 To = new DateTime(2020, 12, 31),
                 Resolution = resolution
             };
-            var result = AccountController.GetMovement(testAccount.Id, request);
+            var result = AccountController.GetMovement(testAccount.Id, request).OkValue<ViewGetMovementResponse>();
             Assert.Equal(result.InitialBalance, transactions.Where(t => t.DateTime < request.From).Sum(t => t.Destination?.Id == testAccount.Id ? t.Total : -t.Total));
                 
             foreach (var item in result.Items)
@@ -446,7 +454,7 @@ namespace backend.unittests.Tests
             Context.UserAccounts.Remove(userAccount);
             Context.SaveChanges();
 
-            Assert.Throws<Exception>(() => AccountController.GetMovement(testAccount.Id, request));
+            Assert.IsType<ForbidResult>(AccountController.GetMovement(testAccount.Id, request));
         }
 
         [Fact]
@@ -461,7 +469,7 @@ namespace backend.unittests.Tests
                 Name = "Test account"
             };
 
-            var accountA = AccountController.Create(accountModel);
+            var accountA = AccountController.Create(accountModel).OkValue<ViewAccount>();
             var transactionModel = new ViewCreateTransaction
             {
                 DestinationId = accountA.Id,
@@ -474,7 +482,7 @@ namespace backend.unittests.Tests
             TransactionController.Create(transactionModel);
 
             accountModel.IncludeInNetWorth = false;
-            var accountB = AccountController.Create(accountModel);
+            var accountB = AccountController.Create(accountModel).OkValue<ViewAccount>();
 
             transactionModel.DestinationId = accountB.Id;
             transactionModel.Total = 200;
@@ -489,7 +497,7 @@ namespace backend.unittests.Tests
             var userB = UserService.CreateUser("test2", "test");
             UserService.MockUser = userB;
             accountModel.IncludeInNetWorth = true;
-            var accountC = AccountController.Create(accountModel);
+            var accountC = AccountController.Create(accountModel).OkValue<ViewAccount>();
             transactionModel.SourceId = null;
             transactionModel.DestinationId = accountC.Id;
             transactionModel.Total = 400;
@@ -499,7 +507,7 @@ namespace backend.unittests.Tests
             var result = AccountController.GetMovementAll(new ViewGetMovementRequest
             {
                 Resolution = AccountMovementResolution.Yearly
-            });
+            }).OkValue<ViewGetMovementAllResponse>();
             Assert.Single(result.Items);
             Assert.Equal(400, result.Items.Single(x => x.Key == accountC.Id).Value.Items.First().Revenue);
 
@@ -507,7 +515,7 @@ namespace backend.unittests.Tests
             result = AccountController.GetMovementAll(new ViewGetMovementRequest
             {
                 Resolution = AccountMovementResolution.Yearly
-            });
+            }).OkValue<ViewGetMovementAllResponse>(); ;
             Assert.Single(result.Items);
             Assert.Equal(100, result.Items.Single(x => x.Key == accountA.Id).Value.Items.First().Revenue);
             Assert.Equal(300, result.Items.Single(x => x.Key == accountA.Id).Value.Items.First().Expenses);
@@ -517,7 +525,7 @@ namespace backend.unittests.Tests
             result = AccountController.GetMovementAll(new ViewGetMovementRequest
             {
                 Resolution = AccountMovementResolution.Yearly
-            });
+            }).OkValue<ViewGetMovementAllResponse>();
             Assert.Equal(2, result.Items.Count);
             Assert.Equal(100, result.Items.Single(x => x.Key == accountA.Id).Value.Items.First().Revenue);
             Assert.Equal(200, result.Items.Single(x => x.Key == accountB.Id).Value.Items.First().Revenue);
@@ -533,7 +541,7 @@ namespace backend.unittests.Tests
                 Favorite = true,
                 IncludeInNetWorth = true,
                 Name = "Test account"
-            });
+            }).OkValue<ViewAccount>();
 
             var transactionModel = new ViewCreateTransaction
             {
@@ -557,7 +565,7 @@ namespace backend.unittests.Tests
             transactionModel.Total = -250;
             var catB2 = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
 
-            var result = AccountController.CategorySummary(account.Id, null);
+            var result = AccountController.CategorySummary(account.Id, null).OkValue<List<ViewCategorySummary>>();
             Assert.Equal(100, result.Single(x => x.Category == catA1.Category).Revenue);
             Assert.Equal(150, result.Single(x => x.Category == catA1.Category).Expenses);
             Assert.Equal(200, result.Single(x => x.Category == catB1.Category).Revenue);
@@ -565,7 +573,7 @@ namespace backend.unittests.Tests
 
             Context.UserAccounts.Remove(Context.UserAccounts.Single(account => account.UserId == User.Id && account.AccountId == account.Id));
             Context.SaveChanges();
-            Assert.Throws<Exception>(() => AccountController.CategorySummary(account.Id, null));
+            Assert.IsType<NotFoundResult>(AccountController.CategorySummary(account.Id, null));
         }
     }
 }

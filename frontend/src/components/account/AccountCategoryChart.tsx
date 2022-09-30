@@ -91,7 +91,7 @@ export default function AccountCategoryChart(props: Props) {
     </>;
 }
 
-function updateData(api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">) {
+async function updateData(api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">) {
     let [start, end] = PeriodFunctions.getRange(period);
     let query: SearchGroup = {
         type: SearchGroupType.And,
@@ -114,12 +114,12 @@ function updateData(api: Api, id: number, period: Period, setData: React.Dispatc
         }]
     };
 
-    api.Account.getCategorySummary(id, query)
-        .then(result => {
-            setData(result.map(obj => ({
-                category: obj.category !== "" ? obj.category : "No category",
-                expenses: obj.expenses.toNumber(),
-                revenue: obj.revenue.toNumber()
-            })));
-        });
+    let result = await api.Account.getCategorySummary(id, query);
+    if (result.status === 200) {
+        setData(result.data.map(obj => ({
+            category: obj.category !== "" ? obj.category : "No category",
+            expenses: obj.expenses.toNumber(),
+            revenue: obj.revenue.toNumber()
+        })));
+    }
 }

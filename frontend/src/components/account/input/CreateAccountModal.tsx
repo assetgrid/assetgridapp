@@ -36,16 +36,18 @@ export default function CreateAccountModal(props: Props) {
         const result = await api.Account.create(model);
         setModel(props.preset);
         setIsCreating(false);
-        if (result.favorite) {
-            if (user !== "fetching") {
-                updateFavoriteAccounts([...user.favoriteAccounts, result]);
+        if (result.status === 200) {
+            if (result.data.favorite) {
+                if (user !== "fetching") {
+                    updateFavoriteAccounts([...user.favoriteAccounts, result.data]);
+                }
             }
-        }
-        if (props.created !== undefined) {
-            props.created(result);
-        }
-        if (props.closeOnChange) {
-            props.close();
+            if (props.created !== undefined) {
+                props.created(result.data);
+            }
+            if (props.closeOnChange) {
+                props.close();
+            }
         }
     }
 }

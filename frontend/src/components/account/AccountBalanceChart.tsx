@@ -138,7 +138,7 @@ export default function AccountBalanceChart(props: Props) {
     </>;
 }
 
-function updateData(api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,    
+async function updateData(api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,    
     resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
 
     let resolution: TimeResolution;
@@ -158,9 +158,9 @@ function updateData(api: Api, id: number, period: Period, setDisplayingPeriod: (
             break;
     }
 
-    api.Account.getMovements(id, start, end, resolution)
-        .then(result => {
-            setDisplayingPeriod(period);
-            setData(result);
-        });
+    const result = await api.Account.getMovements(id, start, end, resolution)
+    if (result.status === 200) {
+        setDisplayingPeriod(period);
+        setData(result.data);
+    }
 }

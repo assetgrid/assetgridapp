@@ -626,8 +626,8 @@ export default function MapCsvFields(props: Props) {
             name: "",
             description: "",
             accountNumber: "",
-            includeInNetWorth: true,
-            favorite: true,
+            includeInNetWorth: false,
+            favorite: false,
         };
         (account as any)[accountReference.identifier] = accountReference.value;
         setModal(<CreateAccountModal preset={account}

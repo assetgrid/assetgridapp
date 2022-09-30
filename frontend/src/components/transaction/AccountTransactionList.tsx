@@ -72,36 +72,38 @@ export default function AccountTransactionList(props: Props) {
         };
         return new Promise(resolve => {
             api.Account.listTransactions(props.accountId, from, to, descending, query).then(result => {
-                const transactions: Transaction[] = result.data;
-                let balances: Decimal[] = [];
-                if (descending) {
-                    for (let i = 0; i < transactions.length; i++) {
-                        balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? new Decimal(result.total))
-                            .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === props.accountId ? 1 : -1))
+                if (result.status === 200) {
+                    const transactions: Transaction[] = result.data.data;
+                    let balances: Decimal[] = [];
+                    if (descending) {
+                        for (let i = 0; i < transactions.length; i++) {
+                            balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? new Decimal(result.data.total))
+                                .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === props.accountId ? 1 : -1))
+                        }
+                    } else {
+                        for (let i = 0; i < transactions.length; i++) {
+                            balances[i] = (balances[i - 1] ?? new Decimal(result.data.total))
+                                .add(transactions[i].total.mul(transactions[i].destination?.id === props.accountId ? 1 : -1))
+                        }
                     }
-                } else {
-                    for (let i = 0; i < transactions.length; i++) {
-                        balances[i] = (balances[i - 1] ?? new Decimal(result.total))
-                            .add(transactions[i].total.mul(transactions[i].destination?.id === props.accountId ? 1 : -1))
+
+                    // If it's not the first render, reset selected transactions
+                    if (!firstRender.current) {
+                        props.setSelectedTransactions({});
                     }
-                }
+                    firstRender.current = false;
+                    setShownTransactions(transactions);
 
-                // If it's not the first render, reset selected transactions
-                if (!firstRender.current) {
-                    props.setSelectedTransactions({});
+                    resolve({
+                        items: transactions.map((t, i) => ({ 
+                            balance: balances[i],
+                            transaction: t,
+                        })),
+                        draw: draw,
+                        offset: from,
+                        totalItems: result.data.totalItems
+                    });
                 }
-                firstRender.current = false;
-                setShownTransactions(transactions);
-
-                resolve({
-                    items: transactions.map((t, i) => ({ 
-                        balance: balances[i],
-                        transaction: t,
-                    })),
-                    draw: draw,
-                    offset: from,
-                    totalItems: result.totalItems
-                });
             })
         });
     }

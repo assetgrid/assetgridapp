@@ -127,7 +127,9 @@ export default function PagePreferences(): React.ReactElement {
         api.User.updatePreferences(model)
             .then(result => {
                 setIsUpdating(false);
-                updatePreferences(result);
+                if (result.status === 200) {
+                    updatePreferences(result.data);
+                }
             })
             .catch(e => {
                 console.log(e);

@@ -151,12 +151,15 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
         setIsUpdating(true);
         const { balance, ...updateModel } = editingModel;
         const result = await api.Account.update(props.account.id, updateModel);
-        result.balance = props.account.balance;
-        setEditingModel(null);
         setIsUpdating(false);
-        if (editingModel.favorite !== props.account.favorite) {
-            props.updateAccountFavoriteInPreferences(props.account, editingModel.favorite);
+
+        if (result.status === 200) {
+            result.data.balance = props.account.balance;
+            setEditingModel(null);
+            if (editingModel.favorite !== props.account.favorite) {
+                props.updateAccountFavoriteInPreferences(props.account, editingModel.favorite);
+            }
+            props.onChange(result.data);
         }
-        props.onChange(result);
     }
 }

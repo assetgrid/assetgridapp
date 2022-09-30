@@ -51,7 +51,7 @@ namespace backend.unittests.Tests
             UserService.MockUser = UserService.GetById(User.Id);
 
             // Setup account controller
-            AccountController = new AccountController(Context, UserService);
+            AccountController = new AccountController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
             TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
 
             var objectValidator = new Mock<IObjectModelValidator>();
@@ -69,9 +69,9 @@ namespace backend.unittests.Tests
                 Favorite = false,
                 IncludeInNetWorth = false,
             };
-            AccountA = AccountController.Create(accountModel);
+            AccountA = AccountController.Create(accountModel).OkValue<ViewAccount>();
             accountModel.Name = "B";
-            AccountB = AccountController.Create(accountModel);
+            AccountB = AccountController.Create(accountModel).OkValue<ViewAccount>();
         }
 
 
@@ -305,15 +305,15 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine>()
             };
 
-            var accountA = AccountController.Create(accountModel);
-            var accountB = AccountController.Create(accountModel);
+            var accountA = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountB = AccountController.Create(accountModel).OkValue<ViewAccount>();
             transactionModel.SourceId = accountA.Id;
             transactionModel.DestinationId = accountB.Id;
             var transactionAB = TransactionController.Create(transactionModel).OkValue<ViewTransaction>();
 
             var otherUser = UserService.CreateUser("test2", "test");
             UserService.MockUser = otherUser;
-            var accountC = AccountController.Create(accountModel);
+            var accountC = AccountController.Create(accountModel).OkValue<ViewAccount>();
 
             // Create transaction referencing only account C. Should succeed
             transactionModel.SourceId = null;
@@ -373,7 +373,7 @@ namespace backend.unittests.Tests
                 Favorite = true,
                 IncludeInNetWorth = true,
                 Name = "Test account"
-            });
+            }).OkValue<ViewAccount>();
 
             var transactionModel = new ViewCreateTransaction
             {
@@ -581,7 +581,7 @@ namespace backend.unittests.Tests
                 AccountNumber = null,
                 Favorite = false,
                 IncludeInNetWorth = false,
-            });
+            }).OkValue<ViewAccount>();
             // Give the other user permission to create transactions on account A
             Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
             Context.SaveChanges();
@@ -709,7 +709,7 @@ namespace backend.unittests.Tests
                 AccountNumber = null,
                 Favorite = false,
                 IncludeInNetWorth = false,
-            });
+            }).OkValue<ViewAccount>();
             model.SourceId = accountC.Id;
 
             // Other user does not perceive the first transaction as a duplicate
@@ -742,7 +742,7 @@ namespace backend.unittests.Tests
                 AccountNumber = null,
                 Favorite = false,
                 IncludeInNetWorth = false,
-            });
+            }).OkValue<ViewAccount>();
             // Give the other user permission to create transactions on account A
             Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
             Context.SaveChanges();
@@ -876,7 +876,7 @@ namespace backend.unittests.Tests
                 AccountNumber = null,
                 Favorite = false,
                 IncludeInNetWorth = false,
-            });
+            }).OkValue<ViewAccount>();
 
             UserService.MockUser = UserService.GetById(User.Id);
             var result = TransactionController.CreateMany(new List<ViewCreateTransaction>
@@ -992,7 +992,7 @@ namespace backend.unittests.Tests
                 AccountNumber = null,
                 Favorite = false,
                 IncludeInNetWorth = false,
-            });
+            }).OkValue<ViewAccount>();
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string>());
             result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {

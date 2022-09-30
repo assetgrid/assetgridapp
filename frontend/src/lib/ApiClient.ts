@@ -89,9 +89,9 @@ export function authenticate(email: string, password: string): Promise<Ok<UserMo
 /**
  * Returns whether any users exist in this installation
  */
-export function anyUsers(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        axios.get<boolean>(rootUrl + '/api/v1/user/any').then(result => resolve(result.data))
+export function anyUsers(): Promise<Ok<boolean>> {
+    return new Promise<Ok<boolean>>((resolve, reject) => {
+        axios.get<boolean>(rootUrl + '/api/v1/user/any').then(result => resolve({ status: 200, data: result.data }))
             .catch(e => {
                 console.log(e);
                 reject();
@@ -105,13 +105,13 @@ const User = (token: string) => ({
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    updatePreferences: function (preferences: PreferencesModel): Promise<PreferencesModel> {
-        return new Promise<PreferencesModel>((resolve, reject) => {
+    updatePreferences: function (preferences: PreferencesModel): Promise<Ok<PreferencesModel>> {
+        return new Promise<Ok<PreferencesModel>>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', preferences, {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    resolve(result.data);
+                    resolve({ status: 200, data: result.data });
                 }).catch(e => {
                     console.log(e);
                     reject();
@@ -126,13 +126,13 @@ const Account = (token: string) => ({
      * @param request Search request specifying which accounts to return
      * @returns A response object with the accounts matching the query
      */
-    search: function (request: SearchRequest): Promise<SearchResponse<AccountModel>> {
-        return new Promise<SearchResponse<AccountModel>>((resolve, reject) => {
+    search: function (request: SearchRequest): Promise<Ok<SearchResponse<AccountModel>>> {
+        return new Promise<Ok<SearchResponse<AccountModel>>>((resolve, reject) => {
             axios.post<SearchResponse<AccountModel>>(rootUrl + "/api/v1/account/search", request, {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    resolve(result.data);
+                    resolve({ status: 200, data: result.data });
                 })
                 .catch(e => {
                     console.log(e);
@@ -146,22 +146,22 @@ const Account = (token: string) => ({
      * @param id Account id
      * @returns The account with the specified id
      */
-    get: function (id: number): Promise<AccountModel | null> {
-        return new Promise<AccountModel | null>((resolve, reject) => {
+    get: function (id: number): Promise<Ok<AccountModel> | NotFound> {
+        return new Promise<Ok<AccountModel> | NotFound>((resolve, reject) => {
             axios.get<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
                     const data = result.data as AccountModel & { balanceString?: string };
-                    if (data) {
-                        data.balance = new Decimal(data.balanceString!).div(new Decimal(10000))
-                        delete data.balanceString;
-                        resolve(result.data);
-                    } else {
-                        resolve(null);
-                    }
+                    data.balance = new Decimal(data.balanceString!).div(new Decimal(10000))
+                    delete data.balanceString;
+                    resolve({ status: 200, data: result.data });
                 })
-                .catch(e => {
+                .catch((e: AxiosError) => {
+                    if (e.response?.status == 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    }
                     console.log(e);
                     reject();
                 });
@@ -174,15 +174,22 @@ const Account = (token: string) => ({
      * @param account The new account
      * @returns The updated account
      */
-    update: function (id: number, updatedAccount: CreateAccount): Promise<AccountModel> {
-        return new Promise<AccountModel>((resolve, reject) => {
+    update: function (id: number, updatedAccount: CreateAccount): Promise<Ok<AccountModel> | NotFound | Forbid> {
+        return new Promise<Ok<AccountModel> | NotFound | Forbid>((resolve, reject) => {
             axios.put<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), updatedAccount, {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    resolve(result.data);
+                    resolve({ status: 200, data: result.data });
                 })
-                .catch(e => {
+                .catch((e: AxiosError) => {
+                    if (e.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    } else if(e.response?.status === 403) {
+                        resolve(ForbidResult);
+                        return;
+                    }
                     console.log(e);
                     reject();
                 });
@@ -194,13 +201,13 @@ const Account = (token: string) => ({
      * @param account The account to be created
      * @returns The newly created account
      */
-    create: function (account: CreateAccount): Promise<AccountModel> {
-        return new Promise<AccountModel>((resolve, reject) => {
+    create: function (account: CreateAccount): Promise<Ok<AccountModel>> {
+        return new Promise<Ok<AccountModel>>((resolve, reject) => {
             axios.post<AccountModel>(rootUrl + "/api/v1/account", account, {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    resolve(result.data);
+                    resolve({ status: 200, data: result.data });
                 })
                 .catch(e => {
                     console.log(e);
@@ -213,13 +220,20 @@ const Account = (token: string) => ({
      * Deletes an Account
      * @param id The id of the account to delete
      */
-     delete: function (id: number): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+     delete: function (id: number): Promise<Ok<null> | Forbid | NotFound> {
+        return new Promise<Ok<null> | Forbid | NotFound>((resolve, reject) => {
             axios.delete<void>(rootUrl + "/api/v1/account/" + id, {
                     headers: { authorization: "Bearer: " + token }
                 })
-                .then(() => resolve())
-                .catch(e => {
+                .then(() => resolve({ status: 200, data: null }))
+                .catch((e: AxiosError) => {
+                    if (e.response?.status == 403) {
+                        resolve(ForbidResult);
+                        return;
+                    } else if (e.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    }
                     console.log(e);
                     reject();
                 })
@@ -234,8 +248,8 @@ const Account = (token: string) => ({
      * @param descending Whether to return newest transactions first
      * @returns An object with information about the transaction for this account
      */
-    listTransactions: function (id: number, from: number, to: number, descending: boolean, query?: SearchGroup): Promise<TransactionListResponse> {
-        return new Promise<TransactionListResponse>((resolve, reject) => {
+    listTransactions: function (id: number, from: number, to: number, descending: boolean, query?: SearchGroup): Promise<Ok<TransactionListResponse> | NotFound> {
+        return new Promise<Ok<TransactionListResponse> | NotFound>((resolve, reject) => {
             axios.post<TransactionListResponse>(rootUrl + "/api/v1/account/" + id + "/transactions", {
                 from: from,
                 to: to,
@@ -244,21 +258,30 @@ const Account = (token: string) => ({
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
-                ...result.data,
-                total: new Decimal((result.data as any).totalString).div(new Decimal(10000)),
-                data: (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
-                    ...transaction,
-                    total: new Decimal(totalString).div(new Decimal(10000)),
-                    dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-                    lines: (transaction.lines as (TransactionLine & { amountString: string})[]).map(({ amountString, ...line }) => ({
-                        ...line,
-                        amount: new Decimal(amountString).div(new Decimal(10000)),
+                status: 200,
+                data: {
+                    ...result.data,
+                    total: new Decimal((result.data as any).totalString).div(new Decimal(10000)),
+                    data: (result.data.data as (TransactionModel & { totalString: string })[]).map(({ totalString, ...transaction }) => ({
+                        ...transaction,
+                        total: new Decimal(totalString).div(new Decimal(10000)),
+                        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
+                        lines: (transaction.lines as (TransactionLine & { amountString: string })[]).map(({ amountString, ...line }) => ({
+                            ...line,
+                            amount: new Decimal(amountString).div(new Decimal(10000)),
+                        }))
                     }))
-                }))
-            })).catch(error => {
-                    console.log(error);
-                    reject(error);
-                });
+                }
+            })).catch((e: AxiosError) => {
+                switch (e.response?.status) {
+                    case 404:
+                        resolve(NotFoundResult);
+                        break;
+                    default:
+                        console.log(e);
+                        reject(e);
+                }
+            });
         });
     },
 
@@ -268,12 +291,16 @@ const Account = (token: string) => ({
      * @param query Query to filter transactions
      * @returns The transaction count
      */
-     countTransactions: function (id: number, query?: SearchGroup): Promise<number> {
-        return new Promise<number>((resolve, reject) => {
+     countTransactions: function (id: number, query?: SearchGroup): Promise<Ok<number> | NotFound> {
+        return new Promise<Ok<number> | NotFound>((resolve, reject) => {
             axios.post<number>(rootUrl + "/api/v1/account/" + id + "/counttransactions", query, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve(result.data))
-                .catch(error => {
+            }).then(result => resolve({ status: 200, data: result.data }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    }
                     console.log(error);
                     reject(error);
                 });
@@ -286,17 +313,22 @@ const Account = (token: string) => ({
      * @param query A query to subset the transactions to include in the summary
      * @returns A dictionary with the category as the key and the revenue and expenses the value in a tuple in that order
      */
-    getCategorySummary: function (accountId: number, query: SearchGroup): Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]> {
-        return new Promise<{ category: string, revenue: Decimal, expenses: Decimal }[]>((resolve, reject) => {
+    getCategorySummary: function (accountId: number, query: SearchGroup): Promise<Ok<{ category: string, revenue: Decimal, expenses: Decimal }[]> | NotFound> {
+        return new Promise<Ok<{ category: string, revenue: Decimal, expenses: Decimal }[]> | NotFound>((resolve, reject) => {
             axios.post<{ category: string, revenue: Decimal, expenses: Decimal }[]>(rootUrl + "/api/v1/account/" + accountId + "/categorysummary", query, {
                 headers: { authorization: "Bearer: " + token }
-            })
-            .then(result => resolve(result.data.map(obj => ({
-                category: obj.category,
-                revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
-                expenses: new Decimal(obj.expenses).div(new Decimal(10000))
-            }))))
-            .catch(error => {
+            }).then(result => resolve({
+                status: 200,
+                data: result.data.map(obj => ({
+                    category: obj.category,
+                    revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
+                    expenses: new Decimal(obj.expenses).div(new Decimal(10000))
+                }))
+            })).catch((error: AxiosError) => {
+                if (error.response?.status === 404) {
+                    resolve(NotFoundResult);
+                    return;
+                }
                 console.log(error);
                 reject(error);
             });
@@ -311,8 +343,8 @@ const Account = (token: string) => ({
      * @param resolution The time resolution at which to aggregate the results
      * @returns An object containing information about account movements
      */
-    getMovements: function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
-        return new Promise<GetMovementResponse>((resolve, reject) => {
+    getMovements: function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<Ok<GetMovementResponse> | NotFound> {
+        return new Promise<Ok<GetMovementResponse> | NotFound>((resolve, reject) => {
             axios.post<GetMovementResponse>(rootUrl + "/api/v1/account/" + accountId + "/movements", {
                 from: from,
                 to: to,
@@ -320,18 +352,25 @@ const Account = (token: string) => ({
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
-                ...result.data,
-                initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
-                items: (result.data.items as (MovementItem & { revenueString: string, expensesString: string })[]).map(({ revenueString, expensesString, ...item }) => ({
-                    ...item,
-                    dateTime: DateTime.fromISO(item.dateTime as any as string),
-                    expenses: new Decimal(expensesString).div(new Decimal(10000)),
-                    revenue: new Decimal(revenueString).div(new Decimal(10000)),
-                }))
-            })).catch(error => {
-                    console.log(error);
-                    reject(error);
-                });
+                status: 200,
+                data: {
+                    ...result.data,
+                    initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
+                    items: (result.data.items as (MovementItem & { revenueString: string, expensesString: string })[]).map(({ revenueString, expensesString, ...item }) => ({
+                        ...item,
+                        dateTime: DateTime.fromISO(item.dateTime as any as string),
+                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                        revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                    }))
+                }
+            })).catch((error: AxiosError) => {
+                if (error.response?.status === 404) {
+                    resolve(NotFoundResult);
+                    return;
+                }
+                console.log(error);
+                reject(error);
+            });
         });
     },
 
@@ -342,8 +381,8 @@ const Account = (token: string) => ({
      * @param resolution The time resolution at which to aggregate the results
      * @returns An object containing information about account movements
      */
-     getMovementsAll: function (from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementAllResponse> {
-        return new Promise<GetMovementAllResponse>((resolve, reject) => {
+     getMovementsAll: function (from: DateTime, to: DateTime, resolution: TimeResolution): Promise<Ok<GetMovementAllResponse> | NotFound> {
+        return new Promise<Ok<GetMovementAllResponse> | NotFound>((resolve, reject) => {
             axios.post<GetMovementAllResponse>(rootUrl + "/api/v1/account/movements", {
                 from: from,
                 to: to,
@@ -362,8 +401,12 @@ const Account = (token: string) => ({
                         revenue: new Decimal(revenueString).div(new Decimal(10000)),
                     }))
                 });
-                resolve(result.data);
-            }).catch(error => {
+                resolve({ status: 200, data: result.data });
+            }).catch((error: AxiosError) => {
+                if (error.response?.status === 404) {
+                    resolve(NotFoundResult);
+                    return;
+                }
                 console.log(error);
                 reject(error);
             });

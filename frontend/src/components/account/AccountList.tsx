@@ -22,9 +22,9 @@ function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{
             orderByColumn: "Id"
         }).then(result => {
             resolve({
-                items: result.data,
+                items: result.data.data,
                 offset: from,
-                totalItems: result.totalItems,
+                totalItems: result.data.totalItems,
                 draw: draw
             });
         });

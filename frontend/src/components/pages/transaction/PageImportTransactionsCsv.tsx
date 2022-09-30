@@ -254,8 +254,8 @@ export default function PageImportTransactionsCsv () {
         } as SearchRequest).then(result => {
             newAccountsBy = { ...newAccountsBy };
             // Update the accounts found
-            for (let i = 0; i < result.data.length; i++) {
-                let account = result.data[i];
+            for (let i = 0; i < result.data.data.length; i++) {
+                let account = result.data.data[i];
                 Object.keys(account).forEach(identifier => {
                     if (newAccountsBy[identifier] === undefined) {
                         newAccountsBy[identifier] = {};

@@ -76,17 +76,20 @@ export default function () {
         setCreatedAccount(null);
         const result = await api.Account.create(value);
         setIsCreating(false);
-        if (result.favorite) {
-            if (user !== "fetching") {
-                updateFavoriteAccounts([...user.favoriteAccounts, result]);
+
+        if (result.status === 200) {
+            if (result.data.favorite) {
+                if (user !== "fetching") {
+                    updateFavoriteAccounts([...user.favoriteAccounts, result.data]);
+                }
             }
-        }
-        
-        if (stay) {
-            setValue(defaultAccount);
-            setCreatedAccount(result);
-        } else {
-            navigate(routes.account(result.id.toString()));
+            
+            if (stay) {
+                setValue(defaultAccount);
+                setCreatedAccount(result.data);
+            } else {
+                navigate(routes.account(result.data.id.toString()));
+            }
         }
     }
 }

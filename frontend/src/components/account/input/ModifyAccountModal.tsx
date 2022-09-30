@@ -40,13 +40,15 @@ export default function ModifyAccountModal(props: Props) {
 
         setIsUpdating(true);
         const result = await api.Account.update(props.account.id, model);
-        setModel(result);
         setIsUpdating(false);
-        if (props.updated !== undefined) {
-            props.updated(result);
-        }
-        if (props.closeOnChange) {
-            props.close();
+        if (result.status === 200) {
+            setModel(result.data);
+            if (props.updated !== undefined) {
+                props.updated(result.data);
+            }
+            if (props.closeOnChange) {
+                props.close();
+            }
         }
     }
 }

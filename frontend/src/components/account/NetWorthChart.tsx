@@ -228,7 +228,9 @@ function updateData(api: Api, period: Period, setDisplayingPeriod: (period: Peri
     api.Account.getMovementsAll(start, end, resolution)
         .then(result => {
             setDisplayingPeriod(period);
-            setData(result);
+            if (result.status === 200) {
+                setData(result.data);
+            }
         });
 }
 

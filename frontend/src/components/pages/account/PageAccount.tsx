@@ -71,7 +71,9 @@ export default function () {
         } else if (api !== null) {
             api.Account.get(id)
                 .then(result => {
-                    setAccount(result);
+                    if (result.status === 200) {
+                        setAccount(result.data);
+                    }
                 })
                 .catch(e => {
                     console.log(e);
@@ -182,9 +184,11 @@ export default function () {
         api.Account.update(Number(id), newAccount)
             .then(result => {
                 setUpdatingFavorite(false);
-                result.balance = account.balance;
-                updateAccountFavoriteInPreferences(result, result.favorite);
-                setAccount(result);
+                if (result.status === 200) {
+                    result.data.balance = account.balance;
+                    updateAccountFavoriteInPreferences(result.data, result.data.favorite);
+                    setAccount(result.data);
+                }
             })
             .catch(e => {
                 setAccount("error");
@@ -215,7 +219,7 @@ export default function () {
         };
         return new Promise(resolve => {
             api.Account.countTransactions(id, query)
-                .then(result => resolve(result));
+                .then(result => result.status == 200 && resolve(result.data));
         });
     }
 }

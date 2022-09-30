@@ -31,7 +31,9 @@ export default function PageAccountConfirmDelete() {
         if (account === "fetching" && api !== null) {
             api.Account.get(id)
                 .then(result => {
-                    setAccount(result);
+                    if (result.status === 200) {
+                        setAccount(result.data);
+                    }
                 })
                 .catch(e => {
                     console.log(e);

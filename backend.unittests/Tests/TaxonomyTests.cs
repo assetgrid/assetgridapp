@@ -51,7 +51,7 @@ namespace backend.unittests.Tests
             UserService.MockUser = UserService.GetById(User.Id);
 
             // Setup account controller
-            AccountController = new AccountController(Context, UserService);
+            AccountController = new AccountController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
             TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
             TaxonomyController = new TaxonomyController(Context, UserService);
 
@@ -70,9 +70,9 @@ namespace backend.unittests.Tests
                 Favorite = false,
                 IncludeInNetWorth = false,
             };
-            AccountA = AccountController.Create(accountModel);
+            AccountA = AccountController.Create(accountModel).OkValue<ViewAccount>();
             accountModel.Name = "B";
-            AccountB = AccountController.Create(accountModel);
+            AccountB = AccountController.Create(accountModel).OkValue<ViewAccount>();
         }
 
 
