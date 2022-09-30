@@ -27,14 +27,14 @@ import Hero from "../../common/Hero";
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
     const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null | "error">("fetching");
-    const { user: preferences } = React.useContext(userContext);
+    const { user } = React.useContext(userContext);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const navigate = useNavigate();
     const api = useApi();
 
-    React.useEffect(fetchTransaction, [id]);
+    React.useEffect(fetchTransaction, [id, api]);
 
     if (transaction === null) {
         return <Page404 />;

@@ -18,7 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace backend.unittests
+namespace backend.unittests.Tests
 {
     public class TaxonomyTests
     {

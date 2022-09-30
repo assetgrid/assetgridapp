@@ -19,7 +19,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace backend.unittests
+namespace backend.unittests.Tests
 {
     public class TransactionTests
     {
@@ -109,7 +109,7 @@ namespace backend.unittests
                 DestinationId = -1
             });
             Assert.Equivalent(transaction, updated);
-            Assert.Equivalent(updated, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             transaction.Description = "My description";
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
@@ -117,7 +117,7 @@ namespace backend.unittests
                 Description = transaction.Description
             });
             Assert.Equivalent(transaction, updated);
-            Assert.Equivalent(updated, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             transaction.Category = "";
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
@@ -125,7 +125,7 @@ namespace backend.unittests
                 Category = "",
             })!;
             Assert.Equivalent(transaction, updated);
-            Assert.Equivalent(updated, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             // Try to update without write permission
             var userAccountA = Context.UserAccounts.Single(a => a.AccountId == AccountA.Id && a.UserId == User.Id);
@@ -133,16 +133,16 @@ namespace backend.unittests
             updated.Source!.Permissions = ViewAccount.AccountPermissions.Read;
             Context.SaveChanges();
             Assert.Throws<Exception>(() => TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
-            Assert.Equivalent(updated, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             userAccountA.Permissions = UserAccountPermissions.ModifyTransactions;
             Context.SaveChanges();
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Updated" });
-            Assert.Equivalent(updated, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             Context.Remove(userAccountA);
             Context.SaveChanges();
-            Assert.Null(TransactionController.Get(transaction.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transaction.Id));
             Assert.Null(TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
 
             // Attempt deletion
@@ -181,13 +181,13 @@ namespace backend.unittests
             model.SourceId = AccountA.Id;
             var transaction = TransactionController.Create(model);
             Assert.NotNull(transaction);
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             model.SourceId = null;
             model.DestinationId = AccountA.Id;
             transaction = TransactionController.Create(model);
             Assert.NotNull(transaction);
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
         }
 
         [Theory]
@@ -398,12 +398,12 @@ namespace backend.unittests
             Context.SaveChanges();
             var transaction = TransactionController.Create(transactionModel);
             Assert.NotNull(transaction);
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 1";
             Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 1" }));
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             // Remove permission. Succeeds, but the account is shown as "uknown"
             Context.UserAccounts.Remove(userAccount);
@@ -416,12 +416,12 @@ namespace backend.unittests
             {
                 transaction.Destination = ViewAccount.GetNoReadAccess(transaction.Destination!.Id);
             }
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 2";
             Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 2" }));
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
         }
 
         [Fact]
@@ -454,8 +454,8 @@ namespace backend.unittests
                 }
             });
 
-            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id));
-            Assert.Equivalent(oppositeTransaction, TransactionController.Get(oppositeTransaction.Id));
+            Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
+            Assert.Equivalent(oppositeTransaction, TransactionController.Get(oppositeTransaction.Id).OkValue<ViewTransaction>());
 
             // Create transaction with negative total
             var negativeTransaction = TransactionController.Create(new ViewCreateTransaction
@@ -551,7 +551,7 @@ namespace backend.unittests
             {
                 // The user has write access to at least one account. Delete the transaction
                 TransactionController.Delete(transaction.Id);
-                Assert.Null(TransactionController.Get(transaction.Id));
+                Assert.IsType<NotFoundResult>(TransactionController.Get(transaction.Id));
             }
             else
             {
@@ -616,16 +616,16 @@ namespace backend.unittests
             });
 
             // Can delete own transactions
-            Assert.Null(TransactionController.Get(transactionA0.Id));
-            Assert.Null(TransactionController.Get(transaction0B.Id));
-            Assert.Null(TransactionController.Get(transactionAB.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transactionA0.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transaction0B.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transactionAB.Id));
             // Can delete shared transactions
-            Assert.Null(TransactionController.Get(transactionCA.Id));
-            Assert.Null(TransactionController.Get(transactionAC.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transactionCA.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transactionAC.Id));
             // Cannot delete other users transactions
             UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id));
-            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id));
+            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>());
 
             // Give user read permission to account C
             var userAccount = new UserAccount { AccountId = accountC.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
@@ -641,8 +641,8 @@ namespace backend.unittests
 
             // Stil cannot delete other users transactions
             UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id));
-            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id));
+            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>());
 
             // Change permission to write
             userAccount.Permissions = UserAccountPermissions.ModifyTransactions;
@@ -655,8 +655,8 @@ namespace backend.unittests
                 Children = new List<ViewSearchGroup>()
             });
 
-            Assert.Null(TransactionController.Get(transactionC0.Id));
-            Assert.Null(TransactionController.Get(transaction0C.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transactionC0.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Get(transaction0C.Id));
             Assert.Empty(Context.Transactions);
         }
 
@@ -772,16 +772,16 @@ namespace backend.unittests
             });
 
             // Can update own transactions
-            Assert.Equal("Updated", TransactionController.Get(transactionA0.Id)!.Description);
-            Assert.Equal("Updated", TransactionController.Get(transaction0B.Id)!.Description);
-            Assert.Equal("Updated", TransactionController.Get(transactionAB.Id)!.Description);
+            Assert.Equal("Updated", TransactionController.Get(transactionA0.Id).OkValue<ViewTransaction>().Description);
+            Assert.Equal("Updated", TransactionController.Get(transaction0B.Id).OkValue<ViewTransaction>().Description);
+            Assert.Equal("Updated", TransactionController.Get(transactionAB.Id).OkValue<ViewTransaction>().Description);
             // Can update shared transactions
-            Assert.Equal("Updated", TransactionController.Get(transactionCA.Id)!.Description);
-            Assert.Equal("Updated", TransactionController.Get(transactionAC.Id)!.Description);
+            Assert.Equal("Updated", TransactionController.Get(transactionCA.Id).OkValue<ViewTransaction>().Description);
+            Assert.Equal("Updated", TransactionController.Get(transactionAC.Id).OkValue<ViewTransaction>().Description);
             // Cannot update other users transactions
             UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id));
-            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id));
+            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>());
 
             // Cannot change source or destination to destination with no write permission
             UserService.MockUser = UserService.GetById(User.Id);
@@ -808,8 +808,8 @@ namespace backend.unittests
 
             // Stil cannot update other users transactions
             UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id));
-            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id));
+            Assert.Equivalent(transactionC0, TransactionController.Get(transactionC0.Id).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>());
 
             // Still fails when trying to update source and destination to account C
             UserService.MockUser = UserService.GetById(User.Id);
@@ -833,8 +833,8 @@ namespace backend.unittests
                 query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
             });
 
-            Assert.Equal("Updated", TransactionController.Get(transactionC0.Id)!.Description);
-            Assert.Equal("Updated", TransactionController.Get(transaction0C.Id)!.Description);
+            Assert.Equal("Updated", TransactionController.Get(transactionC0.Id).OkValue<ViewTransaction>().Description);
+            Assert.Equal("Updated", TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>().Description);
         }
 
         [Fact]

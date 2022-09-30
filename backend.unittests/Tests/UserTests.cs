@@ -11,7 +11,7 @@ using System;
 using System.Web;
 using Xunit;
 
-namespace backend.unittests
+namespace backend.unittests.Tests
 {
     public class UserTests
     {

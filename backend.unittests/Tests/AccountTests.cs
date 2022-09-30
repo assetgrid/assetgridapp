@@ -16,7 +16,7 @@ using System.Text.Json;
 using System.Web;
 using Xunit;
 
-namespace backend.unittests
+namespace backend.unittests.Tests
 {
     public class AccountTests : IDisposable
     {

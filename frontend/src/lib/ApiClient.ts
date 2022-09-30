@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
@@ -378,15 +378,15 @@ const Transaction = (token: string) => ({
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
-                    if (result.data) {
-                        resolve(fixTransaction(result.data));
-                    } else {
-                        resolve(null);
-                    }
+                    resolve(fixTransaction(result.data));
                 })
-                .catch(e => {
-                    console.log(e);
-                    reject();
+                .catch((e: AxiosError) => {
+                    if (e.response?.status == 404) {
+                        resolve(null);
+                    } else {
+                        console.log(e);
+                        reject();
+                    }
                 });
         });
     },

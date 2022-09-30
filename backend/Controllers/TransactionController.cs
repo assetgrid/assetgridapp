@@ -24,7 +24,9 @@ namespace assetgrid_backend.Controllers
 
         [HttpGet()]
         [Route("/api/v1/[controller]/{id}")]
-        public ViewTransaction? Get(int id)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Get(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
             var result = _context.Transactions
@@ -33,9 +35,9 @@ namespace assetgrid_backend.Controllers
                 .SelectView(user.Id)
                 .SingleOrDefault(transaction => transaction.Id == id);
 
-            if (result == null) return null;
+            if (result == null) return NotFound();
 
-            return result;
+            return Ok(result);
         }
 
         [HttpPost()]
