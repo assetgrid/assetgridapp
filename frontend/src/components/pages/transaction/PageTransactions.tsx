@@ -50,12 +50,6 @@ export default function PageTransactions() {
     return <>
         <Hero title="Transactions" subtitle="Browse transactions" />
         <div className="p-3">
-            <Card title="Actions" isNarrow={false}>
-                <Link to={routes.transactionCreate()} state={{ allowBack: true }}
-                    className="button is-primary">
-                    Create Transaction
-                </Link>
-            </Card>
             <Card title="Search" isNarrow={false}>
                 {searchMode === "simple"
                     ? <>
@@ -69,6 +63,12 @@ export default function PageTransactions() {
                         <TransactionFilterEditor query={query} setQuery={setQuery} />
                         <a onClick={() => setSearchMode("simple")}>Simple search</a>
                     </>}
+            </Card>
+            <Card title="Actions" isNarrow={false}>
+                <Link to={routes.transactionCreate()} state={{ allowBack: true }}
+                    className="button is-primary">
+                    Create Transaction
+                </Link>
             </Card>
             <Card title="Transactions" isNarrow={false}>
                 <TransactionList
