@@ -6,6 +6,7 @@ using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Security.Principal;
 
 namespace assetgrid_backend.Controllers
 {
@@ -406,7 +407,10 @@ namespace assetgrid_backend.Controllers
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/{id}")]
-        public void Delete(int id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Delete(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
@@ -415,27 +419,32 @@ namespace assetgrid_backend.Controllers
                     .Single(t => t.Id == id);
 
                 // Make sure that the user has write permissions to an account this transaction references
-                if (!_context.UserAccounts.Any(
-                    account => account.UserId == user.Id &&
-                   (account.AccountId == dbObject.DestinationAccountId || account.AccountId == dbObject.SourceAccountId) &&
-                   new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions)
-                ))
+                var permissions = _context.UserAccounts
+                    .Where(x => x.UserId == user.Id && (x.AccountId == dbObject.DestinationAccountId || x.AccountId == dbObject.SourceAccountId))
+                    .Select(x => x.Permissions)
+                    .ToList();
+                if (permissions.Count == 0)
                 {
-                    throw new Exception("Not authorized to perform this action");
+                    // User cannot see this transaction
+                    return NotFound();
+                }
+                if (!permissions.Any(permissions => new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(permissions)))
+                {
+                    // User can see transaction but cannot modify it
+                    return Forbid();
                 }
 
                 _context.Transactions.Remove(dbObject);
                 _context.SaveChanges();
                 transaction.Commit();
 
-                return;
+                return Ok();
             }
-            throw new Exception();
         }
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/[Action]")]
-        public void DeleteMultiple(ViewSearchGroup query)
+        public IActionResult DeleteMultiple(ViewSearchGroup query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -459,17 +468,20 @@ namespace assetgrid_backend.Controllers
                     _context.SaveChanges();
                     transaction.Commit();
                 }
-                return;
+                return Ok();
             }
-            throw new Exception();
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
-        public ViewSearchResponse<ViewTransaction> Search(ViewSearch query)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewSearchResponse<ViewTransaction>))]
+        public IActionResult Search(ViewSearch query)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var result = _context.Transactions
+            if (ModelState.IsValid)
+            {
+                var result = _context.Transactions
                 .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
                     (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
                 .ApplySearch(query, true)
@@ -478,115 +490,125 @@ namespace assetgrid_backend.Controllers
                 .SelectView(user.Id)
                 .ToList();
 
-            return new ViewSearchResponse<ViewTransaction>
-            {
-                Data = result,
-                TotalItems = _context.Transactions.ApplySearch(query, false).Count(),
-            };
+                return Ok(new ViewSearchResponse<ViewTransaction>
+                {
+                    Data = result,
+                    TotalItems = _context.Transactions.ApplySearch(query, false).Count(),
+                });
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
-        public List<string> FindDuplicates(List<string> identifiers)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+        public IActionResult FindDuplicates(List<string> identifiers)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            return _context.Transactions
+            return Ok(_context.Transactions
                 .Where(transaction => transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
                 .Where(transaction => transaction.Identifier != null && identifiers.Contains(transaction.Identifier))
                 .Select(transaction => transaction.Identifier!)
-                .ToList();
+                .ToList());
         }
 
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
-        public ViewTransactionCreateManyResponse CreateMany(List<ViewCreateTransaction> transactions)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionCreateManyResponse))]
+        public IActionResult CreateMany(List<ViewCreateTransaction> transactions)
         {
             var user = _user.GetCurrent(HttpContext)!;
 
-            var failed = new List<ViewCreateTransaction>();
-            var duplicate = new List<ViewCreateTransaction>();
-            var success = new List<ViewCreateTransaction>();
-
-            var writeAccountIds = _context.UserAccounts
-                .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                .Select(account => account.AccountId)
-                .ToList();
-
-            var identifiers = transactions
-                .Select(t => string.IsNullOrWhiteSpace(t.Identifier) ? null : t.Identifier.Trim())
-                .Where(x => x != null)
-                .ToArray();
-            var duplicateIdentifiers = _context.Transactions
-                .Where(x => writeAccountIds.Contains(x.SourceAccountId ?? -1) || writeAccountIds.Contains(x.DestinationAccountId ?? -1))
-                .Where(x => identifiers.Contains(x.Identifier))
-                .Select(x => x.Identifier)
-                .ToHashSet();
-
-            foreach (var transaction in transactions)
+            if (ModelState.IsValid)
             {
-                if (string.IsNullOrWhiteSpace(transaction.Identifier)) transaction.Identifier = null;
-                transaction.Identifier = transaction.Identifier?.Trim();
 
-                if (duplicateIdentifiers.Contains(transaction.Identifier))
+                var failed = new List<ViewCreateTransaction>();
+                var duplicate = new List<ViewCreateTransaction>();
+                var success = new List<ViewCreateTransaction>();
+
+                var writeAccountIds = _context.UserAccounts
+                    .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                    .Select(account => account.AccountId)
+                    .ToList();
+
+                var identifiers = transactions
+                    .Select(t => string.IsNullOrWhiteSpace(t.Identifier) ? null : t.Identifier.Trim())
+                    .Where(x => x != null)
+                    .ToArray();
+                var duplicateIdentifiers = _context.Transactions
+                    .Where(x => writeAccountIds.Contains(x.SourceAccountId ?? -1) || writeAccountIds.Contains(x.DestinationAccountId ?? -1))
+                    .Where(x => identifiers.Contains(x.Identifier))
+                    .Select(x => x.Identifier)
+                    .ToHashSet();
+
+                foreach (var transaction in transactions)
                 {
-                    duplicate.Add(transaction);
-                }
-                else
-                {
-                    try
+                    if (string.IsNullOrWhiteSpace(transaction.Identifier)) transaction.Identifier = null;
+                    transaction.Identifier = transaction.Identifier?.Trim();
+
+                    if (duplicateIdentifiers.Contains(transaction.Identifier))
                     {
-                        if ((transaction.SourceId.HasValue && ! writeAccountIds.Contains(transaction.SourceId.Value)) ||
-                            (transaction.DestinationId.HasValue && !writeAccountIds.Contains(transaction.DestinationId.Value)))
+                        duplicate.Add(transaction);
+                    }
+                    else
+                    {
+                        try
                         {
-                            throw new Exception("Cannot write to this account");
-                        }
-
-                        if (transaction.Identifier != null) duplicateIdentifiers.Add(transaction.Identifier);
-
-                        var result = new Models.Transaction
-                        {
-                            DateTime = transaction.DateTime,
-                            SourceAccountId = transaction.SourceId,
-                            Description = transaction.Description,
-                            DestinationAccountId = transaction.DestinationId,
-                            Identifier = transaction.Identifier?.Trim(),
-                            Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                            Category = transaction.Category,
-                            TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
+                            if ((transaction.SourceId.HasValue && ! writeAccountIds.Contains(transaction.SourceId.Value)) ||
+                                (transaction.DestinationId.HasValue && !writeAccountIds.Contains(transaction.DestinationId.Value)))
                             {
-                                Amount = line.Amount,
-                                Description = line.Description,
-                                Order = i + 1,
-                            }).ToList(),
-                        };
+                                throw new Exception("Cannot write to this account");
+                            }
 
-                        // Always store transactions in a format where the total is positive
-                        if (result.Total < 0)
-                        {
-                            result.Total = -result.Total;
-                            var sourceId = result.SourceAccountId;
-                            result.SourceAccountId = result.DestinationAccountId;
-                            result.DestinationAccountId = sourceId;
-                            result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                            if (transaction.Identifier != null) duplicateIdentifiers.Add(transaction.Identifier);
+
+                            var result = new Models.Transaction
+                            {
+                                DateTime = transaction.DateTime,
+                                SourceAccountId = transaction.SourceId,
+                                Description = transaction.Description,
+                                DestinationAccountId = transaction.DestinationId,
+                                Identifier = transaction.Identifier?.Trim(),
+                                Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
+                                Category = transaction.Category,
+                                TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
+                                {
+                                    Amount = line.Amount,
+                                    Description = line.Description,
+                                    Order = i + 1,
+                                }).ToList(),
+                            };
+
+                            // Always store transactions in a format where the total is positive
+                            if (result.Total < 0)
+                            {
+                                result.Total = -result.Total;
+                                var sourceId = result.SourceAccountId;
+                                result.SourceAccountId = result.DestinationAccountId;
+                                result.DestinationAccountId = sourceId;
+                                result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                            }
+
+                            _context.Transactions.Add(result);
+                            _context.SaveChanges();
+                            success.Add(transaction);
                         }
-
-                        _context.Transactions.Add(result);
-                        _context.SaveChanges();
-                        success.Add(transaction);
-                    }
-                    catch (Exception)
-                    {
-                        failed.Add(transaction);
+                        catch (Exception)
+                        {
+                            failed.Add(transaction);
+                        }
                     }
                 }
+
+                return Ok(new ViewTransactionCreateManyResponse
+                {
+                    Succeeded = success,
+                    Duplicate = duplicate,
+                    Failed = failed,
+                });
             }
 
-            return new ViewTransactionCreateManyResponse
-            {
-                Succeeded = success,
-                Duplicate = duplicate,
-                Failed = failed,
-            };
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
     }
 }

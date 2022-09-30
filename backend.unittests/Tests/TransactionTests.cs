@@ -149,12 +149,12 @@ namespace backend.unittests.Tests
             Assert.IsType<NotFoundResult>(TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
 
             // Attempt deletion
-            Assert.Throws<Exception>(() => TransactionController.Delete(transaction.Id));
+            Assert.IsType<NotFoundResult>(TransactionController.Delete(transaction.Id));
 
             userAccountA.Permissions = UserAccountPermissions.Read;
             Context.Add(userAccountA);
             Context.SaveChanges();
-            Assert.Throws<Exception>(() => TransactionController.Delete(transaction.Id));
+            Assert.IsType<ForbidResult>(TransactionController.Delete(transaction.Id));
 
             userAccountA.Permissions = UserAccountPermissions.ModifyTransactions;
             Context.SaveChanges();
@@ -558,7 +558,14 @@ namespace backend.unittests.Tests
             }
             else
             {
-                Assert.Throws<Exception>(() => TransactionController.Delete(transaction.Id));
+                if (accountAPermissions == accountBPermissions && accountAPermissions == ViewAccount.AccountPermissions.None)
+                {
+                    Assert.IsType<NotFoundResult>(TransactionController.Delete(transaction.Id));
+                }
+                else
+                {
+                    Assert.IsType<ForbidResult>(TransactionController.Delete(transaction.Id));
+                }
             }
         }
 
@@ -681,7 +688,7 @@ namespace backend.unittests.Tests
 
             // First creation succeeds
             TransactionController.Create(model);
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
 
             // Second creation fails due to duplicate identifier
             Assert.IsType<BadRequestResult>(TransactionController.Create(model));
@@ -706,11 +713,11 @@ namespace backend.unittests.Tests
             model.SourceId = accountC.Id;
 
             // Other user does not perceive the first transaction as a duplicate
-            Assert.Empty(TransactionController.FindDuplicates(new List<string> { model.Identifier }));
+            Assert.Empty(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>());
 
             // Other user can create transaction without issue
             var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
             TransactionController.Delete(transaction.Id);
 
             // Share account A with otherUser
@@ -718,7 +725,7 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             // Now creation fails, as otherUser can see the first users transaction with the same identifier
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
             Assert.IsType<BadRequestResult>(TransactionController.Create(model));
             TransactionController.ModelState.Clear();
         }
@@ -911,7 +918,7 @@ namespace backend.unittests.Tests
                     DestinationId = AccountB.Id,
                     Category = ""
                 }
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
 
             // First transaction should succeed
             Assert.Single(result.Succeeded.Where(x => x.Total == 100));
@@ -936,7 +943,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id
                 },
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Duplicate);
             Assert.Empty(result.Failed);
             Assert.Empty(result.Succeeded);
@@ -968,7 +975,7 @@ namespace backend.unittests.Tests
                     DestinationId = AccountB.Id,
                     Category = ""
                 },
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
             Assert.Equal(100, result.Succeeded.Single().Total);
             Assert.Single(result.Duplicate);
@@ -999,7 +1006,7 @@ namespace backend.unittests.Tests
                     DestinationId = null,
                     Category = ""
                 },
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
             Assert.Equal(100, result.Succeeded.Single().Total);
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new [] { "identifier" });
@@ -1013,7 +1020,7 @@ namespace backend.unittests.Tests
                     Type = ViewSearchGroupType.And,
                     Children = new List<ViewSearchGroup>()
                 }
-            }).Data.Single();
+            }).OkValue<ViewSearchResponse<ViewTransaction>>().Data.Single();
             TransactionController.Delete(transaction.Id);
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new string [0]);
 
@@ -1033,7 +1040,7 @@ namespace backend.unittests.Tests
                     DestinationId = AccountB.Id,
                     Category = ""
                 },
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Failed);
             Assert.Equal(100, result.Failed.Single().Total);
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new [] { "identifier" });
@@ -1071,7 +1078,7 @@ namespace backend.unittests.Tests
                     DestinationId = AccountB.Id,
                     Category = "",
                 },
-            });
+            }).OkValue<ViewTransactionCreateManyResponse>();
 
             Assert.Equal(2, result.Succeeded.Count);
             Assert.Empty(result.Duplicate);
@@ -1084,7 +1091,7 @@ namespace backend.unittests.Tests
                     Type = ViewSearchGroupType.And,
                     Children = new List<ViewSearchGroup>()
                 }
-            }).Data;
+            }).OkValue<ViewSearchResponse<ViewTransaction>>().Data;
 
             var transactionA = transactions.Single(t => t.Description == "A");
             Assert.Equal(100, transactionA.Total);
