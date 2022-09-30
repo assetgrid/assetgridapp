@@ -40,6 +40,11 @@
             border-left: 0;
         }
     }
+    &.is-danger {
+        .dropdown-trigger > .button, .dropdown-trigger > .input {
+            border-color: $danger;
+        }
+    }
 }
 
 /*

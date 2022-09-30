@@ -165,6 +165,7 @@ function TransactionEditor(props: TransactionEditorProps) {
         lines: props.transaction.lines.length > 0 ? props.transaction.lines : null,
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
+    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const { user } = React.useContext(userContext);
     const api = useApi();
 
@@ -192,14 +193,19 @@ function TransactionEditor(props: TransactionEditorProps) {
             <InputDateTime value={model.dateTime}
                 fullwidth={true}
                 onChange={e => setModel({ ...model, dateTime: e })}
-                disabled={props.disabled} /></div>
+                disabled={props.disabled}
+                errors={errors["DateTime"]} /></div>
         <div>
             <InputText value={model.description}
                 onChange={(e) => setModel({ ...model, description: e.target.value })}
-                disabled={props.disabled} /></div>
+                disabled={props.disabled}
+                errors={errors["Description"]} /></div>
         {model.lines === null
             ? <div>
-                <InputNumber allowNull={false} value={model.total.times(amountMultiplier)} onChange={newTotal => setModel({ ...model, total: newTotal.times(amountMultiplier) })} />
+                <InputNumber allowNull={false}
+                    value={model.total.times(amountMultiplier)}
+                    onChange={newTotal => setModel({ ...model, total: newTotal.times(amountMultiplier) })}
+                    errors={errors["Total"]} />
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
@@ -213,7 +219,8 @@ function TransactionEditor(props: TransactionEditorProps) {
                 disabled={props.disabled}
                 allowNull={true}
                 onChange={account => setModel({ ...model, source: account })}
-                allowCreateNewAccount={true} />
+                allowCreateNewAccount={true}
+                errors={errors["SourceAccountId"]} />
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
@@ -221,13 +228,15 @@ function TransactionEditor(props: TransactionEditorProps) {
                 disabled={props.disabled}
                 allowNull={true}
                 onChange={account => setModel({ ...model, destination: account })}
-                allowCreateNewAccount={true} />
+                allowCreateNewAccount={true}
+                errors={errors["DestinationAccountId"]} />
         </div>}
         <div>
             <InputCategory
                 value={model.category}
                 disabled={props.disabled}
-                onChange={category => setModel({ ...model, category: category })} />
+                onChange={category => setModel({ ...model, category: category })}
+                errors={errors["Category"]} />
         </div>
         <div>
             {! props.disabled && api !== null && <>
@@ -264,11 +273,10 @@ function TransactionEditor(props: TransactionEditorProps) {
     </div>;
 
     function saveChanges() {
-        props.setDisabled(true);
+        if (model === null || api === null) return;
 
-        if (model === null || api === null) {
-            return;
-        }
+        props.setDisabled(true);
+        setErrors({});
 
         api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
@@ -279,9 +287,13 @@ function TransactionEditor(props: TransactionEditorProps) {
             total: model.total,
             lines: model.lines ?? []
         }).then(result => {
+            if (result.status === 200) {
+                props.updateItem(result.data);
+                props.stopEditing();
+            } else if (result.status === 400) {
+                setErrors(result.errors);
+            }
             props.setDisabled(false);
-            props.updateItem(result);
-            props.stopEditing();
         });
     }
 

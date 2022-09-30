@@ -101,14 +101,14 @@ namespace backend.unittests.Tests
             var updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
             {
                 DateTime = transaction.DateTime,
-            });
+            }).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
 
             transaction.Destination = null;
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
             {
                 DestinationId = -1
-            });
+            }).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
@@ -116,7 +116,7 @@ namespace backend.unittests.Tests
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
             {
                 Description = transaction.Description
-            });
+            }).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
@@ -124,27 +124,29 @@ namespace backend.unittests.Tests
             updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
             {
                 Category = "",
-            })!;
+            }).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
-            // Try to update without write permission
+            // Try to update with only read permission. Returns 403 Forbidden
             var userAccountA = Context.UserAccounts.Single(a => a.AccountId == AccountA.Id && a.UserId == User.Id);
             userAccountA.Permissions = UserAccountPermissions.Read;
             updated.Source!.Permissions = ViewAccount.AccountPermissions.Read;
             Context.SaveChanges();
-            Assert.Throws<Exception>(() => TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
+            Assert.IsType<ForbidResult>(TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
             Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
+            // Try to update with write permissions. Succeeds
             userAccountA.Permissions = UserAccountPermissions.ModifyTransactions;
             Context.SaveChanges();
-            updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Updated" });
+            updated = TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Updated" }).OkValue<ViewTransaction>();
             Assert.Equivalent(updated, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
+            // Try to update without any permissions. Fails with 404 NotFound
             Context.Remove(userAccountA);
             Context.SaveChanges();
             Assert.IsType<NotFoundResult>(TransactionController.Get(transaction.Id));
-            Assert.Null(TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
+            Assert.IsType<NotFoundResult>(TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
 
             // Attempt deletion
             Assert.Throws<Exception>(() => TransactionController.Delete(transaction.Id));
@@ -320,14 +322,14 @@ namespace backend.unittests.Tests
             Assert.NotNull(transactionC);
 
             // Update transaction to reference account A. Should fail since no write permission to this account
-            Assert.Throws<Exception>(() => TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
+            Assert.IsType<ForbidResult>(TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
 
             // Update transaction description. Should succeed
             transactionC.Description = "New test";
-            Assert.Equivalent(transactionC, TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { Description = transactionC.Description }));
+            Assert.Equivalent(transactionC, TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { Description = transactionC.Description }).OkValue<ViewTransaction>());
 
             // Update description on transaction between A and B should fail due to no write permission
-            Assert.Null(TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
+            Assert.IsType<NotFoundResult>(TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
 
             // Give read permission to account A
             var UserAccountA = new UserAccount { AccountId = accountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.Read };
@@ -335,8 +337,8 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             // Update still fails due to only read - no write permissions
-            Assert.Throws<Exception>(() => TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
-            Assert.Throws<Exception>(() => TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
+            Assert.IsType<ForbidResult>(TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
+            Assert.IsType<ForbidResult>(TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
 
             // Change to write permissions - now it succeeds
             UserAccountA.Permissions = UserAccountPermissions.All;
@@ -344,16 +346,16 @@ namespace backend.unittests.Tests
             UserAccountA.Favorite = true;
             Context.SaveChanges();
             transactionC.Source = accountA;
-            Assert.Equivalent(transactionC, TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
+            Assert.Equivalent(transactionC, TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }).OkValue<ViewTransaction>());
 
             transactionAB.Description = "Something";
             // Transaction AB's source will be AccountB which otherUser does not have read access to. Therefore "Unknown account" will be returned.
             transactionAB.Source = ViewAccount.GetNoReadAccess(transactionAB.Source!.Id);
-            Assert.Equivalent(transactionAB, TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
+            Assert.Equivalent(transactionAB, TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }).OkValue<ViewTransaction>());
 
             // Can also change destination of AB transaction since we now have write access
             transactionAB.Destination = accountC;
-            Assert.Equivalent(transactionAB, TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { DestinationId = accountC.Id }));
+            Assert.Equivalent(transactionAB, TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { DestinationId = accountC.Id }).OkValue<ViewTransaction>());
         }
 
         [Theory]
@@ -403,7 +405,7 @@ namespace backend.unittests.Tests
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 1";
-            Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 1" }));
+            Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 1" }).OkValue<ViewTransaction>());
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
 
             // Remove permission. Succeeds, but the account is shown as "uknown"
@@ -421,7 +423,7 @@ namespace backend.unittests.Tests
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 2";
-            Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 2" }));
+            Assert.Equivalent(transaction, TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 2" }).OkValue<ViewTransaction>());
             Assert.Equivalent(transaction, TransactionController.Get(transaction.Id).OkValue<ViewTransaction>());
         }
 
@@ -484,12 +486,12 @@ namespace backend.unittests.Tests
                     new ViewTransactionLine(amount: -120, description: "Line 1"),
                     new ViewTransactionLine(amount: 20, description: "Line 2"),
                 }
-            })!;
+            }).OkValue<ViewTransaction>();
             negativeTransaction.Id = oppositeTransaction.Id;
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
 
             // Remove transaction lines and make total negative again
-            var updatedTransaction = TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Lines = new List<ViewTransactionLine>(), Total = -100 });
+            var updatedTransaction = TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Lines = new List<ViewTransactionLine>(), Total = -100 }).OkValue<ViewTransaction>();
             transaction.Lines = new List<ViewTransactionLine>();
             Assert.Equivalent(transaction, updatedTransaction);
         }
@@ -789,17 +791,24 @@ namespace backend.unittests.Tests
             Assert.Equivalent(transaction0C, TransactionController.Get(transaction0C.Id).OkValue<ViewTransaction>());
 
             // Cannot change source or destination to destination with no write permission
+            // Process fails silently but nothing is updated
             UserService.MockUser = UserService.GetById(User.Id);
-            Assert.Throws<Exception>(() => TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
+            Assert.IsType<OkResult>(TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
             {
                 model = new ViewUpdateTransaction { DestinationId = accountC.Id },
                 query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
             }));
-            Assert.Throws<Exception>(() => TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
+            Assert.IsType<OkResult>(TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
             {
                 model = new ViewUpdateTransaction { SourceId = accountC.Id },
                 query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
             }));
+            Assert.Equivalent(transactionA0.Source, TransactionController.Get(transactionA0.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transaction0B.Source, TransactionController.Get(transaction0B.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transactionAB.Source, TransactionController.Get(transactionAB.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transactionA0.Destination, TransactionController.Get(transactionA0.Id).OkValue<ViewTransaction>().Destination);
+            Assert.Equivalent(transaction0B.Destination, TransactionController.Get(transaction0B.Id).OkValue<ViewTransaction>().Destination);
+            Assert.Equivalent(transactionAB.Destination, TransactionController.Get(transactionAB.Id).OkValue<ViewTransaction>().Destination);
 
             // Give user read permission to account C
             var userAccount = new UserAccount { AccountId = accountC.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
@@ -818,16 +827,22 @@ namespace backend.unittests.Tests
 
             // Still fails when trying to update source and destination to account C
             UserService.MockUser = UserService.GetById(User.Id);
-            Assert.Throws<Exception>(() => TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
+            Assert.IsType<OkResult>(TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
             {
                 model = new ViewUpdateTransaction { DestinationId = accountC.Id },
                 query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
             }));
-            Assert.Throws<Exception>(() => TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
+            Assert.IsType<OkResult>(TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
             {
                 model = new ViewUpdateTransaction { SourceId = accountC.Id },
                 query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
             }));
+            Assert.Equivalent(transactionA0.Source, TransactionController.Get(transactionA0.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transaction0B.Source, TransactionController.Get(transaction0B.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transactionAB.Source, TransactionController.Get(transactionAB.Id).OkValue<ViewTransaction>().Source);
+            Assert.Equivalent(transactionA0.Destination, TransactionController.Get(transactionA0.Id).OkValue<ViewTransaction>().Destination);
+            Assert.Equivalent(transaction0B.Destination, TransactionController.Get(transaction0B.Id).OkValue<ViewTransaction>().Destination);
+            Assert.Equivalent(transactionAB.Destination, TransactionController.Get(transactionAB.Id).OkValue<ViewTransaction>().Destination);
 
             // Change permission to write
             userAccount.Permissions = UserAccountPermissions.ModifyTransactions;

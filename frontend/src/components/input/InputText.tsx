@@ -4,8 +4,7 @@ interface Props {
     label?: string,
     value: string,
     disabled?: boolean,
-    error?: boolean,
-    errors?: string[];
+    errors?: string[] | boolean;
     addOnAfter?: React.ReactElement,
     onChange: React.ChangeEventHandler<HTMLInputElement>,
     isSmall?: boolean;
@@ -13,7 +12,7 @@ interface Props {
 }
 
 export default function InputText(props: Props) {
-    const isError = props.error !== undefined ? props.error : props.errors !== undefined && props.errors.length > 0;
+    const isError = props.errors === true || (typeof props.errors === "object" && props.errors.length > 0);
     return <div className="field">
         {props.label && <label className="label">{props.label}</label>}
         <div className="field has-addons">
@@ -26,7 +25,7 @@ export default function InputText(props: Props) {
                     disabled={props.disabled}
                     onChange={event => props.onChange(event)}
                 />
-                {props.errors !== undefined && props.errors.length > 0 && <p className="help has-text-danger">
+                {typeof props.errors === "object"  && props.errors.length > 0 && <p className="help has-text-danger">
                     {props.errors[0]}
                 </p>}
             </div>

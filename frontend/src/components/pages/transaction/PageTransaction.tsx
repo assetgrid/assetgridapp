@@ -27,10 +27,10 @@ import Hero from "../../common/Hero";
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
     const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null | "error">("fetching");
-    const { user } = React.useContext(userContext);
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [errors, setErors] = React.useState<{ [key: string]: string[] }>({})
     const navigate = useNavigate();
     const api = useApi();
 
@@ -48,13 +48,14 @@ export default function PageTransaction(): React.ReactElement {
         <div className="p-3">
             <div className="columns">
                 <div className="column p-0 is-narrow is-flex">
-                    {transactionDetails(transaction,
-                        isUpdating,
-                        transaction => setEditModel(transaction),
-                        editModel,
-                        () => setIsDeleting(true),
-                        update
-                    )}
+                    <TransactionDetailsCard
+                        transaction={transaction}
+                        isUpdating={isUpdating}
+                        editModel={editModel}
+                        onChange={transaction => setEditModel(transaction)}
+                        onDelete={() => setIsDeleting(true)}
+                        onSaveChanges={update}
+                        errors={errors} />
                 </div>
                 <div className="column p-0 is-narrow is-flex">
                     {transactionLines(transaction,
@@ -101,26 +102,36 @@ export default function PageTransaction(): React.ReactElement {
         if (editModel === null || api === null) return;
 
         setIsUpdating(true);
+        setErors({});
         const result = await api.Transaction.update(id, {
             ...editModel,
             sourceId: editModel.source?.id ?? -1,
             destinationId: editModel.destination?.id ?? -1
         });
-        setTransaction(result);
+
+        if (result.status == 200) {
+            setTransaction(result.data);
+            setEditModel(null);
+        } else if (result.status === 400) {
+            setErors(result.errors);
+        }
         setIsUpdating(false);
-        setEditModel(null);
     }
 }
 
-function transactionDetails(
-    transaction: Transaction | "fetching",
-    isUpdating: boolean,
-    onChange: (editModel: Transaction | null) => void,
-    editModel: Transaction | null,
-    beginDelete: () => void,
-    saveChanges: () => void,
-): React.ReactElement {
+interface TransactionDetailsCardProps {
+    transaction: Transaction | "fetching";
+    isUpdating: boolean;
+    onChange: (editModel: Transaction | null) => void;
+    editModel: Transaction | null;
+    onDelete: () => void;
+    onSaveChanges: () => void;
+    errors: { [key: string]: string[] };
+}
+function TransactionDetailsCard(props: TransactionDetailsCardProps): React.ReactElement {
     const { user } = React.useContext(userContext);
+    const transaction = props.transaction;
+    const editModel = props.editModel;
 
     if (transaction === "fetching") {
         return <Card title="Transaction details" isNarrow={false}>
@@ -166,10 +177,10 @@ function transactionDetails(
     if (editModel === null) {
         return <Card title={<>
             <span style={{ flexGrow: 1 }}>Transaction details</span>
-            <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
-            <InputIconButton icon={regular.faTrashCan} onClick={() => beginDelete()} />
+            <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
+            <InputIconButton icon={regular.faTrashCan} onClick={() => props.onDelete()} />
         </>} isNarrow={false}>
-            {transaction && <table className="table is-fullwidth">
+            {props.transaction && <table className="table is-fullwidth">
                 <tbody>
                     <tr>
                         <td>Id</td>
@@ -225,10 +236,10 @@ function transactionDetails(
                         <td>
                             <InputTextOrNull
                                 value={editModel.identifier}
-                                onChange={value => onChange({ ...editModel, identifier: value })}
-                                disabled={isUpdating}
+                                onChange={value => props.onChange({ ...editModel, identifier: value })}
+                                disabled={props.isUpdating}
                                 noValueText={"None"}
-                            />
+                                errors={props.errors["Identifier"]} />
                         </td>
                     </tr>
                     <tr>
@@ -236,8 +247,9 @@ function transactionDetails(
                         <td>
                             <InputText
                                 value={editModel.description}
-                                onChange={e => onChange({ ...editModel, description: e.target.value })}
-                                disabled={isUpdating} />
+                                onChange={e => props.onChange({ ...editModel, description: e.target.value })}
+                                disabled={props.isUpdating}
+                                errors={props.errors["Description"]} />
                         </td>
                     </tr>
                     <tr>
@@ -246,8 +258,9 @@ function transactionDetails(
                             <InputDateTime
                                 value={editModel.dateTime}
                                 fullwidth={true}
-                                onChange={value => onChange({ ...editModel, dateTime: value })}
-                                disabled={isUpdating} />
+                                onChange={value => props.onChange({ ...editModel, dateTime: value })}
+                                disabled={props.isUpdating}
+                                errors={props.errors["DateTime"]} />
                         </td>
                     </tr>
                     <tr>
@@ -255,9 +268,11 @@ function transactionDetails(
                         {editModel.lines.length === 0
                             ? <td><InputNumber
                                 value={editModel.total}
-                                onChange={value => onChange({ ...editModel, total: value })}
+                                onChange={value => props.onChange({ ...editModel, total: value })}
                                 allowNull={false}
-                                disabled={isUpdating} /></td>
+                                disabled={props.isUpdating}
+                                errors={props.errors["DateTime"]} />
+                            </td>
                             : <td>{formatNumberWithUser(editModel.total, user)}</td>}
                     </tr>
                     <tr>
@@ -265,10 +280,11 @@ function transactionDetails(
                         <td>
                             <InputAccount
                                 value={editModel.source}
-                                onChange={value => onChange({ ...editModel, source: value })}
+                                onChange={value => props.onChange({ ...editModel, source: value })}
                                 allowNull={true}
                                 allowCreateNewAccount={true}
-                                disabled={isUpdating} />
+                                disabled={props.isUpdating}
+                                errors={props.errors["SourceAccountId"]} />
                         </td>
                     </tr>
                     <tr>
@@ -276,10 +292,11 @@ function transactionDetails(
                         <td>
                             <InputAccount
                                 value={editModel.destination}
-                                onChange={value => onChange({ ...editModel, destination: value })}
+                                onChange={value => props.onChange({ ...editModel, destination: value })}
                                 allowNull={true}
                                 allowCreateNewAccount={true}
-                                disabled={isUpdating} />
+                                disabled={props.isUpdating}
+                                errors={props.errors["DestinationAccountId"]} />
                         </td>
                     </tr>
                     <tr>
@@ -287,15 +304,16 @@ function transactionDetails(
                         <td>
                             <InputCategory
                                 value={editModel.category}
-                                onChange={value => onChange({ ...editModel, category: value })}
-                                disabled={isUpdating} />
+                                onChange={value => props.onChange({ ...editModel, category: value })}
+                                disabled={props.isUpdating}
+                                errors={props.errors["Category"]} />
                         </td>
                     </tr>
                 </tbody>
             </table>}
             <div className="buttons">
-                <InputButton disabled={isUpdating} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
-                <InputButton onClick={() => onChange(null)}>Cancel</InputButton>
+                <InputButton disabled={props.isUpdating} className="is-primary" onClick={props.onSaveChanges}>Save changes</InputButton>
+                <InputButton onClick={() => props.onChange(null)}>Cancel</InputButton>
             </div>
         </Card>;
     }

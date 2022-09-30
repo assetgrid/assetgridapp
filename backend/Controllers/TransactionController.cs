@@ -159,14 +159,17 @@ namespace assetgrid_backend.Controllers
                     });
                 }
             }
-            throw new Exception();
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         #region Update transactions
 
         [HttpPut()]
         [Route("/api/v1/[controller]/{id}")]
-        public ViewTransaction? Update(int id, ViewUpdateTransaction model)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Update(int id, ViewUpdateTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -184,7 +187,7 @@ namespace assetgrid_backend.Controllers
                     if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
                     {
                         // The user has read permissions to neither source nor destination
-                        return null;
+                        return NotFound();
                     }
 
                     var writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
@@ -192,7 +195,7 @@ namespace assetgrid_backend.Controllers
                         dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id && writePermissions.Contains(x.Permissions)) == null)
                     {
                         // User does not have write permission to this transaction, but they can read it
-                        throw new Exception("Not authorized to perform this action");
+                        return Forbid();
                     }
 
                     var result = UpdateTransaction(dbObject, user, model);
@@ -200,12 +203,13 @@ namespace assetgrid_backend.Controllers
                     return result;
                 }
             }
-            throw new Exception();
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         [HttpPost()]
         [Route("/api/v1/[controller]/[Action]")]
-        public void UpdateMultiple(ViewUpdateMultipleTransactions request)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult UpdateMultiple(ViewUpdateMultipleTransactions request)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -228,16 +232,17 @@ namespace assetgrid_backend.Controllers
                     var transactions = query.ToList();
                     foreach (var dbObject in transactions)
                     {
+                        // We ignore any errors returned
                         UpdateTransaction(dbObject, user, request.model);
                     }
                     transaction.Commit();
                 }
-                return;
+                return Ok();
             }
-            throw new Exception();
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
-        private ViewTransaction UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
+        private IActionResult UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
         {
             // Update accounts
             var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
@@ -255,7 +260,7 @@ namespace assetgrid_backend.Controllers
                     .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
                     if (newSourceUserAccount == null)
                     {
-                        throw new Exception("Not authorized to perform this action");
+                        return Forbid();
                     }
                     dbObject.SourceAccountId = newSourceUserAccount.Id;
                     dbObject.SourceAccount = newSourceUserAccount.Account;
@@ -275,7 +280,7 @@ namespace assetgrid_backend.Controllers
                         .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
                     if (newDestinationUserAccount == null)
                     {
-                        throw new Exception("Not authorized to perform this action");
+                        return Forbid();
                     }
                     dbObject.DestinationAccountId = newDestinationUserAccount.Id;
                     dbObject.DestinationAccount = newDestinationUserAccount.Account;
@@ -344,11 +349,15 @@ namespace assetgrid_backend.Controllers
 
             if (dbObject.SourceAccountId == null && dbObject.DestinationAccountId == null)
             {
-                throw new Exception("Source or destination account must be set");
+                ModelState.AddModelError(nameof(dbObject.SourceAccountId), "Either source or destination id must be set.");
+                ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Either source or destination id must be set.");
+                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
             if (dbObject.SourceAccountId == dbObject.DestinationAccountId)
             {
-                throw new Exception("Source and destination cannot be the same account");
+                ModelState.AddModelError(nameof(dbObject.SourceAccountId), "Source and destination must be different.");
+                ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Source and destination must be different.");
+                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
 
             _context.SaveChanges();
@@ -356,7 +365,7 @@ namespace assetgrid_backend.Controllers
             var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
             var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
 
-            return new ViewTransaction
+            return Ok(new ViewTransaction
             {
                 Id = dbObject.Id,
                 Identifier = dbObject.Identifier,
@@ -390,9 +399,7 @@ namespace assetgrid_backend.Controllers
                     .OrderBy(line => line.Order)
                     .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
                     .ToList(),
-            };
-
-            throw new Exception();
+            });
         }
 
         #endregion

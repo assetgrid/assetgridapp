@@ -455,8 +455,8 @@ const Transaction = (token: string) => ({
      * @param transaction The changes to make
      * @returns The updated transaction
      */
-    update: function (id: number, transaction: UpdateTransaction): Promise<Transaction> {
-        return new Promise<Transaction>((resolve, reject) => {
+    update: function (id: number, transaction: UpdateTransaction): Promise<Ok<Transaction> | NotFound | Forbid | BadRequest> {
+        return new Promise<Ok<Transaction> | NotFound | Forbid | BadRequest>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.put<Transaction>(rootUrl + "/api/v1/transaction/" + id, {
                 ...model,
@@ -469,10 +469,22 @@ const Transaction = (token: string) => ({
                 })) : undefined
             }, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve(fixTransaction(result.data)))
-                .catch(e => {
-                    console.log(e);
-                    reject();
+            }).then(result => resolve({ status: 200, data: fixTransaction(result.data) }))
+                .catch((e: AxiosError) => {
+                    switch (e.response?.status) {
+                        case 404:
+                            resolve(NotFoundResult);
+                            break;
+                        case 403:
+                            resolve(ForbidResult);
+                            break;
+                        case 400:
+                            resolve(e.response.data as BadRequest);
+                            break;
+                        default:
+                            console.log(e);
+                            reject();
+                    }
                 })
         });
     },
@@ -482,8 +494,8 @@ const Transaction = (token: string) => ({
      * @param query A query describing which transactions to modify
      * @param transaction The changes to make
      */
-     updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+     updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
+        return new Promise<Ok<null>>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.post<Transaction>(rootUrl + "/api/v1/transaction/updateMultiple", {
                 query: query,
@@ -499,7 +511,7 @@ const Transaction = (token: string) => ({
                 }
             }, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve())
+            }).then(result => resolve({ status: 200, data: null }))
                 .catch(e => {
                     console.log(e);
                     reject();
