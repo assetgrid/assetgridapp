@@ -932,7 +932,7 @@ namespace backend.unittests.Tests
             Assert.Single(result.Failed.Where(x => x.Total == 400));
 
             // Cannot create other transaction with same identifier
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new [] { "identifier" });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string> { "identifier" });
             result = TransactionController.CreateMany(new List<ViewCreateTransaction> {
                 new ViewCreateTransaction {
                     Identifier = "identifier",
@@ -993,7 +993,7 @@ namespace backend.unittests.Tests
                 Favorite = false,
                 IncludeInNetWorth = false,
             });
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new string [0]);
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string>());
             result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
@@ -1009,7 +1009,7 @@ namespace backend.unittests.Tests
             }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
             Assert.Equal(100, result.Succeeded.Single().Total);
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new [] { "identifier" });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new [] { "identifier" });
 
             var transaction = TransactionController.Search(new ViewSearch
             {
@@ -1022,7 +1022,7 @@ namespace backend.unittests.Tests
                 }
             }).OkValue<ViewSearchResponse<ViewTransaction>>().Data.Single();
             TransactionController.Delete(transaction.Id);
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new string [0]);
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string>());
 
             // Share an account with other user. Now creating should fail
             Context.UserAccounts.Add(new UserAccount { UserId = otherUser.Id, AccountId = AccountA.Id });
@@ -1043,7 +1043,7 @@ namespace backend.unittests.Tests
             }).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Failed);
             Assert.Equal(100, result.Failed.Single().Total);
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }), new [] { "identifier" });
+            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string> { "identifier" });
         }
 
         [Fact]

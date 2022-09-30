@@ -93,13 +93,13 @@ namespace backend.unittests.Tests
 
             // Create account and transaction with User A
             TransactionController.Create(model);
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat"));
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt"));
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
 
             // No categories returned with user b
             UserService.MockUser = otherUser;
-            Assert.Empty(TaxonomyController.CategoryAutocomplete("cat"));
-            Assert.Empty(TaxonomyController.CategoryAutocomplete("aCcOuNt"));
+            Assert.Empty(TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
+            Assert.Empty(TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
 
             // Account A is shared with user B and it is suggested
             var UserAccount = new UserAccount {
@@ -111,15 +111,15 @@ namespace backend.unittests.Tests
             };
             Context.UserAccounts.Add(UserAccount);
             Context.SaveChanges();
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat"));
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt"));
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
 
             // Account B is shared with user B and it is still suggested
             UserAccount.Account = Context.Accounts.Single(a => a.Id == AccountB.Id);
             UserAccount.AccountId = AccountB.Id;
             Context.SaveChanges();
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat"));
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt"));
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
+            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
         }
     }
 }

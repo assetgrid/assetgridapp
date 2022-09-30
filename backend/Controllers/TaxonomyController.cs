@@ -22,16 +22,17 @@ namespace assetgrid_backend.Controllers
 
         [HttpGet]
         [Route("/api/v1/[controller]/[action]/{prefix}")]
-        public string[] CategoryAutocomplete(string prefix)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+        public IActionResult CategoryAutocomplete(string prefix)
         {
             var user = _user.GetCurrent(HttpContext)!;
             var normalizedPrefix = prefix.ToLower();
-            return _context.Transactions
+            return Ok(_context.Transactions
                 .Where(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
                 .Where(transaction => transaction.Category.ToLower().Contains(normalizedPrefix))
                 .Select(transaction => transaction.Category)
                 .Distinct()
-                .ToArray();
+                .ToList());
         }
     }
 }
