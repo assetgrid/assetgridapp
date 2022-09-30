@@ -23,16 +23,31 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
       working-directory: ./backend
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
-      working-directory: ./backend
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: backend
         path: backend/bin/Release/net6.0
 
-
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ./backend.unittests
+    - name: Build test
+      run: dotnet build --no-restore --configuration Release
+      working-directory: ./backend.unittests
+    - name: Test
+      run: dotnet test --no-build --verbosity normal --configuration Release
+      working-directory: ./backend.unittests
+      
   build-frontend:
     runs-on: ubuntu-latest
     
