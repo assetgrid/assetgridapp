@@ -9,11 +9,14 @@ export type CsvCreateTransaction = {
     rowNumber: number;
     source: AccountReference | null;
     destination: AccountReference | null;
-    dateText: string;
-    dateTime: DateTime;
     description: string;
     category: string;
     identifier: string | null;
+
+    dateText: string;
+    dateTime: DateTime;
+
+    amountText: string;
     amount: Decimal | "invalid";
 }
 

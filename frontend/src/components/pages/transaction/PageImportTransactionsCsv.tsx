@@ -62,7 +62,7 @@ export default function PageImportTransactionsCsv () {
     const api = useApi();
     
     return <>
-        <Hero title="Import" subtitle="From CSV file" />
+        <Hero title="Import" subtitle={"From CSV file" + (csvFile !== null ? " (" + csvFile.name + ")" : "")} />
         <div className="tabs has-background-white px-5">
             <ul>
                 <li className={currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>

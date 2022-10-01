@@ -67,3 +67,4 @@
 - [ ] Warn users when importing to accounts for which they don't have write permission
 - [x] Add user profile page
 - [x] Make transaction creation warn about things like same source/destination. Missing source destination. Duplicates
+- [ ] Multiple identifiers per transaction
