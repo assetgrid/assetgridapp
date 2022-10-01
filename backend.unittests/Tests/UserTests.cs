@@ -2,7 +2,7 @@ using assetgrid_backend;
 using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc;
@@ -99,6 +99,51 @@ namespace backend.unittests.Tests
 
             UserController.Preferences(user.Preferences);
             Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+        }
+
+        [Fact]
+        public void ChangePassword()
+        {
+            // Create user and sign in
+            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
+            var user = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = UserService.GetById(user!.Id);
+
+            // Change password
+            var changeResult = UserController.ChangePassword(new UpdatePasswordModel { OldPassword = "test", NewPassword = "test2" });
+            Assert.IsType<OkResult>(changeResult);
+
+            // Can no longer sign in with old password
+            var authenticateOldPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
+            Assert.IsType<BadRequestResult>(authenticateOldPasswordResponse);
+            UserController.ModelState.Clear();
+
+            // Can sign in with new password
+            var authenticateNewPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test2" });
+            Assert.IsType<OkObjectResult>(authenticateNewPasswordResponse);
+        }
+
+        [Fact]
+        public void ChangePasswordWrongOldPassword()
+        {
+            // Create user and sign in
+            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
+            var user = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = UserService.GetById(user!.Id);
+
+            // Change password (fails due to wrong old password)
+            var changeResult = UserController.ChangePassword(new UpdatePasswordModel { OldPassword = "test2", NewPassword = "test2" });
+            Assert.IsType<BadRequestResult>(changeResult);
+            UserController.ModelState.Clear();
+
+            // Can not sign in with new password
+            var authenticateOldPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test2" });
+            Assert.IsType<BadRequestResult>(authenticateOldPasswordResponse);
+            UserController.ModelState.Clear();
+
+            // Can still sign in with old password
+            var authenticateNewPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
+            Assert.IsType<OkObjectResult>(authenticateNewPasswordResponse);
         }
     }
 }

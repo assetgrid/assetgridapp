@@ -22,6 +22,7 @@ import { User } from "../models/user";
 import { Account } from "../models/account";
 import PageLogin from "./pages/PageLogin";
 import PageSignup from "./pages/PageSignup";
+import PageProfile from "./pages/PageProfile";
 
 export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -65,6 +66,7 @@ export default function FairFitPortalApp () {
                                     <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
                                     <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
                                     <Route path={routes.preferences()} element={<PagePreferences />} />
+                                    <Route path={routes.profile()} element={<PageProfile />} />
 
                                     <Route path='*' element={<Page404 />} />
                                 </Routes>

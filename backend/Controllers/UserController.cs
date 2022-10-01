@@ -1,6 +1,6 @@
 ﻿using assetgrid_backend.Data;
 using assetgrid_backend.Models;
-using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.ViewModels;
 using assetgrid_backend.Services;
 using assetgrid_backend.Helpers;
 using Microsoft.AspNetCore.Cors;
@@ -102,7 +102,7 @@ namespace assetgrid_backend.Controllers
             else
             {
                 ModelState.AddModelError(nameof(model.Email), "A user already exists");
-            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+                return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
             }
         }
 
@@ -147,6 +147,30 @@ namespace assetgrid_backend.Controllers
             _context.SaveChanges();
 
             return Ok(new ViewPreferences(preferences));
+        }
+
+        [HttpPut]
+        [Authorize]
+        [Route("/api/v1/[controller]/password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult ChangePassword(UpdatePasswordModel model)
+        {
+            var user = _userService.GetCurrent(HttpContext)!;
+            var passwordValid = _userService.ValidatePassword(user, model.OldPassword);
+
+            if (!passwordValid)
+            {
+                ModelState.AddModelError("OldPassword", "Password is not correct");
+            }
+
+            if (ModelState.IsValid)
+            {
+                _userService.SetPassword(user, model.NewPassword);
+                _context.SaveChanges();
+                return Ok();
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
     }
 }

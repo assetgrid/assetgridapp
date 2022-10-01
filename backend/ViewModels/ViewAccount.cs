@@ -1,4 +1,6 @@
-﻿namespace assetgrid_backend.Models.ViewModels
+﻿using assetgrid_backend.Models;
+
+namespace assetgrid_backend.ViewModels
 {
     public class ViewAccount
     {

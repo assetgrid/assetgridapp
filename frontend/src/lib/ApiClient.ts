@@ -67,7 +67,7 @@ export function authenticate(email: string, password: string): Promise<Ok<UserMo
 /**
  * Sign up new user
  */
- export function signup(email: string, password: string): Promise<Ok<UserModel> | BadRequest> {
+export function signup(email: string, password: string): Promise<Ok<UserModel> | BadRequest> {
     return new Promise<Ok<UserModel> | BadRequest>((resolve, reject) => {
         axios.post<UserModel>(rootUrl + '/api/v1/user/createinitial', {
             email: email,
@@ -109,13 +109,37 @@ const User = (token: string) => ({
         return new Promise<Ok<PreferencesModel>>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', preferences, {
                     headers: { authorization: "Bearer: " + token }
-                })
-                .then(result => {
+                }).then(result => {
                     resolve({ status: 200, data: result.data });
                 }).catch(e => {
                     console.log(e);
                     reject();
                 });
+        })
+    },
+
+    /**
+     * Change the password for the current user
+     * @param oldPassword The password currently used to sign in
+     * @param newPassword The desired new password
+     */
+    changePassword: function (oldPassword: string, newPassword: string): Promise<Ok<null> | BadRequest> {
+        return new Promise<Ok<null> | BadRequest>((resolve, reject) => {
+            axios.put(rootUrl + '/api/v1/user/password', {
+                oldPassword: oldPassword,
+                newPassword: newPassword
+            }, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({ status: 200, data: null });
+            }).catch(e => {
+                if (e.response?.status == 400) {
+                    resolve(e.response.data as BadRequest);
+                    return;
+                }
+                console.log(e);
+                reject();
+            });
         })
     }
 });

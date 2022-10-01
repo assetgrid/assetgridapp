@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.Models.ViewModels;
+﻿using assetgrid_backend.ViewModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.Models

@@ -1,4 +1,4 @@
-﻿namespace assetgrid_backend.Models.ViewModels
+﻿namespace assetgrid_backend.ViewModels
 {
     public class UserAuthenticatedResponse
     {
@@ -22,5 +22,11 @@
     {
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
+    }
+
+    public class UpdatePasswordModel
+    {
+        public string OldPassword { get; set; } = null!;
+        public string NewPassword { get; set; } = null!;
     }
 }

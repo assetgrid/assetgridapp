@@ -1,6 +1,6 @@
 ﻿using assetgrid_backend.Data;
 using assetgrid_backend.Models;
-using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -19,6 +19,8 @@ namespace assetgrid_backend.Services
         UserPreferences GetPreferences(int userId);
         User GetById(int id);
         User? GetCurrent(HttpContext context);
+        bool ValidatePassword(User user, string password);
+        void SetPassword(User user, string password);
     }
 
     public class UserService : IUserService
@@ -49,18 +51,9 @@ namespace assetgrid_backend.Services
             if (user == null) return null;
 
             // Verify password
-            var hasher = new PasswordHasher<string>();
-            var result = hasher.VerifyHashedPassword(email.ToLower(), user.user.HashedPassword, password);
-            switch (result)
+            if (! ValidatePassword(user.user, password))
             {
-                case PasswordVerificationResult.SuccessRehashNeeded:
-                    user.user.HashedPassword = hasher.HashPassword(email.ToLower(), password);
-                    _context.SaveChanges();
-                    break;
-                case PasswordVerificationResult.Success:
-                    break;
-                default:
-                    return null;
+                return null;
             }
 
             // authentication successful so generate jwt token
@@ -82,15 +75,37 @@ namespace assetgrid_backend.Services
                 token);
         }
 
-        public User CreateUser(string email, string password)
+        public bool ValidatePassword(User user, string password)
         {
             var hasher = new PasswordHasher<string>();
+            var result = hasher.VerifyHashedPassword(user.Email.ToLower(), user.HashedPassword, password);
+            switch (result)
+            {
+                case PasswordVerificationResult.SuccessRehashNeeded:
+                    user.HashedPassword = hasher.HashPassword(user.Email.ToLower(), password);
+                    _context.SaveChanges();
+                    return true;
+                case PasswordVerificationResult.Success:
+                    return true;
+                default:
+                    return false ;
+            }
+        }
+
+        public void SetPassword(User user, string value)
+        {
+            var hasher = new PasswordHasher<string>();
+            user.HashedPassword = hasher.HashPassword(user.Email.ToLower(), value);
+        }
+
+        public User CreateUser(string email, string password)
+        {
             var user = new User
             {
                 Email = email,
-                HashedPassword = hasher.HashPassword(email.ToLower(), password),
                 NormalizedEmail = email.ToLower(),
             };
+            SetPassword(user, password);
             _context.Users.Add(user);
             _context.SaveChanges();
 

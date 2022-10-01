@@ -15,7 +15,7 @@ export default function Modal (props: Props) {
 
     if (!container) { return null; }
 
-    return createPortal(<div className="modal is-active">
+    return createPortal(<div className={"modal" + (props.active ? " is-active" : "")}>
         <div className="modal-background"></div>
         <div className="modal-card">
             <header className="modal-card-head">

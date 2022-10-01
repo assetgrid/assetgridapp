@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using assetgrid_backend.Models;
+using System.Text.Json.Serialization;
 
-namespace assetgrid_backend.Models.ViewModels
+namespace assetgrid_backend.ViewModels
 {
     public class ViewPreferences
     {

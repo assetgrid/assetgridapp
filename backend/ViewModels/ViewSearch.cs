@@ -1,4 +1,4 @@
-﻿namespace assetgrid_backend.Models.ViewModels
+﻿namespace assetgrid_backend.ViewModels
 {
     public class ViewSearch
     {

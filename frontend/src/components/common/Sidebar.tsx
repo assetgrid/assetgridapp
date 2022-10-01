@@ -30,7 +30,7 @@ export default function Sidebar(props: Props) {
                 <FontAwesomeIcon icon={faUser} /> {user === "fetching" ? <>&hellip;</> : user.email}
             </p>
             <ul className="menu-list">
-                <li><a>Profile</a></li>
+                <li><Link to={routes.profile()}>Profile</Link></li>
                 <li><a onClick={signOut}>Sign out</a></li>
             </ul>
             <p className="menu-label">

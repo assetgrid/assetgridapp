@@ -1,5 +1,5 @@
 ﻿using assetgrid_backend.Models;
-using assetgrid_backend.Models.ViewModels;
+using assetgrid_backend.ViewModels;
 using System.Linq.Expressions;
 using System.Text.Json;
 

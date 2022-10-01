@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace assetgrid_backend.Models.ViewModels
+namespace assetgrid_backend.ViewModels
 {
     public class ViewCreateTransaction : IValidatableObject
     {
