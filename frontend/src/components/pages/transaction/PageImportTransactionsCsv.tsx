@@ -35,7 +35,7 @@ export default function PageImportTransactionsCsv () {
         csvParseHeader: true
     });
     const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
-        duplicateHandling: "identifier",
+        duplicateHandling: "automatic",
         identifierColumn: null,
         identifierParseOptions: defaultParseOptions,
         sourceAccountColumn: null,
@@ -58,27 +58,6 @@ export default function PageImportTransactionsCsv () {
         categoryColumn: null,
         categoryParseOptions: defaultParseOptions,
     });
-
-    /* const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
-        duplicateHandling: "identifier-rownumber",
-        identifierColumn: "Dato",
-        identifierParseOptions: defaultParseOptions,
-        sourceAccountColumn: null,
-        sourceAccountIdentifier: "accountNumber",
-        sourceAccountParseOptions: defaultParseOptions,
-        destinationAccountColumn: "Exportkonto",
-        destinationAccountIdentifier: "accountNumber",
-        destinationAccountParseOptions: defaultParseOptions,
-        amountColumn: "Beløb",
-        amountParseOptions: defaultParseOptions,
-        decimalSeparator: ",",
-        dateColumn: "Dato",
-        dateParseOptions: defaultParseOptions,
-        // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
-        dateFormat: "dd-MM-yyyy",
-        descriptionColumn: "Tekst",
-        descriptionParseOptions: defaultParseOptions,
-    }); */
 
     const api = useApi();
     

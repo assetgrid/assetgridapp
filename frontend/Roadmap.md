@@ -65,5 +65,5 @@
 - [ ] Add page for categories
 - [ ] Handle on import page when multiple accounts match. The user should be made to chose on an overall basis which account to use
 - [ ] Warn users when importing to accounts for which they don't have write permission
-- [ ] Add user preferences page
-- [ ] Make transaction creation warn about things like same source/destination. Missing source destination. Duplicates
+- [x] Add user profile page
+- [x] Make transaction creation warn about things like same source/destination. Missing source destination. Duplicates

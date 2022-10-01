@@ -16,7 +16,7 @@ import CsvMappingIssues from "./CsvMappingIssues";
 import CsvMappingTransactionTable from "./CsvMappingTransactionTable";
 import InputAccount from "../../../account/input/InputAccount";
 
-type DuplicateHandlingOptions = "none" | "identifier" | "rownumber" | "identifier-rownumber";
+type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
 export type CsvMappingTableFilter = "all" | "reference-to-missing-account" | "no-account" | "same-account" | "duplicate" | "error";
 
 interface Props {
@@ -86,6 +86,10 @@ export default function MapCsvFields(props: Props) {
     // Redraw the table whenever the parsed transactions change
     React.useEffect(() => {
         setTableDraw(draw => draw + 1);
+        // If identifiers are automatic, update them every time transactions are changed
+        if (props.options.duplicateHandling === "automatic") {
+            updateAutoIdentifiers();
+        }
     }, [props.transactions]);
 
     return <>
@@ -94,7 +98,7 @@ export default function MapCsvFields(props: Props) {
         <Card title="Mapping options" isNarrow={true}>
 
             <div className="content">
-                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference#csv-import">reference documentation</a></p>
+                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference#csv-import" target="_blank">reference documentation</a></p>
             </div>
 
             <div className="columns">
@@ -105,9 +109,8 @@ export default function MapCsvFields(props: Props) {
                         disabled={! props.apiReady}
                         onChange={result => updateDuplicateHandling(result as DuplicateHandlingOptions, props.options.identifierColumn, props.options.identifierParseOptions)}
                         items={[
-                            { key: "identifier", value: "Colum" },
-                            { key: "identifier-rownumber", value: "Column and count" },
-                            { key: "rownumber", value: "Row number" },
+                            { key: "automatic", value: "Auto" },
+                            { key: "identifier", value: "Unique ID colum" },
                             { key: "none", value: "Allow duplicates" }
                         ]} />
                 </div>
@@ -148,11 +151,8 @@ export default function MapCsvFields(props: Props) {
                 <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
                     This value will be compared during import and transactions with the same identifier will be ignored</p>
                 <ul>
-                    <li><b>Column:</b> Use a column as a unique identifier.</li>
-                    <li><b>Column and count:</b> Use a column as a unique identifier, but append a number for each occurence of the same column value in the CSV-file.
-                        Useful with dates. If you have 3 transactions with value 2020-01-01, their identifier will be 2020-01-01.1, 2020-01-01.2, 2020-01-01.3
-                        based on the order they appear in the file</li>
-                    <li><b>Row number:</b> The row number is the unique identifier.</li>
+                    <li><b>Auto:</b> Automatically calculate an identifier based on transaction source, destination, timestamp, description and amount.</li>
+                    <li><b>Unique ID column:</b> Use a column as a unique identifier</li>
                     <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
                 </ul>
             </div>
@@ -548,7 +548,7 @@ export default function MapCsvFields(props: Props) {
         props.onChange([
             ...props.data.map((row, i) => ({
                 ...props.transactions![i],
-                identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, i, row, props.data)
+                identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, row)
             }))
         ], {
             ...props.options,
@@ -620,8 +620,7 @@ export default function MapCsvFields(props: Props) {
         }
     }
 
-    function beginCreatingAccount(accountReference: AccountReference): void
-    {
+    function beginCreatingAccount(accountReference: AccountReference): void {
         let account: CreateAccount = {
             name: "",
             description: "",
@@ -633,6 +632,71 @@ export default function MapCsvFields(props: Props) {
         setModal(<CreateAccountModal preset={account}
             close={() => setModal(null)}
             created={account => { props.accountCreated(account); setModal(null); }} />);
+    }
+
+    function updateAutoIdentifiers(): void {
+        if (props.transactions === null) return;
+
+        let changes = false;
+        let counts: {[key: string]: number} = {};
+        let transactions = props.transactions.map(t => {
+            let identifier = getAutoIdentifier(t, props.accountsBy);
+            
+            if (identifier === null) {
+                if (t.identifier !== identifier) changes = true;
+                return { ...t, identifier: identifier };
+            }
+
+            if (counts[identifier] === undefined) counts[identifier] = 0;
+            counts[identifier] += 1;
+
+            identifier = identifier + "|" + counts[identifier];
+
+            if (t.identifier !== identifier) changes = true;
+            return { ...t, identifier: identifier };
+        });
+
+        if (changes) {
+            props.onChange(transactions, props.options);
+        }
+    }
+}
+
+/**
+ * Calculates an automatic identifier for the transaction
+ * @param transaction The transaction to calculate an identifier for
+ * @returns A unique identifier
+ */
+function getAutoIdentifier(transaction: CsvCreateTransaction, accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } }): string | null {
+    let source = transaction.source == null
+        ? null
+        : accountsBy[transaction.source.identifier]
+            ? accountsBy[transaction.source.identifier][transaction.source.value] ?? null
+            : null;
+    let destination = transaction.destination == null
+        ? null
+        : accountsBy[transaction.destination.identifier]
+            ? accountsBy[transaction.destination.identifier][transaction.destination.value] ?? null
+            : null;
+
+    if (transaction.amount === "invalid" || !transaction.dateTime.isValid) {
+        return null;
+    }
+    if (source === "fetching" || destination === "fetching") {
+        return null;
+    }
+    return formatAccount(source) + "→" + formatAccount(destination) +
+        "|" + transaction.dateTime.toISO({ suppressMilliseconds: true, includeOffset: false, includePrefix: false }) +
+        "|" + transaction.amount.toDecimalPlaces(4).toString() +
+        "|" + transaction.description;
+
+    function formatAccount(account: Account | null): string {
+        switch (account) {
+            case null:
+                return ".";
+            default:
+                return account.id.toString();
+        }
     }
 }
 
@@ -669,7 +733,8 @@ function parseTransactions(data: any[], options: MappingOptions): CsvCreateTrans
                 identifier: options.destinationAccountIdentifier,
                 value: parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions),
             } as AccountReference,
-            identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, i, row, data),
+     
+            identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, row),
             amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions),
         } as CsvCreateTransaction
     });
@@ -719,32 +784,19 @@ function parseAmount(rawValue: string, decimalSeparator: string, parseOptions: P
 function getIdentifier(duplicateHandling: DuplicateHandlingOptions,
     identifierColumn: string | null,
     parseOptions: ParseOptions,
-    rowNumber: number,
-    row: { [key: string]: string },
-    data: any[]): string | null {
+    row: { [key: string]: string }): string | null {
     
     switch (duplicateHandling)
     {
         case "none":
             return null;
-        case "rownumber":
-            return rowNumber.toString();
         case "identifier":
             if (identifierColumn == null) {
                 return "";
             } else {
                 return parseWithOptions(getValue(row, identifierColumn), parseOptions);
             }
-        case "identifier-rownumber":
-            if (identifierColumn == null) {
-                return "";
-            } else {
-                const value = parseWithOptions(getValue(row, identifierColumn), parseOptions);
-                let number = data
-                    .map((row, index) => [row, index])
-                    .filter(row => row[1] <= rowNumber && parseWithOptions(getValue(row[0], identifierColumn), parseOptions) == value)
-                    .length;
-                return value + "." + number;
-            }
+        case "automatic":
+            return "";
     }
 }

@@ -7,26 +7,13 @@ export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
 
 export type CsvCreateTransaction = {
     rowNumber: number;
-
-    sourceText: string;
     source: AccountReference | null;
-
-    destinationText: string;
     destination: AccountReference | null;
-
     dateText: string;
     dateTime: DateTime;
-
-    descriptionText: string;
     description: string;
-
-    categoryText: string;
     category: string;
-
-    identifierText: string;
     identifier: string | null;
-
-    amountText: string;
     amount: Decimal | "invalid";
 }
 
