@@ -90,6 +90,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Category = "Account A category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 

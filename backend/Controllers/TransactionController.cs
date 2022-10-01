@@ -50,21 +50,17 @@ namespace assetgrid_backend.Controllers
         public IActionResult Create(ViewCreateTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            if (string.IsNullOrWhiteSpace(model.Identifier))
-            {
-                model.Identifier = null;
-            }
-
             if (ModelState.IsValid)
             {
-                if (model.Identifier != null)
+                if (model.Identifiers.Count > 0)
                 {
-                    var otherTransactionsWithSameIdentifier = _context.Transactions
-                        .Where(t => t.Identifier == model.Identifier.Trim())
-                        .Any(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id));
-                    if (otherTransactionsWithSameIdentifier)
+                    var identifiers = model.Identifiers.Select(x => x.Trim());
+                    var otherTransactionsWithSameIdentifiers = _context.TransactionUniqueIdentifiers
+                        .Where(x => x.Transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || x.Transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
+                        .Any(x => identifiers.Contains(x.Identifier));
+                    if (otherTransactionsWithSameIdentifiers)
                     {
-                        ModelState.AddModelError(nameof(model.Identifier), "Another transaction with this identifier exists");
+                        ModelState.AddModelError(nameof(model.Identifiers), "Another transaction with this identifier exists");
                         return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
                     }
                 }
@@ -92,7 +88,10 @@ namespace assetgrid_backend.Controllers
                         SourceAccountId = model.SourceId,
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
-                        Identifier = model.Identifier?.Trim(),
+                        Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
+                        {
+                            Identifier = x
+                        }).ToList(),
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
                         Category = string.IsNullOrWhiteSpace(model.Category) ? "" : model.Category,
                         TransactionLines = model.Lines.Select((line, i) => new TransactionLine
@@ -126,7 +125,7 @@ namespace assetgrid_backend.Controllers
                     _context.SaveChanges();
                     return Ok(new ViewTransaction {
                         Id = result.Id,
-                        Identifier = result.Identifier,
+                        Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
                         DateTime = result.DateTime,
                         Description = result.Description,
                         Category = result.Category,
@@ -181,6 +180,7 @@ namespace assetgrid_backend.Controllers
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.TransactionLines)
+                        .Include(t => t.Identifiers)
                         .Single(t => t.Id == id);
 
                     if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
@@ -225,6 +225,7 @@ namespace assetgrid_backend.Controllers
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.TransactionLines)
+                        .Include(t => t.Identifiers)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(request.query);
 
@@ -295,10 +296,15 @@ namespace assetgrid_backend.Controllers
             {
                 dbObject.Description = model.Description;
             }
-            if (model.HasUniqueIdentifier)
+            if (model.Identifiers != null)
             {
-                if (string.IsNullOrWhiteSpace(model.Identifier)) model.Identifier = null;
-                dbObject.Identifier = model.Identifier?.Trim();
+                _context.RemoveRange(dbObject.Identifiers);
+                dbObject.Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
+                {
+                    TransactionId = dbObject.Id,
+                    Identifier = x.Trim()
+                }).ToList();
+
             }
             if (model.Category != null)
             {
@@ -367,7 +373,7 @@ namespace assetgrid_backend.Controllers
             return Ok(new ViewTransaction
             {
                 Id = dbObject.Id,
-                Identifier = dbObject.Identifier,
+                Identifiers = dbObject.Identifiers.Select(x => x.Identifier).ToList(),
                 DateTime = dbObject.DateTime,
                 Description = dbObject.Description,
                 Category = dbObject.Category,
@@ -503,10 +509,10 @@ namespace assetgrid_backend.Controllers
         public IActionResult FindDuplicates(List<string> identifiers)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            return Ok(_context.Transactions
-                .Where(transaction => transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
-                .Where(transaction => transaction.Identifier != null && identifiers.Contains(transaction.Identifier))
-                .Select(transaction => transaction.Identifier!)
+            return Ok(_context.TransactionUniqueIdentifiers
+                .Where(x => x.Transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || x.Transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
+                .Where(x => identifiers.Contains(x.Identifier))
+                .Select(x => x.Identifier!)
                 .ToList());
         }
 
@@ -519,7 +525,6 @@ namespace assetgrid_backend.Controllers
 
             if (ModelState.IsValid)
             {
-
                 var failed = new List<ViewCreateTransaction>();
                 var duplicate = new List<ViewCreateTransaction>();
                 var success = new List<ViewCreateTransaction>();
@@ -530,21 +535,17 @@ namespace assetgrid_backend.Controllers
                     .ToList();
 
                 var identifiers = transactions
-                    .Select(t => string.IsNullOrWhiteSpace(t.Identifier) ? null : t.Identifier.Trim())
-                    .Where(x => x != null)
+                    .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
                     .ToArray();
-                var duplicateIdentifiers = _context.Transactions
-                    .Where(x => writeAccountIds.Contains(x.SourceAccountId ?? -1) || writeAccountIds.Contains(x.DestinationAccountId ?? -1))
+                var duplicateIdentifiers = _context.TransactionUniqueIdentifiers
+                    .Where(x => writeAccountIds.Contains(x.Transaction.SourceAccountId ?? -1) || writeAccountIds.Contains(x.Transaction.DestinationAccountId ?? -1))
                     .Where(x => identifiers.Contains(x.Identifier))
                     .Select(x => x.Identifier)
                     .ToHashSet();
 
                 foreach (var transaction in transactions)
                 {
-                    if (string.IsNullOrWhiteSpace(transaction.Identifier)) transaction.Identifier = null;
-                    transaction.Identifier = transaction.Identifier?.Trim();
-
-                    if (duplicateIdentifiers.Contains(transaction.Identifier))
+                    if (transaction.Identifiers.Any(x => duplicateIdentifiers.Contains(x.Trim())))
                     {
                         duplicate.Add(transaction);
                     }
@@ -558,7 +559,7 @@ namespace assetgrid_backend.Controllers
                                 throw new Exception("Cannot write to this account");
                             }
 
-                            if (transaction.Identifier != null) duplicateIdentifiers.Add(transaction.Identifier);
+                            transaction.Identifiers.ForEach(x => duplicateIdentifiers.Add(x.Trim()));
 
                             var result = new Models.Transaction
                             {
@@ -566,7 +567,10 @@ namespace assetgrid_backend.Controllers
                                 SourceAccountId = transaction.SourceId,
                                 Description = transaction.Description,
                                 DestinationAccountId = transaction.DestinationId,
-                                Identifier = transaction.Identifier?.Trim(),
+                                Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier
+                                {
+                                    Identifier = x.Trim()
+                                }).ToList(),
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
                                 Category = transaction.Category,
                                 TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
@@ -601,8 +605,8 @@ namespace assetgrid_backend.Controllers
                 return Ok(new ViewTransactionCreateManyResponse
                 {
                     Succeeded = success,
-                    Duplicate = duplicate,
                     Failed = failed,
+                    Duplicate = duplicate,
                 });
             }
 

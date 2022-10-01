@@ -23,6 +23,7 @@ import InputTextOrNull from "../../input/InputTextOrNull";
 import Page404 from "../Page404";
 import PageError from "../PageError";
 import Hero from "../../common/Hero";
+import InputTextMultiple from "../../input/InputTextMultiple";
 
 export default function PageTransaction(): React.ReactElement {
     const id = Number(useParams().id);
@@ -187,8 +188,8 @@ function TransactionDetailsCard(props: TransactionDetailsCardProps): React.React
                         <td>{transaction.id}</td>
                     </tr>
                     <tr>
-                        <td>Unique Identifier</td>
-                        <td>{transaction.identifier ?? "None"}</td>
+                        <td>Unique Identifiers</td>
+                        <td>{transaction.identifiers.length === 0 ? "None" : transaction.identifiers.join(", ")}</td>
                     </tr>
                     <tr>
                         <td>Description</td>
@@ -234,12 +235,11 @@ function TransactionDetailsCard(props: TransactionDetailsCardProps): React.React
                     <tr>
                         <td>Unique identifier</td>
                         <td>
-                            <InputTextOrNull
-                                value={editModel.identifier}
-                                onChange={value => props.onChange({ ...editModel, identifier: value })}
+                            <InputTextMultiple
+                                value={editModel.identifiers}
+                                onChange={value => props.onChange({ ...editModel, identifiers: value })}
                                 disabled={props.isUpdating}
-                                noValueText={"None"}
-                                errors={props.errors["Identifier"]} />
+                                errors={props.errors["Identifiers"]} />
                         </td>
                     </tr>
                     <tr>

@@ -11,13 +11,13 @@ export default function TransactionLink(props: { transaction: Transaction, disab
         </span>;
     }
 
-    if (props.transaction.identifier === null) {
+    if (props.transaction.identifiers.length === 0) {
         return <Link className="transaction-link" to={routes.transaction(props.transaction.id.toString())}>
             <span>#</span>{props.transaction.id}
         </Link>;
     } else {
         return <Tooltip content={<>
-            <span>Identifier: </span> {props.transaction.identifier}. Click to go to transaction.
+            <span>Identifiers: </span> {props.transaction.identifiers.join(", ")}. Click to go to transaction.
         </>}>
             <Link className="transaction-link" to={routes.transaction(props.transaction.id.toString())}>
                 <span>#</span>{props.transaction.id}

@@ -16,7 +16,7 @@ export default function DeleteTransactionModal(props: Props) {
 
     return <Modal
         active={true}
-        title={"Delete account"}
+        title={"Delete transaction"}
         close={() => props.close()}
         footer={<>
             {<InputButton onClick={() => deleteTransaction()} disabled={isDeleting || api === null} className="is-danger">Delete transaction</InputButton>}

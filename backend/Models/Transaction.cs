@@ -11,12 +11,12 @@ namespace assetgrid_backend.Models
         public int? DestinationAccountId { get; set; }
         public virtual Account? DestinationAccount { get; set; }
         public DateTime DateTime { get; set; }
-        public string? Identifier { get; set; }
         public string Description { get; set; } = null!;
         public long Total { get; set; }
         public string Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
+        public virtual List<TransactionUniqueIdentifier> Identifiers { get; set; } = null!;
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {
@@ -73,7 +73,7 @@ namespace assetgrid_backend.Models
                             ViewAccount.PermissionsFromDbPermissions(transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Permissions),
                             0
                         ) : null,
-                Identifier = transaction.Identifier,
+                Identifiers = transaction.Identifiers.Select(x => x.Identifier).ToList(),
                 Category = transaction.Category,
                 Lines = transaction.TransactionLines
                     .OrderBy(line => line.Order)

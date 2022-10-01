@@ -6,12 +6,14 @@ interface Props {
     label?: string;
     value: string[];
     disabled?: boolean;
+    errors?: string[] | boolean,
     onChange: (value: string[]) => void;
 }
 
 export default function InputTextMultiple(props: Props) {
     const [enteringText, setEnteringText] = React.useState<string>("");
     const inputElement = React.useRef<HTMLInputElement>(null);
+    const isError = props.errors === true || (typeof props.errors === "object" && props.errors.length > 0);
 
     return <div className="field" onClick={() => inputElement?.current?.focus()}>
         {props.label && <label className="label">{props.label}</label>}
@@ -28,11 +30,15 @@ export default function InputTextMultiple(props: Props) {
                 disabled={props.disabled}
                 onChange={input}
                 onKeyDown={keydown}
+                className={isError ? " is-danger" : ""}
             />
             <button className="is-small button-add" onClick={() => keydown(null)}>
                 <FontAwesomeIcon icon={solid.faPlusCircle} />
             </button>
         </div>
+        {typeof props.errors === "object"  && props.errors.length > 0 && <p className="help has-text-danger">
+            {props.errors[0]}
+        </p>}
     </div>;
 
     function input(e: React.ChangeEvent<HTMLInputElement>) {

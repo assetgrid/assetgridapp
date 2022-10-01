@@ -60,8 +60,6 @@ namespace assetgrid_backend.Migrations
                     SourceAccountId = table.Column<int>(type: "int", nullable: true),
                     DestinationAccountId = table.Column<int>(type: "int", nullable: true),
                     DateTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    Identifier = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Total = table.Column<long>(type: "bigint", nullable: false),
@@ -167,6 +165,28 @@ namespace assetgrid_backend.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "TransactionUniqueIdentifiers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    Identifier = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionUniqueIdentifiers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TransactionUniqueIdentifiers_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_TransactionLines_TransactionId",
                 table: "TransactionLines",
@@ -189,14 +209,19 @@ namespace assetgrid_backend.Migrations
                 column: "DestinationAccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_Identifier",
-                table: "Transactions",
-                column: "Identifier");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Transactions_SourceAccountId",
                 table: "Transactions",
                 column: "SourceAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionUniqueIdentifiers_Identifier",
+                table: "TransactionUniqueIdentifiers",
+                column: "Identifier");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionUniqueIdentifiers_TransactionId",
+                table: "TransactionUniqueIdentifiers",
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserAccounts_AccountId",
@@ -225,6 +250,9 @@ namespace assetgrid_backend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "TransactionLines");
+
+            migrationBuilder.DropTable(
+                name: "TransactionUniqueIdentifiers");
 
             migrationBuilder.DropTable(
                 name: "UserAccounts");

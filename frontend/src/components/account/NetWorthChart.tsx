@@ -144,7 +144,7 @@ export default function (props: Props) {
                                     data: balances[accountId],
                                     type: "line",
                                     stepped: true,
-                                    borderColor: colors[index & colors.length],
+                                    borderColor: colors[index % colors.length],
                                     backgroundColor: "transparent",
                                 }])
                                 : [{

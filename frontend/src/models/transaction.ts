@@ -8,7 +8,7 @@ export type Transaction = {
     source: Account | null;
     destination: Account | null;
     dateTime: DateTime;
-    identifier: string | null;
+    identifiers: string[];
     lines: TransactionLine[];
     category: string;
     description: string;
@@ -21,14 +21,14 @@ export type CreateTransaction = {
     destinationId: number | null;
     dateTime: DateTime;
     description: string;
-    identifier: string | null;
+    identifiers: string[];
     category: string;
     total: Decimal;
     lines: TransactionLine[];
 }
 
 export type UpdateTransaction = {
-    identifier?: string | null;
+    identifiers?: string[];
     sourceId?: number | null;
     destinationId?: number | null;
     dateTime?: DateTime;

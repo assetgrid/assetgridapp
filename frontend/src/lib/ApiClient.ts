@@ -547,7 +547,6 @@ const Transaction = (token: string) => ({
             const { total, ...model } = transaction;
             axios.put<Transaction>(rootUrl + "/api/v1/transaction/" + id, {
                 ...model,
-                hasUniqueIdentifier: model.identifier !== undefined,
                 totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
                 lines: transaction.lines ? transaction.lines.map(line => ({
                     ...line,
@@ -588,7 +587,6 @@ const Transaction = (token: string) => ({
                 query: query,
                 model: {
                     ...model,
-                    hasUniqueIdentifier: model.identifier !== undefined,
                     totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
                     lines: transaction.lines ? transaction.lines.map(line => ({
                         ...line,
@@ -696,7 +694,7 @@ const Transaction = (token: string) => ({
                     return result;
             }
         }
-    }
+    },
 });
 
 /**

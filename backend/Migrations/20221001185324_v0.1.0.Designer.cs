@@ -11,7 +11,7 @@ using assetgrid_backend.Data;
 namespace assetgrid_backend.Migrations
 {
     [DbContext(typeof(AssetgridDbContext))]
-    [Migration("20220929205500_v0.1.0")]
+    [Migration("20221001185324_v0.1.0")]
     partial class v010
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,9 +63,6 @@ namespace assetgrid_backend.Migrations
                     b.Property<int?>("DestinationAccountId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Identifier")
-                        .HasColumnType("varchar(255)");
-
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
 
@@ -80,8 +77,6 @@ namespace assetgrid_backend.Migrations
                     b.HasIndex("DateTime");
 
                     b.HasIndex("DestinationAccountId");
-
-                    b.HasIndex("Identifier");
 
                     b.HasIndex("SourceAccountId");
 
@@ -112,6 +107,28 @@ namespace assetgrid_backend.Migrations
                     b.HasIndex("TransactionId");
 
                     b.ToTable("TransactionLines");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.TransactionUniqueIdentifier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("TransactionUniqueIdentifiers");
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.User", b =>
@@ -230,6 +247,17 @@ namespace assetgrid_backend.Migrations
                     b.Navigation("Transaction");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.Models.TransactionUniqueIdentifier", b =>
+                {
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Transaction")
+                        .WithMany("Identifiers")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Transaction");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.UserAccount", b =>
                 {
                     b.HasOne("assetgrid_backend.Models.Account", "Account")
@@ -267,6 +295,8 @@ namespace assetgrid_backend.Migrations
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
+                    b.Navigation("Identifiers");
+
                     b.Navigation("TransactionLines");
                 });
 

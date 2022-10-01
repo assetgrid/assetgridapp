@@ -283,6 +283,7 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
+                    Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
@@ -374,6 +375,7 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
+                    Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
@@ -414,6 +416,7 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Category = "",
+                    Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 }).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
@@ -479,6 +482,7 @@ namespace backend.unittests.Tests
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
                 Category = "",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             TransactionController.Create(transactionModel);
@@ -552,7 +556,8 @@ namespace backend.unittests.Tests
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
                 Category = "",
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine>(),
+                Identifiers = new List<string>(),
             };
 
             transactionModel.Category = "A";

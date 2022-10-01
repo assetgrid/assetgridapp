@@ -68,7 +68,7 @@ export function Import (props: Props) {
     function transactionTable(transactions: CreateTransaction[]) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
-                <td>{transaction.identifier}</td>
+                <td>{transaction.identifiers[0] ?? "None"}</td>
                 <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                 <td>{transaction.description}</td>
                 <td>{transaction.sourceId && <AccountLink account={props.accountsBy["id"][transaction.sourceId]} />}</td>
@@ -104,7 +104,7 @@ export function Import (props: Props) {
                 description: transaction.description,
                 sourceId: getAccount(transaction.source)?.id,
                 destinationId: getAccount(transaction.destination)?.id,
-                identifier: transaction.identifier,
+                identifiers: [ transaction.identifier ],
                 category: transaction.category,
                 total: transaction.amount,
                 lines: []
@@ -126,7 +126,7 @@ export function Import (props: Props) {
                 description: transaction.description,
                 sourceId: getAccount(transaction.source)?.id,
                 destinationId: getAccount(transaction.destination)?.id,
-                identifier: transaction.identifier,
+                identifiers: [ transaction.identifier ],
                 category: transaction.category,
                 total: transaction.amount,
                 lines: []

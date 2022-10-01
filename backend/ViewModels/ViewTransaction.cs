@@ -8,7 +8,7 @@ namespace assetgrid_backend.ViewModels
         public int? DestinationId { get; set; }
         public DateTime DateTime { get; set; }
         public string Description { get; set; } = null!;
-        public string? Identifier { get; set; }
+        public List<string> Identifiers { get; set; } = null!;
         public string Category { get; set; } = null!;
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
@@ -54,8 +54,7 @@ namespace assetgrid_backend.ViewModels
         public List<ViewTransactionLine>? Lines { get; set; }
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
-        public bool HasUniqueIdentifier { get; set; } 
-        public string? Identifier { get; set; }
+        public List<string>? Identifiers { get; set; } = null!;
     }
 
     public class ViewUpdateMultipleTransactions
@@ -71,7 +70,7 @@ namespace assetgrid_backend.ViewModels
         public ViewAccount? Destination { get; set; }
         public DateTime DateTime { get; set; }
         public string Description { get; set; } = null!;
-        public string? Identifier { get; set; }
+        public List<string> Identifiers { get; set; } = null!;
         public long Total { get; set; }
 
         public string Category { get; set; } = null!;

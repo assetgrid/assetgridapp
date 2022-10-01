@@ -27,7 +27,7 @@ export default function PageCreateTransaction() {
         description: "",
         destinationId: window.history.state.usr?.destinationId ?? null,
         sourceId: window.history.state.usr?.sourceId ?? null,
-        identifier: null,
+        identifiers: [],
         lines: [],
         total: new Decimal(0),
     };
@@ -58,11 +58,11 @@ export default function PageCreateTransaction() {
                     disabled={creating}
                     errors={modelErrors?.["DateTime"]} />
                 <InputTextOrNull label="Unique identifier"
-                    value={model.identifier}
+                    value={model.identifiers[0] ?? ""}
                     noValueText="Ignore duplicates"
-                    onChange={value => setModel({ ...model, identifier: value })}
+                    onChange={value => setModel({ ...model, identifiers: value === null ? [] : [ value ] })}
                     disabled={creating}
-                    errors={modelErrors?.["Identifier"]}/>
+                    errors={modelErrors?.["Identifiers"]}/>
                 <InputNumber label={"Total"}
                     allowNull={false}
                     value={model.total}

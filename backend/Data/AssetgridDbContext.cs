@@ -29,9 +29,17 @@ namespace assetgrid_backend.Data
             });
 
             builder.Entity<Transaction>(entity => {
-                entity.HasIndex(e => e.Identifier);
                 entity.HasIndex(e => e.DateTime);
                 entity.HasIndex(e => e.Category).HasFilter("Category IS NOT NULL");
+                entity.HasMany(e => e.Identifiers)
+                    .WithOne(e => e.Transaction)
+                    .HasForeignKey(e => e.TransactionId)
+                    .HasPrincipalKey(e => e.Id);
+            });
+
+            builder.Entity<TransactionUniqueIdentifier>(entity =>
+            {
+                entity.HasIndex(e => e.Identifier);
             });
         }
 
@@ -40,6 +48,7 @@ namespace assetgrid_backend.Data
         public DbSet<UserAccount> UserAccounts { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionLine> TransactionLines { get; set; } = null!;
+        public DbSet<TransactionUniqueIdentifier> TransactionUniqueIdentifiers { get; set; } = null!;
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
     }
 }

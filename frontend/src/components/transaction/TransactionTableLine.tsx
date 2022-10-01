@@ -32,6 +32,7 @@ type Props  = {
     updateItem: (item: Transaction | null) => void;
     accountId?: number;
     balance?: Decimal;
+    allowSelection?: boolean;
     allowEditing?: boolean;
     allowLinks?: boolean;
     selected?: boolean;
@@ -84,7 +85,7 @@ function TableTransaction(props: TableTransactionProps) {
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowEditing && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
@@ -186,7 +187,7 @@ function TransactionEditor(props: TransactionEditorProps) {
 
     return <div key={props.transaction.id} className="table-row editing">
         <div>
-            {props.selected !== undefined && props.allowEditing && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} />
         </div>
         <div>

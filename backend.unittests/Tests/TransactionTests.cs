@@ -88,6 +88,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
@@ -180,6 +181,7 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 
@@ -219,6 +221,7 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 
@@ -241,6 +244,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountA.Id,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 
@@ -304,6 +308,7 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 
@@ -385,6 +390,7 @@ namespace backend.unittests.Tests
                 SourceId = unknownAccountType == "source" ? unknownAccount.Id : AccountA.Id,
                 DestinationId = unknownAccountType == "destination" ? unknownAccount.Id : AccountA.Id,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
 
@@ -440,6 +446,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
@@ -453,6 +460,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountB.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
@@ -471,6 +479,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = -100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: -120, description: "Line 1"),
                     new ViewTransactionLine(amount: 20, description: "Line 2"),
@@ -524,6 +533,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
@@ -595,6 +605,7 @@ namespace backend.unittests.Tests
                 SourceId = accountC.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             var transactionCA = TransactionController.Create(model).OkValue<ViewTransaction>();
@@ -685,12 +696,12 @@ namespace backend.unittests.Tests
                 DestinationId = AccountB.Id,
                 Total = 100,
                 Lines = new List<ViewTransactionLine>(),
-                Identifier = "Identifier"
+                Identifiers = new List<string> { "Identifier" }
             };
 
             // First creation succeeds
             TransactionController.Create(model);
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(model.Identifiers).OkValue<List<string>>(), model.Identifiers);
 
             // Second creation fails due to duplicate identifier
             Assert.IsType<BadRequestResult>(TransactionController.Create(model));
@@ -715,11 +726,11 @@ namespace backend.unittests.Tests
             model.SourceId = accountC.Id;
 
             // Other user does not perceive the first transaction as a duplicate
-            Assert.Empty(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>());
+            Assert.Empty(TransactionController.FindDuplicates(model.Identifiers).OkValue<List<string>>());
 
             // Other user can create transaction without issue
             var transaction = TransactionController.Create(model).OkValue<ViewTransaction>();
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(model.Identifiers).OkValue<List<string>>(), model.Identifiers);
             TransactionController.Delete(transaction.Id);
 
             // Share account A with otherUser
@@ -727,7 +738,7 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             // Now creation fails, as otherUser can see the first users transaction with the same identifier
-            Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { model.Identifier }).OkValue<List<string>>(), new List<string> { model.Identifier });
+            Assert.Equivalent(TransactionController.FindDuplicates(model.Identifiers).OkValue<List<string>>(), model.Identifiers);
             Assert.IsType<BadRequestResult>(TransactionController.Create(model));
             TransactionController.ModelState.Clear();
         }
@@ -756,6 +767,7 @@ namespace backend.unittests.Tests
                 SourceId = accountC.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             var transactionCA = TransactionController.Create(model).OkValue<ViewTransaction>();
@@ -884,7 +896,7 @@ namespace backend.unittests.Tests
             var result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -894,6 +906,7 @@ namespace backend.unittests.Tests
                     Category = ""
                 },
                 new ViewCreateTransaction {
+                    Identifiers = new List<string>(),
                     Total = 200,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -903,6 +916,7 @@ namespace backend.unittests.Tests
                     Category = ""
                 },
                 new ViewCreateTransaction {
+                    Identifiers = new List<string>(),
                     Total = 300,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -912,6 +926,7 @@ namespace backend.unittests.Tests
                     Category = ""
                 },
                 new ViewCreateTransaction {
+                    Identifiers = new List<string>(),
                     Total = 400,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -937,7 +952,7 @@ namespace backend.unittests.Tests
             Assert.Equivalent(TransactionController.FindDuplicates(new List<string> { "identifier" }).OkValue<List<string>>(), new List<string> { "identifier" });
             result = TransactionController.CreateMany(new List<ViewCreateTransaction> {
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -958,7 +973,7 @@ namespace backend.unittests.Tests
             var result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -968,7 +983,7 @@ namespace backend.unittests.Tests
                     Category = ""
                 },
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 200,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -999,7 +1014,7 @@ namespace backend.unittests.Tests
             result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -1033,7 +1048,7 @@ namespace backend.unittests.Tests
             result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
-                    Identifier = "identifier",
+                    Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -1061,7 +1076,7 @@ namespace backend.unittests.Tests
             var result = TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
-                    Identifier = "",
+                    Identifiers = new List<string>(),
                     Total = -100,
                     Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
@@ -1071,7 +1086,7 @@ namespace backend.unittests.Tests
                     Category = ""
                 },
                 new ViewCreateTransaction {
-                    Identifier = null,
+                    Identifiers = new List<string>(),
                     Total = -200,
                     Lines = lines,
                     DateTime = new DateTime(2020, 01, 01),
@@ -1115,7 +1130,7 @@ namespace backend.unittests.Tests
         {
             var transaction = TransactionController.Create(new ViewCreateTransaction
             {
-                Identifier = null,
+                Identifiers = new List<string>(),
                 Total = 100,
                 Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),
@@ -1139,7 +1154,7 @@ namespace backend.unittests.Tests
             // Cannot create transactions between the two accounts any more
             Assert.IsType<ForbidResult>(TransactionController.Create(new ViewCreateTransaction
             {
-                Identifier = null,
+                Identifiers = new List<string>(),
                 Total = 100,
                 Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),

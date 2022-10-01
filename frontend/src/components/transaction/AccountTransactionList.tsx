@@ -11,6 +11,7 @@ import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
 import { serializeQueryForHistory } from "./filter/FilterHelpers";
+import MergeTransactionsModal from "./input/MergeTransactionsModal";
 
 interface Props {
     draw?: number;
@@ -34,19 +35,26 @@ export default function AccountTransactionList(props: Props) {
     const [draw, setDraw] = React.useState(0);
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const firstRender = React.useRef(true);
+    const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const navigate = useNavigate();
 
-    return <Table<TableLine>
-        renderType="custom"
-        pageSize={props.pageSize ?? 20}
-        draw={(props.draw ?? 0) + draw}
-        type="async-increment"
-        fetchItems={fetchItems}
-        page={props.page}
-        goToPage={props.goToPage}
-        reversePagination={true}
-        render={renderTable}
-    />;
+    return <>
+        <Table<TableLine>
+            renderType="custom"
+            pageSize={props.pageSize ?? 20}
+            draw={(props.draw ?? 0) + draw}
+            type="async-increment"
+            fetchItems={fetchItems}
+            page={props.page}
+            goToPage={props.goToPage}
+            reversePagination={true}
+            render={renderTable}
+        />
+        <MergeTransactionsModal active={isMergingTransactions}
+            close={() => setIsMergingTransactions(false)}
+            transactions={props.selectedTransactions}
+            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1)}} />
+    </>;
 
     function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
         let [start, end] = PeriodFunctions.getRange(props.period);
@@ -119,6 +127,7 @@ export default function AccountTransactionList(props: Props) {
                     editSelectionDisabled={Object.keys(props.selectedTransactions).length === 0}
                     editAll={() => beginEditMultiple("all")}
                     editAllText="Modify all transactions for this account"
+                    mergeSelection={() => setIsMergingTransactions(true)}
                 />
             </div>
             <div>Date</div>
@@ -141,6 +150,7 @@ export default function AccountTransactionList(props: Props) {
                             balance={line.balance}
                             key={line.transaction.id}
                             allowEditing={true}
+                            allowSelection={true}
                             allowLinks={true}
                             updateItem={() => setDraw(draw => draw + 1)}
                             selected={props.selectedTransactions[line.transaction.id] === true}

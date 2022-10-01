@@ -12,6 +12,7 @@ import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
 import { render } from "react-dom";
 import { serializeQueryForHistory } from "./filter/FilterHelpers";
+import MergeTransactionsModal from "./input/MergeTransactionsModal";
 
 interface Props {
     draw?: number;
@@ -23,7 +24,8 @@ interface Props {
 
     page?: [number, (page: number) => void];
     orderBy?: [{ column: string, descending: boolean }, (value: { column: string, descending: boolean }) => void];
-    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void]
+    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void];
+    selectedTransaction?: [number | null, (value: number | null) => void];
 }
 
 export default React.memo(TransactionList, (a, b) =>
@@ -33,6 +35,7 @@ export default React.memo(TransactionList, (a, b) =>
     a.small === b.small &&
     a.pageSize === b.pageSize &&
     a.selectedTransactions?.[0] === b.selectedTransactions?.[0] &&
+    a.selectedTransaction?.[0] === b.selectedTransaction?.[0] &&
     a.orderBy?.[0] === b.orderBy?.[0] &&
     a.page?.[0] === b.page?.[0]);
 function TransactionList(props: Props) {
@@ -40,6 +43,7 @@ function TransactionList(props: Props) {
     const [orderBy, setOrderBy] = props.orderBy ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
     const [selectedTransactions, setSelectedTransactions] = props.selectedTransactions ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
+    const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const [page, setPage] = props.page ? props.page : React.useState(1);
     const navigate = useNavigate();
 
@@ -57,6 +61,10 @@ function TransactionList(props: Props) {
             render={renderTable}
             afterDraw={transactions => setShownTransactions(transactions)}
         />
+        {props.selectedTransactions && <MergeTransactionsModal active={isMergingTransactions}
+            close={() => setIsMergingTransactions(false)}
+            transactions={selectedTransactions}
+            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1)}} />}
     </>;
     
     function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
@@ -97,6 +105,7 @@ function TransactionList(props: Props) {
                     editSelectionDisabled={Object.keys(selectedTransactions).length === 0}
                     editAll={() => beginEditMultiple("all")}
                     editAllText="Modify all transactions matching current search"
+                    mergeSelection={() => setIsMergingTransactions(true)}
                 />}
             </div>
             {renderColumnHeader("Timestamp", "DateTime", "numeric")}
@@ -123,18 +132,35 @@ function TransactionList(props: Props) {
                             key={transaction.id}
                             transaction={transaction}
                             updateItem={() => setDraw(draw => draw + 1)}
+                            allowSelection={props.selectedTransaction !== undefined || props.selectedTransactions !== undefined}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}
-                            selected={selectedTransactions[transaction.id] === true}
-                            toggleSelected={() => selectedTransactions[transaction.id] === true
-                                ? deselectTransaction(transaction)
-                                : setSelectedTransactions({ ...selectedTransactions, [transaction.id]: true })} />
+                            selected={selectedTransactions[transaction.id] === true || props.selectedTransaction?.[0] === transaction.id}
+                            toggleSelected={() => toggleSelected(transaction)} />
                     })}
                 </div>
                 {heading}
             </div>
             {renderPagination()}
         </>;
+
+        function toggleSelected(transaction: Transaction) {
+            if (props.selectedTransactions) {
+                if (selectedTransactions[transaction.id] === true) {
+                    deselectTransaction(transaction)
+                } else {
+                    setSelectedTransactions({ ...selectedTransactions, [transaction.id]: true });
+                }
+            }
+
+            if (props.selectedTransaction) {
+                if (props.selectedTransaction[0] === transaction.id) {
+                    props.selectedTransaction[1](null);
+                } else {
+                    props.selectedTransaction[1](transaction.id);
+                }
+            }
+        }
     }
 
     function beginEditMultiple(type: "selection" | "all") {
@@ -223,6 +249,7 @@ interface DropdownButtonProps {
     editSelectionDisabled: boolean;
     editAll: () => void;
     editAllText: string;
+    mergeSelection: () => void;
 }
 export function TransactionSelectDropdownButton(props: DropdownButtonProps): React.ReactElement {
     const [open, setOpen] = React.useState(false);
@@ -244,6 +271,11 @@ export function TransactionSelectDropdownButton(props: DropdownButtonProps): Rea
                     onClick={() => ! props.editSelectionDisabled && props.editSelection()}
                     style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
                     Modify selection
+                </a>
+                <a className="dropdown-item"
+                    onClick={() => ! props.editSelectionDisabled && props.mergeSelection()}
+                    style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
+                    Merge selected transactions
                 </a>
                 <a className="dropdown-item" onClick={props.editAll}>
                     {props.editAllText}

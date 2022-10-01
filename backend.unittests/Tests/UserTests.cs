@@ -199,6 +199,7 @@ namespace backend.unittests.Tests
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 Total = 100,
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
