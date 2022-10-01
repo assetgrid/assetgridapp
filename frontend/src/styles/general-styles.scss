@@ -79,6 +79,9 @@ html, body {
 
     .logo {
         height: 100%;
+        & img {
+            height: 100%;
+        }
     }
     .navbar-burger {
         display: block;

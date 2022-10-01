@@ -24,7 +24,7 @@ export default function Sidebar(props: Props) {
 
     return <div tabIndex={0} ref={ref} onBlur={onBlur}
         className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
-        <img className="logo" src={logo}></img>
+        <Link to={routes.dashboard()}><img className="logo" src={logo}></img></Link>
         <aside className="menu has-color-white m-5">
             <p className="menu-label">
                 <FontAwesomeIcon icon={faUser} /> {user === "fetching" ? <>&hellip;</> : user.email}

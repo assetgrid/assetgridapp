@@ -1,5 +1,7 @@
 import logo from "../../assets/logo.svg";
 import * as React from "react";
+import { routes } from "../../lib/routes";
+import { Link } from "react-router-dom";
 
 interface Props {
     setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
@@ -8,7 +10,7 @@ interface Props {
 
 export default function MobileHeader(props: Props) {
     return <div className="mobile-header has-background-dark">
-        <img className="logo" src={logo}></img>
+        <Link className="logo" to={routes.dashboard()}><img src={logo}></img></Link>
         <a role="button"
             className={"navbar-burger" + (props.sidebarVisible ? " is-active" : "")}
             tabIndex={0}
