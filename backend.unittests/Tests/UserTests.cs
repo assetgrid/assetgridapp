@@ -14,6 +14,9 @@ using Newtonsoft.Json;
 using System;
 using System.Web;
 using Xunit;
+using assetgrid_backend.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace backend.unittests.Tests
 {
@@ -21,7 +24,10 @@ namespace backend.unittests.Tests
     {
         public AssetgridDbContext Context { get; set; }
         public UserController UserController { get; set; }
+        public AccountController AccountController { get; set; }
+        public TransactionController TransactionController { get; set; }
         public UserService UserService { get; set; }
+        public AccountService AccountService { get; set; }
 
         public UserTests()
         {
@@ -34,7 +40,10 @@ namespace backend.unittests.Tests
 
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
-            UserController = new UserController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            AccountService = new AccountService(Context);
+            UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
+            AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
         }
 
         [Fact]
@@ -144,6 +153,104 @@ namespace backend.unittests.Tests
             // Can still sign in with old password
             var authenticateNewPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
             Assert.IsType<OkObjectResult>(authenticateNewPasswordResponse);
+        }
+
+        [Fact]
+        public void DeleteUser()
+        {
+            // Create users A and B and sign in with A
+            var userA = UserService.CreateUser("A", "test");
+            var userB = UserService.CreateUser("B", "test");
+            UserService.MockUser = UserService.GetById(userA!.Id);
+
+            // Update user preferences and verify that they were updated
+            UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "å" });
+            Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "å"));
+
+            // Create some accounts
+            var accountModel = new ViewCreateAccount
+            {
+                AccountNumber = "1234",
+                Description = "Test account",
+                Favorite = true,
+                IncludeInNetWorth = false,
+                Name = "My account"
+            };
+            var accountA0 = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountA1 = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountABAll = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountABWrite = AccountController.Create(accountModel).OkValue<ViewAccount>();
+
+            // Share the AB accounts with user B and give correct permission
+            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABAll.Id, Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABWrite.Id, Permissions = UserAccountPermissions.ModifyTransactions });
+
+            // Create some accounts as user B
+            UserService.MockUser = UserService.GetById(userB!.Id);
+            var accountB0 = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountB1 = AccountController.Create(accountModel).OkValue<ViewAccount>();
+
+            // Create transactions
+            var createTransaction = (int? sourceId, int? destinationId) => TransactionController.Create(new ViewCreateTransaction
+            {
+                SourceId = sourceId,
+                DestinationId = destinationId,
+                Category = "",
+                DateTime = new DateTime(2020, 01, 01),
+                Description = "Test transaction",
+                Total = 100,
+                Lines = new List<ViewTransactionLine> {
+                    new ViewTransactionLine(amount: 120, description: "Line 1"),
+                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                }
+            }).OkValue<ViewTransaction>();
+
+            // These transactions will not be deleted, when the user is deleted
+            var keptTransactions = new[]
+            {
+                createTransaction(accountB0.Id, accountB1.Id),
+                createTransaction(accountB0.Id, null),
+                createTransaction(null, accountB0.Id),
+                createTransaction(accountABWrite.Id, accountB0.Id),
+                createTransaction(accountABWrite.Id, accountABAll.Id),
+            };
+            UserService.MockUser = userA;
+            var deletedTransactions = new[]
+            {
+                createTransaction(accountA0.Id, accountA1.Id),
+                createTransaction(accountA0.Id, null),
+                createTransaction(null, accountABWrite.Id),
+                createTransaction(accountABWrite.Id, null),
+            };
+
+            // Delete the user
+            var result = UserController.Delete();
+            Assert.IsType<OkResult>(result);
+
+            // Verify that the user preferences and useraccounts have been deleted
+            Assert.Empty(Context.Users.Where(x => x.Id == userA.Id));
+            Assert.Empty(Context.UserPreferences.Where(x => x.UserId == userA.Id));
+            Assert.Empty(Context.UserAccounts.Where(x => x.UserId == userA.Id));
+
+            // Verify that the correct transactions are left
+            foreach (var transaction in keptTransactions)
+            {
+                Assert.Single(Context.Transactions.Where(t => t.Id == transaction.Id));
+            }
+            foreach (var transaction in deletedTransactions)
+            {
+                Assert.Empty(Context.Transactions.Where(t => t.Id == transaction.Id));
+            }
+
+            // Verify that the correct accounts are left (B has owner permissions to these accounts)
+            Assert.Single(Context.Accounts.Where(x => x.Id == accountB0.Id));
+            Assert.Single(Context.Accounts.Where(x => x.Id == accountB1.Id));
+            Assert.Single(Context.Accounts.Where(x => x.Id == accountABAll.Id));
+
+            // Verify that accounts that should be deleted are deleted (only A has all permissions to these accounts
+            Assert.Empty(Context.Accounts.Where(x => x.Id == accountA0.Id));
+            Assert.Empty(Context.Accounts.Where(x => x.Id == accountA1.Id));
+            Assert.Empty(Context.Accounts.Where(x => x.Id == accountABWrite.Id));
         }
     }
 }

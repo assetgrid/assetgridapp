@@ -29,7 +29,7 @@ export default function DeleteUserModal(props: Props) {
         if (api === null) return;
 
         setisDeleting(true);
-        //await api.User.delete(props.transaction.id);
+        await api.User.delete();
         // Refresh the page
         navigate(0);
     }

@@ -15,8 +15,8 @@ export default function (): React.ReactElement {
     const navigate = useNavigate();
 
     React.useEffect(() => {
-        Api.anyUsers().then(anyUsers => {
-            if (!anyUsers) {
+        Api.anyUsers().then(result => {
+            if (result.status === 200 && !result.data) {
                 navigate(routes.signup());
             }
         });

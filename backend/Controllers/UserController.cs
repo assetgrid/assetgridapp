@@ -14,14 +14,20 @@ namespace assetgrid_backend.Controllers
     [Route("/api/v1/[controller]")]
     public class UserController : Controller
     {
-        private IUserService _userService;
+        private IUserService _user;
+        private IAccountService _account;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly AssetgridDbContext _context;
-        public UserController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        public UserController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IAccountService accountService,
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions)
         {
             _context = context;
-            _userService = userService;
+            _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _account = accountService;
         }
 
         [HttpPost("/api/v1/[controller]/[action]")]
@@ -31,7 +37,7 @@ namespace assetgrid_backend.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = _userService.Authenticate(model.Email, model.Password);
+                var result = _user.Authenticate(model.Email, model.Password);
                 if (result == null)
                 {
                     ModelState.AddModelError(nameof(model.Password), "Invalid username or password");
@@ -47,7 +53,7 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetUser()
         {
-            var signedInUser = _userService.GetCurrent(HttpContext);
+            var signedInUser = _user.GetCurrent(HttpContext);
             if (signedInUser == null)
             {
                 return Unauthorized();
@@ -71,7 +77,7 @@ namespace assetgrid_backend.Controllers
             var response = new UserAuthenticatedResponse(
                 user.user.Id,
                 user.user.Email,
-                new ViewPreferences(_userService.GetPreferences(user.user)),
+                new ViewPreferences(_user.GetPreferences(user.user)),
                 user.favoriteAccounts.Select(account => new ViewAccount(
                     account.Id,
                     account.Account.Name,
@@ -96,7 +102,7 @@ namespace assetgrid_backend.Controllers
         {
             if (! _context.Users.Any())
             {
-                _userService.CreateUser(model.Email, model.Password);
+                _user.CreateUser(model.Email, model.Password);
                 return Ok();
             }
             else
@@ -122,7 +128,7 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewPreferences))]
         public IActionResult Preferences(ViewPreferences model)
         {
-            var user = _userService.GetCurrent(HttpContext)!;
+            var user = _user.GetCurrent(HttpContext)!;
 
             var preferencesExist = true;
             var preferences = _context.UserPreferences
@@ -156,8 +162,8 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult ChangePassword(UpdatePasswordModel model)
         {
-            var user = _userService.GetCurrent(HttpContext)!;
-            var passwordValid = _userService.ValidatePassword(user, model.OldPassword);
+            var user = _user.GetCurrent(HttpContext)!;
+            var passwordValid = _user.ValidatePassword(user, model.OldPassword);
 
             if (!passwordValid)
             {
@@ -166,8 +172,43 @@ namespace assetgrid_backend.Controllers
 
             if (ModelState.IsValid)
             {
-                _userService.SetPassword(user, model.NewPassword);
+                _user.SetPassword(user, model.NewPassword);
                 _context.SaveChanges();
+                return Ok();
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        [Authorize]
+        [HttpPost("/api/v1/[controller]/[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult Delete()
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (ModelState.IsValid)
+            {
+                // Delete preferences
+                if (user.Preferences != null)
+                {
+                    _context.Remove(user.Preferences);
+                }
+
+                // Remove all user accounts by this user
+                _context.RemoveRange(_context.UserAccounts.Where(x => x.UserId == user.Id));
+                _context.SaveChanges();
+
+                // Delete all accounts where no user has all permissions
+                var orphanedAccounts = _context.Accounts
+                    .Where(account => ! _context.UserAccounts.Any(x => x.AccountId == account.Id && x.Permissions == UserAccountPermissions.All))
+                    .Select(x => x.Id)
+                    .ToList();
+
+                orphanedAccounts.ForEach(id => _account.Delete(id));
+
+                _context.Remove(user);
+
+                _context.SaveChanges();
+
                 return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();

@@ -49,6 +49,7 @@ if (connectionString == null)
     builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
     builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(Environment.CurrentDirectory, "./jwt_secret.txt")));
 
 #if DEBUG

@@ -18,12 +18,18 @@ namespace assetgrid_backend.Controllers
     {
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
+        private readonly IAccountService _account;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
 
-        public AccountController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        public AccountController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IAccountService accountService,
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions)
         {
             _context = context;
             _user = userService;
+            _account = accountService;
             _apiBehaviorOptions = apiBehaviorOptions;
         }
 
@@ -153,42 +159,21 @@ namespace assetgrid_backend.Controllers
             var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var dbObject = _context.UserAccounts
-                    .Include(account => account.Account)
+                var permissions = _context.UserAccounts
                     .Where(account => account.AccountId == id && account.UserId == user.Id)
+                    .Select(account => (UserAccountPermissions?)account.Permissions)
                     .SingleOrDefault();
 
-                if (dbObject == null)
+                if (permissions == null)
                 {
                     return NotFound();
                 }
-                if (dbObject.Permissions != UserAccountPermissions.All)
+                if (permissions != UserAccountPermissions.All)
                 {
                     return Forbid();
                 }
 
-                if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
-                {
-                    // InMemory database does not support raw SQL
-                    _context.Transactions.Where(transaction => transaction.SourceAccountId == id).ToList().ForEach(transaction => transaction.SourceAccountId = null);
-                    _context.Transactions.Where(transaction => transaction.DestinationAccountId == id).ToList().ForEach(transaction => transaction.DestinationAccountId = null);
-                    _context.Transactions.RemoveRange(
-                        _context.Transactions.Where(transaction => transaction.DestinationAccountId == null && transaction.SourceAccountId == null));
-                    _context.Accounts.RemoveRange(
-                        _context.Accounts.Where(account => account.Id == id));
-                }
-                else
-                {
-                    // Remove all references to this account on transactions
-                    _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET SourceAccountId = null WHERE SourceAccountId = {id}");
-                    _context.Database.ExecuteSqlInterpolated($"UPDATE Transactions SET DestinationAccountId = null WHERE DestinationAccountId = {id}");
-                    // Delete transactions that do not have any accounts
-                    _context.Database.ExecuteSqlInterpolated($"DELETE FROM Transactions WHERE SourceAccountId IS NULL AND DestinationAccountId IS NULL");
-                    // Delete UserAccounts referencing this account
-                    _context.Database.ExecuteSqlInterpolated($"DELETE FROM UserAccounts WHERE AccountId = {id}");
-                    _context.Accounts.Remove(dbObject.Account);
-                }
-                _context.SaveChanges();
+                _account.Delete(id);
 
                 transaction.Commit();
 

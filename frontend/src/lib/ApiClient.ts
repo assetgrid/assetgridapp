@@ -141,6 +141,22 @@ const User = (token: string) => ({
                 reject();
             });
         })
+    },
+
+    /**
+     * Delete the current user
+     */
+    delete: function (): Promise<Ok<null>> {
+        return new Promise<Ok<null>>((resolve, reject) => {
+            axios.post(rootUrl + '/api/v1/user/delete', undefined, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({ status: 200, data: null });
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+        })
     }
 });
 

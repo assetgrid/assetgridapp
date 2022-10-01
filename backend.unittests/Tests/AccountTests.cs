@@ -26,6 +26,7 @@ namespace backend.unittests.Tests
         public UserAuthenticatedResponse User { get; set; }
         public TransactionController TransactionController { get; set; }
         public UserService UserService { get; set; }
+        public AccountService AccountService { get; set; }
         public AccountTests()
         {
             // Create DB context and connect
@@ -37,13 +38,14 @@ namespace backend.unittests.Tests
 
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
-            var userController = new UserController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
+            AccountService = new AccountService(Context);
+            var userController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             userController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
             User = userController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
             UserService.MockUser = UserService.GetById(User.Id);
 
             // Setup account controller
-            AccountController = new AccountController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
+            AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
         }
 

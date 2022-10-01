@@ -28,6 +28,7 @@ namespace backend.unittests.Tests
         public TransactionController TransactionController { get; set; }
         public UserController UserController { get; set; }
         public UserService UserService { get; set; }
+        public AccountService AccountService { get; set; }
         public UserAuthenticatedResponse User { get; set; }
         public TaxonomyController TaxonomyController { get; set; }
 
@@ -45,13 +46,14 @@ namespace backend.unittests.Tests
 
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
-            UserController = new UserController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
+            AccountService = new AccountService(Context);
+            UserController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
             UserService.MockUser = UserService.GetById(User.Id);
 
             // Setup account controller
-            AccountController = new AccountController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
             TaxonomyController = new TaxonomyController(Context, UserService);
 

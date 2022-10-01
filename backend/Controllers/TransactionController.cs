@@ -178,11 +178,9 @@ namespace assetgrid_backend.Controllers
                 using (var transaction = _context.Database.BeginTransaction())
                 {
                     var dbObject = _context.Transactions
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
+                        .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.TransactionLines)
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
                         .Single(t => t.Id == id);
 
                     if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
@@ -224,8 +222,8 @@ namespace assetgrid_backend.Controllers
                         .ToList();
 
                     var query = _context.Transactions
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.Id == user.Id))
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.Id == user.Id))
+                        .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.TransactionLines)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(request.query);
