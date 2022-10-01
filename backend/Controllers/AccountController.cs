@@ -391,7 +391,7 @@ namespace assetgrid_backend.Controllers
 
             // Calculate revenue and expenses for each account separately
             var revenueQuery = ApplyIntervalGrouping(request.From, request.Resolution,
-                query.Where(transaction => netWorthAccountIds.Contains(transaction.DestinationAccountId ?? -1) && !netWorthAccountIds.Contains(transaction.SourceAccountId ?? -1))
+                query.Where(transaction => netWorthAccountIds.Contains(transaction.DestinationAccountId ?? -1))
                 .Select(transaction => new MovementItem
                 {
                     AccountId = transaction.DestinationAccountId!.Value,
@@ -401,7 +401,7 @@ namespace assetgrid_backend.Controllers
 
             // Calculate revenue and expenses for each account separately
             var expensesQuery = ApplyIntervalGrouping(request.From, request.Resolution,
-                query.Where(transaction => netWorthAccountIds.Contains(transaction.SourceAccountId ?? -1) && !netWorthAccountIds.Contains(transaction.DestinationAccountId ?? -1))
+                query.Where(transaction => netWorthAccountIds.Contains(transaction.SourceAccountId ?? -1))
                 .Select(transaction => new MovementItem
                 {
                     AccountId = transaction.SourceAccountId!.Value,
