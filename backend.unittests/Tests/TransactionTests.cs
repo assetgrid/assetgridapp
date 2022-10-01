@@ -1105,6 +1105,77 @@ namespace backend.unittests.Tests
             Assert.Equal(AccountA.Id, transactionB.Destination!.Id);
             Assert.Equivalent(lines.Select(item => new ViewTransactionLine(-item.Amount, item.Description)), transactionB.Lines);
         }
+
+        [Theory]
+        [InlineData("source")]
+        [InlineData("destination")]
+        public void UpdateTransactionWithOnlyAccessToSingleAccount(string account)
+        {
+            var transaction = TransactionController.Create(new ViewCreateTransaction
+            {
+                Identifier = null,
+                Total = 100,
+                Lines = new List<ViewTransactionLine>(),
+                DateTime = new DateTime(2020, 01, 01),
+                Description = "test",
+                SourceId = AccountA.Id,
+                DestinationId = AccountB.Id,
+                Category = ""
+            }).OkValue<ViewTransaction>();
+
+            // Remove access to an account
+            if (account == "source")
+            {
+                Context.UserAccounts.Remove(Context.UserAccounts.Single(x => x.UserId == User.Id && x.AccountId == AccountA.Id));
+            }
+            else
+            {
+                Context.UserAccounts.Remove(Context.UserAccounts.Single(x => x.UserId == User.Id && x.AccountId == AccountB.Id));
+            }
+            Context.SaveChanges();
+
+            // Cannot create transactions between the two accounts any more
+            Assert.IsType<ForbidResult>(TransactionController.Create(new ViewCreateTransaction
+            {
+                Identifier = null,
+                Total = 100,
+                Lines = new List<ViewTransactionLine>(),
+                DateTime = new DateTime(2020, 01, 01),
+                Description = "test",
+                SourceId = AccountA.Id,
+                DestinationId = AccountB.Id,
+                Category = ""
+            }));
+
+            // Can update transaction
+            var result = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
+            {
+                DateTime = new DateTime(2021, 01, 02),
+                Total = 200,
+                Lines = new List<ViewTransactionLine>
+                {
+                    new ViewTransactionLine(100, "Line A"),
+                    new ViewTransactionLine(100, "Line B"),
+                },
+                Description = "New description",
+                SourceId = AccountA.Id,
+                DestinationId = AccountB.Id,
+                Category = "test category",
+            });
+            Assert.IsType<OkObjectResult>(result);
+
+            var updatedTransaction = result.OkValue<ViewTransaction>();
+            Assert.Equal(200, updatedTransaction.Total);
+            Assert.Equal(new DateTime(2021, 01, 02), updatedTransaction.DateTime);
+            Assert.Equivalent(new List<ViewTransactionLine>
+                {
+                    new ViewTransactionLine(100, "Line A"),
+                    new ViewTransactionLine(100, "Line B"),
+                },
+                updatedTransaction.Lines);
+            Assert.Equal("New description", updatedTransaction.Description);
+            Assert.Equal("test category", updatedTransaction.Category);
+        }
     }
 
 }
