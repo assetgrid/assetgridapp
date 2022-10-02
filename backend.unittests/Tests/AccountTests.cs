@@ -534,7 +534,7 @@ namespace backend.unittests.Tests
             }).OkValue<ViewGetMovementAllResponse>();
             Assert.Equal(2, result.Items.Count);
             Assert.Equal(100, result.Items.Single(x => x.Key == accountA.Id).Value.Items.First().Revenue);
-            Assert.Equal(200, result.Items.Single(x => x.Key == accountB.Id).Value.Items.First().Revenue);
+            Assert.Equal(500, result.Items.Single(x => x.Key == accountB.Id).Value.Items.First().Revenue);
         }
 
         [Fact]
