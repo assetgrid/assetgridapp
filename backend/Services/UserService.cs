@@ -13,13 +13,13 @@ namespace assetgrid_backend.Services
 {
     public interface IUserService
     {
-        UserAuthenticatedResponse? Authenticate(string email, string password);
-        User CreateUser(string email, string password);
+        Task<UserAuthenticatedResponse?> Authenticate(string email, string password);
+        Task<User> CreateUser(string email, string password);
         UserPreferences GetPreferences(User user);
-        UserPreferences GetPreferences(int userId);
-        User GetById(int id);
+        Task<UserPreferences> GetPreferences(int userId);
+        Task<User> GetById(int id);
         User? GetCurrent(HttpContext context);
-        bool ValidatePassword(User user, string password);
+        Task<bool> ValidatePassword(User user, string password);
         void SetPassword(User user, string password);
     }
 
@@ -35,23 +35,23 @@ namespace assetgrid_backend.Services
             _context = context;
         }
 
-        public UserAuthenticatedResponse? Authenticate(string email, string password)
+        public async Task<UserAuthenticatedResponse?> Authenticate(string email, string password)
         {
             // Force entity framework to load favorite accounts for the user
-            var user = _context.Users
+            var user = await _context.Users
                 .Include(user => user.Preferences)
                 .Where(user => user.NormalizedEmail == email.ToLower())
                 .Select(user => new
                 {
                     user,
                     favoriteAccounts = _context.UserAccounts.Include(account => account.Account).Where(account => account.Favorite && account.UserId == user.Id).ToList()
-                }).SingleOrDefault();
+                }).SingleOrDefaultAsync();
 
             // return null if user not found
             if (user == null) return null;
 
             // Verify password
-            if (! ValidatePassword(user.user, password))
+            if (! await ValidatePassword(user.user, password))
             {
                 return null;
             }
@@ -75,7 +75,7 @@ namespace assetgrid_backend.Services
                 token);
         }
 
-        public bool ValidatePassword(User user, string password)
+        public async Task<bool> ValidatePassword(User user, string password)
         {
             var hasher = new PasswordHasher<string>();
             var result = hasher.VerifyHashedPassword(user.Email.ToLower(), user.HashedPassword, password);
@@ -83,7 +83,7 @@ namespace assetgrid_backend.Services
             {
                 case PasswordVerificationResult.SuccessRehashNeeded:
                     user.HashedPassword = hasher.HashPassword(user.Email.ToLower(), password);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     return true;
                 case PasswordVerificationResult.Success:
                     return true;
@@ -98,7 +98,7 @@ namespace assetgrid_backend.Services
             user.HashedPassword = hasher.HashPassword(user.Email.ToLower(), value);
         }
 
-        public User CreateUser(string email, string password)
+        public async Task<User> CreateUser(string email, string password)
         {
             var user = new User
             {
@@ -107,7 +107,7 @@ namespace assetgrid_backend.Services
             };
             SetPassword(user, password);
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return user;
         }
@@ -117,9 +117,9 @@ namespace assetgrid_backend.Services
             return preferencesOrDefault(user.Preferences);
         }
 
-        public UserPreferences GetPreferences(int userId)
+        public async Task<UserPreferences> GetPreferences(int userId)
         {
-            var preferences = _context.UserPreferences.SingleOrDefault(preferences => preferences.UserId == userId);
+            var preferences = await _context.UserPreferences.SingleOrDefaultAsync(preferences => preferences.UserId == userId);
             return preferencesOrDefault(preferences);
         }
 
@@ -135,9 +135,9 @@ namespace assetgrid_backend.Services
             };
         }
 
-        public User GetById(int id)
+        public async Task<User> GetById(int id)
         {
-            return _context.Users.Single(user => user.Id == id);
+            return await _context.Users.SingleAsync(user => user.Id == id);
         }
 
         public User? GetCurrent(HttpContext context)

@@ -40,7 +40,7 @@ namespace assetgrid_backend.Controllers
         /// <returns>The newly created account</returns>
         [HttpPost()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewAccount))]
-        public IActionResult Create(ViewCreateAccount model)
+        public async Task<IActionResult> Create(ViewCreateAccount model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -54,7 +54,7 @@ namespace assetgrid_backend.Controllers
                         AccountNumber = model.AccountNumber,
                     };
                     _context.Accounts.Add(result);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     var userAccount = new UserAccount
                     {
@@ -65,7 +65,7 @@ namespace assetgrid_backend.Controllers
                         UserId = user.Id,
                     };
                     _context.UserAccounts.Add(userAccount);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     transaction.Commit();
 
@@ -88,20 +88,20 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewAccount))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var result = _context.UserAccounts
+            var result = await _context.UserAccounts
                 .Where(account => account.UserId == user.Id && account.AccountId == id)
                 .SelectView()
-                .SingleOrDefault();
+                .SingleOrDefaultAsync();
 
             if (result == null) return NotFound();
 
-            var balance = _context.Transactions
+            var balance = await _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
                 .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
-                .Sum();
+                .SumAsync();
 
             result.Balance = balance;
 
@@ -113,12 +113,12 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewAccount))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Update(int id, ViewAccount model)
+        public async Task<IActionResult> Update(int id, ViewAccount model)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var result = _context.UserAccounts
+            var result = await _context.UserAccounts
                 .Include(account => account.Account)
-                .SingleOrDefault(account => account.UserId == user.Id && account.AccountId == id);
+                .SingleOrDefaultAsync(account => account.UserId == user.Id && account.AccountId == id);
 
             if (result == null)
             {
@@ -135,7 +135,7 @@ namespace assetgrid_backend.Controllers
             result.Favorite = model.Favorite;
             result.IncludeInNetWorth = model.IncludeInNetWorth;
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(new ViewAccount(
                 id: result.Id,
@@ -154,15 +154,15 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var permissions = _context.UserAccounts
+                var permissions = await _context.UserAccounts
                     .Where(account => account.AccountId == id && account.UserId == user.Id)
                     .Select(account => (UserAccountPermissions?)account.Permissions)
-                    .SingleOrDefault();
+                    .SingleOrDefaultAsync();
 
                 if (permissions == null)
                 {
@@ -173,7 +173,7 @@ namespace assetgrid_backend.Controllers
                     return Forbid();
                 }
 
-                _account.Delete(id);
+                await _account.Delete(id);
 
                 transaction.Commit();
 
@@ -184,23 +184,23 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewSearchResponse<ViewAccount>))]
-        public IActionResult Search(ViewSearch query)
+        public async Task<IActionResult> Search(ViewSearch query)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var result = _context.UserAccounts
+            var result = await _context.UserAccounts
                 .Where(account => account.UserId == user.Id)
                 .ApplySearch(query, true)
                 .Skip(query.From)
                 .Take(query.To - query.From)
                 .SelectView()
-                .ToList();
+                .ToListAsync();
 
             return Ok(new ViewSearchResponse<ViewAccount>
             {
                 Data = result,
-                TotalItems = _context.UserAccounts
+                TotalItems = await _context.UserAccounts
                     .Where(account => account.UserId == user.Id)
-                    .ApplySearch(query, false).Count()
+                    .ApplySearch(query, false).CountAsync()
             });
         }
 
@@ -208,10 +208,10 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionList))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Transactions(int id, ViewTransactionListRequest request)
+        public async Task<IActionResult> Transactions(int id, ViewTransactionListRequest request)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            if (! await _context.UserAccounts.AnyAsync(account => account.UserId == user.Id && account.AccountId == id))
             {
                 return NotFound();
             }
@@ -235,23 +235,24 @@ namespace assetgrid_backend.Controllers
                     .ThenBy(transaction => transaction.Id);
             }
 
-            var result = query
+            var result = await query
                 .Skip(request.From)
                 .Take(request.To - request.From)
                 .SelectView(user.Id)
-                .ToList();
+                .ToListAsync();
             var firstTransaction = result
                 .OrderBy(transaction => transaction.DateTime)
-                .ThenBy(transaction => transaction.Id).FirstOrDefault();
-            var total = firstTransaction == null ? 0 : query
+                .ThenBy(transaction => transaction.Id)
+                .FirstOrDefault();
+            var total = firstTransaction == null ? 0 : await query
                 .Where(transaction => transaction.DateTime < firstTransaction.DateTime || (transaction.DateTime == firstTransaction.DateTime && transaction.Id < firstTransaction.Id))
                 .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
-                .Sum();
+                .SumAsync();
 
             return Ok(new ViewTransactionList
             {
                 Data = result,
-                TotalItems = query.Count(),
+                TotalItems = await query.CountAsync(),
                 Total = total,
             });
         }
@@ -264,10 +265,10 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult CountTransactions(int id, ViewSearchGroup? requestQuery)
+        public async Task<IActionResult> CountTransactions(int id, ViewSearchGroup? requestQuery)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            if (! await _context.UserAccounts.AnyAsync(account => account.UserId == user.Id && account.AccountId == id))
             {
                 return NotFound();
             }
@@ -280,7 +281,7 @@ namespace assetgrid_backend.Controllers
                 query = query.ApplySearch(requestQuery);
             }
 
-            return Ok(query.Count());
+            return Ok(await query.CountAsync());
         }
 
 
@@ -313,19 +314,19 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/Movements")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewGetMovementResponse))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public IActionResult GetMovement(int id, ViewGetMovementRequest request)
+        public async Task<IActionResult> GetMovement(int id, ViewGetMovementRequest request)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            if (!_context.UserAccounts.Any(account => account.UserId == user.Id && account.AccountId == id))
+            if (! await _context.UserAccounts.AnyAsync(account => account.UserId == user.Id && account.AccountId == id))
             {
                 return Forbid();
             }
 
-            var initialBalance = request.From == null ? 0 : _context.Transactions
+            var initialBalance = request.From == null ? 0 : await _context.Transactions
                 .Where(transaction => transaction.DateTime < request.From)
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
                 .Select(transaction => transaction.DestinationAccountId == id ? transaction.Total : -transaction.Total)
-                .Sum();
+                .SumAsync();
 
             var query = _context.Transactions
                 .Where(transaction => request.From == null || transaction.DateTime >= request.From)
@@ -338,7 +339,7 @@ namespace assetgrid_backend.Controllers
                     Transaction = transaction
                 });
 
-            var result = ApplyIntervalGrouping(request.From, request.Resolution, query).ToList();
+            var result = await ApplyIntervalGrouping(request.From, request.Resolution, query).ToListAsync();
 
             var revenue = result.Where(item => item.Type == "revenue").ToDictionary(item => item.TimePoint, item => item.Total);
             var expenses = result.Where(item => item.Type == "expense").ToDictionary(item => item.TimePoint, item => item.Total);
@@ -375,14 +376,14 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/Movements")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewGetMovementAllResponse))]
-        public IActionResult GetMovementAll(ViewGetMovementRequest request)
+        public async Task<IActionResult> GetMovementAll(ViewGetMovementRequest request)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            List<ViewAccount> accounts = _context.UserAccounts
+            List<ViewAccount> accounts = await _context.UserAccounts
                 .Where(account => account.IncludeInNetWorth)
                 .Where(account => account.UserId == user.Id)
                 .SelectView()
-                .ToList();
+                .ToListAsync();
             var netWorthAccountIds = accounts.Where(account => account.IncludeInNetWorth).Select(account => account.Id).ToList();
 
             var query = _context.Transactions
@@ -410,8 +411,8 @@ namespace assetgrid_backend.Controllers
                 }));
 
             // Fetch both using a single query
-            var revenue = revenueQuery.ToLookup(item => item.AccountId);
-            var expenses = expensesQuery.ToLookup(item => item.AccountId);
+            var revenue = (await revenueQuery.ToListAsync()).ToLookup(item => item.AccountId);
+            var expenses = (await expensesQuery.ToListAsync()).ToLookup(item => item.AccountId);
             var output = new Dictionary<int, ViewGetMovementResponse>();
 
             foreach (var account in accounts)
@@ -427,11 +428,11 @@ namespace assetgrid_backend.Controllers
                     if (!accountRevenue.ContainsKey(key)) accountRevenue[key] = 0;
                 }
 
-                var initialBalance = request.From == null ? 0 : _context.Transactions
+                var initialBalance = request.From == null ? 0 : await _context.Transactions
                     .Where(transaction => transaction.DateTime < request.From)
                     .Where(transaction => transaction.SourceAccountId == account.Id || transaction.DestinationAccountId == account.Id)
                     .Select(transaction => transaction.DestinationAccountId == account.Id ? transaction.Total : -transaction.Total)
-                    .Sum();
+                    .SumAsync();
 
                 output[account.Id] = new ViewGetMovementResponse
                 {
@@ -529,15 +530,15 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ViewCategorySummary>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult CategorySummary(int id, ViewSearchGroup? query)
+        public async Task<IActionResult> CategorySummary(int id, ViewSearchGroup? query)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            if (!_context.UserAccounts.Any(u => u.UserId == user.Id && u.AccountId == id))
+            if (! await _context.UserAccounts.AnyAsync(u => u.UserId == user.Id && u.AccountId == id))
             {
                 return NotFound();
             }
 
-            return Ok(_context.Transactions
+            return Ok(await _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
                 .ApplySearch(query)
                 .GroupBy(transaction => transaction.Category)
@@ -547,7 +548,7 @@ namespace assetgrid_backend.Controllers
                     Revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
                     Expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
                 })
-                .ToList());
+                .ToListAsync());
         }
 
         #endregion

@@ -5,7 +5,7 @@ namespace assetgrid_backend.Services
 {
     public interface IAccountService
     {
-        public void Delete(int id);
+        public Task Delete(int id);
     }
 
     public class AccountService : IAccountService
@@ -17,14 +17,14 @@ namespace assetgrid_backend.Services
             _context = context;
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
             if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
             {
                 // InMemory database does not support raw SQL
                 _context.Transactions.Where(transaction => transaction.SourceAccountId == id).ToList().ForEach(transaction => transaction.SourceAccountId = null);
                 _context.Transactions.Where(transaction => transaction.DestinationAccountId == id).ToList().ForEach(transaction => transaction.DestinationAccountId = null);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 _context.Transactions.RemoveRange(
                     _context.Transactions.Where(transaction => transaction.DestinationAccountId == null && transaction.SourceAccountId == null));
                 _context.Accounts.RemoveRange(
@@ -41,7 +41,7 @@ namespace assetgrid_backend.Services
                 _context.Database.ExecuteSqlInterpolated($"DELETE FROM UserAccounts WHERE AccountId = {id}");
                 _context.Database.ExecuteSqlInterpolated($"DELETE FROM Accounts WHERE Id = {id}");
             }
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

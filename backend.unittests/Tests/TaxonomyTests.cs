@@ -48,9 +48,9 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
-            User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(User.Id);
+            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
+            User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = UserService.GetById(User.Id).Result;
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
@@ -72,16 +72,16 @@ namespace backend.unittests.Tests
                 Favorite = false,
                 IncludeInNetWorth = false,
             };
-            AccountA = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            AccountA = AccountController.Create(accountModel).Result.OkValue<ViewAccount>();
             accountModel.Name = "B";
-            AccountB = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            AccountB = AccountController.Create(accountModel).Result.OkValue<ViewAccount>();
         }
 
 
         [Fact]
-        public void CategoryAutocomplete()
+        public async void CategoryAutocomplete()
         {
-            var otherUser = UserService.CreateUser("test2", "test");
+            var otherUser = await UserService.CreateUser("test2", "test");
             var model = new ViewCreateTransaction
             {
                 Total = -500,
@@ -95,14 +95,14 @@ namespace backend.unittests.Tests
             };
 
             // Create account and transaction with User A
-            TransactionController.Create(model);
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
+            await TransactionController.Create(model);
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("cat")).OkValue<List<string>>());
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("aCcOuNt")).OkValue<List<string>>());
 
             // No categories returned with user b
             UserService.MockUser = otherUser;
-            Assert.Empty(TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
-            Assert.Empty(TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
+            Assert.Empty((await TaxonomyController.CategoryAutocomplete("cat")).OkValue<List<string>>());
+            Assert.Empty((await TaxonomyController.CategoryAutocomplete("aCcOuNt")).OkValue<List<string>>());
 
             // Account A is shared with user B and it is suggested
             var UserAccount = new UserAccount {
@@ -114,15 +114,15 @@ namespace backend.unittests.Tests
             };
             Context.UserAccounts.Add(UserAccount);
             Context.SaveChanges();
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("cat")).OkValue<List<string>>());
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("aCcOuNt")).OkValue<List<string>>());
 
             // Account B is shared with user B and it is still suggested
             UserAccount.Account = Context.Accounts.Single(a => a.Id == AccountB.Id);
             UserAccount.AccountId = AccountB.Id;
             Context.SaveChanges();
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("cat").OkValue<List<string>>());
-            Assert.Contains("Account A category", TaxonomyController.CategoryAutocomplete("aCcOuNt").OkValue<List<string>>());
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("cat")).OkValue<List<string>>());
+            Assert.Contains("Account A category", (await TaxonomyController.CategoryAutocomplete("aCcOuNt")).OkValue<List<string>>());
         }
     }
 }

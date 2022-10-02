@@ -30,14 +30,14 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var result = _context.Transactions
+            var result = await _context.Transactions
                 .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
                     (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
                 .SelectView(user.Id)
-                .SingleOrDefault(transaction => transaction.Id == id);
+                .SingleOrDefaultAsync(transaction => transaction.Id == id);
 
             if (result == null) return NotFound();
 
@@ -47,7 +47,7 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public IActionResult Create(ViewCreateTransaction model)
+        public async Task<IActionResult> Create(ViewCreateTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -55,9 +55,9 @@ namespace assetgrid_backend.Controllers
                 if (model.Identifiers.Count > 0)
                 {
                     var identifiers = model.Identifiers.Select(x => x.Trim());
-                    var otherTransactionsWithSameIdentifiers = _context.TransactionUniqueIdentifiers
+                    var otherTransactionsWithSameIdentifiers = await _context.TransactionUniqueIdentifiers
                         .Where(x => x.Transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || x.Transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
-                        .Any(x => identifiers.Contains(x.Identifier));
+                        .AnyAsync(x => identifiers.Contains(x.Identifier));
                     if (otherTransactionsWithSameIdentifiers)
                     {
                         ModelState.AddModelError(nameof(model.Identifiers), "Another transaction with this identifier exists");
@@ -69,12 +69,12 @@ namespace assetgrid_backend.Controllers
                 {
                     // Make sure that the user has permission to create transactions on both accounts referenced by this transaction
                     UserAccountPermissions[] writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
-                    var userAccountSource = model.SourceId == null ? null : _context.UserAccounts
+                    var userAccountSource = model.SourceId == null ? null : await _context.UserAccounts
                         .Where(account => account.UserId == user.Id && account.AccountId == model.SourceId)
-                        .SingleOrDefault();
-                    var userAccountDestination = model.DestinationId == null ? null : _context.UserAccounts
+                        .SingleOrDefaultAsync();
+                    var userAccountDestination = model.DestinationId == null ? null : await _context.UserAccounts
                         .Where(account => account.UserId == user.Id && account.AccountId == model.DestinationId)
-                        .SingleOrDefault();
+                        .SingleOrDefaultAsync();
                     if ((model.SourceId != null && (userAccountSource == null || ! writePermissions.Contains(userAccountSource.Permissions))) ||
                         (model.DestinationId != null && (userAccountDestination == null || ! writePermissions.Contains(userAccountDestination.Permissions))))
                     {
@@ -122,7 +122,7 @@ namespace assetgrid_backend.Controllers
 
                     _context.Transactions.Add(result);
                     transaction.Commit();
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     return Ok(new ViewTransaction {
                         Id = result.Id,
                         Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
@@ -169,19 +169,19 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Update(int id, ViewUpdateTransaction model)
+        public async Task<IActionResult> Update(int id, ViewUpdateTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
-                    var dbObject = _context.Transactions
+                    var dbObject = await _context.Transactions
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.TransactionLines)
                         .Include(t => t.Identifiers)
-                        .Single(t => t.Id == id);
+                        .SingleAsync(t => t.Id == id);
 
                     if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
                     {
@@ -197,7 +197,8 @@ namespace assetgrid_backend.Controllers
                         return Forbid();
                     }
 
-                    var result = UpdateTransaction(dbObject, user, model);
+                    var result = await UpdateTransaction(dbObject, user, model);
+                    await _context.SaveChangesAsync();
                     transaction.Commit();
                     return result;
                 }
@@ -208,7 +209,7 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/[Action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult UpdateMultiple(ViewUpdateMultipleTransactions request)
+        public async Task<IActionResult> UpdateMultiple(ViewUpdateMultipleTransactions request)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -216,10 +217,10 @@ namespace assetgrid_backend.Controllers
                 using (var transaction = _context.Database.BeginTransaction())
                 {
                     // Get a list of all accounts the user can write to
-                    var writeAccountIds = _context.UserAccounts
+                    var writeAccountIds = await _context.UserAccounts
                         .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
                         .Select(account => account.AccountId)
-                        .ToList();
+                        .ToListAsync();
 
                     var query = _context.Transactions
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
@@ -233,8 +234,10 @@ namespace assetgrid_backend.Controllers
                     foreach (var dbObject in transactions)
                     {
                         // We ignore any errors returned
-                        UpdateTransaction(dbObject, user, request.model);
+                        await UpdateTransaction(dbObject, user, request.model);
                     }
+
+                    await _context.SaveChangesAsync();
                     transaction.Commit();
                 }
                 return Ok();
@@ -242,7 +245,7 @@ namespace assetgrid_backend.Controllers
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
-        private IActionResult UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
+        private async Task<IActionResult> UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
         {
             // Update accounts
             var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
@@ -255,9 +258,9 @@ namespace assetgrid_backend.Controllers
                 }
                 else
                 {
-                    var newSourceUserAccount = _context.UserAccounts
-                    .Include(x => x.Account)
-                    .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
+                    var newSourceUserAccount = await _context.UserAccounts
+                        .Include(x => x.Account)
+                        .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
                     if (newSourceUserAccount == null)
                     {
                         return Forbid();
@@ -275,9 +278,9 @@ namespace assetgrid_backend.Controllers
                 }
                 else
                 {
-                    var newDestinationUserAccount = _context.UserAccounts
+                    var newDestinationUserAccount = await _context.UserAccounts
                         .Include(x => x.Account)
-                        .SingleOrDefault(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
+                        .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
                     if (newDestinationUserAccount == null)
                     {
                         return Forbid();
@@ -365,7 +368,7 @@ namespace assetgrid_backend.Controllers
                 return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
             var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
@@ -414,19 +417,19 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
             using (var transaction = _context.Database.BeginTransaction())
             {
-                var dbObject = _context.Transactions
-                    .Single(t => t.Id == id);
+                var dbObject = await _context.Transactions
+                    .SingleAsync(t => t.Id == id);
 
                 // Make sure that the user has write permissions to an account this transaction references
-                var permissions = _context.UserAccounts
+                var permissions = await _context.UserAccounts
                     .Where(x => x.UserId == user.Id && (x.AccountId == dbObject.DestinationAccountId || x.AccountId == dbObject.SourceAccountId))
                     .Select(x => x.Permissions)
-                    .ToList();
+                    .ToListAsync();
                 if (permissions.Count == 0)
                 {
                     // User cannot see this transaction
@@ -439,7 +442,7 @@ namespace assetgrid_backend.Controllers
                 }
 
                 _context.Transactions.Remove(dbObject);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 transaction.Commit();
 
                 return Ok();
@@ -448,7 +451,7 @@ namespace assetgrid_backend.Controllers
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/[Action]")]
-        public IActionResult DeleteMultiple(ViewSearchGroup query)
+        public async Task<IActionResult> DeleteMultiple(ViewSearchGroup query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -456,20 +459,20 @@ namespace assetgrid_backend.Controllers
                 using (var transaction = _context.Database.BeginTransaction())
                 {
                     // Get a list of all accounts the user can write to
-                    var writeAccountIds = _context.UserAccounts
+                    var writeAccountIds = await _context.UserAccounts
                         .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
                         .Select(account => account.AccountId)
-                        .ToList();
+                        .ToListAsync();
 
-                    var transactions = _context.Transactions
+                    var transactions = await _context.Transactions
                         .Include(t => t.TransactionLines)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(query)
-                        .ToList();
+                        .ToListAsync();
 
                     _context.RemoveRange(transactions.SelectMany(transaction => transaction.TransactionLines));
                     _context.RemoveRange(transactions);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     transaction.Commit();
                 }
                 return Ok();
@@ -480,24 +483,24 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewSearchResponse<ViewTransaction>))]
-        public IActionResult Search(ViewSearch query)
+        public async Task<IActionResult> Search(ViewSearch query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
-                var result = _context.Transactions
-                .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
-                    (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
-                .ApplySearch(query, true)
-                .Skip(query.From)
-                .Take(query.To - query.From)
-                .SelectView(user.Id)
-                .ToList();
+                var result = await _context.Transactions
+                    .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
+                        (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
+                    .ApplySearch(query, true)
+                    .Skip(query.From)
+                    .Take(query.To - query.From)
+                    .SelectView(user.Id)
+                    .ToListAsync();
 
                 return Ok(new ViewSearchResponse<ViewTransaction>
                 {
                     Data = result,
-                    TotalItems = _context.Transactions.ApplySearch(query, false).Count(),
+                    TotalItems = await _context.Transactions.ApplySearch(query, false).CountAsync(),
                 });
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
@@ -506,20 +509,20 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
-        public IActionResult FindDuplicates(List<string> identifiers)
+        public async Task<IActionResult> FindDuplicates(List<string> identifiers)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            return Ok(_context.TransactionUniqueIdentifiers
+            return Ok(await _context.TransactionUniqueIdentifiers
                 .Where(x => x.Transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || x.Transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
                 .Where(x => identifiers.Contains(x.Identifier))
                 .Select(x => x.Identifier!)
-                .ToList());
+                .ToListAsync());
         }
 
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionCreateManyResponse))]
-        public IActionResult CreateMany(List<ViewCreateTransaction> transactions)
+        public async Task<IActionResult> CreateMany(List<ViewCreateTransaction> transactions)
         {
             var user = _user.GetCurrent(HttpContext)!;
 
@@ -529,18 +532,19 @@ namespace assetgrid_backend.Controllers
                 var duplicate = new List<ViewCreateTransaction>();
                 var success = new List<ViewCreateTransaction>();
 
-                var writeAccountIds = _context.UserAccounts
+                var writeAccountIds = await _context.UserAccounts
                     .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
                     .Select(account => account.AccountId)
-                    .ToList();
+                    .ToListAsync();
 
                 var identifiers = transactions
                     .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
                     .ToArray();
-                var duplicateIdentifiers = _context.TransactionUniqueIdentifiers
+                var duplicateIdentifiers = (await _context.TransactionUniqueIdentifiers
                     .Where(x => writeAccountIds.Contains(x.Transaction.SourceAccountId ?? -1) || writeAccountIds.Contains(x.Transaction.DestinationAccountId ?? -1))
                     .Where(x => identifiers.Contains(x.Identifier))
                     .Select(x => x.Identifier)
+                    .ToListAsync())
                     .ToHashSet();
 
                 foreach (var transaction in transactions)
@@ -561,7 +565,7 @@ namespace assetgrid_backend.Controllers
 
                             transaction.Identifiers.ForEach(x => duplicateIdentifiers.Add(x.Trim()));
 
-                            var result = new Models.Transaction
+                            var result = new Transaction
                             {
                                 DateTime = transaction.DateTime,
                                 SourceAccountId = transaction.SourceId,
@@ -592,7 +596,7 @@ namespace assetgrid_backend.Controllers
                             }
 
                             _context.Transactions.Add(result);
-                            _context.SaveChanges();
+                            await _context.SaveChangesAsync();
                             success.Add(transaction);
                         }
                         catch (Exception)

@@ -47,124 +47,124 @@ namespace backend.unittests.Tests
         }
 
         [Fact]
-        public void CreateUserAndSignIn()
+        public async void CreateUserAndSignIn()
         {
-            Assert.IsType<OkResult>(UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }));
+            Assert.IsType<OkResult>(await UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }));
 
             // Only one user can be created with this method
-            Assert.IsType<BadRequestResult>(UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }));
+            Assert.IsType<BadRequestResult>(await UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }));
             UserController.ModelState.Clear();
 
             // Cannot get user before signing in
-            Assert.IsType<UnauthorizedResult>(UserController.GetUser());
+            Assert.IsType<UnauthorizedResult>(await UserController.GetUser());
 
             // User is null with wrong password
-            var userResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test1" });
+            var userResponse = await UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test1" });
             Assert.IsType<BadRequestResult>(userResponse);
             UserController.ModelState.Clear();
 
             // User can sign in with correct password
-            userResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
+            userResponse = await UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
             Assert.IsType<OkObjectResult>(userResponse);
             var user = userResponse.OkValue<UserAuthenticatedResponse>();
 
             // User can be fetched
-            UserService.MockUser = UserService.GetById(user.Id);
-            var fetchedUser = UserController.GetUser().OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = await UserService.GetById(user.Id);
+            var fetchedUser = (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>();
 
             Assert.NotNull(user);
             Assert.Equal(user!.Email, fetchedUser!.Email);
         }
 
         [Fact]
-        public void UpdatePreferences()
+        public async void UpdatePreferences()
         {
             // Create user and sign in
-            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
-            var user = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(user!.Id);
+            await UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
+            var user = (await UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" })).OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = await UserService.GetById(user!.Id);
 
             user.Preferences.ThousandsSeparator = "TEST";
 
-            UserController.Preferences(user.Preferences);
-            Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+            await UserController.Preferences(user.Preferences);
+            Assert.Equivalent(user.Preferences, (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>().Preferences);
 
             user.Preferences.DecimalSeparator = "TEST";
 
-            UserController.Preferences(user.Preferences);
-            Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+            await UserController.Preferences(user.Preferences);
+            Assert.Equivalent(user.Preferences, (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>().Preferences);
 
             user.Preferences.DateFormat = "TEST";
 
-            UserController.Preferences(user.Preferences);
-            Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+            await UserController.Preferences(user.Preferences);
+            Assert.Equivalent(user.Preferences, (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>().Preferences);
 
             user.Preferences.DateTimeFormat = "TEST";
 
-            UserController.Preferences(user.Preferences);
-            Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+            await UserController.Preferences(user.Preferences);
+            Assert.Equivalent(user.Preferences, (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>().Preferences);
 
             user.Preferences.DecimalDigits = 3;
 
-            UserController.Preferences(user.Preferences);
-            Assert.Equivalent(user.Preferences, UserController.GetUser().OkValue<UserAuthenticatedResponse>().Preferences);
+            await UserController.Preferences(user.Preferences);
+            Assert.Equivalent(user.Preferences, (await UserController.GetUser()).OkValue<UserAuthenticatedResponse>().Preferences);
         }
 
         [Fact]
-        public void ChangePassword()
+        public async void ChangePassword()
         {
             // Create user and sign in
-            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
-            var user = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(user!.Id);
+            await UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
+            var user = (await UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" })).OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = await UserService.GetById(user!.Id);
 
             // Change password
             var changeResult = UserController.ChangePassword(new UpdatePasswordModel { OldPassword = "test", NewPassword = "test2" });
-            Assert.IsType<OkResult>(changeResult);
+            Assert.IsType<OkResult>(await changeResult);
 
             // Can no longer sign in with old password
             var authenticateOldPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
-            Assert.IsType<BadRequestResult>(authenticateOldPasswordResponse);
+            Assert.IsType<BadRequestResult>(await authenticateOldPasswordResponse);
             UserController.ModelState.Clear();
 
             // Can sign in with new password
             var authenticateNewPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test2" });
-            Assert.IsType<OkObjectResult>(authenticateNewPasswordResponse);
+            Assert.IsType<OkObjectResult>(await authenticateNewPasswordResponse);
         }
 
         [Fact]
-        public void ChangePasswordWrongOldPassword()
+        public async void ChangePasswordWrongOldPassword()
         {
             // Create user and sign in
-            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
-            var user = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(user!.Id);
+            await UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" });
+            var user = (await UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" })).OkValue<UserAuthenticatedResponse>();
+            UserService.MockUser = await UserService.GetById(user!.Id);
 
             // Change password (fails due to wrong old password)
             var changeResult = UserController.ChangePassword(new UpdatePasswordModel { OldPassword = "test2", NewPassword = "test2" });
-            Assert.IsType<BadRequestResult>(changeResult);
+            Assert.IsType<BadRequestResult>(await changeResult);
             UserController.ModelState.Clear();
 
             // Can not sign in with new password
             var authenticateOldPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test2" });
-            Assert.IsType<BadRequestResult>(authenticateOldPasswordResponse);
+            Assert.IsType<BadRequestResult>(await authenticateOldPasswordResponse);
             UserController.ModelState.Clear();
 
             // Can still sign in with old password
             var authenticateNewPasswordResponse = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" });
-            Assert.IsType<OkObjectResult>(authenticateNewPasswordResponse);
+            Assert.IsType<OkObjectResult>(await authenticateNewPasswordResponse);
         }
 
         [Fact]
-        public void DeleteUser()
+        public async void DeleteUser()
         {
             // Create users A and B and sign in with A
-            var userA = UserService.CreateUser("A", "test");
-            var userB = UserService.CreateUser("B", "test");
-            UserService.MockUser = UserService.GetById(userA!.Id);
+            var userA = await UserService.CreateUser("A", "test");
+            var userB = await UserService.CreateUser("B", "test");
+            UserService.MockUser = await UserService.GetById(userA!.Id);
 
             // Update user preferences and verify that they were updated
-            UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "å" });
+            await UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "å" });
             Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "å"));
 
             // Create some accounts
@@ -176,22 +176,22 @@ namespace backend.unittests.Tests
                 IncludeInNetWorth = false,
                 Name = "My account"
             };
-            var accountA0 = AccountController.Create(accountModel).OkValue<ViewAccount>();
-            var accountA1 = AccountController.Create(accountModel).OkValue<ViewAccount>();
-            var accountABAll = AccountController.Create(accountModel).OkValue<ViewAccount>();
-            var accountABWrite = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            var accountA0 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
+            var accountA1 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
+            var accountABAll = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
+            var accountABWrite = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Share the AB accounts with user B and give correct permission
             Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABAll.Id, Permissions = UserAccountPermissions.All });
             Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABWrite.Id, Permissions = UserAccountPermissions.ModifyTransactions });
 
             // Create some accounts as user B
-            UserService.MockUser = UserService.GetById(userB!.Id);
-            var accountB0 = AccountController.Create(accountModel).OkValue<ViewAccount>();
-            var accountB1 = AccountController.Create(accountModel).OkValue<ViewAccount>();
+            UserService.MockUser = await UserService.GetById(userB!.Id);
+            var accountB0 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
+            var accountB1 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Create transactions
-            var createTransaction = (int? sourceId, int? destinationId) => TransactionController.Create(new ViewCreateTransaction
+            var createTransaction = async (int? sourceId, int? destinationId) => (await TransactionController.Create(new ViewCreateTransaction
             {
                 SourceId = sourceId,
                 DestinationId = destinationId,
@@ -204,29 +204,29 @@ namespace backend.unittests.Tests
                     new ViewTransactionLine(amount: 120, description: "Line 1"),
                     new ViewTransactionLine(amount: -20, description: "Line 2"),
                 }
-            }).OkValue<ViewTransaction>();
+            })).OkValue<ViewTransaction>();
 
             // These transactions will not be deleted, when the user is deleted
             var keptTransactions = new[]
             {
-                createTransaction(accountB0.Id, accountB1.Id),
-                createTransaction(accountB0.Id, null),
-                createTransaction(null, accountB0.Id),
-                createTransaction(accountABWrite.Id, accountB0.Id),
-                createTransaction(accountABWrite.Id, accountABAll.Id),
+                await createTransaction(accountB0.Id, accountB1.Id),
+                await createTransaction(accountB0.Id, null),
+                await createTransaction(null, accountB0.Id),
+                await createTransaction(accountABWrite.Id, accountB0.Id),
+                await createTransaction(accountABWrite.Id, accountABAll.Id),
             };
             UserService.MockUser = userA;
             var deletedTransactions = new[]
             {
-                createTransaction(accountA0.Id, accountA1.Id),
-                createTransaction(accountA0.Id, null),
-                createTransaction(null, accountABWrite.Id),
-                createTransaction(accountABWrite.Id, null),
+                await createTransaction(accountA0.Id, accountA1.Id),
+                await createTransaction(accountA0.Id, null),
+                await createTransaction(null, accountABWrite.Id),
+                await createTransaction(accountABWrite.Id, null),
             };
 
             // Delete the user
             var result = UserController.Delete();
-            Assert.IsType<OkResult>(result);
+            Assert.IsType<OkResult>(await result);
 
             // Verify that the user preferences and useraccounts have been deleted
             Assert.Empty(Context.Users.Where(x => x.Id == userA.Id));

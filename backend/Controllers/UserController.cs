@@ -33,11 +33,11 @@ namespace assetgrid_backend.Controllers
         [HttpPost("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserAuthenticatedResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(UserAuthenticatedResponse))]
-        public IActionResult Authenticate(AuthenticateModel model)
+        public async Task<IActionResult> Authenticate(AuthenticateModel model)
         {
             if (ModelState.IsValid)
             {
-                var result = _user.Authenticate(model.Email, model.Password);
+                var result = await _user.Authenticate(model.Email, model.Password);
                 if (result == null)
                 {
                     ModelState.AddModelError(nameof(model.Password), "Invalid username or password");
@@ -51,7 +51,7 @@ namespace assetgrid_backend.Controllers
         [HttpGet("/api/v1/[controller]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserAuthenticatedResponse))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public IActionResult GetUser()
+        public async Task<IActionResult> GetUser()
         {
             var signedInUser = _user.GetCurrent(HttpContext);
             if (signedInUser == null)
@@ -59,7 +59,7 @@ namespace assetgrid_backend.Controllers
                 return Unauthorized();
             }
 
-            var user = _context.Users
+            var user = await _context.Users
                 .Include(user => user.Preferences)
                 .Where(user => user.Id == signedInUser.Id)
                 .Select(user => new
@@ -67,7 +67,7 @@ namespace assetgrid_backend.Controllers
                     user,
                     favoriteAccounts = _context.UserAccounts.Include(account => account.Account).Where(account => account.Favorite && account.UserId == user.Id).ToList()
                 })
-                .SingleOrDefault();
+                .SingleOrDefaultAsync();
 
             if (user == null)
             {
@@ -98,11 +98,11 @@ namespace assetgrid_backend.Controllers
         [HttpPost("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateInitial(AuthenticateModel model)
+        public async Task<IActionResult> CreateInitial(AuthenticateModel model)
         {
-            if (! _context.Users.Any())
+            if (! await _context.Users.AnyAsync())
             {
-                _user.CreateUser(model.Email, model.Password);
+                await _user.CreateUser(model.Email, model.Password);
                 return Ok();
             }
             else
@@ -117,22 +117,22 @@ namespace assetgrid_backend.Controllers
         /// </summary>
         [HttpGet("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(bool))]
-        public IActionResult Any()
+        public async Task<IActionResult> Any()
         {
-            return Ok(_context.Users.Any());
+            return Ok(await _context.Users.AnyAsync());
         }
 
         [HttpPut]
         [Authorize]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewPreferences))]
-        public IActionResult Preferences(ViewPreferences model)
+        public async Task<IActionResult> Preferences(ViewPreferences model)
         {
             var user = _user.GetCurrent(HttpContext)!;
 
             var preferencesExist = true;
-            var preferences = _context.UserPreferences
-                .SingleOrDefault(preferences => preferences.UserId == user.Id);
+            var preferences = await _context.UserPreferences
+                .SingleOrDefaultAsync(preferences => preferences.UserId == user.Id);
             if (preferences == null)
             {
                 preferencesExist = false;
@@ -150,7 +150,7 @@ namespace assetgrid_backend.Controllers
             {
                 _context.UserPreferences.Add(preferences);
             }
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(new ViewPreferences(preferences));
         }
@@ -160,10 +160,10 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult ChangePassword(UpdatePasswordModel model)
+        public async Task<IActionResult> ChangePassword(UpdatePasswordModel model)
         {
             var user = _user.GetCurrent(HttpContext)!;
-            var passwordValid = _user.ValidatePassword(user, model.OldPassword);
+            var passwordValid =  await _user.ValidatePassword(user, model.OldPassword);
 
             if (!passwordValid)
             {
@@ -173,7 +173,7 @@ namespace assetgrid_backend.Controllers
             if (ModelState.IsValid)
             {
                 _user.SetPassword(user, model.NewPassword);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
@@ -182,7 +182,7 @@ namespace assetgrid_backend.Controllers
         [Authorize]
         [HttpPost("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult Delete()
+        public async Task<IActionResult> Delete()
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -195,19 +195,19 @@ namespace assetgrid_backend.Controllers
 
                 // Remove all user accounts by this user
                 _context.RemoveRange(_context.UserAccounts.Where(x => x.UserId == user.Id));
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 // Delete all accounts where no user has all permissions
-                var orphanedAccounts = _context.Accounts
+                var orphanedAccounts = await _context.Accounts
                     .Where(account => ! _context.UserAccounts.Any(x => x.AccountId == account.Id && x.Permissions == UserAccountPermissions.All))
                     .Select(x => x.Id)
-                    .ToList();
+                    .ToListAsync();
 
                 orphanedAccounts.ForEach(id => _account.Delete(id));
 
                 _context.Remove(user);
 
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 return Ok();
             }
