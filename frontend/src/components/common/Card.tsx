@@ -10,7 +10,8 @@ interface Props {
 }
 
 export default function Card(props: Props) {
-    return <div className={"card m-3" + (props.isNarrow ? " container" : "") + (props.className ? " " + props.className : "")} style={props.style}>
+    return <div className={"card m-3" + (props.isNarrow ? " container" : "") + (props.className ? " " + props.className : "")}
+            style={props.style}>
         <header className="card-header">
             <p className="card-header-title">
                 {props.title}

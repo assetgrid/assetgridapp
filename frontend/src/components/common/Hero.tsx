@@ -13,18 +13,19 @@ interface Props {
 export default function Hero(props: Props): React.ReactElement {
     const [period, setPeriod] = props.period ?? [{ type: "month", start: DateTime.now() }, () => 0];
 
-    return <section className="hero has-background-white" style={{ flexDirection: "row", alignItems: "center" }}>
-        <div className="hero-body">
-            <p className="title">
-                {props.title}
-            </p>
-            {props.subtitle &&
-                <p className={"subtitle" + (props.isDanger === true ? " has-text-danger" : " has-text-primary")}>
+    return <section className="hero has-background-white">
+        <div className="hero-body" style={{ flexDirection: "row", alignItems: "center", display: "flex", flexWrap: "wrap" }}>
+            <div className="hero-left" style={{ flex: 1, minWidth: "20rem", marginBottom: "1rem" }}>
+                <p className="title">
+                    {props.title}
+                </p>
+                {props.subtitle && <p className={"subtitle" + (props.isDanger === true ? " has-text-danger" : " has-text-primary")}>
                     {props.subtitle}
                 </p>}
+            </div>
+            {props.period && <div>
+                <PeriodSelector period={period} onChange={setPeriod} />
+            </div>}
         </div>
-        {props.period && <div>
-            <PeriodSelector period={period} onChange={setPeriod} />
-        </div>}
     </section>;
 }

@@ -53,7 +53,7 @@ export default function FairFitPortalApp () {
                         <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                         <div style={{display: "flex", flexGrow: 1}}>
                             <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
-                            <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE" }}>
+                            <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
                                 <Routes>
                                     <Route path={routes.dashboard()} element={<PageDashboard />} />
                                     <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>

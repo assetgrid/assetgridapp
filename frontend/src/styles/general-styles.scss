@@ -123,3 +123,9 @@ html, body {
         height: 50px;
     }
 }
+
+@media screen and (max-width: 600px) {
+    html {
+        font-size: 0.8rem;
+    }
+}

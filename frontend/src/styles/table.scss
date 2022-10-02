@@ -10,6 +10,11 @@
     }
 }
 
+.table {
+    max-width: 100%;
+    overflow-x: scroll;
+}
+
 table tr.editing td {
     vertical-align: middle;
 }

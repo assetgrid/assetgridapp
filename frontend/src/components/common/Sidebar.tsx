@@ -6,6 +6,7 @@ import { faStar, faUser } from "@fortawesome/free-solid-svg-icons"
 import logo from "../../assets/logo.svg";
 import { Preferences } from "../../models/preferences";
 import { userContext } from "../App";
+import { useLocation } from "react-router";
 
 interface Props {
     show: boolean;
@@ -15,12 +16,17 @@ interface Props {
 export default function Sidebar(props: Props) {
     const { user, setUser } = React.useContext(userContext);
     const ref = React.useRef<HTMLDivElement>(null);
+    const location = useLocation();
 
     React.useEffect(() => {
         if (props.show) {
             ref.current?.focus();
         }
     }, [props.show]);
+
+    React.useEffect(() => {
+        props.setShowSidebar(false);
+    }, [location.pathname]);
 
     return <div tabIndex={0} ref={ref} onBlur={onBlur}
         className={"sidebar has-background-dark" + (props.show ? " shown" : "")} style={{ width: "300px", backgroundColor: "#0a3d62", flexShrink: 0 }}>
