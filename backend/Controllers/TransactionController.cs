@@ -230,7 +230,7 @@ namespace assetgrid_backend.Controllers
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(request.query);
 
-                    var transactions = query.ToList();
+                    var transactions = await query.ToListAsync();
                     foreach (var dbObject in transactions)
                     {
                         // We ignore any errors returned

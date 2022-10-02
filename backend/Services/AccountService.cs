@@ -22,8 +22,10 @@ namespace assetgrid_backend.Services
             if (_context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
             {
                 // InMemory database does not support raw SQL
-                _context.Transactions.Where(transaction => transaction.SourceAccountId == id).ToList().ForEach(transaction => transaction.SourceAccountId = null);
-                _context.Transactions.Where(transaction => transaction.DestinationAccountId == id).ToList().ForEach(transaction => transaction.DestinationAccountId = null);
+                (await _context.Transactions.Where(transaction => transaction.SourceAccountId == id).ToListAsync())
+                    .ForEach(transaction => transaction.SourceAccountId = null);
+                (await _context.Transactions.Where(transaction => transaction.DestinationAccountId == id).ToListAsync())
+                    .ForEach(transaction => transaction.DestinationAccountId = null);
                 await _context.SaveChangesAsync();
                 _context.Transactions.RemoveRange(
                     _context.Transactions.Where(transaction => transaction.DestinationAccountId == null && transaction.SourceAccountId == null));
