@@ -4,14 +4,18 @@ import { DateTime } from "luxon";
 import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { formatDateTimeWithUser } from "../../../lib/Utils";
-import { Account } from "../../../models/account";
+import { Account, CreateAccount, GetMovementAllResponse, GetMovementResponse, TimeResolution } from "../../../models/account";
+import { Ok, BadRequest, NotFound, Forbid } from "../../../models/api";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
-import { CreateTransaction } from "../../../models/transaction";
+import { Preferences } from "../../../models/preferences";
+import { SearchRequest, SearchResponse, SearchGroup } from "../../../models/search";
+import { CreateTransaction, Transaction, TransactionListResponse, UpdateTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Modal from "../../common/Modal";
 import Table from "../../common/Table";
+import InputAutocomplete from "../../input/InputAutocomplete";
 import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
 import { AccountReference, CsvCreateTransaction } from "./importModels";
@@ -193,12 +197,14 @@ function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
             {<InputButton onClick={() => saveProfile()} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
-        <InputText
-            label="Profile name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            disabled={isCreating}
-            errors={nameError ? [nameError] : undefined} />
+        <div style={{ minHeight: "20rem" }}>
+            <InputImportProfile
+                label="Profile name"
+                value={name}
+                onChange={value => setName(value)}
+                disabled={isCreating}
+                errors={nameError ? [nameError] : undefined} />
+        </div>
     </Modal>;
 
     async function saveProfile() {
@@ -208,4 +214,41 @@ function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
         await api.User.updateCsvImportProfile(name, props.profile);
         setIsSaving(false);
     }
+}
+
+interface InputImportProfileProps {
+    value: string;
+    onChange: (value: string) => void;
+    label?: string;
+    disabled: boolean;
+    errors?: string[];
+}
+function InputImportProfile(props: InputImportProfileProps) {
+    const profilesRef = React.useRef<string[] | Promise<string[]> | null>(null);
+
+    return <InputAutocomplete value={props.value}
+        disabled={props.disabled}
+        onChange={props.onChange}
+        label={props.label}
+        errors={props.errors}
+        refreshSuggestions={(api: Api, prefix: string) => {
+            if (profilesRef.current === null) {
+                // No profiles have been fetched. Start the fetch job
+                profilesRef.current = new Promise<string[]>(resolve => {
+                    api.User.getCsvImportProfiles().then(result => {
+                        profilesRef.current = result.data;
+                        resolve(result.data.filter(profile => profile.toLowerCase().indexOf(prefix.toLowerCase()) >= 0));
+                    });
+                });
+                return profilesRef.current;
+            } else if (Array.isArray(profilesRef.current)) {
+                // Profiles have been fetched
+                return new Promise<string[]>(resolve => {
+                    resolve((profilesRef.current as string[]).filter(profile => profile.toLowerCase().indexOf(prefix.toLowerCase()) >= 0));
+                });
+            } else {
+                // Profiles are fetching
+                return profilesRef.current;
+            }
+        }} />;
 }

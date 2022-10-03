@@ -46,6 +46,23 @@ export default function ImportCsv(props: Props) {
     }, [api]);
 
     return <>
+        <Card title="Profiles" isNarrow={true}>
+            <p>Use an import profile that you have created earlier.</p>
+            {profileNames === "fetching" && <p>
+                Please wait while Assetgrid loads your profiles&hellip;
+            </p>}
+            {profileNames !== "fetching" && profileNames.length === 0 && <p>
+                You do not have any import profiles. It will be possible to create an import profile at the end of the import process.
+            </p>}
+            {profileNames !== "fetching" && profileNames.length > 0 && <InputSelect
+                isFullwidth={true}
+                placeholder="Select profile"
+                disabled={api === null}
+                items={profileNames.map(x => ({ key: x, value: x }))}
+                value={selectedProfile}
+                onChange={updateSelectedProfile} />}
+        </Card>
+
         <Card title="Import options" isNarrow={true}>
             <InputCheckbox label="Parse header"
                 value={props.options.csvParseHeader}
@@ -85,23 +102,6 @@ export default function ImportCsv(props: Props) {
             </div>
 
             <p>If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <a href="https://github.com/Assetgrid/assetgridapp/issues/new?assignees=&labels=CSV+issue&template=csv-file-cannot-be-imported.md&title=" target="_blank">Github page</a></p>
-        </Card>
-
-        <Card title="Profiles" isNarrow={true}>
-            <p>Use an import profile that you have created earlier.</p>
-            {profileNames === "fetching" && <p>
-                Please wait while Assetgrid loads your profiles&hellip;
-            </p>}
-            {profileNames !== "fetching" && profileNames.length === 0 && <p>
-                You do not have any import profiles. It will be possible to create an import profile at the end of the import process.
-            </p>}
-            {profileNames !== "fetching" && profileNames.length > 0 && <InputSelect
-                isFullwidth={true}
-                placeholder="Select profile"
-                disabled={api === null}
-                items={profileNames.map(x => ({ key: x, value: x }))}
-                value={selectedProfile}
-                onChange={updateSelectedProfile} />}
         </Card>
 
         {props.csvFile != null && <Card title="CSV data" isNarrow={false}>
