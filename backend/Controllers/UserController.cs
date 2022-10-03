@@ -188,7 +188,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [Authorize]
-        [HttpPost("/api/v1/[controller]/[action]")]
+        [HttpDelete("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Delete()
         {
@@ -210,9 +210,9 @@ namespace assetgrid_backend.Controllers
                     .Where(account => ! _context.UserAccounts.Any(x => x.AccountId == account.Id && x.Permissions == UserAccountPermissions.All))
                     .Select(x => x.Id)
                     .ToListAsync();
-
                 orphanedAccounts.ForEach(id => _account.Delete(id));
 
+                _context.RemoveRange(_context.UserCsvImportProfiles.Where(x => x.UserId == user.Id));
                 _context.Remove(user);
 
                 await _context.SaveChangesAsync();
@@ -223,7 +223,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("/api/v1/[controller]/import/csv/profiles")]
+        [HttpGet("/api/v1/import/csv/profiles")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
         public async Task<IActionResult> CsvImportProfiles()
         {
@@ -237,7 +237,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("/api/v1/[controller]import/csv/profile/{name}")]
+        [HttpGet("/api/v1/import/csv/profile/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CsvImportProfile))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCsvImportProfile(string name)
@@ -257,7 +257,7 @@ namespace assetgrid_backend.Controllers
         }
 
         [Authorize]
-        [HttpPut("/api/v1/[controller]/csv/profile/{name}")]
+        [HttpPut("/api/v1/import/csv/profile/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CsvImportProfile))]
         public async Task<IActionResult> UpdateCsvImportProfile(string name, CsvImportProfile profile)
         {
@@ -276,7 +276,8 @@ namespace assetgrid_backend.Controllers
                 {
                     ImportProfile = profile,
                     ProfileName = name,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    Version = 1
                 });
                 await _context.SaveChangesAsync();
 

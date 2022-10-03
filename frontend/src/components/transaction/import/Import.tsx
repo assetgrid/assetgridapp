@@ -5,15 +5,19 @@ import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
+import { CsvImportProfile } from "../../../models/csvImportProfile";
 import { CreateTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
+import Modal from "../../common/Modal";
 import Table from "../../common/Table";
 import InputButton from "../../input/InputButton";
+import InputText from "../../input/InputText";
 import { AccountReference, CsvCreateTransaction } from "./importModels";
 
 interface Props {
+    profile: CsvImportProfile;
     transactions: CsvCreateTransaction[];
     accountsBy: { [identifier: string]: { [value: string]: Account } };
     batchSize: number;
@@ -30,6 +34,7 @@ export function Import (props: Props) {
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
     const [page, setPage] = React.useState(1);
+    const [isSavingProfile, setIsSavingProfile] = React.useState(false);
     const api = useApi();
 
     const { user } = React.useContext(userContext);
@@ -39,17 +44,24 @@ export function Import (props: Props) {
             return <Card isNarrow={true} title="Begin import">
                 <div className="buttons mt-3">
                     <InputButton className="is-primary" disabled={api === null} onClick={() => importTransactions()}>Import Transactions</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
+                <SaveProfileModal active={isSavingProfile} close={() => setIsSavingProfile(false)} profile={props.profile} />
             </Card>;
         case "importing":
             return <Card isNarrow={true} title="Importing&hellip;">
-                <p>{progress} of {props.transactions.length} transactions have been imported.</p>
-                <p>Please wait while the import is completed</p>
-            </Card>;
+                    <p>{progress} of {props.transactions.length} transactions have been imported.</p>
+                    <p>Please wait while the import is completed</p>
+                </Card>;
         case "imported":
             return <>
-                <Card title="Import complete" isNarrow={true}>Your transactions have been imported</Card>
+                <Card title="Import complete" isNarrow={true}>
+                    Your transactions have been imported
+                    <div className="buttons mt-3">
+                        <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
+                    </div>
+                </Card>
                 <Card title="Succeeded" isNarrow={false}>
                     <p className="mb-3">The following transactions were successfully created:</p>
                     {transactionTable(succeeded)}
@@ -62,6 +74,7 @@ export function Import (props: Props) {
                     <p className="mb-3">The following transactions could not be created due to errors:</p>
                     {transactionTable(failed)}
                 </Card>
+                <SaveProfileModal active={isSavingProfile} close={() => setIsSavingProfile(false)} profile={props.profile} />
             </>;
     }
 
@@ -158,5 +171,41 @@ export function Import (props: Props) {
         if (props.accountsBy[reference.identifier][reference.value] === undefined) return null;
 
         return props.accountsBy[reference.identifier][reference.value];
+    }
+}
+
+interface SaveProfileModalProps {
+    active: boolean;
+    close: () => void;
+    profile: CsvImportProfile;
+}
+function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
+    const [name, setName] = React.useState("");
+    const [nameError, setNameError] = React.useState<string | null>(null);
+    const [isCreating, setIsSaving] = React.useState(false);
+    const api = useApi();
+
+    return <Modal
+        active={props.active}
+        title={"Merge transactions"}
+        close={() => props.close()}
+        footer={<>
+            {<InputButton onClick={() => saveProfile()} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
+            <button className="button" onClick={() => props.close()}>Cancel</button>
+        </>}>
+        <InputText
+            label="Profile name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            disabled={isCreating}
+            errors={nameError ? [nameError] : undefined} />
+    </Modal>;
+
+    async function saveProfile() {
+        if (api === null) return;
+
+        setIsSaving(true);
+        await api.User.updateCsvImportProfile(name, props.profile);
+        setIsSaving(false);
     }
 }

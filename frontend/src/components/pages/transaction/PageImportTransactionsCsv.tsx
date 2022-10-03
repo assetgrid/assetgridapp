@@ -2,26 +2,26 @@ import axios from "axios";
 import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { Account } from "../../../models/account";
+import { CsvImportProfile, ParseOptions } from "../../../models/csvImportProfile";
 import { Preferences } from "../../../models/preferences";
 import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../../models/search";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import { Import } from "../../transaction/import/Import";
-import ImportCsv, { CsvImportOptions } from "../../transaction/import/ImportCsv";
+import ImportCsv from "../../transaction/import/ImportCsv";
 import { AccountReference, capitalize, CsvCreateTransaction } from "../../transaction/import/importModels";
-import MapCsvFields, { MappingOptions } from "../../transaction/import/MapCsvFields/MapCsvFields";
-import { ParseOptions } from "../../transaction/import/ParseOptions";
+import MapCsvFields from "../../transaction/import/MapCsvFields/MapCsvFields";
+
+const defaultParseOptions = {
+    trimWhitespace: true,
+    regex: null,
+    pattern: "{0}"
+} as ParseOptions;
 
 /*
  * React object class
  */
 export default function PageImportTransactionsCsv () {
-    const defaultParseOptions = {
-        trimWhitespace: true,
-        regex: null,
-        pattern: "{0}"
-    } as ParseOptions;
-
     const [data, setData] = React.useState<any[] | null>(null);
     const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
     const [lines, setLines] = React.useState<string[]>([]);
@@ -29,12 +29,11 @@ export default function PageImportTransactionsCsv () {
     const [accountsBy, setAccountsBy] = React.useState<{ [key: string]: { [value: string]: Account | "fetching" | null } }>({});
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
-    const [csvOptions, setCsvOptions] = React.useState<CsvImportOptions>({
+    const [profile, setProfile] = React.useState<CsvImportProfile>({
         csvDelimiter: "auto",
         csvNewlineCharacter: "auto",
-        csvParseHeader: true
-    });
-    const [mappingOptions, setMappingOptions] = React.useState<MappingOptions>({
+        csvParseHeader: true,
+
         duplicateHandling: "automatic",
         identifierColumn: null,
         identifierParseOptions: defaultParseOptions,
@@ -82,16 +81,16 @@ export default function PageImportTransactionsCsv () {
                     <ImportCsv
                         csvFile={csvFile}
                         csvParsed={(data, lines) => { setData(data); setLines(lines); }}
-                        optionsChanged={options => setCsvOptions(options)}
+                        optionsChanged={options => setProfile(options)}
                         fileChanged={file => setCsvFile(file)}
-                        options={csvOptions}
+                        options={profile}
                         goToNext={() => setCurrentTab("map-columns")}
                     />
                 </>;
             case "map-columns":
                 return data != null && <MapCsvFields
                         accountsBy={accountsBy}
-                        options={mappingOptions}
+                        options={profile}
                         transactions={transactions}
                         duplicateIdentifiers={duplicateIdentifiers}
                         accountCreated={account => {
@@ -120,14 +119,15 @@ export default function PageImportTransactionsCsv () {
                         transactions={transactions}
                         accountsBy={accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
                         batchSize={10}
-                        goToPrevious={() => setCurrentTab("map-columns")}/>
+                        goToPrevious={() => setCurrentTab("map-columns")}
+                        profile={profile} />
                 </>;
             default:
                 throw "Unknown state";
         }
     }
 
-    function mappingsChanged(newTransactions: CsvCreateTransaction[], options: MappingOptions): void {
+    function mappingsChanged(newTransactions: CsvCreateTransaction[], options: CsvImportProfile): void {
         // The CSV mapping window is disabled until the API is loaded to prevent the mappings from changing and triggering an API call
         if (api === null) return;
 
@@ -196,7 +196,7 @@ export default function PageImportTransactionsCsv () {
 
         setAccountsBy(newAccountsBy);
         setTransactions(newTransactions);
-        setMappingOptions(options);
+        setProfile(options);
 
         // Find every unique account reference in the transactions that has not been loaded
         let uniqueAccountReferences = ([

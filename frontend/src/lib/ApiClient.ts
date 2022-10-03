@@ -10,6 +10,7 @@ import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
+import { CsvImportProfile } from "../models/csvImportProfile";
 
 let rootUrl = 'https://localhost:7262';
 if (process.env.NODE_ENV === 'production') {
@@ -152,10 +153,86 @@ const User = (token: string) => ({
      */
     delete: function (): Promise<Ok<null>> {
         return new Promise<Ok<null>>((resolve, reject) => {
-            axios.post(rootUrl + '/api/v1/user/delete', undefined, {
+            axios.delete(rootUrl + '/api/v1/user/delete', {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
                 resolve({ status: 200, data: null });
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+        })
+    },
+
+    /**
+     * Gets the names of the available CSV import profiles for the current user
+     */
+    getCsvImportProfiles: function (): Promise<Ok<string[]>> {
+        return new Promise<Ok<string[]>>((resolve, reject) => {
+            axios.get<string[]>(rootUrl + '/api/v1/import/csv/profiles', {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({ status: 200, data: result.data });
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+        })
+    },
+
+    /**
+     * Gets a csv import profile by name
+     */
+     getCsvImportProfile: function (name: string): Promise<Ok<CsvImportProfile>> {
+        return new Promise<Ok<CsvImportProfile>>((resolve, reject) => {
+            axios.get<CsvImportProfile>(rootUrl + '/api/v1/import/csv/profile/' + encodeURIComponent(name), {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({
+                    status: 200, data: {
+                        ...result.data, 
+                        amountParseOptions: { ...result.data.amountParseOptions, regex: fixRegex(result.data.amountParseOptions.regex) },
+                        categoryParseOptions: { ...result.data.categoryParseOptions, regex: fixRegex(result.data.categoryParseOptions.regex) },
+                        dateParseOptions: { ...result.data.dateParseOptions, regex: fixRegex(result.data.dateParseOptions.regex) },
+                        descriptionParseOptions: { ...result.data.descriptionParseOptions, regex: fixRegex(result.data.descriptionParseOptions.regex) },
+                        destinationAccountParseOptions: { ...result.data.destinationAccountParseOptions, regex: fixRegex(result.data.destinationAccountParseOptions.regex) },
+                        sourceAccountParseOptions: { ...result.data.sourceAccountParseOptions, regex: fixRegex(result.data.sourceAccountParseOptions.regex) },
+                        identifierParseOptions: { ...result.data.identifierParseOptions, regex: fixRegex(result.data.identifierParseOptions.regex) },
+                    }
+                });
+
+                function fixRegex(regex: RegExp | null): RegExp| null {
+                    if (regex === null) return null;
+                    return new RegExp(regex);
+                }
+            }).catch(e => {
+                console.log(e);
+                reject();
+            });
+        })
+    },
+     
+     /**
+     * Gets a csv import profile by name
+     */
+    updateCsvImportProfile: function (name: string, profile: CsvImportProfile): Promise<Ok<string[]>> {
+        return new Promise<Ok<string[]>>((resolve, reject) => {
+            axios.put<string[]>(rootUrl + '/api/v1/import/csv/profile/' + encodeURIComponent(name), {
+                ...profile,
+                sourceAccount: profile.sourceAccount?.id ?? null,
+                destinationAccount: profile.destinationAccount?.id ?? null,
+
+                amountParseOptions: { ...profile.amountParseOptions, regex: profile.amountParseOptions.regex?.source },
+                categoryParseOptions: { ...profile.categoryParseOptions, regex: profile.categoryParseOptions.regex?.source },
+                dateParseOptions: { ...profile.dateParseOptions, regex: profile.dateParseOptions.regex?.source },
+                descriptionParseOptions: { ...profile.descriptionParseOptions, regex: profile.descriptionParseOptions.regex?.source },
+                destinationAccountParseOptions: { ...profile.destinationAccountParseOptions, regex: profile.destinationAccountParseOptions.regex?.source },
+                sourceAccountParseOptions: { ...profile.sourceAccountParseOptions, regex: profile.sourceAccountParseOptions.regex?.source },
+                identifierParseOptions: { ...profile.identifierParseOptions, regex: profile.identifierParseOptions.regex?.source },
+            }, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({ status: 200, data: result.data });
             }).catch(e => {
                 console.log(e);
                 reject();

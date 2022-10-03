@@ -1,9 +1,8 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "../../../models/account";
+import { AccountIdentifier } from "../../../models/csvImportProfile";
 import { TransactionLine } from "../../../models/transaction";
-
-export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
 
 export type CsvCreateTransaction = {
     rowNumber: number;

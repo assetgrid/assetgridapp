@@ -1,7 +1,7 @@
 import * as React from "react";
+import { ParseOptions, parseWithOptions } from "../../models/csvImportProfile";
 import Modal from "../common/Modal";
 import Table from "../common/Table";
-import { parseWithOptions, ParseOptions } from "../transaction/import/ParseOptions";
 import InputButton from "./InputButton";
 import InputCheckbox from "./InputCheckbox";
 import InputText from "./InputText";

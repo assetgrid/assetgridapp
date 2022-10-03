@@ -3,12 +3,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
+import { CsvImportProfile } from "../../../../models/csvImportProfile";
 import { userContext } from "../../../App";
 import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
 import { AccountReference, CsvCreateTransaction } from "../importModels";
 import DuplicateIndicator from "./DuplicateIndicator";
-import { CsvMappingTableFilter, MappingOptions } from "./MapCsvFields";
+import { CsvMappingTableFilter } from "./MapCsvFields";
 import TableAccount from "./TableAccount";
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
     duplicateIdentifiers: Set<string> | "fetching";
     tableFilter: CsvMappingTableFilter;
     tableDraw: number;
-    options: MappingOptions;
+    options: CsvImportProfile;
     beginCreatingAccount: (reference: AccountReference) => void;
 }
 

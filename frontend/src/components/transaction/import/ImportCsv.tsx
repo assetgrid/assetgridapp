@@ -9,20 +9,16 @@ import InputText from "../../input/InputText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import InputIconButton from "../../input/InputIconButton";
+import { useApi } from "../../../lib/ApiClient";
+import { CsvImportProfile } from "../../../models/csvImportProfile";
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
     fileChanged: (file: File) => void;
-    optionsChanged: (options: CsvImportOptions) => void;
-    options: CsvImportOptions;
+    optionsChanged: (options: CsvImportProfile) => void;
+    options: CsvImportProfile;
     csvFile: File | null;
     goToNext: () => void;
-}
-
-export interface CsvImportOptions {
-    csvParseHeader: boolean;
-    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r";
-    csvDelimiter: string;
 }
 
 const pageSize: number = 20;
@@ -32,12 +28,22 @@ export default function ImportCsv(props: Props) {
     const [csvData, setCsvData] = React.useState<Papa.ParseResult<any> | null | "error">(null);
     const [columnOffset, setColumnOffset] = React.useState(0);
     const [page, setPage] = React.useState(1);
+    const [profileNames, setProfileNames] = React.useState<string[] | "fetching">("fetching");
+    const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
+    const api = useApi();
 
     React.useEffect(() => {
         if (props.csvFile !== null) {
             reparseFile(props.csvFile);
         }
     }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter])
+
+    React.useEffect(() => {
+        if (api !== null) {
+            api.User.getCsvImportProfiles()
+                .then(result => setProfileNames(result.data));
+        }
+    }, [api]);
 
     return <>
         <Card title="Import options" isNarrow={true}>
@@ -79,6 +85,23 @@ export default function ImportCsv(props: Props) {
             </div>
 
             <p>If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <a href="https://github.com/Assetgrid/assetgridapp/issues/new?assignees=&labels=CSV+issue&template=csv-file-cannot-be-imported.md&title=" target="_blank">Github page</a></p>
+        </Card>
+
+        <Card title="Profiles" isNarrow={true}>
+            <p>Use an import profile that you have created earlier.</p>
+            {profileNames === "fetching" && <p>
+                Please wait while Assetgrid loads your profiles&hellip;
+            </p>}
+            {profileNames !== "fetching" && profileNames.length === 0 && <p>
+                You do not have any import profiles. It will be possible to create an import profile at the end of the import process.
+            </p>}
+            {profileNames !== "fetching" && profileNames.length > 0 && <InputSelect
+                isFullwidth={true}
+                placeholder="Select profile"
+                disabled={api === null}
+                items={profileNames.map(x => ({ key: x, value: x }))}
+                value={selectedProfile}
+                onChange={updateSelectedProfile} />}
         </Card>
 
         {props.csvFile != null && <Card title="CSV data" isNarrow={false}>
@@ -171,5 +194,15 @@ export default function ImportCsv(props: Props) {
             setCsvData("error");
         }
         reader.readAsText(file, "UTF-8");
+    }
+
+    async function updateSelectedProfile(name: string) {
+        if (api === null) return;
+
+        setSelectedProfile(name);
+        const result = await api.User.getCsvImportProfile(name);
+        if (result.status === 200) {
+            props.optionsChanged(result.data);
+        }
     }
 }

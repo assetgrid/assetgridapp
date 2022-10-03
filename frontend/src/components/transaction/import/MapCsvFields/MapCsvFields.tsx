@@ -4,9 +4,8 @@ import { Account, CreateAccount } from "../../../../models/account";
 import Card from "../../../common/Card";
 import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
-import { AccountIdentifier, AccountReference, CsvCreateTransaction } from "../importModels";
+import { AccountReference, CsvCreateTransaction } from "../importModels";
 import CreateAccountModal from "../../../account/input/CreateAccountModal";
-import { parseWithOptions, ParseOptions } from "../ParseOptions";
 import { InputParseOptionsModal } from "../../../input/InputParsingOptions";
 import Decimal from "decimal.js";
 import { Message } from "../../../common/Message";
@@ -15,8 +14,8 @@ import MapCsvFieldsIssues from "./CsvMappingIssues";
 import CsvMappingIssues from "./CsvMappingIssues";
 import CsvMappingTransactionTable from "./CsvMappingTransactionTable";
 import InputAccount from "../../../account/input/InputAccount";
+import { AccountIdentifier, CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
 
-type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
 export type CsvMappingTableFilter = "all" | "reference-to-missing-account" | "no-account" | "same-account" | "duplicate" | "error";
 
 interface Props {
@@ -24,44 +23,13 @@ interface Props {
     transactions: CsvCreateTransaction[] | null;
     accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
-    options: MappingOptions;
+    options: CsvImportProfile;
     apiReady: boolean;
-    onChange: (transactions: CsvCreateTransaction[], options: MappingOptions) => void;
+    onChange: (transactions: CsvCreateTransaction[], options: CsvImportProfile) => void;
     goToNext: () => void;
     goToPrevious: () => void;
     accountCreated: (account: Account) => void;
 }
-
-export interface MappingOptions {
-    // Mapping options
-    duplicateHandling: DuplicateHandlingOptions;
-    identifierColumn: string | null;
-    identifierParseOptions: ParseOptions;
-
-    amountColumn: string | null;
-    amountParseOptions: ParseOptions;
-    decimalSeparator: string;
-
-    descriptionColumn: string | null;
-    descriptionParseOptions: ParseOptions;
-
-    categoryColumn: string | null;
-    categoryParseOptions: ParseOptions;
-
-    sourceAccountColumn: string | null;
-    sourceAccount: Account | null;
-    sourceAccountIdentifier: AccountIdentifier;
-    sourceAccountParseOptions: ParseOptions;
-
-    destinationAccountColumn: string | null;
-    destinationAccount: Account | null;
-    destinationAccountIdentifier: AccountIdentifier;
-    destinationAccountParseOptions: ParseOptions;
-
-    dateColumn: string | null;
-    dateFormat: string;
-    dateParseOptions: ParseOptions;
-};
 
 function isNullOrWhitespace(input: string) {
     return !input || !input.trim();
@@ -727,7 +695,7 @@ function getValue(row: {[key: string]: string}, columnName: string | null): stri
  * @param options The options telling which CSV fields to map to which fields on the transaction
  * @returns An array of parsed transactions
  */
-function parseTransactions(data: any[], options: MappingOptions): CsvCreateTransaction[] {
+function parseTransactions(data: any[], options: CsvImportProfile): CsvCreateTransaction[] {
     return data.map((row, i) => {
         const dateText = parseWithOptions(getValue(row, options.dateColumn), options.dateParseOptions);
         return {

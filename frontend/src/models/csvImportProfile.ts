@@ -1,0 +1,70 @@
+import { Account } from "./account";
+
+export type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
+export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
+
+export interface CsvImportProfile {
+    // CSV options
+    csvDelimiter: string;
+    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r";
+    csvParseHeader: boolean;
+    
+    // Mapping options
+    duplicateHandling: DuplicateHandlingOptions;
+    identifierColumn: string | null;
+    identifierParseOptions: ParseOptions;
+
+    amountColumn: string | null;
+    amountParseOptions: ParseOptions;
+    decimalSeparator: string;
+
+    descriptionColumn: string | null;
+    descriptionParseOptions: ParseOptions;
+
+    categoryColumn: string | null;
+    categoryParseOptions: ParseOptions;
+
+    sourceAccountColumn: string | null;
+    sourceAccount: Account | null;
+    sourceAccountIdentifier: AccountIdentifier;
+    sourceAccountParseOptions: ParseOptions;
+
+    destinationAccountColumn: string | null;
+    destinationAccount: Account | null;
+    destinationAccountIdentifier: AccountIdentifier;
+    destinationAccountParseOptions: ParseOptions;
+
+    dateColumn: string | null;
+    dateFormat: string;
+    dateParseOptions: ParseOptions;
+};
+
+export interface ParseOptions {
+    trimWhitespace: boolean;
+
+    regex: RegExp | null;
+    pattern: string;
+}
+
+export function parseWithOptions(input: string, options: ParseOptions): string
+{
+    let result = input ?? "";
+
+    if (options.regex !== null) {
+        let matches = options.regex.exec(input);
+        if (matches !== null) {
+            result = options.pattern;
+            for (let i = 0; i < matches.length; i++) {
+                result = result.replace(new RegExp("\\{" + i + "\\}", 'g'), matches[i]);
+            }
+        } else {
+            result = "";
+        }
+    }
+
+    if (options.trimWhitespace) {
+        result = result.trim();
+    }
+
+    return result;
+}

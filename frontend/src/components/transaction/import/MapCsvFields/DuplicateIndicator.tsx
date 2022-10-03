@@ -18,7 +18,7 @@ export default function DuplicateIndicator(props: Props): React.ReactElement {
     }
     if (props.duplicateIdentifiers.has(props.identifier)) {
         return <Tooltip content="Duplicate identifier">
-            <span className="icon has-text-alert">
+            <span className="icon has-text-warning">
                 <FontAwesomeIcon icon={faExclamationTriangle} />
             </span>
         </Tooltip>;

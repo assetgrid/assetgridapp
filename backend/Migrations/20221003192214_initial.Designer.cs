@@ -11,7 +11,7 @@ using assetgrid_backend.Data;
 namespace assetgrid_backend.Migrations
 {
     [DbContext(typeof(AssetgridDbContext))]
-    [Migration("20221003174811_initial")]
+    [Migration("20221003192214_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -213,6 +213,9 @@ namespace assetgrid_backend.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

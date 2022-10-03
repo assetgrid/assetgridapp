@@ -2,11 +2,18 @@
 
 namespace assetgrid_backend.Models
 {
+    /*
+     * If multiple versions are added, create classes for each version.
+     * When deserializing it will deserialize into the correct class.
+     * Each class should then have a method to upgrade to the next until we are at the latest version.
+     */
+
     public class UserCsvImportProfile
     {
         public int Id { get; set; }
         public int UserId { get; set; }
         public virtual User User { get; set; } = null!;
+        public int Version { get; set; }
 
         [MaxLength(50)]
         public string ProfileName { get; set; } = null!;
@@ -15,34 +22,63 @@ namespace assetgrid_backend.Models
 
     public class CsvImportProfile : IValidatableObject
     {
-        public const int Version = 1;
-
         // CSV Options
+        [MaxLength(50)]
         public string CsvDelimiter { get; set; } = null!;
+
+        [MaxLength(50)]
         public string CsvNewlineCharacter { get; set; } = null!;
-        public string CsvParseHeader { get; set; } = null!;
+
+        public bool CsvParseHeader { get; set; }
 
         // Mapping options
+        [MaxLength(50)]
         public string DuplicateHandling { get; set; } = null!;
+
+        [MaxLength(50)]
         public string? IdentifierColumn { get; set; } = null!;
         public ParseOptions IdentifierParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
         public string SourceAccountColumn { get; set; } = null!;
-        public string SourceAccount { get; set; } = null!;
+
+        [MaxLength(50)]
+        public int? SourceAccount { get; set; } = null!;
+
+        [MaxLength(50)]
         public string SourceAccountIdentifier { get; set; } = null!;
         public ParseOptions SourceAccountParseOptions { get; set; } = null!;
-        public string DestinationAccountColumn { get; set; } = null!;
-        public string DestinationAccount { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? DestinationAccountColumn { get; set; } = null!;
+
+        [MaxLength(50)]
+        public int? DestinationAccount { get; set; } = null!;
+
+        [MaxLength(50)]
         public string DestinationAccountIdentifier { get; set; } = null!;
         public ParseOptions DestinationAccountParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
         public string AmountColumn { get; set; } = null!;
         public ParseOptions AmountParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
         public string DecimalSeparator { get; set; } = null!;
+
+        [MaxLength(50)]
         public string DateColumn { get; set; } = null!;
         public ParseOptions DateParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
         public string DateFormat { get; set; } = null!;
-        public string DescriptionColum { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? DescriptionColumn { get; set; } = null!;
         public ParseOptions DescriptionParseOptions { get; set; } = null!;
-        public string CategoryColumn { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? CategoryColumn { get; set; } = null!;
         public ParseOptions CategoryParseOptions { get; set; } = null!;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -67,7 +103,11 @@ namespace assetgrid_backend.Models
         public class ParseOptions
         {
             public bool TrimWhitespace { get; set; }
-            public string Regex { get; set; } = null!;
+
+            [MaxLength(250)]
+            public string? Regex { get; set; } = null!;
+
+            [MaxLength(250)]
             public string Pattern { get; set; } = null!;
         }
     }
