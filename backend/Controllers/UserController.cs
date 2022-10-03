@@ -100,16 +100,20 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateInitial(AuthenticateModel model)
         {
-            if (! await _context.Users.AnyAsync())
+            if (ModelState.IsValid)
             {
-                await _user.CreateUser(model.Email, model.Password);
-                return Ok();
+                if (!await _context.Users.AnyAsync())
+                {
+                    await _user.CreateUser(model.Email, model.Password);
+                    return Ok();
+                }
+                else
+                {
+                    ModelState.AddModelError(nameof(model.Email), "A user already exists");
+                    return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+                }
             }
-            else
-            {
-                ModelState.AddModelError(nameof(model.Email), "A user already exists");
-                return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
-            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         /// <summary>
@@ -128,31 +132,35 @@ namespace assetgrid_backend.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewPreferences))]
         public async Task<IActionResult> Preferences(ViewPreferences model)
         {
-            var user = _user.GetCurrent(HttpContext)!;
-
-            var preferencesExist = true;
-            var preferences = await _context.UserPreferences
-                .SingleOrDefaultAsync(preferences => preferences.UserId == user.Id);
-            if (preferences == null)
+            if (ModelState.IsValid)
             {
-                preferencesExist = false;
-                preferences = new UserPreferences();
-                preferences.UserId = user.Id;
-            }
+                var user = _user.GetCurrent(HttpContext)!;
 
-            preferences.ThousandsSeparator = model.ThousandsSeparator;
-            preferences.DecimalSeparator = model.DecimalSeparator;
-            preferences.DecimalDigits = model.DecimalDigits;
-            preferences.DateFormat = model.DateFormat;
-            preferences.DateTimeFormat = model.DateTimeFormat;
+                var preferencesExist = true;
+                var preferences = await _context.UserPreferences
+                    .SingleOrDefaultAsync(preferences => preferences.UserId == user.Id);
+                if (preferences == null)
+                {
+                    preferencesExist = false;
+                    preferences = new UserPreferences();
+                    preferences.UserId = user.Id;
+                }
+
+                preferences.ThousandsSeparator = model.ThousandsSeparator;
+                preferences.DecimalSeparator = model.DecimalSeparator;
+                preferences.DecimalDigits = model.DecimalDigits;
+                preferences.DateFormat = model.DateFormat;
+                preferences.DateTimeFormat = model.DateTimeFormat;
             
-            if (!preferencesExist)
-            {
-                _context.UserPreferences.Add(preferences);
-            }
-            await _context.SaveChangesAsync();
+                if (!preferencesExist)
+                {
+                    _context.UserPreferences.Add(preferences);
+                }
+                await _context.SaveChangesAsync();
 
-            return Ok(new ViewPreferences(preferences));
+                return Ok(new ViewPreferences(preferences));
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
         [HttpPut]
@@ -210,6 +218,69 @@ namespace assetgrid_backend.Controllers
                 await _context.SaveChangesAsync();
 
                 return Ok();
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        [Authorize]
+        [HttpGet("/api/v1/[controller]/import/csv/profiles")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+        public async Task<IActionResult> CsvImportProfiles()
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            var profiles = await _context.UserCsvImportProfiles
+                .Where(x => x.UserId == user.Id)
+                .Select(x => x.ProfileName)
+                .ToListAsync();
+
+            return Ok(profiles);
+        }
+
+        [Authorize]
+        [HttpGet("/api/v1/[controller]import/csv/profile/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CsvImportProfile))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetCsvImportProfile(string name)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            var profile = await _context.UserCsvImportProfiles
+                .Where(x => x.UserId == user.Id && x.ProfileName == name)
+                .Select(x => x.ImportProfile)
+                .SingleOrDefaultAsync();
+
+            if (profile == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(profile);
+        }
+
+        [Authorize]
+        [HttpPut("/api/v1/[controller]/csv/profile/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CsvImportProfile))]
+        public async Task<IActionResult> UpdateCsvImportProfile(string name, CsvImportProfile profile)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = _user.GetCurrent(HttpContext)!;
+                var existingProfile = await _context.UserCsvImportProfiles
+                    .Where(x => x.UserId == user.Id && x.ProfileName == name)
+                    .SingleOrDefaultAsync();
+
+                if (existingProfile != null)
+                {
+                    _context.Remove(existingProfile);
+                }
+                _context.Add(new UserCsvImportProfile
+                {
+                    ImportProfile = profile,
+                    ProfileName = name,
+                    UserId = user.Id
+                });
+                await _context.SaveChangesAsync();
+
+                return Ok(profile);
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }

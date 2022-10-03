@@ -1,12 +1,19 @@
 ﻿using assetgrid_backend.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.ViewModels
 {
     public class ViewAccount
     {
         public int Id { get; set; }
+
+        [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
         public string Name { get; set; }
+
+        [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; }
+
+        [MaxLength(30, ErrorMessage = "Account number must be shorter than 30 characters.")]
         public string? AccountNumber { get; set; }
         public bool Favorite { get; set; }
         public long Balance { get; set; }
@@ -65,8 +72,13 @@ namespace assetgrid_backend.ViewModels
 
     public class ViewCreateAccount
     {
+        [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
         public string Name { get; set; } = null!;
+
+        [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
+
+        [MaxLength(30, ErrorMessage = "Account number must be shorter than 30 characters.")]
         public string? AccountNumber { get; set; }
         public bool IncludeInNetWorth { get; set; }
         public bool Favorite { get; set; }

@@ -15,6 +15,7 @@ interface Props {
 export default function ModifyAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.account);
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
 
     return <Modal
@@ -25,20 +26,25 @@ export default function ModifyAccountModal(props: Props) {
             <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || api === null}>Save changes</InputButton>
             <InputButton onClick={() => props.close()}>Cancel</InputButton>
         </>}>
-        <InputModifyAccount value={model} disabled={isUpdating} onChange={account => setModel({
-            id: model.id,
-            favorite: account.favorite,
-            accountNumber: account.accountNumber,
-            description: account.description,
-            includeInNetWorth: account.includeInNetWorth,
-            name: account.name,
-        })}/>
+        <InputModifyAccount
+            value={model}
+            disabled={isUpdating}
+            errors={errors}
+            onChange={account => setModel({
+                id: model.id,
+                favorite: account.favorite,
+                accountNumber: account.accountNumber,
+                description: account.description,
+                includeInNetWorth: account.includeInNetWorth,
+                name: account.name,
+            })}/>
     </Modal>;
 
     async function update() {
         if (api === null) return;
 
         setIsUpdating(true);
+        setErrors({});
         const result = await api.Account.update(props.account.id, model);
         setIsUpdating(false);
         if (result.status === 200) {
@@ -49,6 +55,8 @@ export default function ModifyAccountModal(props: Props) {
             if (props.closeOnChange) {
                 props.close();
             }
+        } else if (result.status === 400) {
+            setErrors(result.errors);
         }
     }
 }

@@ -7,8 +7,12 @@ namespace assetgrid_backend.ViewModels
         public int? SourceId { get; set; }
         public int? DestinationId { get; set; }
         public DateTime DateTime { get; set; }
+
+        [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
         public List<string> Identifiers { get; set; } = null!;
+
+        [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
         public string Category { get; set; } = null!;
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
@@ -38,23 +42,44 @@ namespace assetgrid_backend.ViewModels
             else if (Total != null && Lines.Count > 0 && Total != Lines.Select(line => line.Amount).Sum())
             {
                 yield return new ValidationResult(
-                    $"Sum of line amounts does not match transaction total",
+                    $"Sum of line amounts does not match transaction total.",
                     new[] { nameof(Total), nameof(Lines) });
+            }
+
+            if (Identifiers.Any(x => x.Length > 100))
+            {
+                yield return new ValidationResult(
+                    $"Identifier must be shorter than 100 characters.",
+                    new[] { nameof(Total) });
             }
         }
     }
 
-    public class ViewUpdateTransaction
+    public class ViewUpdateTransaction : IValidatableObject
     {
         public int? SourceId { get; set; }
         public int? DestinationId { get; set; }
         public DateTime? DateTime { get; set; }
+
+        [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string? Description { get; set; }
+
+        [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
         public string? Category { get; set; }
         public List<ViewTransactionLine>? Lines { get; set; }
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
         public List<string>? Identifiers { get; set; } = null!;
+
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (Identifiers != null && Identifiers.Any(x => x.Length > 100))
+            {
+                yield return new ValidationResult(
+                    $"Identifier must be shorter than 100 characters.",
+                    new[] { nameof(Total) });
+            }
+        }
     }
 
     public class ViewUpdateMultipleTransactions
@@ -89,6 +114,8 @@ namespace assetgrid_backend.ViewModels
     {
         public long Amount { get; set; }
         public string AmountString { get => Amount.ToString(); set => Amount = long.Parse(value); }
+
+        [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
 
         public ViewTransactionLine(long amount, string description)

@@ -16,6 +16,7 @@ export default function CreateAccountModal(props: Props) {
     const [model, setModel] = React.useState(props.preset);
     const [isCreating, setIsCreating] = React.useState(false);
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
 
     return <Modal
@@ -26,13 +27,18 @@ export default function CreateAccountModal(props: Props) {
             <button className="button is-success" onClick={() => create()} disabled={isCreating || api === null}>Create account</button>
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
-        <InputModifyAccount value={model} disabled={isCreating} onChange={account => setModel(account)}/>
+        <InputModifyAccount
+            errors={errors}
+            value={model}
+            disabled={isCreating}
+            onChange={account => setModel(account)} />
     </Modal>;
 
     async function create() {
         if (api === null) return;
 
         setIsCreating(true);
+        setErrors({});
         const result = await api.Account.create(model);
         setModel(props.preset);
         setIsCreating(false);
@@ -48,6 +54,8 @@ export default function CreateAccountModal(props: Props) {
             if (props.closeOnChange) {
                 props.close();
             }
+        } else if (result.status === 400) {
+            setErrors(result.errors);
         }
     }
 }

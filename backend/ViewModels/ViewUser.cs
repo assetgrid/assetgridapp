@@ -1,4 +1,6 @@
-﻿namespace assetgrid_backend.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace assetgrid_backend.ViewModels
 {
     public class UserAuthenticatedResponse
     {
@@ -20,7 +22,10 @@
 
     public class AuthenticateModel
     {
+        [MaxLength(100, ErrorMessage = "Email must be shorter than 100 characters.")]
+        [MinLength(3, ErrorMessage = "Please enter your email address.")]
         public string Email { get; set; } = null!;
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         public string Password { get; set; } = null!;
     }
 

@@ -1,14 +1,23 @@
 ﻿using assetgrid_backend.Models;
+using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace assetgrid_backend.ViewModels
 {
     public class ViewPreferences
     {
+        [MaxLength(10, ErrorMessage = "Decimal separator must be shorter than 3 characters.")]
         public string DecimalSeparator { get; set; } = null!;
         public int DecimalDigits { get; set; }
+
+        [MaxLength(10, ErrorMessage = "Thousands separator must be shorter than 3 characters.")]
         public string ThousandsSeparator { get; set; } = null!;
+
+        [MaxLength(30, ErrorMessage = "Date format must be shorter than 30 characters.")]
         public string? DateFormat { get; set; } = null!;
+
+        [MaxLength(100, ErrorMessage = "Date and time format must be shorter than 100 characters.")]
         public string? DateTimeFormat { get; set; } = null!;
 
         [JsonConstructor]

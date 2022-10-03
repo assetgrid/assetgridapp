@@ -1,5 +1,7 @@
 ﻿using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Text.Json;
 
 namespace assetgrid_backend.Data
 {
@@ -19,6 +21,8 @@ namespace assetgrid_backend.Data
                 entity.HasMany(e => e.Accounts)
                     .WithOne(e => e.User);
                 entity.HasOne(e => e.Preferences)
+                    .WithOne(e => e.User);
+                entity.HasMany(e => e.CsvImportProfiles)
                     .WithOne(e => e.User);
             });
 
@@ -41,6 +45,17 @@ namespace assetgrid_backend.Data
             {
                 entity.HasIndex(e => e.Identifier);
             });
+
+            builder.Entity<UserCsvImportProfile>(entity =>
+            {
+                var valueConverter = new ValueConverter<CsvImportProfile, string>(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<CsvImportProfile>(v, (JsonSerializerOptions?)null) ?? new CsvImportProfile()
+                );
+                entity.Property("ImportProfile")
+                    .HasConversion(valueConverter)
+                    .HasColumnType("json");
+            });
         }
 
         public DbSet<User> Users { get; set; } = null!;
@@ -50,5 +65,6 @@ namespace assetgrid_backend.Data
         public DbSet<TransactionLine> TransactionLines { get; set; } = null!;
         public DbSet<TransactionUniqueIdentifier> TransactionUniqueIdentifiers { get; set; } = null!;
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
+        public DbSet<UserCsvImportProfile> UserCsvImportProfiles { get; set; } = null!;
     }
 }

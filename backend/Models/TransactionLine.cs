@@ -1,4 +1,6 @@
-﻿namespace assetgrid_backend.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace assetgrid_backend.Models
 {
     public class TransactionLine
     {
@@ -7,6 +9,8 @@
         public int Order { get; set; }
         public virtual Transaction Transaction { get; set; } = null!;
         public long Amount { get; set; }
+
+        [MaxLength(250)]
         public string Description { get; set; } = null!;
     }
 }

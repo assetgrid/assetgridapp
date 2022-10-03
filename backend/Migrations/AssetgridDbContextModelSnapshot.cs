@@ -26,15 +26,18 @@ namespace assetgrid_backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AccountNumber")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.HasKey("Id");
 
@@ -49,14 +52,16 @@ namespace assetgrid_backend.Migrations
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
 
                     b.Property<int?>("DestinationAccountId")
                         .HasColumnType("int");
@@ -92,7 +97,8 @@ namespace assetgrid_backend.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -115,7 +121,8 @@ namespace assetgrid_backend.Migrations
 
                     b.Property<string>("Identifier")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<int>("TransactionId")
                         .HasColumnType("int");
@@ -137,15 +144,18 @@ namespace assetgrid_backend.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("HashedPassword")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("NormalizedEmail")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("Id");
 
@@ -185,6 +195,31 @@ namespace assetgrid_backend.Migrations
                     b.ToTable("UserAccounts");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.Models.UserCsvImportProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImportProfile")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<string>("ProfileName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserCsvImportProfiles");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.UserPreferences", b =>
                 {
                     b.Property<int>("Id")
@@ -192,21 +227,25 @@ namespace assetgrid_backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("DateFormat")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.Property<string>("DateTimeFormat")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<int>("DecimalDigits")
                         .HasColumnType("int");
 
                     b.Property<string>("DecimalSeparator")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
 
                     b.Property<string>("ThousandsSeparator")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -275,6 +314,17 @@ namespace assetgrid_backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.Models.UserCsvImportProfile", b =>
+                {
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany("CsvImportProfiles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.UserPreferences", b =>
                 {
                     b.HasOne("assetgrid_backend.Models.User", "User")
@@ -301,6 +351,8 @@ namespace assetgrid_backend.Migrations
             modelBuilder.Entity("assetgrid_backend.Models.User", b =>
                 {
                     b.Navigation("Accounts");
+
+                    b.Navigation("CsvImportProfiles");
 
                     b.Navigation("Preferences")
                         .IsRequired();

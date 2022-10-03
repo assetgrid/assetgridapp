@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
@@ -105,13 +105,17 @@ const User = (token: string) => ({
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    updatePreferences: function (preferences: PreferencesModel): Promise<Ok<PreferencesModel>> {
-        return new Promise<Ok<PreferencesModel>>((resolve, reject) => {
+    updatePreferences: function (preferences: PreferencesModel): Promise<Ok<PreferencesModel> | BadRequest> {
+        return new Promise<Ok<PreferencesModel> |BadRequest>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + '/api/v1/user/preferences', preferences, {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => {
                     resolve({ status: 200, data: result.data });
-                }).catch(e => {
+                }).catch((e: AxiosError) => {
+                    if (e.response?.status === 400) {
+                        resolve(e.response.data as BadRequest);
+                        return;
+                    }
                     console.log(e);
                     reject();
                 });
@@ -186,8 +190,8 @@ const Account = (token: string) => ({
      * @param id Account id
      * @returns The account with the specified id
      */
-    get: function (id: number): Promise<Ok<AccountModel> | NotFound> {
-        return new Promise<Ok<AccountModel> | NotFound>((resolve, reject) => {
+    get: function (id: number): Promise<Ok<AccountModel> | NotFound | BadRequest> {
+        return new Promise<Ok<AccountModel> | NotFound | BadRequest>((resolve, reject) => {
             axios.get<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), {
                     headers: { authorization: "Bearer: " + token }
                 })
@@ -198,9 +202,13 @@ const Account = (token: string) => ({
                     resolve({ status: 200, data: result.data });
                 })
                 .catch((e: AxiosError) => {
-                    if (e.response?.status == 404) {
-                        resolve(NotFoundResult);
-                        return;
+                    switch (e.response?.status) {
+                        case 400:
+                            resolve(e.response.data as BadRequest);
+                            break;
+                        case 404:
+                            resolve(NotFoundResult);
+                            break;
                     }
                     console.log(e);
                     reject();
@@ -214,8 +222,8 @@ const Account = (token: string) => ({
      * @param account The new account
      * @returns The updated account
      */
-    update: function (id: number, updatedAccount: CreateAccount): Promise<Ok<AccountModel> | NotFound | Forbid> {
-        return new Promise<Ok<AccountModel> | NotFound | Forbid>((resolve, reject) => {
+    update: function (id: number, updatedAccount: CreateAccount): Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest> {
+        return new Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
             axios.put<AccountModel>(rootUrl + '/api/v1/account/' + Number(id), updatedAccount, {
                     headers: { authorization: "Bearer: " + token }
                 })
@@ -223,12 +231,16 @@ const Account = (token: string) => ({
                     resolve({ status: 200, data: result.data });
                 })
                 .catch((e: AxiosError) => {
-                    if (e.response?.status === 404) {
-                        resolve(NotFoundResult);
-                        return;
-                    } else if(e.response?.status === 403) {
-                        resolve(ForbidResult);
-                        return;
+                    switch (e.response?.status) {
+                        case 400:
+                            resolve(e.response.data as BadRequest);
+                            break;
+                        case 403:
+                            resolve(ForbidResult);
+                            break;
+                        case 404:
+                            resolve(NotFoundResult);
+                            break;
                     }
                     console.log(e);
                     reject();
@@ -241,15 +253,19 @@ const Account = (token: string) => ({
      * @param account The account to be created
      * @returns The newly created account
      */
-    create: function (account: CreateAccount): Promise<Ok<AccountModel>> {
-        return new Promise<Ok<AccountModel>>((resolve, reject) => {
+    create: function (account: CreateAccount): Promise<Ok<AccountModel> | BadRequest> {
+        return new Promise<Ok<AccountModel> | BadRequest>((resolve, reject) => {
             axios.post<AccountModel>(rootUrl + "/api/v1/account", account, {
                     headers: { authorization: "Bearer: " + token }
                 })
                 .then(result => {
                     resolve({ status: 200, data: result.data });
                 })
-                .catch(e => {
+                .catch((e: AxiosError) => {
+                    if (e.response?.status === 400) {
+                        resolve(e.response.data as BadRequest);
+                        return;
+                    }
                     console.log(e);
                     reject();
                 });

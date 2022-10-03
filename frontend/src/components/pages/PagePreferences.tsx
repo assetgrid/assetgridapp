@@ -19,6 +19,7 @@ export default function PagePreferences(): React.ReactElement {
     const { user, updatePreferences } = React.useContext(userContext);
     const [model, setModel] = React.useState<Preferences | "fetching">(user === "fetching" ? "fetching" : user.preferences);
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
 
     React.useEffect(() => {
@@ -51,6 +52,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputText value={model.decimalSeparator}
                         disabled={isUpdating}
                         label="Decimal Separator"
+                        errors={errors["DecimalSeparator"]}
                         onChange={(event => setModel({
                             ...model,
                             decimalSeparator: event.target.value
@@ -60,6 +62,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputText value={model.thousandsSeparator}
                         disabled={isUpdating}
                         label="Thousands Separator"
+                        errors={errors["ThousandsSeparator"]}
                         onChange={(event => setModel({
                             ...model,
                             thousandsSeparator: event.target.value
@@ -68,6 +71,7 @@ export default function PagePreferences(): React.ReactElement {
                 <div className="column">
                     <InputNumber value={new Decimal(model.decimalDigits)}
                         disabled={isUpdating}
+                        errors={errors["DecimalDigits"]}
                         label="Digits after decimal point"
                         allowNull={false}
                         onChange={(value => setModel({
@@ -86,6 +90,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputTextOrNull value={model.dateFormat}
                         disabled={isUpdating}
                         noValueText="System default"
+                        errors={errors["DateFormat"]}
                         label="Date format"
                         onChange={(value => setModel({
                             ...model,
@@ -97,6 +102,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputTextOrNull value={model.dateTimeFormat}
                         disabled={isUpdating}
                         label="Date and time format"
+                        errors={errors["DateTimeFormat"]}
                         noValueText="System default"
                         onChange={(value => setModel({
                             ...model,
@@ -124,11 +130,14 @@ export default function PagePreferences(): React.ReactElement {
         }
 
         setIsUpdating(true);
+        setErrors({});
         api.User.updatePreferences(model)
             .then(result => {
                 setIsUpdating(false);
                 if (result.status === 200) {
                     updatePreferences(result.data);
+                } else if (result.status === 400) {
+                    setErrors(result.errors);
                 }
             })
             .catch(e => {

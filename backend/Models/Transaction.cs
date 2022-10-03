@@ -11,8 +11,12 @@ namespace assetgrid_backend.Models
         public int? DestinationAccountId { get; set; }
         public virtual Account? DestinationAccount { get; set; }
         public DateTime DateTime { get; set; }
+
+        [MaxLength(250)]
         public string Description { get; set; } = null!;
         public long Total { get; set; }
+
+        [MaxLength(50)]
         public string Category { get; set; } = null!;
 
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
