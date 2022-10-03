@@ -264,6 +264,7 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             var validationResultList = new List<ValidationResult>();
@@ -282,6 +283,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Category = "My category",
+                Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
             var validationResultList = new List<ValidationResult>();
