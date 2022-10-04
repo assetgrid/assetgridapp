@@ -215,7 +215,6 @@ function renderActionValue(action: Action, model: UpdateTransaction, setModel: R
             if (model.category === undefined) {
                 return <></>;
             }
-            console.log(model);
             return <InputCategory label="Enter category"
                 value={model.category}
                 onChange={value => setModel({ ...model, category: value })}
