@@ -4,6 +4,7 @@ import { Account } from "../../../../models/account";
 import { CsvImportProfile } from "../../../../models/csvImportProfile";
 import InputAccount from "../../../account/input/InputAccount";
 import Card from "../../../common/Card";
+import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
 import { CsvCreateTransaction } from "../importModels";
 
@@ -17,6 +18,7 @@ interface Props {
 
 export default function AccountSelector(props: Props): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [page, setPage] = React.useState(1);
     const api = useApi();
 
     const identifiers = props.transactions
@@ -33,37 +35,30 @@ export default function AccountSelector(props: Props): React.ReactElement {
     
     return <Card title="Accounts" isNarrow={true}>
         The following account identifiers where found in the CSV file.
-        <table className="table is-fullwidth">
-            <thead>
-                <tr>
-                    <th>Identifier</th>
-                    <th>Account</th>
-                </tr>
-            </thead>
-            <tbody>
-                {identifiers.map(identifier => <tr key={identifier}>
-                    <td>
-                        <Tooltip content="Show transactions with this account">
-                            <a onClick={() => filterTableForIdentifier(identifier)}>
-                                {identifier}
-                            </a>
-                        </Tooltip>
-                    </td>
-                    <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier)) ?? null}
-                        disabled={api === null || isUpdating}
-                        allowNull={true}
-                        nullSelectedText={"No account"}
-                        onChange={value => accountSelected(identifier, value)}
-                        allowCreateNewAccount={true} /></td>
-                </tr>)}
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th>Identifier</th>
-                    <th>Account</th>
-                </tr>
-            </tfoot>
-        </table>
+        <Table pageSize={10}
+            renderItem={(identifier, i) => <tr key={identifier}>
+                <td>
+                    <Tooltip content="Show transactions with this account">
+                        <a onClick={() => filterTableForIdentifier(identifier)}>
+                            {identifier}
+                        </a>
+                    </Tooltip>
+                </td>
+                <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier)) ?? null}
+                    disabled={api === null || isUpdating}
+                    allowNull={true}
+                    nullSelectedText={"No account"}
+                    onChange={value => accountSelected(identifier, value)}
+                    allowCreateNewAccount={true} /></td>
+            </tr>}
+            page={page}
+            goToPage={setPage}
+            type="sync"
+            renderType="table"
+            headings={<tr>
+                <th>Identifier</th>
+                <th>Account</th>
+            </tr>} items={identifiers} />
     </Card>;
 
     function filterTableForIdentifier(identifier: string) {
