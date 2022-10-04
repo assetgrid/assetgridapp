@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Principal;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace assetgrid_backend.Controllers
 {
@@ -220,6 +221,8 @@ namespace assetgrid_backend.Controllers
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
+                    _context.ChangeTracker.AutoDetectChangesEnabled = false;
+
                     // Get a list of all accounts the user can write to
                     var writeAccountIds = await _context.UserAccounts
                         .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
@@ -253,6 +256,7 @@ namespace assetgrid_backend.Controllers
 
         private async Task<IActionResult> UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
         {
+            // EF Core enty. Manually track changes to improve performance
             // Update accounts
             var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
             if (model.SourceId != null && dbObject.SourceAccountId != model.SourceId)
@@ -261,6 +265,7 @@ namespace assetgrid_backend.Controllers
                 {
                     dbObject.SourceAccountId = null;
                     dbObject.SourceAccount = null;
+                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
                 }
                 else
                 {
@@ -273,6 +278,7 @@ namespace assetgrid_backend.Controllers
                     }
                     dbObject.SourceAccountId = newSourceUserAccount.Id;
                     dbObject.SourceAccount = newSourceUserAccount.Account;
+                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
                 }
             }
             if (model.DestinationId != null && dbObject.DestinationAccountId != model.DestinationId)
@@ -281,6 +287,7 @@ namespace assetgrid_backend.Controllers
                 {
                     dbObject.DestinationAccountId = null;
                     dbObject.DestinationAccount = null;
+                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
                 }
                 else
                 {
@@ -293,6 +300,7 @@ namespace assetgrid_backend.Controllers
                     }
                     dbObject.DestinationAccountId = newDestinationUserAccount.Id;
                     dbObject.DestinationAccount = newDestinationUserAccount.Account;
+                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
                 }
             }
 
@@ -300,10 +308,12 @@ namespace assetgrid_backend.Controllers
             if (model.DateTime != null)
             {
                 dbObject.DateTime = model.DateTime.Value;
+                _context.Entry(dbObject).Property(nameof(dbObject.DateTime)).IsModified = true;
             }
             if (model.Description != null)
             {
                 dbObject.Description = model.Description;
+                _context.Entry(dbObject).Property(nameof(dbObject.Description)).IsModified = true;
             }
             if (model.Identifiers != null)
             {
@@ -313,11 +323,12 @@ namespace assetgrid_backend.Controllers
                     TransactionId = dbObject.Id,
                     Identifier = x.Trim()
                 }).ToList();
-
+                _context.Entry(dbObject).Property(nameof(dbObject.Identifiers)).IsModified = true;
             }
             if (model.Category != null)
             {
                 dbObject.Category = model.Category;
+                _context.Entry(dbObject).Property(nameof(dbObject.Category)).IsModified = true;
             }
             if (model.Total != null && dbObject.TransactionLines.Count == 0)
             {
@@ -329,7 +340,10 @@ namespace assetgrid_backend.Controllers
                     var source = dbObject.SourceAccountId;
                     dbObject.SourceAccountId = dbObject.DestinationAccountId;
                     dbObject.DestinationAccountId = source;
+                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
                 }
+                _context.Entry(dbObject).Property(nameof(dbObject.Total)).IsModified = true;
             }
             if (model.Lines != null)
             {
@@ -349,6 +363,7 @@ namespace assetgrid_backend.Controllers
                         TransactionId = dbObject.Id,
                     })
                     .ToList();
+                _context.Entry(dbObject).Property(nameof(dbObject.TransactionLines)).IsModified = true;
 
                 if (dbObject.Total < 0)
                 {
@@ -358,6 +373,8 @@ namespace assetgrid_backend.Controllers
                     dbObject.SourceAccountId = dbObject.DestinationAccountId;
                     dbObject.DestinationAccountId = source;
                     dbObject.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
                 }
             }
 
@@ -373,8 +390,6 @@ namespace assetgrid_backend.Controllers
                 ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Source and destination must be different.");
                 return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
-
-            await _context.SaveChangesAsync();
 
             var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
             var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
