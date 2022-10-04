@@ -16,7 +16,7 @@ interface Props {
     maxItems?: number;
 }
 
-export default function InputAutocomplete (props: Props) {
+export default function InputAutoComplete (props: Props) {
     const [open, setOpen] = React.useState(false);
     const [autocompleteSuggestions, setAutocompleteSuggestions] = React.useState<string[] | null>(null);
     const api = useApi();

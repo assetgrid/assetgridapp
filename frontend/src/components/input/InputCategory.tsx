@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
 import { debounce } from "../../lib/Utils";
-import InputAutocomplete from "./InputAutocomplete";
+import InputAutoComplete from "./InputAutoComplete";
 
 interface Props {
     label?: string;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function InputCategory (props: Props) {
-    return <InputAutocomplete refreshSuggestions={refreshSuggestions} {...props} />;
+    return <InputAutoComplete refreshSuggestions={refreshSuggestions} {...props} />;
 
     function refreshSuggestions(api: Api, prefix: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {

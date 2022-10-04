@@ -15,7 +15,7 @@ import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Modal from "../../common/Modal";
 import Table from "../../common/Table";
-import InputAutocomplete from "../../input/InputAutocomplete";
+import InputAutoComplete from "../../input/InputAutoComplete";
 import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
 import { CsvCreateTransaction } from "./importModels";
@@ -218,7 +218,7 @@ interface InputImportProfileProps {
 function InputImportProfile(props: InputImportProfileProps) {
     const profilesRef = React.useRef<string[] | Promise<string[]> | null>(null);
 
-    return <InputAutocomplete value={props.value}
+    return <InputAutoComplete value={props.value}
         disabled={props.disabled}
         onChange={props.onChange}
         label={props.label}

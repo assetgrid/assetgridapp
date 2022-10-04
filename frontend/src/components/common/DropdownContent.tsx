@@ -8,20 +8,18 @@ interface Props {
     fullWidth: boolean;
 }
 
-type positionType = [number | undefined, number | undefined, number | undefined, number | undefined];
-
 export default function DropdownContent(props: Props) {
     const { container } = React.useContext(modalContainerContext);
     const ref = React.useRef<HTMLSpanElement>(null);
     const timeoutRef = React.useRef<NodeJS.Timer | null>(null);
     const parentRef = React.useRef<HTMLDivElement>(null);
 
-    if (!container) { return null; }
-
     React.useEffect(() => {
         timeoutRef.current = setInterval(() => updateContent(), 100);
         return () => clearInterval(timeoutRef.current!);
     }, []);
+    
+    if (!container) { return null; }
 
     return <>
         <span ref={ref}></span>
@@ -60,9 +58,9 @@ export default function DropdownContent(props: Props) {
             }
 
             if (parentBounding.bottom > window.innerHeight - dropdownBounding.height - 10) {
-                parentRef.current.style.top = (parentBounding.top - dropdownBounding.height - 5).toString() + "px";
+                parentRef.current.style.top = (parentBounding.top - dropdownBounding.height - 15).toString() + "px";
             } else {
-                parentRef.current.style.top = (parentBounding.bottom + 5).toString() + "px";
+                parentRef.current.style.top = (parentBounding.bottom + 15).toString() + "px";
             }
         }
     }
