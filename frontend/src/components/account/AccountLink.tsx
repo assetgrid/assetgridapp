@@ -16,7 +16,7 @@ export default function AccountLink(props: Props) {
         </span>;
     }
 
-    return <Link className="account-link" to={routes.account(props.account.id.toString())} target={props.targetBlank === true ? "_blank" : "_self"}>
+    return <Link className="account-link" to={routes.account(props.account.id.toString())} state={{ page: 1 }} target={props.targetBlank === true ? "_blank" : "_self"}>
         <span>#{props.account.id}</span> {props.account.name}
     </Link>;
 }
