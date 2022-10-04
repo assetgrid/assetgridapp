@@ -249,6 +249,8 @@ namespace assetgrid_backend.Controllers
                     await _context.SaveChangesAsync();
                     transaction.Commit();
                 }
+
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
                 return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
@@ -323,7 +325,7 @@ namespace assetgrid_backend.Controllers
                     TransactionId = dbObject.Id,
                     Identifier = x.Trim()
                 }).ToList();
-                _context.Entry(dbObject).Property(nameof(dbObject.Identifiers)).IsModified = true;
+                _context.Entry(dbObject).Collection(nameof(dbObject.Identifiers)).IsModified = true;
             }
             if (model.Category != null)
             {
@@ -363,7 +365,7 @@ namespace assetgrid_backend.Controllers
                         TransactionId = dbObject.Id,
                     })
                     .ToList();
-                _context.Entry(dbObject).Property(nameof(dbObject.TransactionLines)).IsModified = true;
+                _context.Entry(dbObject).Collection(nameof(dbObject.TransactionLines)).IsModified = true;
 
                 if (dbObject.Total < 0)
                 {
