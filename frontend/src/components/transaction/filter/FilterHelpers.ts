@@ -97,14 +97,14 @@ export type ConditionModel = {
     value: DateTime;
     onChange: (value: DateTime) => void;
 } | {
-    column: "Identifier" | "Category" | "Description";
+    column: "Category" | "Description";
     operator: typeof stringScalarOperators[number];
     negated: boolean;
     valueType: "string";
     value: string;
     onChange: (value: string) => void;
 } | {
-    column: "Identifier" | "Category" | "Description";
+    column: "Category" | "Description";
     operator: typeof arrayOperators[number];
     negated: boolean;
     valueType: "string[]";
@@ -122,7 +122,6 @@ export function getPossibleOperators(column: ConditionModel["column"]): (typeof 
         case "SourceAccountId":
         case "DestinationAccountId":
             return Operators.filter(op => accountOperators.includes(op.operator as any));
-        case "Identifier":
         case "Category":
         case "Description":
             return Operators.filter(op => stringOperators.includes(op.operator as any));
@@ -149,7 +148,6 @@ export function getValueType(column: ConditionModel['column'], operator: SearchO
             }
         case "Category":
         case "Description":
-        case "Identifier":
             switch (operator) {
                 case SearchOperator.In:
                     return "string[]";

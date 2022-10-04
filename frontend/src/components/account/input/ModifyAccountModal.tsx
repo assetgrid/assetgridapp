@@ -33,7 +33,7 @@ export default function ModifyAccountModal(props: Props) {
             onChange={account => setModel({
                 id: model.id,
                 favorite: account.favorite,
-                accountNumber: account.accountNumber,
+                identifiers: account.identifiers,
                 description: account.description,
                 includeInNetWorth: account.includeInNetWorth,
                 name: account.name,

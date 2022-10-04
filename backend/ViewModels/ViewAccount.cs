@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.ViewModels
 {
-    public class ViewAccount
+    public class ViewAccount : IValidatableObject
     {
         public int Id { get; set; }
 
@@ -12,9 +12,7 @@ namespace assetgrid_backend.ViewModels
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; }
-
-        [MaxLength(30, ErrorMessage = "Account number must be shorter than 30 characters.")]
-        public string? AccountNumber { get; set; }
+        public List<string> Identifiers { get; set; }
         public bool Favorite { get; set; }
         public long Balance { get; set; }
         public string BalanceString { get => Balance.ToString(); set => Balance = long.Parse(value); }
@@ -25,7 +23,7 @@ namespace assetgrid_backend.ViewModels
             int id,
             string name,
             string description,
-            string? accountNumber,
+            List<string> identifiers,
             bool favorite,
             bool includeInNetWorth,
             AccountPermissions permissions,
@@ -35,7 +33,7 @@ namespace assetgrid_backend.ViewModels
             Id = id;
             Name = name;
             Description = description;
-            AccountNumber = accountNumber;
+            Identifiers = identifiers;
             Favorite = favorite;
             Balance = balance;
             IncludeInNetWorth = includeInNetWorth;
@@ -54,6 +52,15 @@ namespace assetgrid_backend.ViewModels
         {
             return (AccountPermissions)(permissions + 1);
         }
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (Identifiers.Any(x => x.Length > 100))
+            {
+                yield return new ValidationResult(
+                    $"Identifier must be shorter than 100 characters.",
+                    new[] { nameof(Identifiers) });
+            }
+        }
 
         public static ViewAccount GetNoReadAccess(int id)
         {
@@ -61,7 +68,7 @@ namespace assetgrid_backend.ViewModels
                 id,
                 "Unknown",
                 "You do not have permission to view this account",
-                null,
+                new List<string>(),
                 false,
                 false,
                 AccountPermissions.None,
@@ -70,18 +77,26 @@ namespace assetgrid_backend.ViewModels
         }
     }
 
-    public class ViewCreateAccount
+    public class ViewCreateAccount : IValidatableObject
     {
         [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
         public string Name { get; set; } = null!;
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
-
-        [MaxLength(30, ErrorMessage = "Account number must be shorter than 30 characters.")]
-        public string? AccountNumber { get; set; }
+        public List<string> Identifiers { get; set; } = null!;
         public bool IncludeInNetWorth { get; set; }
         public bool Favorite { get; set; }
+
+        IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
+        {
+            if (Identifiers.Any(x => x.Length > 100))
+            {
+                yield return new ValidationResult(
+                    $"Identifier must be shorter than 100 characters.",
+                    new[] { nameof(Identifiers) });
+            }
+        }
     }
 
     public enum AccountMovementResolution

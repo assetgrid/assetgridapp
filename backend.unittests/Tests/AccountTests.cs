@@ -59,7 +59,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string> { "test" },
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -69,7 +69,7 @@ namespace backend.unittests.Tests
             // Create account
             var createResult = (await AccountController.Create(model)).OkValue<ViewAccount>();
             Assert.NotNull(createResult);
-            Assert.Equal(createResult.AccountNumber, model.AccountNumber);
+            Assert.Equal(createResult.Identifiers, model.Identifiers);
             Assert.Equal(createResult.Description, model.Description);
             Assert.Equal(createResult.Favorite, model.Favorite);
             Assert.Equal(createResult.IncludeInNetWorth, model.IncludeInNetWorth);
@@ -90,7 +90,7 @@ namespace backend.unittests.Tests
             Assert.Equal(JsonConvert.SerializeObject(createResult), JsonConvert.SerializeObject(getResult));
 
             // Update account properties
-            getResult.AccountNumber = "New account number";
+            getResult.Identifiers = new List<string> { "test2" };
             getResult.Description = "New description";
             getResult.Name = "Another name";
 
@@ -119,7 +119,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -181,7 +181,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -261,7 +261,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -353,7 +353,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -394,7 +394,7 @@ namespace backend.unittests.Tests
         {
             var model = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -467,7 +467,7 @@ namespace backend.unittests.Tests
         {
             var accountModel = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -542,7 +542,7 @@ namespace backend.unittests.Tests
         {
             var account = (await AccountController.Create(new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string>(),
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace assetgrid_backend.Controllers
 {
@@ -51,7 +52,10 @@ namespace assetgrid_backend.Controllers
                     {
                         Name = model.Name,
                         Description = model.Description,
-                        AccountNumber = model.AccountNumber,
+                        Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
+                        {
+                            Identifier = x
+                        }).ToList()
                     };
                     _context.Accounts.Add(result);
                     await _context.SaveChangesAsync();
@@ -71,7 +75,7 @@ namespace assetgrid_backend.Controllers
 
                     return Ok(new ViewAccount(
                         id: result.Id,
-                        accountNumber: result.AccountNumber,
+                        identifiers: result.Identifiers.Select(x => x.Identifier).ToList(),
                         description: result.Description,
                         name: result.Name,
                         favorite: model.Favorite,
@@ -129,7 +133,11 @@ namespace assetgrid_backend.Controllers
                 return Forbid();
             }
 
-            result.Account.AccountNumber = model.AccountNumber;
+            _context.AccountUniqueIdentifiers.RemoveRange(_context.AccountUniqueIdentifiers.Where(x => x.AccountId == id));
+            result.Account.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
+            {
+                Identifier = x
+            }).ToList();
             result.Account.Description = model.Description;
             result.Account.Name = model.Name;
             result.Favorite = model.Favorite;
@@ -141,7 +149,7 @@ namespace assetgrid_backend.Controllers
                 id: result.Id,
                 name: result.Account.Name,
                 description: result.Account.Description,
-                accountNumber: result.Account.AccountNumber,
+                identifiers: result.Account.Identifiers.Select(x => x.Identifier).ToList(),
                 favorite: result.Favorite,
                 includeInNetWorth: result.IncludeInNetWorth,
                 permissions: ViewAccount.PermissionsFromDbPermissions(result.Permissions),
@@ -235,6 +243,12 @@ namespace assetgrid_backend.Controllers
                     .ThenBy(transaction => transaction.Id);
             }
 
+            var test = query
+                .Skip(request.From)
+                .Take(request.To - request.From)
+                .SelectView(user.Id)
+                .ToList();
+
             var result = await query
                 .Skip(request.From)
                 .Take(request.To - request.From)
@@ -283,9 +297,6 @@ namespace assetgrid_backend.Controllers
 
             return Ok(await query.CountAsync());
         }
-
-
-
 
         #region Movements
 

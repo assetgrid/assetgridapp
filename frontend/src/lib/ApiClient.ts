@@ -219,8 +219,8 @@ const User = (token: string) => ({
         return new Promise<Ok<string[]>>((resolve, reject) => {
             axios.put<string[]>(rootUrl + '/api/v1/import/csv/profile/' + encodeURIComponent(name), {
                 ...profile,
-                sourceAccount: profile.sourceAccount?.id ?? null,
-                destinationAccount: profile.destinationAccount?.id ?? null,
+                sourceAccount: profile.sourceAccountId ?? null,
+                destinationAccount: profile.destinationAccountId ?? null,
 
                 amountParseOptions: { ...profile.amountParseOptions, regex: profile.amountParseOptions.regex?.source },
                 categoryParseOptions: { ...profile.categoryParseOptions, regex: profile.categoryParseOptions.regex?.source },

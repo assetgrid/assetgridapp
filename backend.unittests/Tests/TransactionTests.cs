@@ -67,7 +67,7 @@ namespace backend.unittests.Tests
             {
                 Name = "A",
                 Description = "Description",
-                AccountNumber = null,
+                Identifiers = new List<string>(),
                 Favorite = false,
                 IncludeInNetWorth = false,
             };
@@ -296,7 +296,7 @@ namespace backend.unittests.Tests
         {
             var accountModel = new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string> { },
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -377,7 +377,7 @@ namespace backend.unittests.Tests
             UserService.MockUser = otherUser;
             var unknownAccount = (await AccountController.Create(new ViewCreateAccount
             {
-                AccountNumber = "Test Account Number",
+                Identifiers = new List<string> { },
                 Description = "This is a test",
                 Favorite = true,
                 IncludeInNetWorth = true,
@@ -592,7 +592,7 @@ namespace backend.unittests.Tests
             {
                 Name = "C",
                 Description = "no access",
-                AccountNumber = null,
+                Identifiers = new List<string> { },
                 Favorite = false,
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
@@ -722,7 +722,7 @@ namespace backend.unittests.Tests
             {
                 Name = "C",
                 Description = "no access",
-                AccountNumber = null,
+                Identifiers = new List<string> { },
                 Favorite = false,
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
@@ -756,7 +756,7 @@ namespace backend.unittests.Tests
             {
                 Name = "C",
                 Description = "no access",
-                AccountNumber = null,
+                Identifiers = new List<string> { },
                 Favorite = false,
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
@@ -891,7 +891,7 @@ namespace backend.unittests.Tests
             {
                 Name = "C",
                 Description = "no access",
-                AccountNumber = null,
+                Identifiers = new List<string> { },
                 Favorite = false,
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
@@ -1010,7 +1010,7 @@ namespace backend.unittests.Tests
             {
                 Name = "C",
                 Description = "no access",
-                AccountNumber = null,
+                Identifiers = new List<string> { },
                 Favorite = false,
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();

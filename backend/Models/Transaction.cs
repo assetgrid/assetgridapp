@@ -1,5 +1,7 @@
 ﻿using assetgrid_backend.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace assetgrid_backend.Models
 {
@@ -55,28 +57,32 @@ namespace assetgrid_backend.Models
                 Id = transaction.Id,
                 DateTime = transaction.DateTime,
                 Description = transaction.Description,
-                Source = transaction.SourceAccount != null
-                        ? transaction.SourceAccount.Users!.SingleOrDefault(user => user.UserId == userId) == null ? ViewAccount.GetNoReadAccess(transaction.SourceAccount.Id) : new ViewAccount(
-                            transaction.SourceAccount.Id,
-                            transaction.SourceAccount.Name,
-                            transaction.SourceAccount.Description,
-                            transaction.SourceAccount.AccountNumber,
-                            transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Favorite,
-                            transaction.SourceAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
-                            ViewAccount.PermissionsFromDbPermissions(transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Permissions),
-                            0
-                        ) : null,
-                Destination = transaction.DestinationAccount != null
-                        ? transaction.DestinationAccount.Users!.SingleOrDefault(user => user.UserId == userId) == null ? ViewAccount.GetNoReadAccess(transaction.DestinationAccount.Id) : new ViewAccount(
-                            transaction.DestinationAccount.Id,
-                            transaction.DestinationAccount.Name,
-                            transaction.DestinationAccount.Description,
-                            transaction.DestinationAccount.AccountNumber,
-                            transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Favorite,
-                            transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
-                            ViewAccount.PermissionsFromDbPermissions(transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Permissions),
-                            0
-                        ) : null,
+                Source = transaction.SourceAccount == null ? null
+                        : !transaction.SourceAccount.Users!.Any(user => user.UserId == userId) ? ViewAccount.GetNoReadAccess(transaction.SourceAccount.Id)
+                            : new ViewAccount(
+                                transaction.SourceAccount.Id,
+                                transaction.SourceAccount.Name,
+                                transaction.SourceAccount.Description,
+                                // We don't include identifiers on transactions because it is unnecessary and because it fails during testing with MemoryDb
+                                new List<string>(),
+                                // transaction.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Favorite,
+                                transaction.SourceAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
+                                ViewAccount.PermissionsFromDbPermissions(transaction.SourceAccount.Users!.Single(user => user.UserId == userId).Permissions),
+                                0),
+                Destination = transaction.DestinationAccount == null ? null
+                        : !transaction.DestinationAccount.Users!.Any(user => user.UserId == userId) ? ViewAccount.GetNoReadAccess(transaction.DestinationAccount.Id)
+                            : new ViewAccount(
+                                transaction.DestinationAccount.Id,
+                                transaction.DestinationAccount.Name,
+                                transaction.DestinationAccount.Description,
+                                // We don't include identifiers on transactions because it is unnecessary and because it fails during testing with MemoryDb
+                                new List<string>(),
+                                // transaction.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Favorite,
+                                transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).IncludeInNetWorth,
+                                ViewAccount.PermissionsFromDbPermissions(transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Permissions),
+                                0),
                 Identifiers = transaction.Identifiers.Select(x => x.Identifier).ToList(),
                 Category = transaction.Category,
                 Lines = transaction.TransactionLines

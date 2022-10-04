@@ -11,8 +11,8 @@ import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import { Import } from "../../transaction/import/Import";
 import ImportCsv from "../../transaction/import/ImportCsv";
-import { AccountReference, capitalize, CsvCreateTransaction } from "../../transaction/import/importModels";
-import MapCsvFields from "../../transaction/import/MapCsvFields/MapCsvFields";
+import { CsvCreateTransaction } from "../../transaction/import/importModels";
+import MapCsvFields, { updateAutoIdentifiers } from "../../transaction/import/MapCsvFields/MapCsvFields";
 
 const defaultParseOptions = {
     trimWhitespace: true,
@@ -25,10 +25,10 @@ const defaultParseOptions = {
  */
 export default function PageImportTransactionsCsv () {
     const [data, setData] = React.useState<any[] | null>(null);
+    const [accounts, setAccounts] = React.useState<Account[] | "fetching">("fetching");
     const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
     const [lines, setLines] = React.useState<string[]>([]);
     const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
-    const [accountsBy, setAccountsBy] = React.useState<{ [key: string]: { [value: string]: Account | "fetching" | null } }>({});
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
     const [profile, setProfile] = React.useState<CsvImportProfile>({
@@ -40,12 +40,12 @@ export default function PageImportTransactionsCsv () {
         identifierColumn: null,
         identifierParseOptions: defaultParseOptions,
         sourceAccountColumn: null,
-        sourceAccount: null,
-        sourceAccountIdentifier: "name",
+        sourceAccountId: null,
+        sourceAccountType: "column",
         sourceAccountParseOptions: defaultParseOptions,
         destinationAccountColumn: null,
-        destinationAccount: null,
-        destinationAccountIdentifier: "name",
+        destinationAccountId: null,
+        destinationAccountType: "column",
         destinationAccountParseOptions: defaultParseOptions,
         amountColumn: null,
         amountParseOptions: defaultParseOptions,
@@ -61,9 +61,18 @@ export default function PageImportTransactionsCsv () {
     });
 
     const updateDuplicateAccountsDebounced = React.useCallback(debounce(updateDuplicateAccounts, 500), []);
-    const fetchAccountsDebounced = React.useCallback(debounce(fetchAccounts, 500), []);
     const api = useApi();
     
+    React.useEffect(() => {
+        if (api !== null) {
+            api.Account.search({ from: 0, to: 1000, descending: false, orderByColumn: "Id" }).then(result => {
+                if (result.status === 200) {
+                    setAccounts(result.data.data);
+                }
+            });
+        }
+    }, [api]);
+
     return <>
         <Hero title="Import" subtitle={"From CSV file" + (csvFile !== null ? " (" + csvFile.name + ")" : "")} />
         <div className="tabs has-background-white px-5">
@@ -88,43 +97,29 @@ export default function PageImportTransactionsCsv () {
                         optionsChanged={options => setProfile(options)}
                         fileChanged={file => setCsvFile(file)}
                         options={profile}
-                        goToNext={() => setCurrentTab("map-columns")}
+                        goToNext={() => accounts !== "fetching" && setCurrentTab("map-columns")}
                     />
                 </>;
             case "map-columns":
                 return data != null && <MapCsvFields
-                        accountsBy={accountsBy}
-                        options={profile}
-                        transactions={transactions}
-                        duplicateIdentifiers={duplicateIdentifiers}
-                        accountCreated={account => {
-                            const newAccountsBy = { ...accountsBy };
-                            Object.keys(account).forEach(identifier => {
-                                if (newAccountsBy[identifier] === undefined) newAccountsBy[identifier] = {};
-                                newAccountsBy[identifier][(account as any)[identifier]] = account;
-                            });
-                            setAccountsBy(newAccountsBy);
-                        }}
-                        data={data}
-                        onChange={(transactions, options) => mappingsChanged(transactions, options)}
-                        goToPrevious={() => setCurrentTab("parse-csv")}
-                        goToNext={() => setCurrentTab("process")}
-                        apiReady={api !== null}
-                    />;
+                    options={profile}
+                    accounts={accounts === "fetching" ? [] : accounts}
+                    setAccounts={accountsChanged}
+                    transactions={transactions}
+                    duplicateIdentifiers={duplicateIdentifiers}
+                    data={data}
+                    onChange={(transactions, options) => mappingsChanged(transactions, options)}
+                    goToPrevious={() => setCurrentTab("parse-csv")}
+                    goToNext={() => setCurrentTab("process")}
+                    apiReady={api !== null} />;
             case "process":
-                if (Object.keys(accountsBy).some(identifier =>
-                    Object.keys(accountsBy[identifier]).some(value =>
-                        accountsBy[identifier][value] === "fetching"))) {
-                    return "Please wait while fetching accounts";
-                }
-                
                 return transactions != null && <>
                     <Import
                         transactions={transactions}
-                        accountsBy={accountsBy as { [identifier: string]: { [value: string]: Account; }; }}
-                        batchSize={10}
+                        batchSize={100}
                         goToPrevious={() => setCurrentTab("map-columns")}
-                        profile={profile} />
+                        profile={profile}
+                        accounts={accounts === "fetching" ? [] : accounts} />
                 </>;
             default:
                 throw "Unknown state";
@@ -135,61 +130,37 @@ export default function PageImportTransactionsCsv () {
         // The CSV mapping window is disabled until the API is loaded to prevent the mappings from changing and triggering an API call
         if (api === null) return;
 
-        // Update duplicates
+        // If any account identifier changed, update duplicates
         if ((transactions === null && newTransactions !== null)
             || newTransactions.length !== transactions?.length
             || newTransactions.some((transaction, i) => transactions[i].identifier !== transaction.identifier)) {
             setDuplicateIdentifiers("fetching");
             updateDuplicateAccountsDebounced(api, newTransactions);
         }
-        
-        // Update AccountsBy. Go through all transactions and set their accounts to fetching
-        let newAccountsBy = { ...accountsBy };
-        for (let i = 0; i < newTransactions.length; i++) {
-            let transaction = newTransactions[i];
 
-            if (transaction.source !== null) {
-                if (newAccountsBy[transaction.source.identifier] === undefined) {
-                    newAccountsBy[transaction.source.identifier] = {};
-                }
-                if (newAccountsBy[transaction.source.identifier][transaction.source.value] === undefined) {
-                    newAccountsBy[transaction.source.identifier][transaction.source.value] = "fetching";
-                }
-            }
-
-            if (transaction.destination !== null) {
-                if (newAccountsBy[transaction.destination.identifier] === undefined) {
-                    newAccountsBy[transaction.destination.identifier] = {};
-                }
-                if (newAccountsBy[transaction.destination.identifier][transaction.destination.value] === undefined) {
-                    newAccountsBy[transaction.destination.identifier][transaction.destination.value] = "fetching";
-                }
-            }
-        }
-
-        // If explicit accounts have been selected, these need to be added to the AccountsBy object as well
-        if (options.sourceAccount !== null) {
-            for (const identifier of Object.keys(options.sourceAccount)) {
-                if (newAccountsBy[identifier] === undefined) {
-                    newAccountsBy[identifier] = {};
-                }
-                newAccountsBy[identifier][(options.sourceAccount as any)[identifier]] = options.sourceAccount;
-            };
-        }
-        if (options.destinationAccount !== null) {
-            for (const identifier of Object.keys(options.destinationAccount)) {
-                if (newAccountsBy[identifier] === undefined) {
-                    newAccountsBy[identifier] = {};
-                }
-                newAccountsBy[identifier][(options.destinationAccount as any)[identifier]] = options.destinationAccount;
-            };
-        }
-
-        setAccountsBy(newAccountsBy);
         setTransactions(newTransactions);
         setProfile(options);
+    }
 
-        fetchAccountsDebounced(api, newTransactions, newAccountsBy);
+    function accountsChanged(newAccounts: Account[]) {
+        if (transactions !== null) {
+            // Create object from identifiers to speed up lookups
+            const identifierDictionary: { [identifier: string]: Account } = {};
+            newAccounts.forEach(account => account.identifiers.forEach(identifier => {
+                if (identifierDictionary[identifier] === undefined) {
+                    identifierDictionary[identifier] = account;
+                }
+            }));
+
+            setTransactions(
+                updateAutoIdentifiers([...transactions.map(transaction => ({
+                    ...transaction,
+                    source: identifierDictionary[transaction.sourceText] ?? null,
+                    destination: identifierDictionary[transaction.destinationText] ?? null,
+                }))], profile)
+            );
+        }
+        setAccounts(newAccounts);
     }
 
     function updateDuplicateAccounts(api: Api, newTransactions: CsvCreateTransaction[]) {
@@ -205,71 +176,5 @@ export default function PageImportTransactionsCsv () {
                 ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
                 ...result
             ])));
-    }
-
-    function fetchAccounts(api: Api, transactions: CsvCreateTransaction[], accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } }) {
-        // Find every unique account reference in the transactions that has not been loaded
-        let uniqueAccountReferences = ([
-            ...transactions.map(transaction => transaction.source),
-            ...transactions.map(transaction => transaction.destination)
-        ].filter(account => account != null) as AccountReference[])
-            .filter((account, index, array) => array.findIndex(accountB => accountB.identifier == account.identifier && accountB.value == account.value) == index)
-            .filter(account => {
-                return accountsBy[account.identifier][account.value] === "fetching"
-            });
-
-        let uniqueIdentifiers = uniqueAccountReferences
-            .map(account => account.identifier)
-            .filter((a, index, array) => array.findIndex(b => a == b) == index);
-        
-        api.Account.search({
-            from: 0,
-            to: uniqueAccountReferences.length,
-            query: {
-                type: SearchGroupType.Or,
-                children: uniqueIdentifiers.map(identifier => ({
-                    type: SearchGroupType.Query,
-                    query: {
-                        column: capitalize(identifier),
-                        operator: SearchOperator.In,
-                        value: uniqueAccountReferences
-                            .filter(reference => reference.identifier === identifier)
-                            .map(reference => reference.value)
-                            .filter((a, index, array) => array.findIndex(b => a == b) == index)
-                    }
-                })),
-            }
-        } as SearchRequest).then(result => {
-            accountsBy = { ...accountsBy };
-            // Update the accounts found
-            for (let i = 0; i < result.data.data.length; i++) {
-                let account = result.data.data[i];
-                Object.keys(account).forEach(identifier => {
-                    if (accountsBy[identifier] === undefined) {
-                        accountsBy[identifier] = {};
-                    }
-                    accountsBy[identifier][(account as any)[identifier]] = account;
-                });
-            }
-
-            // Set missing accounts to be known missing as well (rather than being fetching)
-            for (let i = 0; i < transactions.length; i++) {
-                let transaction = transactions[i];
-    
-                if (transaction.source !== null) {
-                    if (accountsBy[transaction.source.identifier][transaction.source.value] === "fetching") {
-                        accountsBy[transaction.source.identifier][transaction.source.value] = null;
-                    }
-                }
-    
-                if (transaction.destination !== null) {
-                    if (accountsBy[transaction.destination.identifier][transaction.destination.value] === "fetching") {
-                        accountsBy[transaction.destination.identifier][transaction.destination.value] = null;
-                    }
-                }
-            }
-
-            setAccountsBy(accountsBy);
-        });
     }
 }

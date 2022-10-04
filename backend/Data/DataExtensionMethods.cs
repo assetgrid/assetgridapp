@@ -48,7 +48,6 @@ namespace assetgrid_backend.Data
                 ("Id", typeof(int), false),
                 ("SourceAccountId", typeof(int), true),
                 ("DestinationAccountId", typeof(int), true),
-                ("Identifier", typeof(string), false),
                 ("Description", typeof(string), false),
                 ("Category", typeof(string), false),
                 ("DateTime", typeof(DateTime), false),

@@ -6,7 +6,7 @@ export type Account = {
     name: string;
     description: string;
     favorite: boolean;
-    accountNumber: string;
+    identifiers: string[];
     balance?: Decimal;
     includeInNetWorth: boolean;
 }
@@ -14,7 +14,7 @@ export type Account = {
 export type CreateAccount = {
     name: string;
     description: string;
-    accountNumber: string;
+    identifiers: string[];
     includeInNetWorth: boolean;
     favorite: boolean;
 }

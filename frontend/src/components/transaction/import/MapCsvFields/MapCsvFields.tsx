@@ -4,7 +4,7 @@ import { Account, CreateAccount } from "../../../../models/account";
 import Card from "../../../common/Card";
 import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
-import { AccountReference, CsvCreateTransaction } from "../importModels";
+import { CsvCreateTransaction } from "../importModels";
 import CreateAccountModal from "../../../account/input/CreateAccountModal";
 import { InputParseOptionsModal } from "../../../input/InputParsingOptions";
 import Decimal from "decimal.js";
@@ -15,20 +15,20 @@ import CsvMappingIssues from "./CsvMappingIssues";
 import CsvMappingTransactionTable from "./CsvMappingTransactionTable";
 import InputAccount from "../../../account/input/InputAccount";
 import { AccountIdentifier, CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
-
-export type CsvMappingTableFilter = "all" | "reference-to-missing-account" | "no-account" | "same-account" | "duplicate" | "error";
+import AccountSelector from "./AccountSelector";
+import { Transaction } from "../../../../models/transaction";
 
 interface Props {
     data: any[];
     transactions: CsvCreateTransaction[] | null;
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
+    accounts: Account[];
+    setAccounts: (accounts: Account[]) => void;
     duplicateIdentifiers: Set<string> | "fetching";
     options: CsvImportProfile;
     apiReady: boolean;
     onChange: (transactions: CsvCreateTransaction[], options: CsvImportProfile) => void;
     goToNext: () => void;
     goToPrevious: () => void;
-    accountCreated: (account: Account) => void;
 }
 
 function isNullOrWhitespace(input: string) {
@@ -41,11 +41,13 @@ function isNullOrWhitespace(input: string) {
 export default function MapCsvFields(props: Props) {
     const [tableDraw, setTableDraw] = React.useState(0);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
-    const [tableFilter, setTableFilter] = React.useState<CsvMappingTableFilter>("all");
+
+    const [tableFilterMessage, settableFilterMessage] = React.useState<string>();
+    const [tableFilter, setTableFilter] = React.useState<{ filter: (transaction: CsvCreateTransaction) => boolean }>({ filter: () => true });
 
     // Update transactions whenever the raw data changes
     React.useEffect(() => {
-        const newTransactions = parseTransactions(props.data, props.options);
+        const newTransactions = parseTransactions(props.data, props.options, props.accounts);
         if (props.apiReady) {
             props.onChange(newTransactions, props.options);
         }
@@ -55,13 +57,6 @@ export default function MapCsvFields(props: Props) {
     React.useEffect(() => {
         setTableDraw(draw => draw + 1);
     }, [props.transactions]);
-
-    // If identifiers are automatic, update them every time transactions are changed
-    React.useEffect(() => {
-        if (props.options.duplicateHandling === "automatic") {
-            updateAutoIdentifiers();
-        }
-    }, [props.transactions, props.accountsBy]);
 
     return <>
         {modal !== null && modal}
@@ -170,38 +165,36 @@ export default function MapCsvFields(props: Props) {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Source account identifier"
+                    <InputSelect label="Source account"
                         isFullwidth={true}
-                        value={props.options.sourceAccountIdentifier}
-                        placeholder={"Select variable"}
+                        value={props.options.sourceAccountType}
+                        placeholder={"Source account"}
                         disabled={! props.apiReady}
                         onChange={result => updateAccountMapping("source",
-                            result as AccountIdentifier,
+                            result,
                             props.options.sourceAccountColumn,
-                            props.options.sourceAccount,
+                            props.accounts.find(x => x.id === props.options.sourceAccountId) ?? null,
                             props.options.sourceAccountParseOptions)}
                         items={[
-                            { key: "select", value: "Select single account for all transactions" },
-                            { key: "name", value: "Name" },
-                            { key: "id", value: "Id" },
-                            { key: "accountNumber", value: "Account number" },
+                            { key: "column", value: "CSV column" },
+                            { key: "single", value: "Same account for all transactions" },
                         ]} />
                 </div>
                 <div className="column">
-                    {props.options.sourceAccountIdentifier === "select"
-                        ? <InputAccount label="Source account"
+                    {props.options.sourceAccountType === "single"
+                        ? <InputAccount label="Select account"
                             allowNull={true}
                             allowCreateNewAccount={true}
                             disabled={! props.apiReady}
                             nullSelectedText={"No account"}
-                            value={props.options.sourceAccount}
-                            onChange={result => updateAccountMapping("source", props.options.sourceAccountIdentifier, null, result, props.options.sourceAccountParseOptions)}/>
-                        : <InputSelect label="Source account column"
+                            value={props.options.sourceAccountId}
+                            onChange={result => updateAccountMapping("source", props.options.sourceAccountType, null, result, props.options.sourceAccountParseOptions)}/>
+                        : <InputSelect label="Column"
                             isFullwidth={true}
                             value={props.options.sourceAccountColumn}
                             placeholder={"Select column"}
                             disabled={! props.apiReady}
-                            onChange={result => updateAccountMapping("source", props.options.sourceAccountIdentifier, result, null, props.options.sourceAccountParseOptions)}
+                            onChange={result => updateAccountMapping("source", props.options.sourceAccountType, result, null, props.options.sourceAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No source account" },
                                 ...Object.keys(props.data[0]).map(item => ({
@@ -216,7 +209,7 @@ export default function MapCsvFields(props: Props) {
                                         onClick={() => setModal(<InputParseOptionsModal
                                         value={props.options.sourceAccountParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
-                                            onChange={options => updateAccountMapping("source", props.options.sourceAccountIdentifier, props.options.sourceAccountColumn, null, options)}
+                                            onChange={options => updateAccountMapping("source", props.options.sourceAccountType, props.options.sourceAccountColumn, null, options)}
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
@@ -229,38 +222,36 @@ export default function MapCsvFields(props: Props) {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Destination account identifier"
+                    <InputSelect label="Destination account"
                         isFullwidth={true}
-                        value={props.options.destinationAccountIdentifier}
-                        placeholder={"Select variable"}
+                        value={props.options.destinationAccountType}
+                        placeholder={"Destination account"}
                         disabled={! props.apiReady}
                         onChange={result => updateAccountMapping("destination",
-                            result as AccountIdentifier,
+                            result,
                             props.options.destinationAccountColumn,
-                            props.options.destinationAccount,
+                            props.accounts.find(x => x.id === props.options.destinationAccountId) ?? null,
                             props.options.destinationAccountParseOptions)}
                         items={[
-                            { key: "select", value: "Select single account for all transactions" },
-                            { key: "name", value: "Name" },
-                            { key: "id", value: "Id" },
-                            { key: "accountNumber", value: "Account Number" },
+                            { key: "column", value: "CSV column" },
+                            { key: "single", value: "Same account for all transactions" },
                         ]} />
                 </div>
                 <div className="column">
-                    {props.options.destinationAccountIdentifier === "select"
-                        ? <InputAccount label="Destination account"
+                    {props.options.destinationAccountType === "single"
+                        ? <InputAccount label="Select account"
                             allowNull={true}
                             allowCreateNewAccount={true}
                             disabled={! props.apiReady}
                             nullSelectedText={"No account"}
-                            value={props.options.destinationAccount}
-                            onChange={result => updateAccountMapping("destination", props.options.destinationAccountIdentifier, null, result, props.options.destinationAccountParseOptions)} />
+                            value={props.options.destinationAccountId}
+                            onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, null, result, props.options.destinationAccountParseOptions)} />
                         : <InputSelect label="Destination account column"
                             isFullwidth={true}
                             value={props.options.destinationAccountColumn}
                             placeholder={"Select column"}
                             disabled={! props.apiReady}
-                            onChange={result => updateAccountMapping("destination", props.options.destinationAccountIdentifier, result, null, props.options.destinationAccountParseOptions)}
+                            onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, result, null, props.options.destinationAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No destination account" },
                                 ...Object.keys(props.data[0]).map(item => ({
@@ -275,7 +266,7 @@ export default function MapCsvFields(props: Props) {
                                         onClick={() => setModal(<InputParseOptionsModal
                                             value={props.options.destinationAccountParseOptions}
                                             previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
-                                            onChange={options => updateAccountMapping("destination", props.options.destinationAccountIdentifier, props.options.destinationAccountColumn, null, options)}
+                                            onChange={options => updateAccountMapping("destination", props.options.destinationAccountType, props.options.destinationAccountColumn, null, options)}
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                     )}>
@@ -394,32 +385,36 @@ export default function MapCsvFields(props: Props) {
             </div>
         </Card>
 
+        {(props.options.sourceAccountType === "column" || props.options.destinationAccountType === "column")
+            && <AccountSelector
+                accounts={props.accounts}
+                options={props.options}
+                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1) }}
+                setAccounts={props.setAccounts}
+                transactions={props.transactions ?? []} />}
+
         {props.transactions && <Card title="Import preview" isNarrow={false}>
-            {tableFilter !== "all" && <Message title="Filter is active" type="link">
-                Some transactions are hidden!{" "}
-                {tableFilter === "reference-to-missing-account" && <>Currently only transactions that reference a missing source or destination account are shown.{" "}</>}
-                {tableFilter === "no-account" && <>Currently only transactions that have no source or destination account are shown.{" "}</>}
-                {tableFilter === "same-account" && <>Currently only transactions that have the same source and destination account are shown.{" "}</>}
-                {tableFilter === "duplicate" && <>Currently only duplicate transactions are shown.{" "}</>}
-                {tableFilter === "error" && <>Currently only transactions with parsing errors are shown.{" "}</>}
-                <a className="has-text-link" onClick={() => { setTableFilter("all"); setTableDraw(draw => draw + 1) }}>Show all transactions</a>
+            {tableFilterMessage && <Message title="Filter is active" type="link">
+                Some transactions are hidden! {tableFilterMessage}{" "}
+                <a className="has-text-link" onClick={() => {
+                    setTableFilter({ filter: () => true });
+                    settableFilterMessage(undefined);
+                    setTableDraw(draw => draw + 1)
+                }}>Show all transactions</a>
             </Message>}
             <CsvMappingTransactionTable
                 transactions={props.transactions}
                 options={props.options}
-                accountsBy={props.accountsBy}
                 duplicateIdentifiers={props.duplicateIdentifiers}
-                tableFilter={tableFilter}
-                tableDraw={tableDraw}
-                beginCreatingAccount={beginCreatingAccount} />
+                tableFilter={tableFilter.filter}
+                tableDraw={tableDraw} />
         </Card>}
 
         {props.transactions && <Card title="Continue" isNarrow={true}>
             <CsvMappingIssues
                 transactions={props.transactions}
-                accountsBy={props.accountsBy}
                 duplicateIdentifiers={props.duplicateIdentifiers}
-                setTableFilter={filter => { setTableFilter(filter); setTableDraw(draw => draw + 1) }} />
+                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1) }} />
             <div className="buttons">
                 <InputButton onClick={props.goToPrevious}>Back</InputButton>
                 <InputButton className="is-primary" onClick={props.goToNext}>Continue</InputButton>
@@ -431,13 +426,13 @@ export default function MapCsvFields(props: Props) {
      * Updates how the amount is parsed from the raw CSV data and recalculates it for all transactions
      */
     function updateAmountMapping(column: string | null, decimalSeparator: string, parseOptions: ParseOptions) {
-        props.onChange([
+        props.onChange(updateAutoIdentifiers([
             ...props.data.map((row, i) => ({
                 ...props.transactions![i],
                 amountText: parseWithOptions(getValue(row, column), parseOptions),
                 amount: parseAmount(getValue(row, column), decimalSeparator, parseOptions)
             }))
-        ], {
+        ], props.options), {
             ...props.options,
             amountColumn: column,
             decimalSeparator: decimalSeparator,
@@ -493,7 +488,7 @@ export default function MapCsvFields(props: Props) {
             return;
         }
 
-        props.onChange([
+        props.onChange(updateAutoIdentifiers([
             ...props.data.map((row, i) => {
                 const dateText = parseWithOptions(dateColumn ? (row as any)[dateColumn] ?? "" : "", parseOptions);
                 return {
@@ -502,7 +497,7 @@ export default function MapCsvFields(props: Props) {
                     dateText: dateText
                 }
             })
-        ], {
+        ], props.options), {
             ...props.options,
             dateColumn: dateColumn,
             dateFormat: dateFormat,
@@ -518,26 +513,36 @@ export default function MapCsvFields(props: Props) {
             return;
         }
 
-        props.onChange([
-            ...props.data.map((row, i) => ({
-                ...props.transactions![i],
-                identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, row)
-            }))
-        ], {
+        const newOptions = {
             ...props.options,
             duplicateHandling: duplicateHandling,
             identifierColumn: identifierColumn,
             identifierParseOptions: parseOptions,
-        });
+        };
+
+        props.onChange(
+            updateAutoIdentifiers([
+                ...props.data.map((row, i) => ({
+                    ...props.transactions![i],
+                    identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, row)
+                }))
+            ], newOptions),
+            newOptions);
     }
 
     /**
      * Updates how an account column is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAccountMapping(type: "source" | "destination", identifier: AccountIdentifier, column: string | null, value: Account | null, parseOptions: ParseOptions) {
+    function updateAccountMapping(
+        type: "source" | "destination",
+        accountType: "column" | "single",
+        column: string | null,
+        value: Account | null,
+        parseOptions: ParseOptions)
+    {
         if (props.transactions === null) return;
 
-        if (identifier === "select") {
+        if (accountType === "single") {
             column = null;
         } else {
             value = null;
@@ -552,119 +557,88 @@ export default function MapCsvFields(props: Props) {
             newTransactions = [
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
-                    source: getReference(row)
+                    source: getAccount(row),
+                    sourceText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
                 } as CsvCreateTransaction))
             ];
         } else {
             newTransactions = [
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
-                    destination: getReference(row)
+                    destination: getAccount(row),
+                    destinationText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
                 } as CsvCreateTransaction))
             ];
         }
 
         let newOptions = { ...props.options };
         if (type === "source") {
-            newOptions.sourceAccountIdentifier = identifier;
+            newOptions.sourceAccountType = accountType;
             newOptions.sourceAccountColumn = column
-            newOptions.sourceAccount = value;
+            newOptions.sourceAccountId = value?.id ?? null;
             newOptions.sourceAccountParseOptions = parseOptions;
         } else {
-            newOptions.destinationAccountIdentifier = identifier;
+            newOptions.destinationAccountType = accountType;
             newOptions.destinationAccountColumn = column
-            newOptions.destinationAccount = value;
+            newOptions.destinationAccountId = value?.id ?? null;
             newOptions.destinationAccountParseOptions = parseOptions;
         }
-        props.onChange(newTransactions, newOptions);
+        props.onChange(updateAutoIdentifiers(newTransactions, newOptions), newOptions);
 
-        function getReference(row: string[]): AccountReference | null {
-            if (identifier === "select") {
-                return value === null ? null : {
-                    identifier: "id",
-                    value: value.id
-                };
+        function getAccount(row: string[]): Account | null {
+            if (accountType === "single") {
+                return value;
             } else {
-                return column === null || isNullOrWhitespace(row[column as any]) ? null : {
-                    identifier: identifier,
-                    value: parseWithOptions(row[column as any], parseOptions),
-                } as AccountReference
+                if (column === null || isNullOrWhitespace(row[column as any])) {
+                    return null;
+                } else {
+                    const identifier = parseWithOptions(row[column as any], parseOptions);
+                    return props.accounts.find(account => account.identifiers.includes(identifier)) ?? null;
+                }
             }
-        }
-    }
-
-    function beginCreatingAccount(accountReference: AccountReference): void {
-        let account: CreateAccount = {
-            name: "",
-            description: "",
-            accountNumber: "",
-            includeInNetWorth: false,
-            favorite: false,
-        };
-        (account as any)[accountReference.identifier] = accountReference.value;
-        setModal(<CreateAccountModal preset={account}
-            close={() => setModal(null)}
-            created={account => { props.accountCreated(account); setModal(null); }} />);
-    }
-
-    function updateAutoIdentifiers(): void {
-        if (props.transactions === null) return;
-
-        let changes = false;
-        let counts: {[key: string]: number} = {};
-        let transactions = props.transactions.map(t => {
-            let identifier = getAutoIdentifier(t, props.accountsBy);
-            
-            if (identifier === null) {
-                if (t.identifier !== identifier) changes = true;
-                return { ...t, identifier: identifier };
-            }
-
-            if (counts[identifier] === undefined) counts[identifier] = 0;
-            counts[identifier] += 1;
-
-            identifier = identifier + "|" + counts[identifier];
-
-            if (t.identifier !== identifier) changes = true;
-            return { ...t, identifier: identifier };
-        });
-
-        if (changes) {
-            props.onChange(transactions, props.options);
         }
     }
 }
+
+/**
+ * Updates automatic identifiers for all transactions, but only if identifier is set to automatic
+ */
+export function updateAutoIdentifiers(transactions: CsvCreateTransaction[], options: CsvImportProfile): CsvCreateTransaction[] {
+    if (options.duplicateHandling !== "automatic") return transactions;
+
+    let counts: {[key: string]: number} = {};
+    return transactions.map(t => {
+        let identifier = getAutoIdentifier(t);
+        
+        if (identifier === null) {
+            return { ...t, identifier: identifier };
+        }
+
+        if (counts[identifier] === undefined) counts[identifier] = 0;
+        counts[identifier] += 1;
+
+        identifier = identifier + "|" + counts[identifier];
+
+        return { ...t, identifier: identifier };
+    });
+} 
 
 /**
  * Calculates an automatic identifier for the transaction
  * @param transaction The transaction to calculate an identifier for
  * @returns A unique identifier
  */
-function getAutoIdentifier(transaction: CsvCreateTransaction, accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } }): string | null {
-    let source = transaction.source == null
-        ? null
-        : accountsBy[transaction.source.identifier]
-            ? accountsBy[transaction.source.identifier][transaction.source.value] ?? null
-            : null;
-    let destination = transaction.destination == null
-        ? null
-        : accountsBy[transaction.destination.identifier]
-            ? accountsBy[transaction.destination.identifier][transaction.destination.value] ?? null
-            : null;
-
+function getAutoIdentifier(transaction: CsvCreateTransaction): string | null {
     if (transaction.amount === "invalid" || !transaction.dateTime.isValid) {
-        return null;
-    }
-    if (source === "fetching" || destination === "fetching") {
         return null;
     }
 
     if (transaction.amount.greaterThanOrEqualTo(0)) {
-        return formatAccount(source) + "→" + formatAccount(destination) +
+        return formatAccount(transaction.source) + "→" + formatAccount(transaction.destination) +
             "|" + transaction.dateTime.toISO({ suppressMilliseconds: true, includeOffset: false, includePrefix: false }) +
             "|" + transaction.amount.toDecimalPlaces(4).toString();
     } else {
-        return formatAccount(destination) + "→" + formatAccount(source) +
+        return formatAccount(transaction.destination) + "→" + formatAccount(transaction.source) +
             "|" + transaction.dateTime.toISO({ suppressMilliseconds: true, includeOffset: false, includePrefix: false }) +
             "|" + transaction.amount.neg().toDecimalPlaces(4).toString();
     }
@@ -695,29 +669,36 @@ function getValue(row: {[key: string]: string}, columnName: string | null): stri
  * @param options The options telling which CSV fields to map to which fields on the transaction
  * @returns An array of parsed transactions
  */
-function parseTransactions(data: any[], options: CsvImportProfile): CsvCreateTransaction[] {
-    return data.map((row, i) => {
+function parseTransactions(data: any[], options: CsvImportProfile, accounts: Account[]): CsvCreateTransaction[] {
+    const result = data.map((row, i) => {
         const dateText = parseWithOptions(getValue(row, options.dateColumn), options.dateParseOptions);
+        const sourceText = options.sourceAccountType === "column"
+            ? parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions) : "";
+        const destinationText = options.destinationAccountType === "column"
+            ? parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions) : "";
         return {
             rowNumber: i,
             dateText: dateText,
             dateTime: DateTime.fromFormat(dateText, options.dateFormat),
             description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
             category: parseWithOptions(getValue(row, options.categoryColumn), options.categoryParseOptions),
-            source: isNullOrWhitespace(getValue(row, options.sourceAccountColumn)) ? null : {
-                identifier: options.sourceAccountIdentifier,
-                value: parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions),
-            } as AccountReference,
-            destination: isNullOrWhitespace(getValue(row, options.destinationAccountColumn)) ? null : {
-                identifier: options.destinationAccountIdentifier,
-                value: parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions),
-            } as AccountReference,
-     
+            sourceText: sourceText,
+            source: accounts.find(account => options.sourceAccountType === "single"
+                ? account.id === options.sourceAccountId
+                : account.identifiers.some(x => x === sourceText)
+            ) ?? null,
+            destinationText: destinationText,
+            destination: accounts.find(account => options.destinationAccountType === "single"
+                ? account.id === options.destinationAccountId
+                : account.identifiers.some(x => x === destinationText)
+            ) ?? null,
             identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, row),
             amountText: parseWithOptions(getValue(row, options.amountColumn), options.amountParseOptions),
             amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions),
         } as CsvCreateTransaction
     });
+
+    return updateAutoIdentifiers(result, options);
 }
 
 /**

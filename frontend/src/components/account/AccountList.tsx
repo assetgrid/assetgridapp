@@ -38,7 +38,7 @@ export default function AccountList(props: Props) {
         headings={<tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Account number</th>
+            <th>Identifiers</th>
             <th>Favorite</th>
             <th>In net worth</th>
         </tr>}
@@ -53,7 +53,7 @@ export default function AccountList(props: Props) {
             <tr key={account.id}>
                 <td><AccountLink account={account} /></td>
                 <td>{account.description}</td>
-                <td>{account.accountNumber}</td>
+                <td>{account.identifiers.join(", ")}</td>
                 <td>
                     <YesNoDisplay value={account.favorite} />
                 </td>

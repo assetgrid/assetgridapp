@@ -70,9 +70,11 @@ namespace assetgrid_backend.Controllers
                     // Make sure that the user has permission to create transactions on both accounts referenced by this transaction
                     UserAccountPermissions[] writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
                     var userAccountSource = model.SourceId == null ? null : await _context.UserAccounts
+                        .Include(account => account.Account.Identifiers)
                         .Where(account => account.UserId == user.Id && account.AccountId == model.SourceId)
                         .SingleOrDefaultAsync();
                     var userAccountDestination = model.DestinationId == null ? null : await _context.UserAccounts
+                        .Include(account => account.Account.Identifiers)
                         .Where(account => account.UserId == user.Id && account.AccountId == model.DestinationId)
                         .SingleOrDefaultAsync();
                     if ((model.SourceId != null && (userAccountSource == null || ! writePermissions.Contains(userAccountSource.Permissions))) ||
@@ -135,7 +137,7 @@ namespace assetgrid_backend.Controllers
                                 id: result.SourceAccount.Id,
                                 name: result.SourceAccount.Name,
                                 description: result.SourceAccount.Description,
-                                accountNumber: result.SourceAccount.AccountNumber,
+                                identifiers: result.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
                                 favorite: userAccountSource!.Favorite,
                                 includeInNetWorth: userAccountSource!.IncludeInNetWorth,
                                 permissions: ViewAccount.PermissionsFromDbPermissions(userAccountSource!.Permissions),
@@ -146,7 +148,7 @@ namespace assetgrid_backend.Controllers
                                 id: result.DestinationAccount.Id,
                                 name: result.DestinationAccount.Name,
                                 description: result.DestinationAccount.Description,
-                                accountNumber: result.DestinationAccount.AccountNumber,
+                                identifiers: result.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
                                 favorite: userAccountDestination!.Favorite,
                                 includeInNetWorth: userAccountDestination!.IncludeInNetWorth,
                                 permissions: ViewAccount.PermissionsFromDbPermissions(userAccountDestination!.Permissions),
@@ -178,7 +180,9 @@ namespace assetgrid_backend.Controllers
                 {
                     var dbObject = await _context.Transactions
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.SourceAccount!.Identifiers)
                         .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.DestinationAccount!.Identifiers)
                         .Include(t => t.TransactionLines)
                         .Include(t => t.Identifiers)
                         .SingleAsync(t => t.Id == id);
@@ -224,7 +228,9 @@ namespace assetgrid_backend.Controllers
 
                     var query = _context.Transactions
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.SourceAccount!.Identifiers)
                         .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
+                        .Include(t => t.DestinationAccount!.Identifiers)
                         .Include(t => t.TransactionLines)
                         .Include(t => t.Identifiers)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
@@ -386,7 +392,7 @@ namespace assetgrid_backend.Controllers
                         id: dbObject.SourceAccount.Id,
                         name: dbObject.SourceAccount.Name,
                         description: dbObject.SourceAccount.Description,
-                        accountNumber: dbObject.SourceAccount.AccountNumber,
+                        identifiers: dbObject.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
                         favorite: sourceUserAccount.Favorite,
                         includeInNetWorth: sourceUserAccount.IncludeInNetWorth,
                         permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount.Permissions),
@@ -397,7 +403,7 @@ namespace assetgrid_backend.Controllers
                         id: dbObject.DestinationAccount.Id,
                         name: dbObject.DestinationAccount.Name,
                         description: dbObject.DestinationAccount.Description,
-                        accountNumber: dbObject.DestinationAccount.AccountNumber,
+                        identifiers: dbObject.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
                         favorite: destinationUserAccount.Favorite,
                         includeInNetWorth: destinationUserAccount.IncludeInNetWorth,
                         permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount.Permissions),
@@ -525,6 +531,7 @@ namespace assetgrid_backend.Controllers
         public async Task<IActionResult> CreateMany(List<ViewCreateTransaction> transactions)
         {
             var user = _user.GetCurrent(HttpContext)!;
+            _context.ChangeTracker.AutoDetectChangesEnabled = false;
 
             if (ModelState.IsValid)
             {
@@ -596,7 +603,6 @@ namespace assetgrid_backend.Controllers
                             }
 
                             _context.Transactions.Add(result);
-                            await _context.SaveChangesAsync();
                             success.Add(transaction);
                         }
                         catch (Exception)
@@ -605,6 +611,7 @@ namespace assetgrid_backend.Controllers
                         }
                     }
                 }
+                await _context.SaveChangesAsync();
 
                 return Ok(new ViewTransactionCreateManyResponse
                 {

@@ -124,15 +124,6 @@ export default function PageTransactions() {
                     operator: SearchOperator.Contains,
                     value: searchString,
                 }
-            },
-            {
-                type: SearchGroupType.Query,
-                query: {
-                    column: "Identifier",
-                    not: false,
-                    operator: SearchOperator.Contains,
-                    value: searchString,
-                }
             }]
         })
     }

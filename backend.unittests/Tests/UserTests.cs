@@ -170,7 +170,7 @@ namespace backend.unittests.Tests
             // Create some accounts
             var accountModel = new ViewCreateAccount
             {
-                AccountNumber = "1234",
+                Identifiers = new List<string> { "test" },
                 Description = "Test account",
                 Favorite = true,
                 IncludeInNetWorth = false,

@@ -1,18 +1,18 @@
 import * as React from "react";
 
-interface Props {
+interface Props<T> {
     label?: string;
-    items: { key: string, value: string }[];
-    value: string | null,
+    items: { key: T, value: string }[];
+    value: T | null,
     placeholder?: string,
-    onChange: (selectedKey: string) => void;
+    onChange: (selectedKey: T) => void;
     addOnAfter?: React.ReactElement;
     isFullwidth?: boolean;
     disabled?: boolean;
 }
 
-export default class InputSelect<T> extends React.Component<Props> {
-    constructor(props: Props) {
+export default class InputSelect<T extends string> extends React.Component<Props<T>> {
+    constructor(props: Props<T>) {
         super(props);
     }
 
@@ -24,7 +24,7 @@ export default class InputSelect<T> extends React.Component<Props> {
                     <div className={"select" + (this.props.isFullwidth ? " is-fullwidth" : "")}>
                         <select value={this.props.value ?? "___placeholder___"}
                             disabled={this.props.disabled}
-                            onChange={e => this.props.onChange(e.target.value)}>
+                            onChange={e => this.props.onChange(e.target.value as T)}>
                             {this.props.placeholder !== undefined && <option disabled value="___placeholder___">{this.props.placeholder}</option>}
                             {this.props.items.map(item => <option key={item.key}
                                 value={item.key}>

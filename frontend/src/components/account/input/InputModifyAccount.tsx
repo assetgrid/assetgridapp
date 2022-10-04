@@ -5,6 +5,7 @@ import { Transaction } from "../../../models/transaction";
 import InputButton from "../../input/InputButton";
 import InputCheckbox from "../../input/InputCheckbox";
 import InputText from "../../input/InputText";
+import InputTextMultiple from "../../input/InputTextMultiple";
 
 interface Props
 {
@@ -26,10 +27,10 @@ export default function InputCreateAccount (props: Props) {
             onChange={e => props.onChange({ ...props.value, description: e.target.value })}
             errors={props.errors["Description"]}
             disabled={props.disabled} />
-        <InputText label="Account number"
-            value={props.value.accountNumber}
-            onChange={e => props.onChange({ ...props.value, accountNumber: e.target.value })}
-            errors={props.errors["AccountNumber"]}
+        <InputTextMultiple label="Identifiers"
+            value={props.value.identifiers}
+            onChange={value => props.onChange({ ...props.value, identifiers: value })}
+            errors={props.errors["Identifiers"]}
             disabled={props.disabled} />
         <InputCheckbox label="Favorite"
             value={props.value.favorite}

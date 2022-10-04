@@ -68,7 +68,7 @@ namespace backend.unittests.Tests
             {
                 Name = "A",
                 Description = "Description",
-                AccountNumber = null,
+                Identifiers = new List<string>(),
                 Favorite = false,
                 IncludeInNetWorth = false,
             };

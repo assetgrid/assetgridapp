@@ -3,69 +3,61 @@ import { Account } from "../../../../models/account";
 import { Message } from "../../../common/Message";
 import InputButton from "../../../input/InputButton";
 import { CsvCreateTransaction } from "../importModels";
-import { CsvMappingTableFilter } from "./MapCsvFields";
 
 interface Props {
     transactions: CsvCreateTransaction[];
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
-    setTableFilter: (newFilter: CsvMappingTableFilter) => void;
+    setTableFilter: (message: string, filter: ((transaction: CsvCreateTransaction) => boolean)) => void;
 }
 
 export default function CsvMappingIssues(props: Props): React.ReactElement {
     // Waiting for a server call before the issues can be shown
-    const fetching = props.transactions === null ||
-        props.transactions.some(t =>
-            (t.source && props.accountsBy[t.source.identifier] && props.accountsBy[t.source.identifier][t.source.value] === "fetching") ||
-            (t.destination && props.accountsBy[t.destination.identifier] && props.accountsBy[t.destination.identifier][t.destination.value] === "fetching")
-        ) ||
-        props.duplicateIdentifiers === "fetching";
+    const fetching = props.duplicateIdentifiers === "fetching";
 
     if (fetching) {
         return <>Processing&hellip; Please wait.</>;
     }
 
-    const referenceToMissingAccountCount = props.transactions.filter(t => 
-        (t.source && props.accountsBy[t.source.identifier][t.source.value] === null) ||
-        (t.destination && props.accountsBy[t.destination.identifier][t.destination.value] === null)
-    ).length;
-    const noAccountCount = props.transactions.filter(t =>
-        (t.source === null || props.accountsBy[t.source.identifier][t.source.value] === null) &&
-        (t.destination === null || props.accountsBy[t.destination.identifier][t.destination.value] === null)
-    ).length;
-    const sameSourceDestinationCount = props.transactions.filter(t =>
-        t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value
-    ).length;
-    const duplicateCount = props.transactions.filter(t => t.identifier && (props.duplicateIdentifiers as Set<string>).has(t.identifier)).length;
-    const errorCount = props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid).length;
-    const allCount = referenceToMissingAccountCount + noAccountCount + duplicateCount + errorCount;
-    
+    const noAccountFilter = (t: CsvCreateTransaction) => t.source === null && t.destination === null;
+    const sameSourceDestinationFilter = (t: CsvCreateTransaction) => t.source !== null && t.source?.id === t.destination?.id;
+    const duplicateFilter = (t: CsvCreateTransaction) => t.identifier !== null && (props.duplicateIdentifiers as Set<string>).has(t.identifier);
+    const errorFilter = (t: CsvCreateTransaction) => t.amount === "invalid" || !t.dateTime.isValid;
+    const totalIssueCount = props.transactions.filter(t => noAccountFilter(t) || sameSourceDestinationFilter(t) || duplicateFilter(t) || errorFilter(t)).length;
+
     return <>
-        {allCount == 0
+        {totalIssueCount == 0
             ? <p className="mb-3">No issues detected</p>
             : <Message title="Problems detected" type="danger">
                 The following issues were detected:
                 <div className="content">
                     <ul>
-                        {referenceToMissingAccountCount > 0 && <li>
-                            {referenceToMissingAccountCount} transactions reference a source or destination account that doesn't exist. They will be created without this account.{" "}
-                            <a className="has-text-link" onClick={() => props.setTableFilter("reference-to-missing-account")}>Show transactions</a>
+                        {props.transactions.filter(noAccountFilter).length > 0 && <li>
+                            {props.transactions.filter(noAccountFilter).length} transactions do not have a source nor destination. They will not be created{" "}
+                            <a className="has-text-link"
+                                onClick={() => props.setTableFilter("Currently only transactions that have no source or destination account are shown.", noAccountFilter)}>
+                                Show transactions
+                            </a>
                         </li>}
-                        {noAccountCount > 0 && <li>
-                            {noAccountCount} transactions do not have a source nor destination. They will not be created{" "}
-                            <a className="has-text-link" onClick={() => props.setTableFilter("no-account")}>Show transactions</a>
+                        {props.transactions.filter(sameSourceDestinationFilter).length > 0 && <li>
+                            {props.transactions.filter(sameSourceDestinationFilter).length} transactions have the same source and destination. They will not be created{" "}
+                            <a className="has-text-link"
+                                onClick={() => props.setTableFilter("Currently only transactions that have the same source and destination account are shown.", sameSourceDestinationFilter)}>
+                                Show transactions
+                            </a>
                         </li>}
-                        {sameSourceDestinationCount > 0 && <li>
-                            {sameSourceDestinationCount} transactions have the same source and destination. They will not be created{" "}
-                            <a className="has-text-link" onClick={() => props.setTableFilter("same-account")}>Show transactions</a>
+                        {props.transactions.filter(duplicateFilter).length  > 0 && <li>
+                            {props.transactions.filter(duplicateFilter).length } transactions have duplicate identifiers. Only one transaction can exist for each identifier.{" "}
+                            <a className="has-text-link"
+                                onClick={() => props.setTableFilter("Currently only duplicate transactions are shown.", duplicateFilter)}>
+                                Show transactions
+                            </a>
                         </li>}
-                        {duplicateCount > 0 && <li>
-                            {duplicateCount} transactions have duplicate identifiers. Only one transaction can exist for each identifier.{" "}
-                            <a className="has-text-link" onClick={() => props.setTableFilter("duplicate")}>Show transactions</a>
-                        </li>}
-                        {errorCount > 0 && <li>
-                            {errorCount} transactions have errors. They will not be created{" "}
-                            <a className="has-text-link" onClick={() => props.setTableFilter("error")}>Show transactions</a>
+                        {props.transactions.filter(errorFilter).length  > 0 && <li>
+                            {props.transactions.filter(errorFilter).length } transactions have errors. They will not be created{" "}
+                            <a className="has-text-link"
+                                onClick={() => props.setTableFilter("Currently only transactions with parsing errors are shown.", errorFilter)}>
+                                Show transactions
+                            </a>
                         </li>}
                     </ul>
                 </div>

@@ -14,6 +14,7 @@ import InputText from "../input/InputText";
 import YesNoDisplay from "../input/YesNoDisplay";
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
+import InputTextMultiple from "../input/InputTextMultiple";
 
 interface Props {
     account: Account,
@@ -28,6 +29,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
     const [editingModel, setEditingModel] = React.useState<Account | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const { user } = React.useContext(userContext);
+    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const navigate = useNavigate();
     const api = useApi();
 
@@ -65,8 +67,8 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                         <td style={{maxWidth: "300px"}}>{props.account.description}</td>
                     </tr>
                     <tr>
-                        <td>Account Number</td>
-                        <td>{props.account.accountNumber}</td>
+                        <td>Identifiers</td>
+                        <td>{props.account.identifiers.join(", ")}</td>
                     </tr>
                     <tr>
                         <td>Favorite</td>
@@ -97,7 +99,8 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                             <InputText
                                 value={editingModel.name}
                                 onChange={e => setEditingModel({ ...editingModel, name: e.target.value })}
-                                disabled={isUpdating} />
+                                disabled={isUpdating}
+                                errors={errors["Name"]} />
                         </td>
                     </tr>
                     <tr>
@@ -106,16 +109,18 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                             <InputText
                                 value={editingModel.description}
                                 onChange={e => setEditingModel({ ...editingModel, description: e.target.value })}
-                                disabled={isUpdating} />
+                                disabled={isUpdating}
+                                errors={errors["Description"]}/>
                         </td>
                     </tr>
                     <tr>
-                        <td>Account number</td>
+                        <td>Identifiers</td>
                         <td>
-                            <InputText
-                                value={editingModel.accountNumber}
-                                onChange={e => setEditingModel({ ...editingModel, accountNumber: e.target.value })}
-                                disabled={isUpdating} />
+                            <InputTextMultiple
+                                value={editingModel.identifiers}
+                                onChange={value => setEditingModel({ ...editingModel, identifiers: value })}
+                                disabled={isUpdating}
+                                errors={errors["Identifiers"]}/>
                         </td>
                     </tr>
                     <tr>
@@ -124,7 +129,8 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                             <InputCheckbox
                                 value={editingModel.favorite}
                                 onChange={e => setEditingModel({ ...editingModel, favorite: e.target.checked })}
-                                disabled={isUpdating} />  
+                                disabled={isUpdating}
+                                errors={errors["Favorite"]}/>  
                         </td>
                     </tr>
                     <tr>
@@ -133,7 +139,8 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                             <InputCheckbox
                                 value={editingModel.includeInNetWorth}
                                 onChange={e => setEditingModel({ ...editingModel, includeInNetWorth: e.target.checked })}
-                                disabled={isUpdating} />
+                                disabled={isUpdating}
+                                errors={errors["IncludeInNetWorth"]}/>
                         </td>
                     </tr>
                 </tbody>
@@ -149,6 +156,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
         if (editingModel === null || api === null) return;
 
         setIsUpdating(true);
+        setErrors({});
         const { balance, ...updateModel } = editingModel;
         const result = await api.Account.update(props.account.id, updateModel);
         setIsUpdating(false);
@@ -160,6 +168,8 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                 props.updateAccountFavoriteInPreferences(props.account, editingModel.favorite);
             }
             props.onChange(result.data);
+        } else if (result.status === 400) {
+            setErrors(result.errors);
         }
     }
 }

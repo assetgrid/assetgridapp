@@ -30,6 +30,10 @@ namespace assetgrid_backend.Data
             {
                 entity.HasMany(e => e.Users)
                     .WithOne(e => e.Account);
+                entity.HasMany(e => e.Identifiers)
+                    .WithOne(e => e.Account)
+                    .HasForeignKey(e => e.AccountId)
+                    .HasPrincipalKey(e => e.Id);
             });
 
             builder.Entity<Transaction>(entity => {
@@ -60,6 +64,7 @@ namespace assetgrid_backend.Data
 
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Account> Accounts { get; set; } = null!;
+        public DbSet<AccountUniqueIdentifier> AccountUniqueIdentifiers { get; set; } = null!;
         public DbSet<UserAccount> UserAccounts { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionLine> TransactionLines { get; set; } = null!;

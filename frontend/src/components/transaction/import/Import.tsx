@@ -18,14 +18,14 @@ import Table from "../../common/Table";
 import InputAutocomplete from "../../input/InputAutocomplete";
 import InputButton from "../../input/InputButton";
 import InputText from "../../input/InputText";
-import { AccountReference, CsvCreateTransaction } from "./importModels";
+import { CsvCreateTransaction } from "./importModels";
 
 interface Props {
     profile: CsvImportProfile;
     transactions: CsvCreateTransaction[];
-    accountsBy: { [identifier: string]: { [value: string]: Account } };
     batchSize: number;
     goToPrevious: () => void;
+    accounts: Account[];
 }
 
 /*
@@ -88,8 +88,8 @@ export function Import (props: Props) {
                 <td>{transaction.identifiers[0] ?? "None"}</td>
                 <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                 <td>{transaction.description}</td>
-                <td>{transaction.sourceId && <AccountLink account={props.accountsBy["id"][transaction.sourceId]} />}</td>
-                <td>{transaction.destinationId && <AccountLink account={props.accountsBy["id"][transaction.destinationId]} />}</td>
+                <td>{transaction.sourceId && <AccountLink account={props.accounts.find(account => account.id === transaction.sourceId)!} targetBlank={true} />}</td>
+                <td>{transaction.destinationId && <AccountLink account={props.accounts.find(account => account.id === transaction.destinationId)!} targetBlank={true} />}</td>
             </tr>}
             page={page}
             goToPage={setPage}
@@ -113,14 +113,14 @@ export function Import (props: Props) {
         let errors = props.transactions.map(t =>
             t.amount === "invalid" ||
             !t.dateTime.isValid ||
-            (t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value)
+            (t.source?.id === t.destination?.id)
         );
         let invalidTransactions = props.transactions.filter((_, i) => errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
                 description: transaction.description,
-                sourceId: getAccount(transaction.source)?.id,
-                destinationId: getAccount(transaction.destination)?.id,
+                sourceId: transaction.source?.id,
+                destinationId: transaction.destination?.id,
                 identifiers: [ transaction.identifier ],
                 category: transaction.category,
                 total: transaction.amount,
@@ -141,8 +141,8 @@ export function Import (props: Props) {
             return {
                 dateTime: transaction.dateTime,
                 description: transaction.description,
-                sourceId: getAccount(transaction.source)?.id,
-                destinationId: getAccount(transaction.destination)?.id,
+                sourceId: transaction.source?.id,
+                destinationId: transaction.destination?.id,
                 identifiers: [ transaction.identifier ],
                 category: transaction.category,
                 total: transaction.amount,
@@ -167,14 +167,6 @@ export function Import (props: Props) {
         }
 
         setState("imported");
-    }
-
-    function getAccount(reference: AccountReference | null): Account | null {
-        if (reference === null || reference === undefined) return null;
-        if (props.accountsBy[reference.identifier] === undefined) return null;
-        if (props.accountsBy[reference.identifier][reference.value] === undefined) return null;
-
-        return props.accountsBy[reference.identifier][reference.value];
     }
 }
 

@@ -25,13 +25,13 @@ export interface CsvImportProfile {
     categoryParseOptions: ParseOptions;
 
     sourceAccountColumn: string | null;
-    sourceAccount: Account | null;
-    sourceAccountIdentifier: AccountIdentifier;
+    sourceAccountId: number | null;
+    sourceAccountType: "column" | "single";
     sourceAccountParseOptions: ParseOptions;
 
     destinationAccountColumn: string | null;
-    destinationAccount: Account | null;
-    destinationAccountIdentifier: AccountIdentifier;
+    destinationAccountType: "column" | "single";
+    destinationAccountId: number | null;
     destinationAccountParseOptions: ParseOptions;
 
     dateColumn: string | null;

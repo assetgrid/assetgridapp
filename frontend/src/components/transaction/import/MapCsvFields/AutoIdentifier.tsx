@@ -9,18 +9,7 @@ interface Props {
 }
 
 export default function AutoIdentifier(props: Props): React.ReactElement {
-    let source = props.transaction.source == null
-        ? null
-        : props.accountsBy[props.transaction.source.identifier]
-            ? props.accountsBy[props.transaction.source.identifier][props.transaction.source.value] ?? null
-            : null;
-    let destination = props.transaction.source == null
-        ? null
-        : props.accountsBy[props.transaction.source.identifier]
-            ? props.accountsBy[props.transaction.source.identifier][props.transaction.source.value] ?? null
-            : null;
-    
-    const identifier = formatAccount(source) + "→" + formatAccount(destination) +
+    const identifier = formatAccount(props.transaction.source) + "→" + formatAccount(props.transaction.destination) +
         "|" + props.transaction.dateTime.toString() +
         "|" + props.transaction.amount.toString() +
         "|" + props.transaction.description;

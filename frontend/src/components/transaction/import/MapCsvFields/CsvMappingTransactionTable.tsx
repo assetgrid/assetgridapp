@@ -4,22 +4,20 @@ import * as React from "react";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
 import { CsvImportProfile } from "../../../../models/csvImportProfile";
+import { Transaction } from "../../../../models/transaction";
+import AccountLink from "../../../account/AccountLink";
 import { userContext } from "../../../App";
 import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
-import { AccountReference, CsvCreateTransaction } from "../importModels";
+import { CsvCreateTransaction } from "../importModels";
 import DuplicateIndicator from "./DuplicateIndicator";
-import { CsvMappingTableFilter } from "./MapCsvFields";
-import TableAccount from "./TableAccount";
 
 interface Props {
     transactions: CsvCreateTransaction[];
-    accountsBy: { [key: string]: { [value: string]: Account | "fetching" | null } };
     duplicateIdentifiers: Set<string> | "fetching";
-    tableFilter: CsvMappingTableFilter;
+    tableFilter: (transaction: CsvCreateTransaction) => boolean;
     tableDraw: number;
     options: CsvImportProfile;
-    beginCreatingAccount: (reference: AccountReference) => void;
 }
 
 export default function CsvMappingTransactionTable(props: Props): React.ReactElement {
@@ -30,43 +28,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         return <p>Loading</p>;
     }
 
-    let items = props.transactions;
-    if (props.tableFilter !== "all") {
-        const fetching = props.transactions === null ||
-            props.transactions.some(t =>
-                (t.source && props.accountsBy[t.source.identifier] && props.accountsBy[t.source.identifier][t.source.value] === "fetching") ||
-                (t.destination && props.accountsBy[t.destination.identifier] && props.accountsBy[t.destination.identifier][t.destination.value] === "fetching")
-            ) ||
-            props.duplicateIdentifiers === "fetching";
-        
-        if (fetching) return <p>Loading</p>;
-
-        switch (props.tableFilter) {
-            case "reference-to-missing-account":
-                items = props.transactions.filter(t =>
-                    (t.source && props.accountsBy[t.source.identifier][t.source.value] === null) ||
-                    (t.destination && props.accountsBy[t.destination.identifier][t.destination.value] === null)
-                );
-                break;
-            case "no-account":
-                items = props.transactions.filter(t =>
-                    (t.source === null || props.accountsBy[t.source.identifier][t.source.value] === null) &&
-                    (t.destination === null || props.accountsBy[t.destination.identifier][t.destination.value] === null)
-                );
-                break;
-            case "same-account":
-                items = props.transactions.filter(t =>
-                    t.source && t.destination && t.source.identifier == t.destination.identifier && t.source.value == t.destination.value
-                );
-                break;
-            case "duplicate":
-                items = props.transactions.filter(t => t.identifier && (props.duplicateIdentifiers as Set<string>).has(t.identifier));
-                break;
-            case "error":
-                items = props.transactions.filter(t => t.amount === "invalid" || !t.dateTime.isValid);
-                break;
-        }
-    }
+    let items = props.transactions.filter(props.tableFilter);
 
     return <Table pageSize={20}
         items={items}
@@ -95,10 +57,18 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
                     {displayAmount(transaction)}
                 </td>
                 <td>
-                    <TableAccount reference={transaction.source} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />
+                    {props.options.sourceAccountType === "single"
+                        ? (transaction.source !== null ? <AccountLink account={transaction.source} targetBlank={true} /> : <>None</>)
+                        : <Tooltip content={"Identifier: '" + transaction.sourceText + "'"}>
+                            {transaction.source !== null ? <AccountLink account={transaction.source} targetBlank={true} /> : <>None</>}
+                        </Tooltip>}
                 </td>
                 <td>
-                    <TableAccount reference={transaction.destination} accountsBy={props.accountsBy} beginCreatingAccount={props.beginCreatingAccount} />
+                    {props.options.destinationAccountType === "single"
+                        ? (transaction.destination !== null ? <AccountLink account={transaction.destination} targetBlank={true} /> : <>None</>)
+                        : <Tooltip content={"Identifier: '" + transaction.destinationText + "'"}>
+                            {transaction.destination !== null ? <AccountLink account={transaction.destination} targetBlank={true} /> : <>None</>}
+                        </Tooltip>}
                 </td>
                 <td>
                     {transaction.category}

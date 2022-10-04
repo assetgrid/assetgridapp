@@ -74,6 +74,8 @@ export default function () {
                 .then(result => {
                     if (result.status === 200) {
                         setAccount(result.data);
+                    } else if (result.status === 404) {
+                        setAccount(null);
                     }
                 })
                 .catch(e => {

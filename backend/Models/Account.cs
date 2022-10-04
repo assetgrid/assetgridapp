@@ -13,9 +13,7 @@ namespace assetgrid_backend.Models
         [MaxLength(250)]
         public string Description { get; set; } = null!;
 
-        [MaxLength(30)]
-        public string? AccountNumber { get; set; }
-
         public virtual List<UserAccount>? Users { get; set; }
+        public virtual List<AccountUniqueIdentifier>? Identifiers { get; set; }
     }
 }

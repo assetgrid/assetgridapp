@@ -34,7 +34,6 @@ export default function Condition(props: ConditionProps) {
                     { key: "SourceAccountId", value: "Source Account" },
                     { key: "DestinationAccountId", value: "Destination Account" },
                     { key: "DateTime", value: "Datetime" },
-                    { key: "Identifier", value: "Unique Identifier" },
                     { key: "Category", value: "Category" },
                     { key: "Description", value: "Description" },
                     { key: "Total", value: "Total" }
@@ -125,7 +124,6 @@ function ConditionValueEditor(props: {condition: FilterHelpers.ConditionModel}):
             return <ConditionValueEditorNumeric condition={props.condition} />;
         case "Category":
         case "Description":
-        case "Identifier":
             return <ConditionValueEditorText condition={props.condition} />;
         case "SourceAccountId":
         case "DestinationAccountId":
@@ -192,7 +190,6 @@ function ConditionValueEditorText(props: { condition: FilterHelpers.ConditionMod
                 const condition = props.condition;
                 return <InputCategory value={condition.value} onChange={value => condition.onChange(value)} disabled={false} />;
             }
-        case "Identifier":
         case "Description":
             break;
         default:

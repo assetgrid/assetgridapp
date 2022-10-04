@@ -50,7 +50,7 @@ namespace assetgrid_backend.ViewModels
             {
                 yield return new ValidationResult(
                     $"Identifier must be shorter than 100 characters.",
-                    new[] { nameof(Total) });
+                    new[] { nameof(Identifiers) });
             }
         }
     }
@@ -77,7 +77,7 @@ namespace assetgrid_backend.ViewModels
             {
                 yield return new ValidationResult(
                     $"Identifier must be shorter than 100 characters.",
-                    new[] { nameof(Total) });
+                    new[] { nameof(Identifiers) });
             }
         }
     }
@@ -101,6 +101,16 @@ namespace assetgrid_backend.ViewModels
         public string Category { get; set; } = null!;
         public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
+
+        public ViewTransaction()
+        {
+
+        }
+
+        public ViewTransaction(int id, ViewAccount? source, ViewAccount? destination, List<string>? sourceIdentifiers)
+        {
+            
+        }
     }
 
     public class ViewTransactionCreateManyResponse

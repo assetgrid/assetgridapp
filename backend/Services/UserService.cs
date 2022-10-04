@@ -44,7 +44,10 @@ namespace assetgrid_backend.Services
                 .Select(user => new
                 {
                     user,
-                    favoriteAccounts = _context.UserAccounts.Include(account => account.Account).Where(account => account.Favorite && account.UserId == user.Id).ToList()
+                    favoriteAccounts = _context.UserAccounts
+                        .Include(account => account.Account)
+                        .Include(account => account.Account.Identifiers)
+                        .Where(account => account.Favorite && account.UserId == user.Id).ToList()
                 }).SingleOrDefaultAsync();
 
             // return null if user not found
@@ -67,7 +70,7 @@ namespace assetgrid_backend.Services
                     account.Id,
                     account.Account.Name,
                     account.Account.Description,
-                    account.Account.AccountNumber,
+                    account.Account.Identifiers!.Select(x => x.Identifier).ToList(),
                     account.Favorite,
                     account.IncludeInNetWorth,
                     ViewAccount.PermissionsFromDbPermissions(account.Permissions),

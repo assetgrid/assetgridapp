@@ -42,21 +42,19 @@ namespace assetgrid_backend.Models
         [MaxLength(50)]
         public string SourceAccountColumn { get; set; } = null!;
 
-        [MaxLength(50)]
-        public int? SourceAccount { get; set; } = null!;
+        public int? SourceAccountId { get; set; } = null!;
 
-        [MaxLength(50)]
-        public string SourceAccountIdentifier { get; set; } = null!;
+        [MaxLength(10)]
+        public string SourceAccountType { get; set; } = null!;
         public ParseOptions SourceAccountParseOptions { get; set; } = null!;
 
         [MaxLength(50)]
         public string? DestinationAccountColumn { get; set; } = null!;
 
-        [MaxLength(50)]
-        public int? DestinationAccount { get; set; } = null!;
+        public int? DestinationAccountId { get; set; } = null!;
 
-        [MaxLength(50)]
-        public string DestinationAccountIdentifier { get; set; } = null!;
+        [MaxLength(10)]
+        public string DestinationAccountType { get; set; } = null!;
         public ParseOptions DestinationAccountParseOptions { get; set; } = null!;
 
         [MaxLength(50)]

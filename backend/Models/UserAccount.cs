@@ -22,7 +22,7 @@ namespace assetgrid_backend.Models
                 account.AccountId,
                 account.Account.Name,
                 account.Account.Description,
-                account.Account.AccountNumber,
+                account.Account.Identifiers!.Select(x => x.Identifier).ToList(),
                 account.Favorite,
                 account.IncludeInNetWorth,
                 (ViewAccount.AccountPermissions)(account.Permissions + 1),

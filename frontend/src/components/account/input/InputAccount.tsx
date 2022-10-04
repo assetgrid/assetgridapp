@@ -124,7 +124,7 @@ export default function InputAccount(props: Props) {
             preset={{
             name: "",
             description: "",
-            accountNumber: "",
+            identifiers: [],
             includeInNetWorth: false,
             favorite: false
         }} /> }
