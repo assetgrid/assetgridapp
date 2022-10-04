@@ -8,6 +8,7 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
 import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
+import DropdownContent from "../../common/DropdownContent";
 
 interface Props {
     label?: string,
@@ -25,6 +26,7 @@ export default function InputAccount(props: Props) {
     const isError = props.errors !== undefined && props.errors.length > 0;
     const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const [creatingAccount, setCreatingAccount] = React.useState(false);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     if (props.value == null) {
         if (props.nullSelectedText) {
@@ -62,9 +64,7 @@ export default function InputAccount(props: Props) {
 
     const refreshDropdownDebounced = React.useCallback(debounce(refreshDropdown, 300), []);
 
-    return <div className="field" tabIndex={0}
-        onBlur={e => ! e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
-    >
+    return <div className="field" onBlur={onBlur}>
         {/* Label */}
         {props.label !== undefined && <label className="label">{props.label}</label>}
 
@@ -84,36 +84,38 @@ export default function InputAccount(props: Props) {
                     </span>
                 </button>}
             </div>
-            <div className={"dropdown-menu"} role="menu">
-                <div className="dropdown-content">
-                    <input
-                        className="dropdown-item"
-                        style={{border: "0"}}
-                        type="text"
-                        placeholder="Search for account"
-                        value={searchQuery}
-                        disabled={props.disabled || api === null}
-                        onChange={e => setSearchQuery(e.target.value ) }
-                    />
-                    <hr className="dropdown-divider" />
-                    {dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
-                    {dropdownOptions?.map(option => <a
-                        className={"dropdown-item" + (selectedAccountId == option.id ? " is-active" : "")}
-                        key={option.id}
-                        onClick={() => setSelectedAccount(option) }>
-                        #{option.id} {option.name}
-                    </a>)}
-                    {props.allowCreateNewAccount && <>
+            <DropdownContent active={open}>
+                <div className={"dropdown-menu"} role="menu" ref={dropdownRef} tabIndex={0}>
+                    <div className="dropdown-content">
+                        <input
+                            className="dropdown-item"
+                            style={{border: "0"}}
+                            type="text"
+                            placeholder="Search for account"
+                            value={searchQuery}
+                            disabled={props.disabled || api === null}
+                            onChange={e => setSearchQuery(e.target.value ) }
+                        />
                         <hr className="dropdown-divider" />
-                        <div className="dropdown-item">
-                            <InputButton
-                                disabled={props.disabled || api === null}
-                                className="is-small is-fullwidth"
-                                onClick={() => setCreatingAccount(true)}>New Account</InputButton>
-                        </div>
-                    </>}
+                        {dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {dropdownOptions?.map(option => <a
+                            className={"dropdown-item" + (selectedAccountId == option.id ? " is-active" : "")}
+                            key={option.id}
+                            onClick={() => setSelectedAccount(option) }>
+                            #{option.id} {option.name}
+                        </a>)}
+                        {props.allowCreateNewAccount && <>
+                            <hr className="dropdown-divider" />
+                            <div className="dropdown-item">
+                                <InputButton
+                                    disabled={props.disabled || api === null}
+                                    className="is-small is-fullwidth"
+                                    onClick={() => setCreatingAccount(true)}>New Account</InputButton>
+                            </div>
+                        </>}
+                    </div>
                 </div>
-            </div>
+            </DropdownContent>
         </div>
         {isError && <p className="help has-text-danger">
             {props.errors![0]}
@@ -201,5 +203,11 @@ export default function InputAccount(props: Props) {
                 setAccount(result.data.data[0]);
             }
         })
+    }
+
+    function onBlur(e: React.FocusEvent) {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+            setOpen(false);
+        }
     }
 }

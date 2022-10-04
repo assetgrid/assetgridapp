@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
 import { debounce } from "../../lib/Utils";
+import DropdownContent from "../common/DropdownContent";
 
 interface Props {
     label?: string;
@@ -20,6 +21,7 @@ export default function InputAutocomplete (props: Props) {
     const [autocompleteSuggestions, setAutocompleteSuggestions] = React.useState<string[] | null>(null);
     const api = useApi();
     const isError = props.errors !== undefined && props.errors.length > 0;
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         if (props.value === "") {
@@ -32,7 +34,7 @@ export default function InputAutocomplete (props: Props) {
     }, [api, props.value]);
     const refreshSuggestionsDebounced = React.useCallback(debounce(refreshSuggestions, 300), []);
 
-    return <div className="field" tabIndex={0} onBlur={lostFocus}>
+    return <div className="field" onBlur={onBlur}>
         {props.label !== undefined && <label className="label">{props.label}</label>}
         <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
             <div className="dropdown-trigger">
@@ -48,17 +50,19 @@ export default function InputAutocomplete (props: Props) {
                     </span>
                 </button>}
             </div>
-            <div className={"dropdown-menu"} role="menu">
-                <div className="dropdown-content">
-                    {autocompleteSuggestions == null && <div className="dropdown-item">Loading suggestions…</div>}
-                    {autocompleteSuggestions?.map(suggestion => <a
-                        className={"dropdown-item"}
-                        key={suggestion}
-                        onClick={() => { setOpen(false); props.onChange(suggestion); }} >
-                        {suggestion}
-                    </a>)}
+            <DropdownContent active={open}>
+                <div className={"dropdown-menu"} role="menu" tabIndex={0} ref={dropdownRef}>
+                    <div className="dropdown-content">
+                        {autocompleteSuggestions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {autocompleteSuggestions?.map(suggestion => <a
+                            className={"dropdown-item"}
+                            key={suggestion}
+                            onClick={() => { setOpen(false); props.onChange(suggestion); }} >
+                            {suggestion}
+                        </a>)}
+                    </div>
                 </div>
-            </div>
+            </DropdownContent>
         </div>
         {isError && <p className="help has-text-danger">
             {props.errors![0]}
@@ -73,18 +77,18 @@ export default function InputAutocomplete (props: Props) {
         setOpen(true);
         props.onChange(e.target.value);
     }
-    
-    function lostFocus(e: React.FocusEvent<HTMLDivElement, Element>) {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-            setOpen(false);
-            setAutocompleteSuggestions(null);
-        }
-    }
 
     async function refreshSuggestions(prefix: string) {
         if (prefix !== "" && api !== null) {
             let result = await props.refreshSuggestions(api, prefix);
             setAutocompleteSuggestions(result.slice(0, props.maxItems ?? 5));
+        }
+    }
+
+    function onBlur(e: React.FocusEvent) {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+            setOpen(false);
+            setAutocompleteSuggestions(null);
         }
     }
 }
