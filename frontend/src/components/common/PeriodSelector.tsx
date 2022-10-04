@@ -45,6 +45,7 @@ export default function PeriodSelector(props: Props) {
                 </span>
             </button>
         </p>
+
         <DropdownContent active={open} fullWidth={false}>
             {renderDropdown()}
         </DropdownContent>
@@ -80,13 +81,13 @@ export default function PeriodSelector(props: Props) {
                     Dispay one {props.period.type} starting on <i>{props.period.start.toLocaleString(DateTime.DATE_MED)}</i>.
                 </p>
                 <div className="calendar-wrapper">
-                    <Calendar
+                    {open && <Calendar
                         scroll={{ enabled: true }}
                         minDate={DateTime.now().minus({ years: 20 }).toJSDate()}
                         maxDate={DateTime.now().plus({ years: 1 }).toJSDate()}
                         date={props.period.start.toJSDate()}
                         onChange={date => props.onChange({ ...props.period, start: DateTime.fromJSDate(date).startOf("day") })}
-                    />
+                    />}
                 </div>
             </div>}
             {props.period.type === "custom" && <div className="details">
@@ -94,7 +95,7 @@ export default function PeriodSelector(props: Props) {
                     Select the period to display.
                 </p>
                 <div className="calendar-wrapper">
-                    <DateRange
+                    {open && <DateRange
                         scroll={{ enabled: true }}
                         editableDateInputs={true}
                         minDate={DateTime.now().minus({ years: 20 }).toJSDate()}
@@ -105,7 +106,7 @@ export default function PeriodSelector(props: Props) {
                             start: DateTime.fromJSDate((item.range as Range).startDate!).startOf("day"),
                             end: DateTime.fromJSDate((item.range as Range).endDate!).endOf("day"),
                         })}
-                    />
+                    />}
                 </div>
             </div>}
         </div>;
