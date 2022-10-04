@@ -50,7 +50,7 @@ export default function InputAutocomplete (props: Props) {
                     </span>
                 </button>}
             </div>
-            <DropdownContent active={open}>
+            <DropdownContent active={open} fullWidth={true}>
                 <div className={"dropdown-menu"} role="menu" tabIndex={0} ref={dropdownRef}>
                     <div className="dropdown-content">
                         {autocompleteSuggestions == null && <div className="dropdown-item">Loading suggestions…</div>}

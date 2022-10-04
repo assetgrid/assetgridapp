@@ -84,7 +84,7 @@ export default function InputAccount(props: Props) {
                     </span>
                 </button>}
             </div>
-            <DropdownContent active={open}>
+            <DropdownContent active={open} fullWidth={true}>
                 <div className={"dropdown-menu"} role="menu" ref={dropdownRef} tabIndex={0}>
                     <div className="dropdown-content">
                         <input

@@ -43,7 +43,7 @@ export default function InputDateTime (props: Props) {
                     </span>
                 </button>
             </div>
-            <DropdownContent active={open}>
+            <DropdownContent active={open} fullWidth={false}>
                 <div ref={dropdownRef} className={"dropdown-menu"} role="menu" tabIndex={0} style={{maxWidth: "none"}}>
                     <div className="input-datetime dropdown-content">
                         <Calendar

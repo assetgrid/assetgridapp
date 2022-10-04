@@ -5,6 +5,7 @@ import { modalContainerContext } from "../App";
 interface Props {
     children: React.ReactNode;
     active: boolean;
+    fullWidth: boolean;
 }
 
 type positionType = [number | undefined, number | undefined, number | undefined, number | undefined];
@@ -35,7 +36,7 @@ export default function DropdownContent(props: Props) {
 
     function updateContent() {
         if (ref.current !== null && parentRef.current !== null) {
-            const viewportOffset = ref.current.parentElement!.getBoundingClientRect();
+            const parentBounding = ref.current.parentElement!.getBoundingClientRect();
             const dropdownBounding = parentRef.current.children[0].getBoundingClientRect();
 
             if (dropdownBounding.width === 0) {
@@ -44,18 +45,24 @@ export default function DropdownContent(props: Props) {
                 parentRef.current.style.opacity = "1";
             }
 
-            if (viewportOffset.right < dropdownBounding.width - 10) {
-                parentRef.current.style.left = (viewportOffset.left).toString() + "px";
+            if (parentBounding.right < dropdownBounding.width - 10) {
+                parentRef.current.style.left = (parentBounding.left).toString() + "px";
                 parentRef.current.style.right = "";
             } else {
                 parentRef.current.style.left = "";
-                parentRef.current.style.right = (window.innerWidth - viewportOffset.right + dropdownBounding.width).toString() + "px";
+                parentRef.current.style.right = (window.innerWidth - parentBounding.right + dropdownBounding.width).toString() + "px";
             }
 
-            if (viewportOffset.bottom > window.innerHeight - dropdownBounding.height - 10) {
-                parentRef.current.style.top = (viewportOffset.top - dropdownBounding.height - 5).toString() + "px";
+            if (props.fullWidth) {
+                (parentRef.current.children[0] as HTMLElement).style.width = Math.max(300, parentBounding.width) + "px";
             } else {
-                parentRef.current.style.top = (viewportOffset.bottom + 5).toString() + "px";
+                (parentRef.current.children[0] as HTMLElement).style.width = "";
+            }
+
+            if (parentBounding.bottom > window.innerHeight - dropdownBounding.height - 10) {
+                parentRef.current.style.top = (parentBounding.top - dropdownBounding.height - 5).toString() + "px";
+            } else {
+                parentRef.current.style.top = (parentBounding.bottom + 5).toString() + "px";
             }
         }
     }
