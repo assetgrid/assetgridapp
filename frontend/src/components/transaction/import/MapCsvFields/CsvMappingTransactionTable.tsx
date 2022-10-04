@@ -25,7 +25,7 @@ interface Props {
 export default function CsvMappingTransactionTable(props: Props): React.ReactElement {
     const { user } = React.useContext(userContext);
     const [page, setPage] = React.useState(1);
-
+    
     if (props.transactions === null) {
         return <p>Loading</p>;
     }

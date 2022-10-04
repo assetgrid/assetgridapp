@@ -178,10 +178,10 @@ export function formatNumber(number: Decimal, decimals: number, decimalSeparator
     return s.join(decimalSeparator);
 }
 
-export function debounce(this: any, func: Function, wait: number) {
+export function debounce<T extends (...args: any) => void>(this: any, func: T, wait: number) {
     let timeoutId: NodeJS.Timeout | null = null;
 
-    return (...args: any[]) => {
+    return (...args: Parameters<T>) => {
         var context = this;
 
         var later = () => {
