@@ -268,11 +268,13 @@ namespace assetgrid_backend.Controllers
                     dbObject.SourceAccountId = null;
                     dbObject.SourceAccount = null;
                     _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Reference(nameof(dbObject.SourceAccount)).IsModified = true;
                 }
                 else
                 {
                     var newSourceUserAccount = await _context.UserAccounts
                         .Include(x => x.Account)
+                        .Include(x => x.Account.Identifiers)
                         .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
                     if (newSourceUserAccount == null)
                     {
@@ -281,6 +283,7 @@ namespace assetgrid_backend.Controllers
                     dbObject.SourceAccountId = newSourceUserAccount.Id;
                     dbObject.SourceAccount = newSourceUserAccount.Account;
                     _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Reference(nameof(dbObject.SourceAccount)).IsModified = true;
                 }
             }
             if (model.DestinationId != null && dbObject.DestinationAccountId != model.DestinationId)
@@ -290,11 +293,13 @@ namespace assetgrid_backend.Controllers
                     dbObject.DestinationAccountId = null;
                     dbObject.DestinationAccount = null;
                     _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Reference(nameof(dbObject.DestinationAccount)).IsModified = true;
                 }
                 else
                 {
                     var newDestinationUserAccount = await _context.UserAccounts
                         .Include(x => x.Account)
+                        .Include(x => x.Account.Identifiers)
                         .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
                     if (newDestinationUserAccount == null)
                     {
@@ -303,6 +308,7 @@ namespace assetgrid_backend.Controllers
                     dbObject.DestinationAccountId = newDestinationUserAccount.Id;
                     dbObject.DestinationAccount = newDestinationUserAccount.Account;
                     _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
+                    _context.Entry(dbObject).Reference(nameof(dbObject.DestinationAccount)).IsModified = true;
                 }
             }
 
@@ -393,8 +399,10 @@ namespace assetgrid_backend.Controllers
                 return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
 
-            var sourceUserAccount = dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
-            var destinationUserAccount = dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id);
+            var sourceUserAccount = dbObject.SourceAccount?.Users?
+                .SingleOrDefault(x => x.UserId == user.Id);
+            var destinationUserAccount = dbObject.DestinationAccount?.Users?
+                .SingleOrDefault(x => x.UserId == user.Id);
 
             return Ok(new ViewTransaction
             {
