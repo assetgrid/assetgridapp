@@ -673,11 +673,11 @@ const Transaction = (token: string) => ({
      * @param query A query describing which transactions to modify
      * @param transaction The changes to make
      */
-     updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
+    updateMultiple: function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
         return new Promise<Ok<null>>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.post<Transaction>(rootUrl + "/api/v1/transaction/updateMultiple", {
-                query: query,
+                query: fixAccountQuery(query),
                 model: {
                     ...model,
                     totalString: transaction.total ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
@@ -717,10 +717,10 @@ const Transaction = (token: string) => ({
      * Deletes all transactions matching the specified query
      * @param query A query describing which transactions to delete
      */
-     deleteMultiple: function (query: SearchGroup): Promise<void> {
+    deleteMultiple: function (query: SearchGroup): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             axios.delete<Transaction>(rootUrl + "/api/v1/transaction/deleteMultiple", {
-                data: query,
+                data: fixAccountQuery(query),
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
@@ -751,7 +751,7 @@ const Transaction = (token: string) => ({
         return new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
             let fixedQuery = query;
             if (query.query) {
-                query.query = fixQuery(query.query);
+                query.query = fixAccountQuery(query.query);
             }
             axios.post<SearchResponse<TransactionModel>>(rootUrl + "/api/v1/transaction/search", fixedQuery, {
                 headers: { authorization: "Bearer: " + token }
@@ -761,34 +761,34 @@ const Transaction = (token: string) => ({
                     reject();
                 });
         });
-
-        function fixQuery(query: SearchGroup): SearchGroup {
-            switch (query.type) {
-                case SearchGroupType.And:
-                case SearchGroupType.Or:
-                    return {
-                        type: query.type,
-                        children: query.children.map(child => fixQuery(child))
-                    };
-                case SearchGroupType.Query:
-                    let result: SearchGroup = {
-                        type: query.type,
-                        query: {
-                            ...query.query
-                        }
-                    };
-                    if (query.query.column === "Total") {
-                        if (query.query.operator === SearchOperator.In) {
-                            result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
-                        } else {
-                            result.query.value = (result.query.value as Decimal).times(10000).toNumber();
-                        }
-                    }
-                    return result;
-            }
-        }
-    },
+    }
 });
+
+function fixAccountQuery(query: SearchGroup): SearchGroup {
+    switch (query.type) {
+        case SearchGroupType.And:
+        case SearchGroupType.Or:
+            return {
+                type: query.type,
+                children: query.children.map(child => fixAccountQuery(child))
+            };
+        case SearchGroupType.Query:
+            let result: SearchGroup = {
+                type: query.type,
+                query: {
+                    ...query.query
+                }
+            };
+            if (query.query.column === "Total") {
+                if (query.query.operator === SearchOperator.In) {
+                    result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
+                } else {
+                    result.query.value = (result.query.value as Decimal).times(10000).toNumber();
+                }
+            }
+            return result;
+    }
+}
 
 /**
  * Converts fields from RAW json into complex javascript types
