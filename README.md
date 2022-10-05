@@ -61,3 +61,16 @@ Now you can run the application by switching to the backend directory and runnin
 dotnet backend.dll --urls=http://0.0.0.0:8080/
 
 You can change the —urls parameter to run Assetgrid on a different port.
+
+## Building from source
+
+We have included a Visual Studio Code launch config and some tasks to ease building the project.
+
+### Backend
+
+To run the backend you must first update /backend/appsettings.development.json. You must run a mysql/mariadb server separately. After doing this, you can just use the Visual Studio code launch config to run the project. Alternatively you can build it and run it with the dotnet command from the dotnet SDK.
+
+### Frontend
+
+CD into the frontend folder and run 'npm install'. You can then run the "watch frontend" task in VS code which will automatically compile and serve the frontend.
+In the /frontend/src/lib/apiClient.ts file you can change which URL the frontend expects the backend to be at.
