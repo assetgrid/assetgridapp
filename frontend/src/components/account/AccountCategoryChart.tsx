@@ -50,7 +50,7 @@ export default function AccountCategoryChart(props: Props) {
         return <>Please wait&hellip;</>;
     }
 
-    const sortedData = data.sort((a, b) => a.expenses == b.expenses ? (a.revenue - b.revenue) : a.expenses - b.expenses);
+    const sortedData = data.sort((a, b) => a.expenses == b.expenses ? (a.revenue - b.revenue) : b.expenses - a.expenses);
 
     // Generate colors by selecting evenly spaced hues on the color wheel
     let colors = Array.from(Array(sortedData.length).keys()).map((_, i) => "hsl(" + (i / sortedData.length * 360) + ", 70%, 70%)");
