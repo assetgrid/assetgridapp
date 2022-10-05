@@ -64,7 +64,7 @@ export default function MapCsvFields(props: Props) {
         <Card title="Mapping options" isNarrow={true}>
 
             <div className="content">
-                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference#csv-import" target="_blank">reference documentation</a></p>
+                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference/import/csv" target="_blank">reference documentation</a></p>
             </div>
 
             <div className="columns">
