@@ -123,10 +123,6 @@ namespace assetgrid_backend.Data
                     var column = columns.First(column => column.name == group.Query.Column);
                     var columnValue = group.Query.Value != null ? CastJsonElement((JsonElement)group.Query.Value, column.type) : null;
                     MemberExpression property = Expression.Property(parameter, group.Query.Column);
-                    if (column.name == "Category")
-                    {
-                        property = Expression.Property(property, "NormalizedName");
-                    }
 
                     switch (group.Query.Operator)
                     {
@@ -140,15 +136,7 @@ namespace assetgrid_backend.Data
                                 throw new Exception($"Operator '{group.Query.Operator}' expects value of type '{column.type}' but received type {columnValue.GetType()}");
                             }
 
-                            // Categories should be handled separately as "" means null
-                            if (column.name == "Category" && ((string?)columnValue ?? "") == "")
-                            {
-                                result = Expression.Equal(Expression.Property(parameter, "CategoryId"), Expression.Constant(null));
-                            }
-                            else
-                            {
-                                result = Expression.Equal(property, Expression.Constant(columnValue, property.Type));
-                            }
+                            result = Expression.Equal(property, Expression.Constant(columnValue, property.Type));
                             break;
 
                         case ViewSearchOperator.Contains:
@@ -170,11 +158,6 @@ namespace assetgrid_backend.Data
                                     typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
                                     Expression.Constant(columnValue)
                                     );
-                                if (column.name == "Category" && group.Query.Not)
-                                {
-                                    // For "does not contain" queries on categories, those without a category should be included as well
-                                    result = Expression.AndAlso(Expression.NotEqual(Expression.Property(parameter, "CategoryId"), Expression.Constant(null)), result);
-                                }
                                 break;
                             }
                             else
