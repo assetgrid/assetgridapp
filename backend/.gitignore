@@ -1,5 +1,5 @@
 bin
 obj
 .vs
-appsettings.json
+appsettings.Development.json
 wwwroot
