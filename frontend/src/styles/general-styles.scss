@@ -1,21 +1,22 @@
 .tooltip-container {
-    position: relative;
     display: inline-block;
-
-    .tooltip {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        display: none;
-        background-color: white;
-        z-index: 10;
-        min-width: 15rem;
-        padding: $size-7;
-    }
-    &:hover .tooltip {
-        display: block;
-    }
+}
+.tooltip {
+    background-color: white;
+    z-index: 10;
+    min-width: 15rem;
+    max-width: 25rem;
+    display: inline-block;
+    padding: $size-7;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.1s;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+.dropdown.is-active .tooltip {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: none;
 }
 
 .pagination-container {

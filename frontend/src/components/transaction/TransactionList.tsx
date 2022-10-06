@@ -13,6 +13,7 @@ import { routes } from "../../lib/routes";
 import { render } from "react-dom";
 import { serializeQueryForHistory } from "./filter/FilterHelpers";
 import MergeTransactionsModal from "./input/MergeTransactionsModal";
+import DropdownContent from "../common/DropdownContent";
 
 interface Props {
     draw?: number;
@@ -253,9 +254,9 @@ interface DropdownButtonProps {
 }
 export function TransactionSelectDropdownButton(props: DropdownButtonProps): React.ReactElement {
     const [open, setOpen] = React.useState(false);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-    return <div tabIndex={0}
-        onBlur={e => !e.currentTarget.contains(e.relatedTarget as Node) && setOpen(false)}
+    return <div onBlur={onBlur}
         className={"buttons has-addons btn-multiselect dropdown is-trigger" + (open ? " is-active" : "")}>
         <button className="button is-small" onClick={() => props.selected ? props.clearSelection() : props.selectAll()}>
             <InputCheckbox
@@ -265,22 +266,30 @@ export function TransactionSelectDropdownButton(props: DropdownButtonProps): Rea
         <button className="button is-small" aria-haspopup="true" onClick={() => setOpen(true)}>
             <FontAwesomeIcon icon={faChevronDown} />
         </button>
-        <div className={"dropdown-menu"} role="menu" style={{ maxWidth: "none" }}>
-            <div className="dropdown-content">
-                <a className="dropdown-item"
-                    onClick={() => ! props.editSelectionDisabled && props.editSelection()}
-                    style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
-                    Modify selection
-                </a>
-                <a className="dropdown-item"
-                    onClick={() => ! props.editSelectionDisabled && props.mergeSelection()}
-                    style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
-                    Merge selected transactions
-                </a>
-                <a className="dropdown-item" onClick={props.editAll}>
-                    {props.editAllText}
-                </a>
+        <DropdownContent active={open} fullWidth={false} preferedPosition="right">
+            <div className={"dropdown-menu"} role="menu" style={{ maxWidth: "none" }} tabIndex={0} ref={dropdownRef}>
+                <div className="dropdown-content">
+                    <a className="dropdown-item"
+                        onClick={() => ! props.editSelectionDisabled && props.editSelection()}
+                        style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
+                        Modify selection
+                    </a>
+                    <a className="dropdown-item"
+                        onClick={() => ! props.editSelectionDisabled && props.mergeSelection()}
+                        style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
+                        Merge selected transactions
+                    </a>
+                    <a className="dropdown-item" onClick={props.editAll}>
+                        {props.editAllText}
+                    </a>
+                </div>
             </div>
-        </div>
+        </DropdownContent>
     </div>;
+
+    function onBlur(e: React.FocusEvent) {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+            setOpen(false);
+        }
+    }
 }
