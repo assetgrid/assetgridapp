@@ -67,7 +67,7 @@ namespace assetgrid_backend.Services
                 user.user.Email,
                 new ViewPreferences(GetPreferences(user.user)),
                 user.favoriteAccounts.Select(account => new ViewAccount(
-                    account.Id,
+                    account.AccountId,
                     account.Account.Name,
                     account.Account.Description,
                     account.Account.Identifiers!.Select(x => x.Identifier).ToList(),
