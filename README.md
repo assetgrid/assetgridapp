@@ -11,9 +11,11 @@ Assetgrid is based on the following workflow:
 
 3. **Browse your data**. Assetgrid will have a powerful report tool that allows you to extract whatever information you want from your financial data. Currently we support some basic net worth/cash flow calculations, but in the future we will implement budgets and customizable reports.
 
+View [screenshots 📸](https://assetgrid.app/screenshots)
+
 # Getting started
 
-For information on how to get started using Assetgrid, check our website http://assetgrid.app
+For information on how to get started using Assetgrid, check our website https://assetgrid.app
 
 # Install Assetgrid
 
