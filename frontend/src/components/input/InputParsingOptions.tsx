@@ -2,26 +2,17 @@ import * as React from "react";
 import { ParseOptions, parseWithOptions } from "../../models/csvImportProfile";
 import Modal from "../common/Modal";
 import Table from "../common/Table";
-import InputButton from "./InputButton";
 import InputCheckbox from "./InputCheckbox";
 import InputText from "./InputText";
 
 interface InputParseOptionsProps {
-    value: ParseOptions;
-    disabled?: boolean;
-    onChange: (value: ParseOptions | "invalid") => void;
-    previewData: string[] | null;
+    value: ParseOptions
+    disabled?: boolean
+    onChange: (value: ParseOptions | "invalid") => void
+    previewData: string[] | null
 }
 
-interface InputParseOptionsState {
-    trimWhitespace: boolean,
-    regexEnabled: boolean,
-    regexString: string,
-    regexStringValid: boolean,
-    pattern: string,
-}
-
-export default function InputParseOptions(props: InputParseOptionsProps) {
+export default function InputParseOptions (props: InputParseOptionsProps): React.ReactElement {
     const [page, setPage] = React.useState(1);
     const [trimWhitespace, setTrimWhitespace] = React.useState(props.value.trimWhitespace);
     const [regexEnabled, setRegexEnabled] = React.useState(props.value.regex !== null);
@@ -42,11 +33,11 @@ export default function InputParseOptions(props: InputParseOptionsProps) {
             <InputCheckbox label="Trim whitespace"
                 onChange={e => setTrimWhitespace(e.target.checked)}
                 value={trimWhitespace} />
-            
+
             <InputCheckbox label="Enable RegEx"
                 onChange={e => setRegexEnabled(e.target.checked)}
                 value={regexEnabled} />
-            
+
             {regexEnabled && <>
                 <InputText label="RegEx"
                     value={regexString}
@@ -78,18 +69,18 @@ export default function InputParseOptions(props: InputParseOptionsProps) {
         </div>
     </div>;
 
-    function getParseOptions(): ParseOptions {
+    function getParseOptions (): ParseOptions {
         return {
             pattern,
             regex: regexEnabled && regexStringValid ? new RegExp(regexString) : null,
-            trimWhitespace: trimWhitespace,
+            trimWhitespace
         };
     }
 
-    function setRegex(newValue: string) {
+    function setRegex (newValue: string): void {
         let regexValid = true;
         try {
-            new RegExp(newValue)
+            new RegExp(newValue); // eslint-disable-line no-new
         } catch {
             regexValid = false;
         }
@@ -100,34 +91,34 @@ export default function InputParseOptions(props: InputParseOptionsProps) {
 }
 
 interface InputParseOptionsModalProps {
-    close: () => void;
-    closeOnChange?: boolean;
-    onChange: (options: ParseOptions) => void;
-    value: ParseOptions;
-    previewData?: string[];
+    close: () => void
+    closeOnChange?: boolean
+    onChange: (options: ParseOptions) => void
+    value: ParseOptions
+    previewData?: string[]
 }
 
 interface InputParseOptionsModalState {
-    valid: boolean;
-    value: ParseOptions;
+    valid: boolean
+    value: ParseOptions
 }
 
 export class InputParseOptionsModal extends React.Component<InputParseOptionsModalProps, InputParseOptionsModalState> {
-    constructor(props: InputParseOptionsModalProps) {
+    constructor (props: InputParseOptionsModalProps) {
         super(props);
         this.state = {
             valid: true,
-            value: this.props.value,
-        }
+            value: this.props.value
+        };
     }
 
-    public render() {
+    public render (): React.ReactElement {
         return <Modal
             active={true}
             title={"Parse options"}
             close={() => this.props.close()}
             footer={<>
-                <button className="button is-success" onClick={() => this.saveChanges()} disabled={! this.state.valid}>Apply Changes</button>
+                <button className="button is-success" onClick={() => this.saveChanges()} disabled={!this.state.valid}>Apply Changes</button>
                 <button className="button" onClick={() => this.props.close()}>Cancel</button>
             </>}>
             <InputParseOptions
@@ -138,7 +129,7 @@ export class InputParseOptionsModal extends React.Component<InputParseOptionsMod
         </Modal>;
     }
 
-    private onChange(newOptions: ParseOptions | "invalid") {
+    private onChange (newOptions: ParseOptions | "invalid"): void {
         if (newOptions === "invalid") {
             this.setState({ valid: false });
         } else {
@@ -146,7 +137,7 @@ export class InputParseOptionsModal extends React.Component<InputParseOptionsMod
         }
     }
 
-    private saveChanges(): void {
+    private saveChanges (): void {
         this.props.onChange(this.state.value);
         if (this.props.closeOnChange === true) {
             this.props.close();

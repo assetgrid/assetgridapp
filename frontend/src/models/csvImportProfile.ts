@@ -1,62 +1,59 @@
-import { Account } from "./account";
-
 export type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
 export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
 
 export interface CsvImportProfile {
     // CSV options
-    csvDelimiter: string;
-    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r";
-    csvParseHeader: boolean;
-    csvTextEncoding: string | null;
-    
+    csvDelimiter: string
+    csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r"
+    csvParseHeader: boolean
+    csvTextEncoding: string | null
+
     // Mapping options
-    duplicateHandling: DuplicateHandlingOptions;
-    identifierColumn: string | null;
-    identifierParseOptions: ParseOptions;
+    duplicateHandling: DuplicateHandlingOptions
+    identifierColumn: string | null
+    identifierParseOptions: ParseOptions
 
-    amountColumn: string | null;
-    amountParseOptions: ParseOptions;
-    decimalSeparator: string;
+    amountColumn: string | null
+    amountParseOptions: ParseOptions
+    decimalSeparator: string
 
-    descriptionColumn: string | null;
-    descriptionParseOptions: ParseOptions;
+    descriptionColumn: string | null
+    descriptionParseOptions: ParseOptions
 
-    categoryColumn: string | null;
-    categoryParseOptions: ParseOptions;
+    categoryColumn: string | null
+    categoryParseOptions: ParseOptions
 
-    sourceAccountColumn: string | null;
-    sourceAccountId: number | null;
-    sourceAccountType: "column" | "single";
-    sourceAccountParseOptions: ParseOptions;
+    sourceAccountColumn: string | null
+    sourceAccountId: number | null
+    sourceAccountType: "column" | "single"
+    sourceAccountParseOptions: ParseOptions
 
-    destinationAccountColumn: string | null;
-    destinationAccountType: "column" | "single";
-    destinationAccountId: number | null;
-    destinationAccountParseOptions: ParseOptions;
+    destinationAccountColumn: string | null
+    destinationAccountType: "column" | "single"
+    destinationAccountId: number | null
+    destinationAccountParseOptions: ParseOptions
 
-    dateColumn: string | null;
-    dateFormat: string;
-    dateParseOptions: ParseOptions;
+    dateColumn: string | null
+    dateFormat: string
+    dateParseOptions: ParseOptions
 };
 
 export interface ParseOptions {
-    trimWhitespace: boolean;
+    trimWhitespace: boolean
 
-    regex: RegExp | null;
-    pattern: string;
+    regex: RegExp | null
+    pattern: string
 }
 
-export function parseWithOptions(input: string, options: ParseOptions): string
-{
+export function parseWithOptions (input: string, options: ParseOptions): string {
     let result = input ?? "";
 
     if (options.regex !== null) {
-        let matches = options.regex.exec(input);
+        const matches = options.regex.exec(input);
         if (matches !== null) {
             result = options.pattern;
             for (let i = 0; i < matches.length; i++) {
-                result = result.replace(new RegExp("\\{" + i + "\\}", 'g'), matches[i]);
+                result = result.replace(new RegExp(`\\{${i}\\}`, "g"), matches[i]);
             }
         } else {
             result = "";

@@ -1,18 +1,18 @@
 import * as React from "react";
-import { Api, useApi } from "../../../lib/ApiClient";
+import { useApi } from "../../../lib/ApiClient";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import { userContext } from "../../App";
 import Modal from "../../common/Modal";
 import InputModifyAccount from "./InputModifyAccount";
 
 interface Props {
-    close: () => void;
-    closeOnChange?: boolean;
-    created: (account: Account) => void;
-    preset: CreateAccountModel;
+    close: () => void
+    closeOnChange?: boolean
+    created: (account: Account) => void
+    preset: CreateAccountModel
 }
 
-export default function CreateAccountModal(props: Props) {
+export default function CreateAccountModal (props: Props): React.ReactElement {
     const [model, setModel] = React.useState(props.preset);
     const [isCreating, setIsCreating] = React.useState(false);
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
@@ -24,7 +24,7 @@ export default function CreateAccountModal(props: Props) {
         title={"Create account"}
         close={() => props.close()}
         footer={<>
-            <button className="button is-success" onClick={() => create()} disabled={isCreating || api === null}>Create account</button>
+            <button className="button is-success" onClick={create} disabled={isCreating || api === null}>Create account</button>
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <InputModifyAccount
@@ -34,7 +34,7 @@ export default function CreateAccountModal(props: Props) {
             onChange={account => setModel(account)} />
     </Modal>;
 
-    async function create() {
+    async function create (): Promise<void> {
         if (api === null) return;
 
         setIsCreating(true);
@@ -48,10 +48,8 @@ export default function CreateAccountModal(props: Props) {
                     updateFavoriteAccounts([...user.favoriteAccounts, result.data]);
                 }
             }
-            if (props.created !== undefined) {
-                props.created(result.data);
-            }
-            if (props.closeOnChange) {
+            props.created(result.data);
+            if (props.closeOnChange !== undefined) {
                 props.close();
             }
         } else if (result.status === 400) {

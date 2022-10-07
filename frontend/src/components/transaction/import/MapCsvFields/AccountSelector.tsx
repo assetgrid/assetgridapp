@@ -9,14 +9,14 @@ import Tooltip from "../../../common/Tooltip";
 import { CsvCreateTransaction } from "../importModels";
 
 interface Props {
-    options: CsvImportProfile;
-    transactions: CsvCreateTransaction[];
-    accounts: Account[];
-    setAccounts: (accounts: Account[]) => void;
-    setTableFilter: (message: string, filter: ((transaction: CsvCreateTransaction) => boolean)) => void;
+    options: CsvImportProfile
+    transactions: CsvCreateTransaction[]
+    accounts: Account[]
+    setAccounts: (accounts: Account[]) => void
+    setTableFilter: (message: string, filter: ((transaction: CsvCreateTransaction) => boolean)) => void
 }
 
-export default function AccountSelector(props: Props): React.ReactElement {
+export default function AccountSelector (props: Props): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [page, setPage] = React.useState(1);
     const api = useApi();
@@ -25,14 +25,14 @@ export default function AccountSelector(props: Props): React.ReactElement {
         .flatMap(x => [x.sourceText, x.destinationText])
         .map(x => x.trim())
         .filter(x => x !== "")
-        .filter((a, index, array) => array.findIndex(b => b == a) == index); // Only unique
-    
+        .filter((a, index, array) => array.findIndex(b => b === a) === index); // Only unique
+
     if (identifiers.length === 0) {
         return <Card title="Accounts" isNarrow={true}>
             <p>No accounts where found in your CSV file. Check that you have selected the correct columns.</p>
         </Card>;
     }
-    
+
     return <Card title="Accounts" isNarrow={true}>
         The following account identifiers where found in the CSV file.
         <Table pageSize={10}
@@ -48,7 +48,7 @@ export default function AccountSelector(props: Props): React.ReactElement {
                     disabled={api === null || isUpdating}
                     allowNull={true}
                     nullSelectedText={"No account"}
-                    onChange={value => accountSelected(identifier, value)}
+                    onChange={async value => await accountSelected(identifier, value)}
                     allowCreateNewAccount={true} /></td>
             </tr>}
             page={page}
@@ -61,32 +61,32 @@ export default function AccountSelector(props: Props): React.ReactElement {
             </tr>} items={identifiers} />
     </Card>;
 
-    function filterTableForIdentifier(identifier: string) {
+    function filterTableForIdentifier (identifier: string): void {
         props.setTableFilter("Showing transactions with accounts with identifier '" + identifier + "'.",
-            x => x.sourceText === identifier || x.destinationText === identifier)
+            x => x.sourceText === identifier || x.destinationText === identifier);
     }
-    
-    async function accountSelected(identifier: string, account: Account | null) {
+
+    async function accountSelected (identifier: string, account: Account | null): Promise<void> {
         if (api === null) return;
-        
+
         setIsUpdating(true);
 
-        let newAccounts = [...props.accounts];
+        const newAccounts = [...props.accounts];
         const currentAccount = props.accounts.find(x => x.identifiers.some(id => id === identifier)) ?? null;
         if (currentAccount !== null) {
             // Remove this identifier from the currently selected account
             const result = await api.Account.update(currentAccount.id, {
                 ...currentAccount,
-                identifiers: currentAccount.identifiers.filter(x => x != identifier)
+                identifiers: currentAccount.identifiers.filter(x => x !== identifier)
             });
-            
+
             // Update current accounts
             if (result.status === 200) {
                 newAccounts.forEach(account => {
                     if (account.id === result.data.id) {
                         account.identifiers = account.identifiers.filter(x => x !== identifier);
                     }
-                })
+                });
             }
         }
         // Add the identifier to the newly selected account
@@ -99,7 +99,7 @@ export default function AccountSelector(props: Props): React.ReactElement {
             // Update current accounts
             if (result.status === 200) {
                 const previousAccount = newAccounts.find(account => account.id === result.data.id);
-                if (previousAccount) {
+                if (previousAccount != null) {
                     previousAccount.identifiers = account.identifiers.concat(identifier);
                 } else {
                     newAccounts.push(result.data);

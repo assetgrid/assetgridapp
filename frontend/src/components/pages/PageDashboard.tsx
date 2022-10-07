@@ -1,21 +1,13 @@
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { routes } from "../../lib/routes";
 import { Period } from "../../models/period";
-import { Preferences } from "../../models/preferences";
-import AccountList from "../account/AccountList";
-import CreateAccountModal from "../account/input/CreateAccountModal";
 import NetWorthChart from "../account/NetWorthChart";
-import Card from "../common/Card";
 import Hero from "../common/Hero";
-import PeriodSelector from "../common/PeriodSelector";
-import TransactionList from "../transaction/TransactionList";
 
-export default function PageDashboard() {
+export default function PageDashboard (): React.ReactElement {
     const [period, setPeriod] = React.useState<Period>({
         type: "month",
-        start: DateTime.now().startOf("month"),
+        start: DateTime.now().startOf("month")
     });
 
     return <>

@@ -1,44 +1,41 @@
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Account, CreateAccount } from "../../../../models/account";
+import { Account } from "../../../../models/account";
 import Card from "../../../common/Card";
 import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
 import { CsvCreateTransaction } from "../importModels";
-import CreateAccountModal from "../../../account/input/CreateAccountModal";
 import { InputParseOptionsModal } from "../../../input/InputParsingOptions";
 import Decimal from "decimal.js";
-import { Message } from "../../../common/Message";
+import Message from "../../../common/Message";
 import InputButton from "../../../input/InputButton";
-import MapCsvFieldsIssues from "./CsvMappingIssues";
 import CsvMappingIssues from "./CsvMappingIssues";
 import CsvMappingTransactionTable from "./CsvMappingTransactionTable";
 import InputAccount from "../../../account/input/InputAccount";
-import { AccountIdentifier, CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
+import { CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
 import AccountSelector from "./AccountSelector";
-import { Transaction } from "../../../../models/transaction";
 
 interface Props {
-    data: any[];
-    transactions: CsvCreateTransaction[] | null;
-    accounts: Account[];
-    setAccounts: (accounts: Account[]) => void;
-    duplicateIdentifiers: Set<string> | "fetching";
-    options: CsvImportProfile;
-    apiReady: boolean;
-    onChange: (transactions: CsvCreateTransaction[], options: CsvImportProfile) => void;
-    goToNext: () => void;
-    goToPrevious: () => void;
+    data: any[]
+    transactions: CsvCreateTransaction[] | null
+    accounts: Account[]
+    setAccounts: (accounts: Account[]) => void
+    duplicateIdentifiers: Set<string> | "fetching"
+    options: CsvImportProfile
+    apiReady: boolean
+    onChange: (transactions: CsvCreateTransaction[], options: CsvImportProfile) => void
+    goToNext: () => void
+    goToPrevious: () => void
 }
 
-function isNullOrWhitespace(input: string) {
-    return !input || !input.trim();
+function isNullOrWhitespace (input: string | null | undefined): boolean {
+    return (input ?? "").trim() === "";
 }
 
 /*
  * React object class
  */
-export default function MapCsvFields(props: Props) {
+export default function MapCsvFields (props: Props): React.ReactElement {
     const [tableDraw, setTableDraw] = React.useState(0);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
 
@@ -64,7 +61,7 @@ export default function MapCsvFields(props: Props) {
         <Card title="Mapping options" isNarrow={true}>
 
             <div className="content">
-                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference/import/csv" target="_blank">reference documentation</a></p>
+                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference/import/csv" target="_blank" rel="noreferrer">reference documentation</a></p>
             </div>
 
             <div className="columns">
@@ -72,7 +69,7 @@ export default function MapCsvFields(props: Props) {
                     <InputSelect label="Duplicate handling"
                         isFullwidth={true}
                         value={props.options.duplicateHandling}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateDuplicateHandling(result as DuplicateHandlingOptions, props.options.identifierColumn, props.options.identifierParseOptions)}
                         items={[
                             { key: "automatic", value: "Auto" },
@@ -81,38 +78,40 @@ export default function MapCsvFields(props: Props) {
                         ]} />
                 </div>
                 <div className="column">
-                    {["identifier", "identifier-rownumber"].indexOf(props.options.duplicateHandling) > -1 &&
+                    {["identifier", "identifier-rownumber"].includes(props.options.duplicateHandling) &&
                         <InputSelect label="Identifier column"
                             isFullwidth={true}
                             value={props.options.identifierColumn}
                             placeholder={"Select column"}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             onChange={result => updateDuplicateHandling(props.options.duplicateHandling, result, props.options.identifierParseOptions)}
                             items={Object.keys(props.data[0]).map(item => {
                                 return {
                                     key: item,
-                                    value: item,
-                                }
+                                    value: item
+                                };
                             })}
                             addOnAfter={
-                                props.options.identifierColumn ? <div className="control">
-                                    <button className="button is-primary"
-                                        disabled={! props.apiReady}
-                                        onClick={() => setModal(<InputParseOptionsModal
-                                            value={props.options.identifierParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.identifierColumn))}
-                                            onChange={options => updateDuplicateHandling(props.options.duplicateHandling, props.options.identifierColumn, options)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true} />
-                                        )}>
+                                props.options.identifierColumn !== null
+                                    ? <div className="control">
+                                        <button className="button is-primary"
+                                            disabled={!props.apiReady}
+                                            onClick={() => setModal(<InputParseOptionsModal
+                                                value={props.options.identifierParseOptions}
+                                                previewData={props.data.map(row => getValue(row, props.options.identifierColumn))}
+                                                onChange={options => updateDuplicateHandling(props.options.duplicateHandling, props.options.identifierColumn, options)}
+                                                close={() => setModal(null)}
+                                                closeOnChange={true} />
+                                            )}>
                                         Parse Options
-                                    </button>
-                                </div> : undefined
+                                        </button>
+                                    </div>
+                                    : undefined
                             } />
                     }
                 </div>
             </div>
-        
+
             <div className="content">
                 <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
                     This value will be compared during import and transactions with the same identifier will be ignored</p>
@@ -129,37 +128,39 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.dateColumn}
                         placeholder={"Select column"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateDateMapping(result, props.options.dateFormat, props.options.dateParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
                                 key: item,
-                                value: item,
-                            }
+                                value: item
+                            };
                         })}
                         addOnAfter={
-                            props.options.dateColumn ? <div className="control">
-                                <button className="button is-primary"
-                                    disabled={! props.apiReady}
-                                    onClick={() => setModal(<InputParseOptionsModal
-                                        value={props.options.dateParseOptions}
-                                        previewData={props.data.map(row => getValue(row, props.options.dateColumn))}
-                                        onChange={regex => updateDateMapping(props.options.dateColumn, props.options.dateFormat, regex)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true} />
-                                    )}>
+                            props.options.dateColumn !== null
+                                ? <div className="control">
+                                    <button className="button is-primary"
+                                        disabled={!props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            value={props.options.dateParseOptions}
+                                            previewData={props.data.map(row => getValue(row, props.options.dateColumn))}
+                                            onChange={regex => updateDateMapping(props.options.dateColumn, props.options.dateFormat, regex)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                        )}>
                                     Parse Options
-                                </button>
-                            </div> : undefined
+                                    </button>
+                                </div>
+                                : undefined
                         } />
                 </div>
                 {props.options.dateColumn !== null && <div className="column">
                     <InputText label="Timestamp format"
                         value={props.options.dateFormat}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={e => updateDateMapping(props.options.dateColumn, e.target.value, props.options.dateParseOptions)}
                     />
-                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank">Read more</a>
+                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank" rel="noreferrer">Read more</a>
                 </div>}
             </div>
 
@@ -169,7 +170,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.sourceAccountType}
                         placeholder={"Source account"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateAccountMapping("source",
                             result,
                             props.options.sourceAccountColumn,
@@ -177,7 +178,7 @@ export default function MapCsvFields(props: Props) {
                             props.options.sourceAccountParseOptions)}
                         items={[
                             { key: "column", value: "CSV column" },
-                            { key: "single", value: "Same account for all transactions" },
+                            { key: "single", value: "Same account for all transactions" }
                         ]} />
                 </div>
                 <div className="column">
@@ -185,7 +186,7 @@ export default function MapCsvFields(props: Props) {
                         ? <InputAccount label="Select account"
                             allowNull={true}
                             allowCreateNewAccount={true}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             nullSelectedText={"No account"}
                             value={props.options.sourceAccountId}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountType, null, result, props.options.sourceAccountParseOptions)}/>
@@ -193,29 +194,31 @@ export default function MapCsvFields(props: Props) {
                             isFullwidth={true}
                             value={props.options.sourceAccountColumn}
                             placeholder={"Select column"}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountType, result, null, props.options.sourceAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No source account" },
                                 ...Object.keys(props.data[0]).map(item => ({
-                                key: item,
-                                value: item,
+                                    key: item,
+                                    value: item
                                 }))
                             ]}
                             addOnAfter={
-                                props.options.sourceAccountColumn ? <div className="control">
-                                    <button className="button is-primary"
-                                        disabled={! props.apiReady}
-                                        onClick={() => setModal(<InputParseOptionsModal
-                                        value={props.options.sourceAccountParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
-                                            onChange={options => updateAccountMapping("source", props.options.sourceAccountType, props.options.sourceAccountColumn, null, options)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true} />
-                                        )}>
+                                props.options.sourceAccountColumn !== null
+                                    ? <div className="control">
+                                        <button className="button is-primary"
+                                            disabled={!props.apiReady}
+                                            onClick={() => setModal(<InputParseOptionsModal
+                                                value={props.options.sourceAccountParseOptions}
+                                                previewData={props.data.map(row => getValue(row, props.options.sourceAccountColumn))}
+                                                onChange={options => updateAccountMapping("source", props.options.sourceAccountType, props.options.sourceAccountColumn, null, options)}
+                                                close={() => setModal(null)}
+                                                closeOnChange={true} />
+                                            )}>
                                         Parse Options
-                                    </button>
-                                </div> : undefined
+                                        </button>
+                                    </div>
+                                    : undefined
                             } /> }
                 </div>
             </div>
@@ -226,7 +229,7 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.destinationAccountType}
                         placeholder={"Destination account"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateAccountMapping("destination",
                             result,
                             props.options.destinationAccountColumn,
@@ -234,7 +237,7 @@ export default function MapCsvFields(props: Props) {
                             props.options.destinationAccountParseOptions)}
                         items={[
                             { key: "column", value: "CSV column" },
-                            { key: "single", value: "Same account for all transactions" },
+                            { key: "single", value: "Same account for all transactions" }
                         ]} />
                 </div>
                 <div className="column">
@@ -242,7 +245,7 @@ export default function MapCsvFields(props: Props) {
                         ? <InputAccount label="Select account"
                             allowNull={true}
                             allowCreateNewAccount={true}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             nullSelectedText={"No account"}
                             value={props.options.destinationAccountId}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, null, result, props.options.destinationAccountParseOptions)} />
@@ -250,29 +253,31 @@ export default function MapCsvFields(props: Props) {
                             isFullwidth={true}
                             value={props.options.destinationAccountColumn}
                             placeholder={"Select column"}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, result, null, props.options.destinationAccountParseOptions)}
                             items={[
                                 { key: "___NULL___", value: "No destination account" },
                                 ...Object.keys(props.data[0]).map(item => ({
                                     key: item,
-                                    value: item,
+                                    value: item
                                 }))
                             ]}
                             addOnAfter={
-                                props.options.destinationAccountColumn ? <div className="control">
-                                    <button className="button is-primary"
-                                        disabled={! props.apiReady}
-                                        onClick={() => setModal(<InputParseOptionsModal
-                                            value={props.options.destinationAccountParseOptions}
-                                            previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
-                                            onChange={options => updateAccountMapping("destination", props.options.destinationAccountType, props.options.destinationAccountColumn, null, options)}
-                                            close={() => setModal(null)}
-                                            closeOnChange={true} />
-                                    )}>
+                                props.options.destinationAccountColumn !== null
+                                    ? <div className="control">
+                                        <button className="button is-primary"
+                                            disabled={!props.apiReady}
+                                            onClick={() => setModal(<InputParseOptionsModal
+                                                value={props.options.destinationAccountParseOptions}
+                                                previewData={props.data.map(row => getValue(row, props.options.destinationAccountColumn))}
+                                                onChange={options => updateAccountMapping("destination", props.options.destinationAccountType, props.options.destinationAccountColumn, null, options)}
+                                                close={() => setModal(null)}
+                                                closeOnChange={true} />
+                                            )}>
                                         Parse Options
-                                    </button>
-                                </div> : undefined
+                                        </button>
+                                    </div>
+                                    : undefined
                             } />}
                 </div>
             </div>
@@ -283,35 +288,37 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.amountColumn}
                         placeholder={"Select column"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateAmountMapping(result, props.options.decimalSeparator, props.options.amountParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
                                 key: item,
-                                value: item,
-                            }
+                                value: item
+                            };
                         })}
                         addOnAfter={
-                            props.options.amountColumn ? <div className="control">
-                                <button className="button is-primary"
-                                    disabled={! props.apiReady}
-                                    onClick={() => setModal(<InputParseOptionsModal
-                                        previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
-                                        value={props.options.amountParseOptions}
-                                        onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true} />
-                                    )}>
+                            props.options.amountColumn !== null
+                                ? <div className="control">
+                                    <button className="button is-primary"
+                                        disabled={!props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
+                                            value={props.options.amountParseOptions}
+                                            onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                        )}>
                                     Parse Options
-                                </button>
-                            </div> : undefined
+                                    </button>
+                                </div>
+                                : undefined
                         } />
                 </div>
                 <div className="column">
-                    {props.options.dateColumn !== null && 
+                    {props.options.dateColumn !== null &&
                         <InputText label="Decimal separator"
                             value={props.options.decimalSeparator}
-                            disabled={! props.apiReady}
+                            disabled={!props.apiReady}
                             onChange={e => updateAmountMapping(props.options.amountColumn, e.target.value, props.options.amountParseOptions)}
                         />}
                 </div>
@@ -323,28 +330,30 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.descriptionColumn}
                         placeholder={"Select column"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateDescriptionMapping(result, props.options.descriptionParseOptions)}
-                            items={[{ key: "___NULL___", value: "No description" },
+                        items={[{ key: "___NULL___", value: "No description" },
                             ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
-                                value: item,
+                                value: item
                             }))
                         ]}
                         addOnAfter={
-                            props.options.descriptionColumn ? <div className="control">
-                                <button className="button is-primary"
-                                    disabled={! props.apiReady}
-                                    onClick={() => setModal(<InputParseOptionsModal
-                                        value={props.options.descriptionParseOptions}
-                                        previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
-                                        onChange={options => updateDescriptionMapping(props.options.descriptionColumn, options)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true} />
-                                    )}>
+                            props.options.descriptionColumn !== null
+                                ? <div className="control">
+                                    <button className="button is-primary"
+                                        disabled={!props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            value={props.options.descriptionParseOptions}
+                                            previewData={props.data.map(row => getValue(row, props.options.descriptionColumn))}
+                                            onChange={options => updateDescriptionMapping(props.options.descriptionColumn, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                        )}>
                                     Parse Options
-                                </button>
-                            </div> : undefined
+                                    </button>
+                                </div>
+                                : undefined
                         } />
                 </div>
                 <div className="column"></div>
@@ -356,50 +365,52 @@ export default function MapCsvFields(props: Props) {
                         isFullwidth={true}
                         value={props.options.categoryColumn}
                         placeholder={"Select column"}
-                        disabled={! props.apiReady}
+                        disabled={!props.apiReady}
                         onChange={result => updateCategoryMapping(result, props.options.categoryParseOptions)}
                         items={[
                             { key: "___NULL___", value: "No category" },
                             ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
-                                value: item,
+                                value: item
                             })
-                        )]}
+                            )]}
                         addOnAfter={
-                            props.options.categoryColumn ? <div className="control">
-                                <button className="button is-primary"
-                                    disabled={! props.apiReady}
-                                    onClick={() => setModal(<InputParseOptionsModal
-                                        value={props.options.descriptionParseOptions}
-                                        previewData={props.data.map(row => getValue(row, props.options.categoryColumn))}
-                                        onChange={options => updateCategoryMapping(props.options.categoryColumn, options)}
-                                        close={() => setModal(null)}
-                                        closeOnChange={true}
-                                    /> )}>
+                            props.options.categoryColumn !== null
+                                ? <div className="control">
+                                    <button className="button is-primary"
+                                        disabled={!props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            value={props.options.descriptionParseOptions}
+                                            previewData={props.data.map(row => getValue(row, props.options.categoryColumn))}
+                                            onChange={options => updateCategoryMapping(props.options.categoryColumn, options)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true}
+                                        />)}>
                                     Parse Options
-                                </button>
-                            </div> : undefined
+                                    </button>
+                                </div>
+                                : undefined
                         } />
                 </div>
                 <div className="column"></div>
             </div>
         </Card>
 
-        {(props.options.sourceAccountType === "column" || props.options.destinationAccountType === "column")
-            && <AccountSelector
+        {(props.options.sourceAccountType === "column" || props.options.destinationAccountType === "column") &&
+            <AccountSelector
                 accounts={props.accounts}
                 options={props.options}
-                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1) }}
+                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1); }}
                 setAccounts={props.setAccounts}
                 transactions={props.transactions ?? []} />}
 
-        {props.transactions && <Card title="Import preview" isNarrow={false}>
-            {tableFilterMessage && <Message title="Filter is active" type="link">
+        {(props.transactions != null) && <Card title="Import preview" isNarrow={false}>
+            {tableFilterMessage !== undefined && <Message title="Filter is active" type="link">
                 Some transactions are hidden! {tableFilterMessage}{" "}
                 <a className="has-text-link" onClick={() => {
                     setTableFilter({ filter: () => true });
                     settableFilterMessage(undefined);
-                    setTableDraw(draw => draw + 1)
+                    setTableDraw(draw => draw + 1);
                 }}>Show all transactions</a>
             </Message>}
             <CsvMappingTransactionTable
@@ -410,11 +421,11 @@ export default function MapCsvFields(props: Props) {
                 tableDraw={tableDraw} />
         </Card>}
 
-        {props.transactions && <Card title="Continue" isNarrow={true}>
+        {(props.transactions != null) && <Card title="Continue" isNarrow={true}>
             <CsvMappingIssues
                 transactions={props.transactions}
                 duplicateIdentifiers={props.duplicateIdentifiers}
-                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1) }} />
+                setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1); }} />
             <div className="buttons">
                 <InputButton onClick={props.goToPrevious}>Back</InputButton>
                 <InputButton className="is-primary" onClick={props.goToNext}>Continue</InputButton>
@@ -425,7 +436,7 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how the amount is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAmountMapping(column: string | null, decimalSeparator: string, parseOptions: ParseOptions) {
+    function updateAmountMapping (column: string | null, decimalSeparator: string, parseOptions: ParseOptions): void {
         props.onChange(updateAutoIdentifiers([
             ...props.data.map((row, i) => ({
                 ...props.transactions![i],
@@ -435,15 +446,15 @@ export default function MapCsvFields(props: Props) {
         ], props.options), {
             ...props.options,
             amountColumn: column,
-            decimalSeparator: decimalSeparator,
-            amountParseOptions: parseOptions,
+            decimalSeparator,
+            amountParseOptions: parseOptions
         });
     }
 
     /**
      * Updates how the description is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateDescriptionMapping(newValue: string | null, parseOptions: ParseOptions) {
+    function updateDescriptionMapping (newValue: string | null, parseOptions: ParseOptions): void {
         if (newValue === "___NULL___") {
             newValue = null;
         }
@@ -456,14 +467,14 @@ export default function MapCsvFields(props: Props) {
         ], {
             ...props.options,
             descriptionColumn: newValue,
-            descriptionParseOptions: parseOptions,
+            descriptionParseOptions: parseOptions
         });
     }
 
     /**
      * Updates how the category is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateCategoryMapping(newValue: string | null, parseOptions: ParseOptions) {
+    function updateCategoryMapping (newValue: string | null, parseOptions: ParseOptions): void {
         if (newValue === "___NULL___") {
             newValue = null;
         }
@@ -476,48 +487,48 @@ export default function MapCsvFields(props: Props) {
         ], {
             ...props.options,
             categoryColumn: newValue,
-            categoryParseOptions: parseOptions,
+            categoryParseOptions: parseOptions
         });
     }
 
     /**
      * Updates how the description is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateDateMapping(dateColumn: string | null, dateFormat: string, parseOptions: ParseOptions) {
+    function updateDateMapping (dateColumn: string | null, dateFormat: string, parseOptions: ParseOptions): void {
         if (props.transactions === null) {
             return;
         }
 
         props.onChange(updateAutoIdentifiers([
             ...props.data.map((row, i) => {
-                const dateText = parseWithOptions(dateColumn ? (row as any)[dateColumn] ?? "" : "", parseOptions);
+                const dateText = parseWithOptions(dateColumn !== null ? (row)[dateColumn] ?? "" : "", parseOptions);
                 return {
                     ...props.transactions![i],
                     dateTime: DateTime.fromFormat(dateText, dateFormat),
-                    dateText: dateText
-                }
+                    dateText
+                };
             })
         ], props.options), {
             ...props.options,
-            dateColumn: dateColumn,
-            dateFormat: dateFormat,
-            dateParseOptions: parseOptions,
+            dateColumn,
+            dateFormat,
+            dateParseOptions: parseOptions
         });
     }
 
     /**
      * Updates how duplicates are handled from the raw CSV data and recalculates the unique identifiers for all transactions
      */
-    function updateDuplicateHandling(duplicateHandling: DuplicateHandlingOptions, identifierColumn: string | null, parseOptions: ParseOptions) {
+    function updateDuplicateHandling (duplicateHandling: DuplicateHandlingOptions, identifierColumn: string | null, parseOptions: ParseOptions): void {
         if (props.transactions === null) {
             return;
         }
 
         const newOptions = {
             ...props.options,
-            duplicateHandling: duplicateHandling,
-            identifierColumn: identifierColumn,
-            identifierParseOptions: parseOptions,
+            duplicateHandling,
+            identifierColumn,
+            identifierParseOptions: parseOptions
         };
 
         props.onChange(
@@ -533,13 +544,12 @@ export default function MapCsvFields(props: Props) {
     /**
      * Updates how an account column is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAccountMapping(
+    function updateAccountMapping (
         type: "source" | "destination",
         accountType: "column" | "single",
         column: string | null,
         value: Account | null,
-        parseOptions: ParseOptions)
-    {
+        parseOptions: ParseOptions): void {
         if (props.transactions === null) return;
 
         if (accountType === "single") {
@@ -553,13 +563,13 @@ export default function MapCsvFields(props: Props) {
         }
 
         let newTransactions: CsvCreateTransaction[];
-        if (type == "source") {
+        if (type === "source") {
             newTransactions = [
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     source: getAccount(row),
                     sourceText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
-                } as CsvCreateTransaction))
+                }))
             ];
         } else {
             newTransactions = [
@@ -567,25 +577,25 @@ export default function MapCsvFields(props: Props) {
                     ...props.transactions![i],
                     destination: getAccount(row),
                     destinationText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
-                } as CsvCreateTransaction))
+                }))
             ];
         }
 
-        let newOptions = { ...props.options };
+        const newOptions = { ...props.options };
         if (type === "source") {
             newOptions.sourceAccountType = accountType;
-            newOptions.sourceAccountColumn = column
+            newOptions.sourceAccountColumn = column;
             newOptions.sourceAccountId = value?.id ?? null;
             newOptions.sourceAccountParseOptions = parseOptions;
         } else {
             newOptions.destinationAccountType = accountType;
-            newOptions.destinationAccountColumn = column
+            newOptions.destinationAccountColumn = column;
             newOptions.destinationAccountId = value?.id ?? null;
             newOptions.destinationAccountParseOptions = parseOptions;
         }
         props.onChange(updateAutoIdentifiers(newTransactions, newOptions), newOptions);
 
-        function getAccount(row: string[]): Account | null {
+        function getAccount (row: string[]): Account | null {
             if (accountType === "single") {
                 return value;
             } else {
@@ -603,32 +613,32 @@ export default function MapCsvFields(props: Props) {
 /**
  * Updates automatic identifiers for all transactions, but only if identifier is set to automatic
  */
-export function updateAutoIdentifiers(transactions: CsvCreateTransaction[], options: CsvImportProfile): CsvCreateTransaction[] {
+export function updateAutoIdentifiers (transactions: CsvCreateTransaction[], options: CsvImportProfile): CsvCreateTransaction[] {
     if (options.duplicateHandling !== "automatic") return transactions;
 
-    let counts: {[key: string]: number} = {};
+    const counts: { [key: string]: number } = {};
     return transactions.map(t => {
         let identifier = getAutoIdentifier(t);
-        
+
         if (identifier === null) {
-            return { ...t, identifier: identifier };
+            return { ...t, identifier };
         }
 
         if (counts[identifier] === undefined) counts[identifier] = 0;
         counts[identifier] += 1;
 
-        identifier = identifier + "|" + counts[identifier];
+        identifier = `${identifier} | + ${counts[identifier]}`;
 
-        return { ...t, identifier: identifier };
+        return { ...t, identifier };
     });
-} 
+}
 
 /**
  * Calculates an automatic identifier for the transaction
  * @param transaction The transaction to calculate an identifier for
  * @returns A unique identifier
  */
-function getAutoIdentifier(transaction: CsvCreateTransaction): string | null {
+function getAutoIdentifier (transaction: CsvCreateTransaction): string | null {
     if (transaction.amount === "invalid" || !transaction.dateTime.isValid) {
         return null;
     }
@@ -643,7 +653,7 @@ function getAutoIdentifier(transaction: CsvCreateTransaction): string | null {
             "|" + transaction.amount.neg().toDecimalPlaces(4).toString();
     }
 
-    function formatAccount(account: Account | null): string {
+    function formatAccount (account: Account | null): string {
         switch (account) {
             case null:
                 return ".";
@@ -659,8 +669,8 @@ function getAutoIdentifier(transaction: CsvCreateTransaction): string | null {
  * @param columnName The name of the field to get the value of
  * @returns The value of that field
  */
-function getValue(row: {[key: string]: string}, columnName: string | null): string {
-    return columnName ? row[columnName] : "";
+function getValue (row: { [key: string]: string }, columnName: string | null): string {
+    return columnName !== null ? row[columnName] : "";
 }
 
 /**
@@ -669,47 +679,49 @@ function getValue(row: {[key: string]: string}, columnName: string | null): stri
  * @param options The options telling which CSV fields to map to which fields on the transaction
  * @returns An array of parsed transactions
  */
-function parseTransactions(data: any[], options: CsvImportProfile, accounts: Account[]): CsvCreateTransaction[] {
-    const result = data.map((row, i) => {
+function parseTransactions (data: any[], options: CsvImportProfile, accounts: Account[]): CsvCreateTransaction[] {
+    const result = data.map((row, i): CsvCreateTransaction => {
         const dateText = parseWithOptions(getValue(row, options.dateColumn), options.dateParseOptions);
         const sourceText = options.sourceAccountType === "column"
-            ? parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions) : "";
+            ? parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions)
+            : "";
         const destinationText = options.destinationAccountType === "column"
-            ? parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions) : "";
+            ? parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions)
+            : "";
         return {
             rowNumber: i,
-            dateText: dateText,
+            dateText,
             dateTime: DateTime.fromFormat(dateText, options.dateFormat),
             description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
             category: parseWithOptions(getValue(row, options.categoryColumn), options.categoryParseOptions),
-            sourceText: sourceText,
+            sourceText,
             source: accounts.find(account => options.sourceAccountType === "single"
                 ? account.id === options.sourceAccountId
                 : account.identifiers.some(x => x === sourceText)
             ) ?? null,
-            destinationText: destinationText,
+            destinationText,
             destination: accounts.find(account => options.destinationAccountType === "single"
                 ? account.id === options.destinationAccountId
                 : account.identifiers.some(x => x === destinationText)
             ) ?? null,
             identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, row),
             amountText: parseWithOptions(getValue(row, options.amountColumn), options.amountParseOptions),
-            amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions),
-        } as CsvCreateTransaction
+            amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions)
+        };
     });
 
     return updateAutoIdentifiers(result, options);
 }
 
 /**
- * Parses 
+ * Parses
  * @param rawValue The raw string to be parsed
  * @param parseOptions The options with which to parse
  * @returns A decimal representation of the number or the string "invalid" if parsing failed
  */
-function parseAmount(rawValue: string, decimalSeparator: string, parseOptions: ParseOptions): Decimal | "invalid" {
-    function escapeRegExp(string: string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+function parseAmount (rawValue: string, decimalSeparator: string, parseOptions: ParseOptions): Decimal | "invalid" {
+    function escapeRegExp (string: string): string {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
     }
 
     if (rawValue === undefined || rawValue === null) {
@@ -719,10 +731,10 @@ function parseAmount(rawValue: string, decimalSeparator: string, parseOptions: P
     rawValue = parseWithOptions(rawValue, parseOptions);
 
     // Remove everything except numbers and the decimal separator
-    rawValue = rawValue.replace(new RegExp("[^" + escapeRegExp(decimalSeparator) + "\\-\\d]", 'g'), "");
+    rawValue = rawValue.replace(new RegExp("[^" + escapeRegExp(decimalSeparator) + "\\-\\d]", "g"), "");
     // Change decimal separator to period
-    rawValue = rawValue.replace(new RegExp(escapeRegExp(decimalSeparator), 'g'), ".");
-    
+    rawValue = rawValue.replace(new RegExp(escapeRegExp(decimalSeparator), "g"), ".");
+
     let result: Decimal | "invalid" = "invalid";
     try {
         result = new Decimal(rawValue);
@@ -742,13 +754,11 @@ function parseAmount(rawValue: string, decimalSeparator: string, parseOptions: P
  * @param data Raw CSV data set
  * @returns The unique identifier for the transaction described by the function parameters
  */
-function getIdentifier(duplicateHandling: DuplicateHandlingOptions,
+function getIdentifier (duplicateHandling: DuplicateHandlingOptions,
     identifierColumn: string | null,
     parseOptions: ParseOptions,
     row: { [key: string]: string }): string | null {
-    
-    switch (duplicateHandling)
-    {
+    switch (duplicateHandling) {
         case "none":
             return null;
         case "identifier":

@@ -3,7 +3,7 @@ import Card from "../common/Card";
 import Hero from "../common/Hero";
 import Image404 from "../../assets/404.svg";
 
-export default function () {
+export default function Page404 (): React.ReactElement {
     return <>
         <Hero title="Page not found" subtitle="The page you requested could not be found" isDanger={true} />
         <div className="p-3">

@@ -6,27 +6,25 @@ import { Api } from "../../lib/ApiClient";
 import TransactionTableLine from "./TransactionTableLine";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZA, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import InputButton from "../input/InputButton";
 import InputCheckbox from "../input/InputCheckbox";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
-import { render } from "react-dom";
 import { serializeQueryForHistory } from "./filter/FilterHelpers";
 import MergeTransactionsModal from "./input/MergeTransactionsModal";
 import DropdownContent from "../common/DropdownContent";
 
 interface Props {
-    draw?: number;
-    query?: SearchGroup;
-    allowEditing?: boolean;
-    allowLinks?: boolean;
-    small?: boolean;
-    pageSize?: number;
+    draw?: number
+    query?: SearchGroup
+    allowEditing?: boolean
+    allowLinks?: boolean
+    small?: boolean
+    pageSize?: number
 
-    page?: [number, (page: number) => void];
-    orderBy?: [{ column: string, descending: boolean }, (value: { column: string, descending: boolean }) => void];
-    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void];
-    selectedTransaction?: [number | null, (value: number | null) => void];
+    page?: [number, (page: number) => void]
+    orderBy?: [{ column: string, descending: boolean }, (value: { column: string, descending: boolean }) => void]
+    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void]
+    selectedTransaction?: [number | null, (value: number | null) => void]
 }
 
 export default React.memo(TransactionList, (a, b) =>
@@ -39,13 +37,13 @@ export default React.memo(TransactionList, (a, b) =>
     a.selectedTransaction?.[0] === b.selectedTransaction?.[0] &&
     a.orderBy?.[0] === b.orderBy?.[0] &&
     a.page?.[0] === b.page?.[0]);
-function TransactionList(props: Props) {
+function TransactionList (props: Props): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
-    const [orderBy, setOrderBy] = props.orderBy ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
-    const [selectedTransactions, setSelectedTransactions] = props.selectedTransactions ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
+    const [orderBy, setOrderBy] = (props.orderBy != null) ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
+    const [selectedTransactions, setSelectedTransactions] = (props.selectedTransactions != null) ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
-    const [page, setPage] = props.page ? props.page : React.useState(1);
+    const [page, setPage] = (props.page != null) ? props.page : React.useState(1);
     const navigate = useNavigate();
 
     const firstRender = React.useRef(true);
@@ -62,40 +60,37 @@ function TransactionList(props: Props) {
             render={renderTable}
             afterDraw={transactions => setShownTransactions(transactions)}
         />
-        {props.selectedTransactions && <MergeTransactionsModal active={isMergingTransactions}
+        {(props.selectedTransactions != null) && <MergeTransactionsModal active={isMergingTransactions}
             close={() => setIsMergingTransactions(false)}
             transactions={selectedTransactions}
-            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1)}} />}
+            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1); }} />}
     </>;
-    
-    function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
-        return new Promise(resolve => {
-            api.Transaction.search({
-                from: from,
-                to: to,
-                query: props.query,
-                descending: orderBy.descending,
-                orderByColumn: orderBy.column
-            } as SearchRequest).then(result => {
-                const transactions: Transaction[] = result.data;
 
-                // If it's not the first render, reset selected transactions
-                if (!firstRender.current) {
-                    setSelectedTransactions({});
-                }
-                firstRender.current = false;
-
-                resolve({
-                    items: transactions,
-                    draw: draw,
-                    offset: from,
-                    totalItems: result.totalItems
-                });
-            })
+    async function fetchItems (api: Api, from: number, to: number, draw: number): Promise<{ items: Transaction[], totalItems: number, offset: number, draw: number }> {
+        const result = await api.Transaction.search({
+            from,
+            to,
+            query: props.query,
+            descending: orderBy.descending,
+            orderByColumn: orderBy.column
         });
+        const transactions: Transaction[] = result.data;
+
+        // If it's not the first render, reset selected transactions
+        if (!firstRender.current) {
+            setSelectedTransactions({});
+        }
+        firstRender.current = false;
+
+        return {
+            items: transactions,
+            draw,
+            offset: from,
+            totalItems: result.totalItems
+        };
     };
 
-    function renderTable(items: { item: Transaction, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
+    function renderTable (items: Array<{ item: Transaction, index: number }>, renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
             <div>
                 {props.allowEditing && <TransactionSelectDropdownButton
@@ -123,7 +118,7 @@ function TransactionList(props: Props) {
         const className = "transaction-table table is-fullwidth is-hoverable" +
             (props.allowEditing !== true ? " no-actions" : " multi-select") +
             (props.small === true ? " is-small" : "");
-        
+
         return <>
             <div className={className}>
                 {heading}
@@ -136,8 +131,8 @@ function TransactionList(props: Props) {
                             allowSelection={props.selectedTransaction !== undefined || props.selectedTransactions !== undefined}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}
-                            selected={selectedTransactions[transaction.id] === true || props.selectedTransaction?.[0] === transaction.id}
-                            toggleSelected={() => toggleSelected(transaction)} />
+                            selected={selectedTransactions[transaction.id] || props.selectedTransaction?.[0] === transaction.id}
+                            toggleSelected={() => toggleSelected(transaction)} />;
                     })}
                 </div>
                 {heading}
@@ -145,16 +140,16 @@ function TransactionList(props: Props) {
             {renderPagination()}
         </>;
 
-        function toggleSelected(transaction: Transaction) {
-            if (props.selectedTransactions) {
-                if (selectedTransactions[transaction.id] === true) {
-                    deselectTransaction(transaction)
+        function toggleSelected (transaction: Transaction) {
+            if (props.selectedTransactions != null) {
+                if (selectedTransactions[transaction.id]) {
+                    deselectTransaction(transaction);
                 } else {
                     setSelectedTransactions({ ...selectedTransactions, [transaction.id]: true });
                 }
             }
 
-            if (props.selectedTransaction) {
+            if (props.selectedTransaction != null) {
                 if (props.selectedTransaction[0] === transaction.id) {
                     props.selectedTransaction[1](null);
                 } else {
@@ -164,8 +159,8 @@ function TransactionList(props: Props) {
         }
     }
 
-    function beginEditMultiple(type: "selection" | "all") {
-        if (!props.query) {
+    function beginEditMultiple (type: "selection" | "all") {
+        if (props.query == null) {
             // Multi edit requires a query
             return;
         }
@@ -184,41 +179,40 @@ function TransactionList(props: Props) {
                     }
                 }]
             };
-        
+
         navigate(routes.transactionEditMultiple(), {
             state: {
                 query: serializeQueryForHistory(query),
-                showBack: true,
+                showBack: true
             }
         });
     }
 
-    function deselectTransaction(transaction: Transaction) {
-        let newSelectedTransactions = { ...selectedTransactions };
+    function deselectTransaction (transaction: Transaction) {
+        const newSelectedTransactions = { ...selectedTransactions };
         delete newSelectedTransactions[transaction.id];
         setSelectedTransactions(newSelectedTransactions);
     }
 
-    function selectAllTransactions() {
-        let newSelectedTransactions: {[id: number]: boolean} = {};
+    function selectAllTransactions () {
+        const newSelectedTransactions: { [id: number]: boolean } = {};
         shownTransactions.forEach(t => newSelectedTransactions[t.id] = true);
         setSelectedTransactions(newSelectedTransactions);
     }
 
-    function renderColumnHeader(title: string, columnName: string, type: "numeric" | "string", rightAligned?: boolean): React.ReactElement {
-        let sortIcon: React.ReactElement | undefined = undefined;
-        if (orderBy.column === columnName)
-        {
+    function renderColumnHeader (title: string, columnName: string, type: "numeric" | "string", rightAligned?: boolean): React.ReactElement {
+        let sortIcon: React.ReactElement | undefined;
+        if (orderBy.column === columnName) {
             switch (type) {
                 case "numeric":
                     sortIcon = orderBy.descending
                         ? <span className="icon"><FontAwesomeIcon icon={faArrowDownWideShort} /></span>
-                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownShortWide} /></span>
+                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownShortWide} /></span>;
                     break;
                 case "string":
                     sortIcon = orderBy.descending
                         ? <span className="icon"><FontAwesomeIcon icon={faArrowDownZA} /></span>
-                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownAZ} /></span>
+                        : <span className="icon"><FontAwesomeIcon icon={faArrowDownAZ} /></span>;
                     break;
             }
         }
@@ -230,11 +224,11 @@ function TransactionList(props: Props) {
         </div>;
     }
 
-    function switchOrderBy(column: string) {
+    function switchOrderBy (column: string) {
         if (orderBy.column === column) {
-            setOrderBy({ column, descending: !orderBy.descending })
+            setOrderBy({ column, descending: !orderBy.descending });
         } else {
-            setOrderBy({ column, descending: false })
+            setOrderBy({ column, descending: false });
         }
         if (props.orderBy === undefined) {
             setDraw(draw => draw + 1);
@@ -243,16 +237,16 @@ function TransactionList(props: Props) {
 }
 
 interface DropdownButtonProps {
-    selectAll: () => void;
-    clearSelection: () => void;
-    selected: boolean;
-    editSelection: () => void;
-    editSelectionDisabled: boolean;
-    editAll: () => void;
-    editAllText: string;
-    mergeSelection: () => void;
+    selectAll: () => void
+    clearSelection: () => void
+    selected: boolean
+    editSelection: () => void
+    editSelectionDisabled: boolean
+    editAll: () => void
+    editAllText: string
+    mergeSelection: () => void
 }
-export function TransactionSelectDropdownButton(props: DropdownButtonProps): React.ReactElement {
+export function TransactionSelectDropdownButton (props: DropdownButtonProps): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -270,12 +264,12 @@ export function TransactionSelectDropdownButton(props: DropdownButtonProps): Rea
             <div className={"dropdown-menu"} role="menu" style={{ maxWidth: "none" }} tabIndex={0} ref={dropdownRef}>
                 <div className="dropdown-content">
                     <a className="dropdown-item"
-                        onClick={() => ! props.editSelectionDisabled && props.editSelection()}
+                        onClick={() => !props.editSelectionDisabled && props.editSelection()}
                         style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
                         Modify selection
                     </a>
                     <a className="dropdown-item"
-                        onClick={() => ! props.editSelectionDisabled && props.mergeSelection()}
+                        onClick={() => !props.editSelectionDisabled && props.mergeSelection()}
                         style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
                         Merge selected transactions
                     </a>
@@ -287,7 +281,7 @@ export function TransactionSelectDropdownButton(props: DropdownButtonProps): Rea
         </DropdownContent>
     </div>;
 
-    function onBlur(e: React.FocusEvent) {
+    function onBlur (e: React.FocusEvent) {
         if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
             setOpen(false);
         }

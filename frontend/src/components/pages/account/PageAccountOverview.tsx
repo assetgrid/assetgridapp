@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { routes } from "../../../lib/routes";
 import Hero from "../../common/Hero";
 
-export default function PageAccountOverview() {
+export default function PageAccountOverview (): React.ReactElement {
     return <>
         <Hero title="Accounts" subtitle="Manage your accounts" />
         <div className="p-3">

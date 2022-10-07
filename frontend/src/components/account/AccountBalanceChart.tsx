@@ -2,7 +2,7 @@ import * as React from "react";
 import { GetMovementResponse, TimeResolution } from "../../models/account";
 import { Api, useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
-import 'chartjs-adapter-luxon';
+import "chartjs-adapter-luxon";
 import {
     Chart as ChartJS,
     LinearScale,
@@ -14,11 +14,10 @@ import {
     Tooltip,
     Legend,
     BarElement,
-    BarController,
-} from 'chart.js'
-import { Chart } from 'react-chartjs-2'
-import { userContext } from "../App";
-  
+    BarController
+} from "chart.js";
+import { Chart } from "react-chartjs-2";
+
 ChartJS.register(
     LinearScale,
     PointElement,
@@ -30,14 +29,14 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend
-)
+);
 
 interface Props {
-    id: number;
-    period: Period;
+    id: number
+    period: Period
 }
 
-export default function AccountBalanceChart(props: Props) {
+export default function AccountBalanceChart (props: Props): React.ReactElement {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
@@ -45,9 +44,9 @@ export default function AccountBalanceChart(props: Props) {
 
     React.useEffect(() => {
         if (api !== null) {
-            updateData(api, props.id, props.period, setDisplayingPeriod, resolution, setMovements);
+            void updateData(api, props.id, props.period, setDisplayingPeriod, resolution, setMovements);
         }
-    }, [api, props.period, resolution])
+    }, [api, props.period, resolution]);
 
     if (movements === "fetching") {
         return <>Please wait&hellip;</>;
@@ -58,10 +57,10 @@ export default function AccountBalanceChart(props: Props) {
     let expenses: number[] = movements.items.map(point => point.expenses.toNumber());
     let labels = movements.items.map(point => point.dateTime.toJSDate());
     for (let i = 0; i < movements.items.length; i++) {
-        let item = movements.items[i];
+        const item = movements.items[i];
         balances[i] = (balances[i - 1] !== undefined ? balances[i - 1] : movements.initialBalance.toNumber()) + item.revenue.toNumber() - item.expenses.toNumber();
     }
-    let [start, end] = PeriodFunctions.getRange(displayingPeriod);
+    const [start, end] = PeriodFunctions.getRange(displayingPeriod);
 
     if (movements.items.length === 0 || movements.items[0].dateTime.diff(start, "days").days > 1) {
         balances = [movements.initialBalance.toNumber(), ...balances];
@@ -69,7 +68,7 @@ export default function AccountBalanceChart(props: Props) {
         expenses = [0, ...expenses];
         labels = [start.toJSDate(), ...labels];
     }
-    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end, "days").days < - 1) {
+    if (movements.items.length < 2 || movements.items[movements.items.length - 1].dateTime.diff(end, "days").days < -1) {
         balances = [...balances, balances[balances.length - 1]];
         revenues = [...revenues, 0];
         expenses = [...expenses, 0];
@@ -78,7 +77,7 @@ export default function AccountBalanceChart(props: Props) {
 
     return <>
         <div style={{ height: "400px", position: "relative" }}>
-            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
                 <Chart type={"line"} height="400px" data={{
                     labels,
                     datasets: [{
@@ -87,7 +86,7 @@ export default function AccountBalanceChart(props: Props) {
                         type: "line",
                         stepped: true,
                         borderColor: "#558eb3",
-                        backgroundColor: "transparent",
+                        backgroundColor: "transparent"
                     },
                     {
                         label: "Revenue",
@@ -102,14 +101,14 @@ export default function AccountBalanceChart(props: Props) {
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#ff6b6b"
-                    }],
+                    }]
                 }} options={{
                     normalized: true,
                     maintainAspectRatio: false,
                     responsive: true,
                     scales: {
                         x: {
-                            type: 'time',
+                            type: "time",
                             display: true,
                             offset: true,
                             time: {
@@ -117,19 +116,19 @@ export default function AccountBalanceChart(props: Props) {
                             },
                             min: start.valueOf(),
                             max: end.valueOf()
-                        },
+                        }
                     },
                     interaction: {
-                        intersect: false,
+                        intersect: false
                     }
-                    }}>
+                }}>
                 </Chart>
             </div>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
             <p>Aggregate by:</p>&nbsp;
             {["day", "week", "month", "year"].map(option =>
-                <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer"}}
+                <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer" }}
                     className={option === resolution ? "tag is-primary" : "tag is-dark"}
                     onClick={() => setResolution(option as any)}>
                     {["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(option as any)]}
@@ -138,11 +137,10 @@ export default function AccountBalanceChart(props: Props) {
     </>;
 }
 
-async function updateData(api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,    
-    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>) {
-
+async function updateData (api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,
+    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>): Promise<void> {
     let resolution: TimeResolution;
-    let [start, end] = PeriodFunctions.getRange(period);
+    const [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
         case "day":
             resolution = TimeResolution.Daily;
@@ -158,7 +156,7 @@ async function updateData(api: Api, id: number, period: Period, setDisplayingPer
             break;
     }
 
-    const result = await api.Account.getMovements(id, start, end, resolution)
+    const result = await api.Account.getMovements(id, start, end, resolution);
     if (result.status === 200) {
         setDisplayingPeriod(period);
         setData(result.data);

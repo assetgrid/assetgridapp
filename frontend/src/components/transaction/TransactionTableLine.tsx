@@ -1,20 +1,17 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
-import { Preferences } from "../../models/preferences";
 import { Transaction, TransactionLine } from "../../models/transaction";
 import InputAccount from "../account/input/InputAccount";
 import InputCategory from "../input/InputCategory";
 import InputDateTime from "../input/InputDateTime";
 import InputText from "../input/InputText";
 import TransactionLink from "./TransactionLink";
-import * as regular from "@fortawesome/free-regular-svg-icons"
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import Modal from "../common/Modal";
-import { Api, useApi } from "../../lib/ApiClient";
+import * as regular from "@fortawesome/free-regular-svg-icons";
+import * as solid from "@fortawesome/free-solid-svg-icons";
+import { useApi } from "../../lib/ApiClient";
 import AccountLink from "../account/AccountLink";
 import InputButton from "../input/InputButton";
 import InputNumber from "../input/InputNumber";
@@ -27,29 +24,29 @@ import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { SearchGroupType, SearchOperator } from "../../models/search";
 
-type Props  = {
-    transaction: Transaction;
-    updateItem: (item: Transaction | null) => void;
-    accountId?: number;
-    balance?: Decimal;
-    allowSelection?: boolean;
-    allowEditing?: boolean;
-    allowLinks?: boolean;
-    selected?: boolean;
-    toggleSelected?: () => void;
+interface Props {
+    transaction: Transaction
+    updateItem: (item: Transaction | null) => void
+    accountId?: number
+    balance?: Decimal
+    allowSelection?: boolean
+    allowEditing?: boolean
+    allowLinks?: boolean
+    selected?: boolean
+    toggleSelected?: () => void
 }
 
 interface TransactionEditingModel {
-    total: Decimal;
-    description: string;
-    dateTime: DateTime;
-    source: Account | null;
-    destination: Account | null;
-    category: string;
-    lines: TransactionLine[] | null;
+    total: Decimal
+    description: string
+    dateTime: DateTime
+    source: Account | null
+    destination: Account | null
+    category: string
+    lines: TransactionLine[] | null
 };
 
-export default function TransactionTableLine(props: Props) {
+export default function TransactionTableLine (props: Props): React.ReactElement {
     const [disabled, setDisabled] = React.useState(false);
     const [state, setState] = React.useState<null | "editing" | "confirm-delete">(null);
 
@@ -61,22 +58,15 @@ export default function TransactionTableLine(props: Props) {
     }
 }
 
-
-
-
-
-
-
-
 /*
  * Transaction that is not currently being edited
  */
 type TableTransactionProps = Props & {
-    disabled: boolean;
-    setState: (state: null | "editing" | "confirm-delete") => void;
-    isConfirmingDeletion: boolean;
-}
-function TableTransaction(props: TableTransactionProps) {
+    disabled: boolean
+    setState: (state: null | "editing" | "confirm-delete") => void
+    isConfirmingDeletion: boolean
+};
+function TableTransaction (props: TableTransactionProps): React.ReactElement {
     const offsetAccount = props.accountId !== undefined ? props.transaction.destination?.id === props.accountId ? props.transaction.source : props.transaction.destination : null;
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
@@ -85,7 +75,7 @@ function TableTransaction(props: TableTransactionProps) {
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
@@ -99,16 +89,16 @@ function TableTransaction(props: TableTransactionProps) {
         <div className={"number-total " + totalClass}>
             {formatNumberWithUser(total, user)}
         </div>
-        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>
+        {(props.balance != null) && <div className={"number-total"} style={{ fontWeight: "normal" }}>
             {formatNumberWithUser(props.balance, user)}
         </div>}
         <div>
             {props.accountId !== undefined
-                ? offsetAccount !== null && <AccountLink account={offsetAccount} disabled={! (props.allowLinks ?? true)} />
-                : props.transaction.source !== null && <AccountLink account={props.transaction.source} disabled={! (props.allowLinks ?? true)} />}
+                ? offsetAccount !== null && <AccountLink account={offsetAccount} disabled={!(props.allowLinks ?? true)} />
+                : props.transaction.source !== null && <AccountLink account={props.transaction.source} disabled={!(props.allowLinks ?? true)} />}
         </div>
         {props.accountId === undefined && <div>
-            {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={! (props.allowLinks ?? true)} />}
+            {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={!(props.allowLinks ?? true)} />}
         </div>}
         <div>
             <Link to={routes.transactions()}
@@ -121,7 +111,7 @@ function TableTransaction(props: TableTransactionProps) {
                 <InputIconButton icon={solid.faPen} onClick={() => props.setState("editing")} />
                 <InputIconButton icon={regular.faTrashCan} onClick={() => props.setState("confirm-delete")} />
             </>}
-            
+
             {/* Deletion modal */}
             {props.isConfirmingDeletion && <DeleteTransactionModal
                 close={() => props.setState(null)}
@@ -143,19 +133,16 @@ function TableTransaction(props: TableTransactionProps) {
     </div>;
 }
 
-
-
-
 /*
  * Inline transaction editor for transaction tables
  */
 type TransactionEditorProps = Props & {
-    disabled: boolean;
-    setDisabled: (disabled: boolean) => void;
-    stopEditing: () => void;
-}
+    disabled: boolean
+    setDisabled: (disabled: boolean) => void
+    stopEditing: () => void
+};
 
-function TransactionEditor(props: TransactionEditorProps) {
+function TransactionEditor (props: TransactionEditorProps) {
     const defaultModel = {
         total: props.transaction.total,
         dateTime: props.transaction.dateTime,
@@ -163,7 +150,7 @@ function TransactionEditor(props: TransactionEditorProps) {
         source: props.transaction.source,
         destination: props.transaction.destination,
         category: props.transaction.category,
-        lines: props.transaction.lines.length > 0 ? props.transaction.lines : null,
+        lines: props.transaction.lines.length > 0 ? props.transaction.lines : null
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
@@ -187,7 +174,7 @@ function TransactionEditor(props: TransactionEditorProps) {
 
     return <div key={props.transaction.id} className="table-row editing">
         <div>
-            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => props.toggleSelected && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} />
         </div>
         <div>
@@ -195,25 +182,25 @@ function TransactionEditor(props: TransactionEditorProps) {
                 fullwidth={true}
                 onChange={e => setModel({ ...model, dateTime: e })}
                 disabled={props.disabled}
-                errors={errors["DateTime"]} /></div>
+                errors={errors.DateTime} /></div>
         <div>
             <InputText value={model.description}
                 onChange={(e) => setModel({ ...model, description: e.target.value })}
                 disabled={props.disabled}
-                errors={errors["Description"]} /></div>
+                errors={errors.Description} /></div>
         {model.lines === null
             ? <div>
                 <InputNumber allowNull={false}
                     value={model.total.times(amountMultiplier)}
                     onChange={newTotal => setModel({ ...model, total: newTotal.times(amountMultiplier) })}
-                    errors={errors["Total"]} />
+                    errors={errors.Total} />
             </div>
             : < div className={"number-total " + totalClass}>
                 {/* If the transaction is split, the total is the sum of the lines */}
                 {formatNumberWithUser(model.total.times(amountMultiplier), user)}
             </div>
         }
-        {props.balance && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithUser(props.balance, user)}</div>}
+        {(props.balance != null) && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithUser(props.balance, user)}</div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <div>
             <InputAccount
                 value={model.source}
@@ -221,7 +208,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                 allowNull={true}
                 onChange={account => setModel({ ...model, source: account })}
                 allowCreateNewAccount={true}
-                errors={errors["SourceAccountId"]} />
+                errors={errors.SourceAccountId} />
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
@@ -230,17 +217,17 @@ function TransactionEditor(props: TransactionEditorProps) {
                 allowNull={true}
                 onChange={account => setModel({ ...model, destination: account })}
                 allowCreateNewAccount={true}
-                errors={errors["DestinationAccountId"]} />
+                errors={errors.DestinationAccountId} />
         </div>}
         <div>
             <InputCategory
                 value={model.category}
                 disabled={props.disabled}
-                onChange={category => setModel({ ...model, category: category })}
-                errors={errors["Category"]} />
+                onChange={category => setModel({ ...model, category })}
+                errors={errors.Category} />
         </div>
         <div>
-            {! props.disabled && api !== null && <>
+            {!props.disabled && api !== null && <>
                 <InputIconButton icon={solid.faSave} onClick={() => saveChanges()} />
                 <InputIconButton icon={solid.faXmark} onClick={() => props.stopEditing()} />
             </>}
@@ -254,7 +241,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                     disabled={props.disabled}
                     inverse={amountMultiplier.toNumber() == -1}
                     last={i === model.lines!.length} />)}
-                <div style={{ gridColumn: "span 3"}}></div>
+                <div style={{ gridColumn: "span 3" }}></div>
                 <div className="btn-add-line">
                     <InputButton className="is-small"
                         onClick={() => setModel({
@@ -262,7 +249,7 @@ function TransactionEditor(props: TransactionEditorProps) {
                             lines: [...model.lines!, { amount: new Decimal(0), description: "Transaction line" }]
                         })}>Add line</InputButton>
                 </div>
-                <div style={{ gridColumn: "span 4"}}></div>
+                <div style={{ gridColumn: "span 4" }}></div>
             </div>
             : < div className="transaction-lines non-split">
                 <InputButton className="is-small"
@@ -273,7 +260,7 @@ function TransactionEditor(props: TransactionEditorProps) {
             </div>}
     </div>;
 
-    function saveChanges() {
+    function saveChanges (): void {
         if (model === null || api === null) return;
 
         props.setDisabled(true);
@@ -298,29 +285,29 @@ function TransactionEditor(props: TransactionEditorProps) {
         });
     }
 
-    function updateLine(newLine: Partial<TransactionLine>, index: number) {
+    function updateLine (newLine: Partial<TransactionLine>, index: number): void {
         if (model === null || model.lines === null) return;
 
         const lines = [
             ...model.lines.slice(0, index),
             { ...model.lines[index], ...newLine },
-            ...model.lines.slice(index + 1),
+            ...model.lines.slice(index + 1)
         ];
         setModel({
             ...model,
             total: lines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)),
-            lines: lines
-        })
+            lines
+        });
     }
 
-    function deleteLine(index: number) {
+    function deleteLine (index: number): void {
         if (model === null || model.lines === null) return;
-        
+
         const newLines = [...model.lines.slice(0, index), ...model.lines.slice(index + 1)];
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : model.lines[index].amount;
         setModel({
             ...model,
-            total: total,
+            total,
             lines: newLines.length > 0 ? newLines : null
         });
     }
@@ -330,13 +317,14 @@ function TransactionEditor(props: TransactionEditorProps) {
  * Inline editor for a transaction line
  */
 interface LineEditorProps {
-    line: TransactionLine;
-    update: (changes: Partial<TransactionLine>) => void;
-    delete: () => void;
-    disabled: boolean, last: boolean;
-    inverse: boolean;
+    line: TransactionLine
+    update: (changes: Partial<TransactionLine>) => void
+    delete: () => void
+    disabled: boolean
+    last: boolean
+    inverse: boolean
 }
-function TransactionLineEditor(props: LineEditorProps) {
+function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
     const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
 
     return <div className={"transaction-line" + (props.last ? " last" : "")}>

@@ -1,7 +1,5 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import * as React from "react";
-import { userContext } from "../components/App";
 import { Preferences } from "../models/preferences";
 import { SearchGroup, SearchGroupType } from "../models/search";
 import { User } from "../models/user";
@@ -10,12 +8,12 @@ const Utils = {
     arrayToObject,
     groupBy,
     objectMap,
-    range,
+    range
 };
 export default Utils;
 
-function arrayToObject<A, K extends string | number, V>(array: A[], selector: (item: A) => [K, V]) {
-    const output: { [key: string]: V} = {};
+function arrayToObject<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]) {
+    const output: { [key: string]: V } = {};
 
     for (const item of array) {
         const [key, value] = selector(item);
@@ -25,8 +23,8 @@ function arrayToObject<A, K extends string | number, V>(array: A[], selector: (i
     return output;
 }
 
-function groupBy<A, K extends string | number, V>(array: A[], selector: (item: A) => [K, V]) {
-    const output: { [key: string]: V[]} = {};
+function groupBy<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]) {
+    const output: { [key: string]: V[] } = {};
 
     for (const item of array) {
         const [key, value] = selector(item);
@@ -39,7 +37,7 @@ function groupBy<A, K extends string | number, V>(array: A[], selector: (item: A
     return output;
 }
 
-function objectMap<A, B>(object: { [key: string]: A }, selector: (item: A) => B): { [key: string]: B } {
+function objectMap<A, B> (object: { [key: string]: A }, selector: (item: A) => B): { [key: string]: B } {
     const output: { [key: string]: B } = {};
     for (const key of Object.keys(object)) {
         output[key] = selector(object[key]);
@@ -48,7 +46,7 @@ function objectMap<A, B>(object: { [key: string]: A }, selector: (item: A) => B)
     return output;
 }
 
-function range(start: number, end: number) {
+function range (start: number, end: number) {
     const ans = [];
     for (let i = start; i <= end; i++) {
         ans.push(i);
@@ -62,7 +60,7 @@ function range(start: number, end: number) {
  * @param user The user whose preferences to use
  * @returns A string representation of the date
  */
-export function formatDateWithUser(date: DateTime, user: User | "fetching"): string {
+export function formatDateWithUser (date: DateTime, user: User | "fetching"): string {
     return formatDateWithPreferences(date, user === "fetching" ? "fetching" : user.preferences);
 }
 
@@ -72,7 +70,7 @@ export function formatDateWithUser(date: DateTime, user: User | "fetching"): str
  * @param preferences The preferences to use
  * @returns A string representation of the date
  */
- export function formatDateWithPreferences(date: DateTime, preferences: Preferences | "fetching"): string {
+export function formatDateWithPreferences (date: DateTime, preferences: Preferences | "fetching"): string {
     if (preferences === "fetching" || preferences.dateFormat === null) {
         return date.toJSDate().toLocaleDateString();
     } else {
@@ -86,7 +84,7 @@ export function formatDateWithUser(date: DateTime, user: User | "fetching"): str
  * @param user The user whose preferences to use
  * @returns A string representation of the dateTime
  */
-export function formatDateTimeWithUser(dateTime: DateTime, user: User | "fetching"): string {
+export function formatDateTimeWithUser (dateTime: DateTime, user: User | "fetching"): string {
     return formatDateTimeWithPreferences(dateTime, user === "fetching" ? "fetching" : user.preferences);
 }
 
@@ -96,7 +94,7 @@ export function formatDateTimeWithUser(dateTime: DateTime, user: User | "fetchin
  * @param preferences The preferences to use
  * @returns A string representation of the date
  */
- export function formatDateTimeWithPreferences(dateTime: DateTime, preferences: Preferences | "fetching"): string {
+export function formatDateTimeWithPreferences (dateTime: DateTime, preferences: Preferences | "fetching"): string {
     if (preferences === "fetching" || preferences.dateTimeFormat === null) {
         return dateTime.toJSDate().toLocaleString();
     } else {
@@ -104,11 +102,11 @@ export function formatDateTimeWithUser(dateTime: DateTime, user: User | "fetchin
     }
 }
 
-export function formatNumberWithUser(number: Decimal, user: User | "fetching"): string {
+export function formatNumberWithUser (number: Decimal, user: User | "fetching"): string {
     return formatNumberWithPreferences(number, user === "fetching" ? "fetching" : user.preferences);
 }
 
-export function formatNumberWithPreferences(number: Decimal, preferences: Preferences | "fetching"): string {
+export function formatNumberWithPreferences (number: Decimal, preferences: Preferences | "fetching"): string {
     let decimalDigits: number = 2;
     let decimalSeparator: string = ".";
     let thousandsSeparator: string = ",";
@@ -121,7 +119,7 @@ export function formatNumberWithPreferences(number: Decimal, preferences: Prefer
     return formatNumber(number, decimalDigits, decimalSeparator, thousandsSeparator);
 }
 
-export function formatNumber(number: Decimal, decimals: number, decimalSeparator: string, thousandsSeparator: string): string {
+export function formatNumber (number: Decimal, decimals: number, decimalSeparator: string, thousandsSeparator: string): string {
     // http://kevin.vanzonneveld.net
     // +   original by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
     // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -167,29 +165,29 @@ export function formatNumber(number: Decimal, decimals: number, decimalSeparator
     // *    returns 11: '1.2000'
     // *    example 12: number_format('1.2000', 3);
     // *    returns 12: '1.200'
-    let s = number.toFixed(decimals).split('.');
+    const s = number.toFixed(decimals).split(".");
     if (s[0].length > 3) {
         s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousandsSeparator);
     }
-    if ((s[1] || '').length < decimals) {
-        s[1] = s[1] || '';
-        s[1] += new Array(decimals - s[1].length + 1).join('0');
+    if ((s[1] || "").length < decimals) {
+        s[1] = s[1] || "";
+        s[1] += new Array(decimals - s[1].length + 1).join("0");
     }
     return s.join(decimalSeparator);
 }
 
-export function debounce<T extends (...args: any) => void>(this: any, func: T, wait: number) {
+export function debounce<T1 extends (...args: any) => T2, T2 extends void | Promise<void>> (this: any, func: T1, wait?: number): (...args: Parameters<T1>) => void {
     let timeoutId: NodeJS.Timeout | null = null;
 
-    return (...args: Parameters<T>) => {
-        var context = this;
+    return (...args: Parameters<T1>) => {
+        const context = this;
 
-        var later = () => {
+        const later = () => {
             timeoutId = null;
             func.apply(context, args);
         };
 
-        var callNow = ! wait || wait === 0;
+        const callNow = wait === undefined || wait === 0;
 
         if (timeoutId !== null) {
             clearTimeout(timeoutId);
@@ -208,5 +206,5 @@ export function debounce<T extends (...args: any) => void>(this: any, func: T, w
  */
 export const emptyQuery: SearchGroup = {
     type: SearchGroupType.And,
-    children: [],
+    children: []
 };

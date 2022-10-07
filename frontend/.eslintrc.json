@@ -24,7 +24,11 @@
     ],
     "ignorePatterns": ["./src/assets/*"],
     "rules": {
-        "indent": ["error", 4],
-        "@typescript-eslint/indent": ["error", 4]
+        "indent": ["error", 4, { "SwitchCase": 1 }],
+        "@typescript-eslint/indent": ["error", 4],
+        "@typescript-eslint/semi": ["error", "always"],
+        "@typescript-eslint/quotes": ["error", "double"],
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturningArgument": false }]
     }
 }

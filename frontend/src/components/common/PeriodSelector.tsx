@@ -1,21 +1,17 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Period, PeriodFunctions } from "../../models/period";
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import { Calendar, DateRange, DateRangePicker, defaultInputRanges, defaultStaticRanges, Range, RangeKeyDict } from "react-date-range";
+import * as solid from "@fortawesome/free-solid-svg-icons";
+import { Calendar, DateRange } from "react-date-range";
 import { DateTime } from "luxon";
 import DropdownContent from "./DropdownContent";
 
 interface Props {
-    period: Period;
-    onChange: (period: Period) => void;
+    period: Period
+    onChange: (period: Period) => void
 }
 
-interface State {
-    down: boolean;
-}
-
-export default function PeriodSelector(props: Props) {
+export default function PeriodSelector (props: Props): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -28,7 +24,7 @@ export default function PeriodSelector(props: Props) {
             </button>
         </p>
         <p className="control date-display">
-            <button className="button" onClick={() => setOpen(open => ! open)}>
+            <button className="button" onClick={() => setOpen(open => !open)}>
                 <span className="icon is-small">
                     <FontAwesomeIcon icon={solid.faCalendarAlt} />
                 </span>
@@ -51,7 +47,7 @@ export default function PeriodSelector(props: Props) {
         </DropdownContent>
     </div>;
 
-    function renderDropdown() {
+    function renderDropdown (): React.ReactElement {
         return <div className="period-dropdown" ref={dropdownRef} tabIndex={0}>
             <ul className="period-sidebar">
                 <li onClick={() => props.onChange({ type: "custom", start: DateTime.now().startOf("day"), end: DateTime.now().endOf("day") })}>
@@ -76,7 +72,7 @@ export default function PeriodSelector(props: Props) {
                     Custom Period
                 </li>
             </ul>
-            {["month", "year"].indexOf(props.period.type) != -1 && <div className="details">
+            {["month", "year"].includes(props.period.type) && <div className="details">
                 <p>
                     Dispay one {props.period.type} starting on <i>{props.period.start.toLocaleString(DateTime.DATE_MED)}</i>.
                 </p>
@@ -103,8 +99,8 @@ export default function PeriodSelector(props: Props) {
                         ranges={[{ startDate: props.period.start.startOf("day").toJSDate(), endDate: props.period.end.endOf("day").toJSDate(), key: "range" }]}
                         onChange={item => props.onChange({
                             type: "custom",
-                            start: DateTime.fromJSDate((item.range as Range).startDate!).startOf("day"),
-                            end: DateTime.fromJSDate((item.range as Range).endDate!).endOf("day"),
+                            start: DateTime.fromJSDate((item.range).startDate!).startOf("day"),
+                            end: DateTime.fromJSDate((item.range).endDate!).endOf("day")
                         })}
                     />}
                 </div>
@@ -112,8 +108,8 @@ export default function PeriodSelector(props: Props) {
         </div>;
     }
 
-    function onBlur(e: React.FocusEvent) {
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+    function onBlur (e: React.FocusEvent): void {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !(dropdownRef.current?.contains(e.relatedTarget as Node) ?? false)) {
             setOpen(false);
         }
     }

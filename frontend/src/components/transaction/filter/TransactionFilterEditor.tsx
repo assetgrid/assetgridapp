@@ -1,7 +1,6 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import * as React from "react";
-import { AndSearchGroup, OrSearchGroup, SearchGroup, SearchGroupType, SearchOperator, SearchQuery, SearchRequest } from "../../../models/search";
-import Tooltip from "../../common/Tooltip";
+import { AndSearchGroup, OrSearchGroup, SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import InputButton from "../../input/InputButton";
 import InputIconButton from "../../input/InputIconButton";
 import Condition from "./TransactionFilterConditionEditor";
@@ -9,37 +8,35 @@ import Condition from "./TransactionFilterConditionEditor";
 // Inspiration: https://www.npmjs.com/package/comet-awesome-query-builder
 
 interface Props<T1, T2> {
-    query: T1;
-    setQuery: (newQuery: T2) => void;
+    query: T1
+    setQuery: (newQuery: T2) => void
 }
 
-export default function TransactionFilterEditor(props: Props<SearchGroup, SearchGroup>) {
-    return <Group query={props.query} setQuery={query => query && props.setQuery(query)} isParent={true} />;
+export default function TransactionFilterEditor (props: Props<SearchGroup, SearchGroup>): React.ReactElement {
+    return <Group query={props.query} setQuery={query => (query != null) && props.setQuery(query)} isParent={true} />;
 }
 
-function Group(props: Props<SearchGroup, SearchGroup | null> & { isParent: boolean }) {
+function Group (props: Props<SearchGroup, SearchGroup | null> & { isParent: boolean }): React.ReactElement {
     switch (props.query.type) {
         case SearchGroupType.And:
         case SearchGroupType.Or:
             return <AndOrGroup query={props.query} setQuery={props.setQuery} isParent={props.isParent} />;
         case SearchGroupType.Query:
             if (props.isParent) {
-                // Top level SearchGroups must not be queries
+            // Top level SearchGroups must not be queries
                 return <AndOrGroup
                     isParent={true}
                     setQuery={props.setQuery}
                     query={{
                         type: SearchGroupType.And,
                         children: [props.query]
-                    }} />
+                    }} />;
             }
-            return <Condition query={props.query.query} setQuery={query => query === null ? props.setQuery(null) : props.setQuery({ type: SearchGroupType.Query, query: query })}/>;
-        default:
-            throw "Unknown search group";
+            return <Condition query={props.query.query} setQuery={query => query === null ? props.setQuery(null) : props.setQuery({ type: SearchGroupType.Query, query })}/>;
     }
 }
 
-function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | null> & { isParent: boolean }) {
+function AndOrGroup (props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | null> & { isParent: boolean }): React.ReactElement {
     return <div className="filter-group">
         <div className="filter-group--header">
             <InputButton className="is-small"
@@ -47,11 +44,11 @@ function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | n
                 {props.query.type === SearchGroupType.And ? <>AND</> : <>OR</>}
             </InputButton>
             {props.query.type === SearchGroupType.And
-                ?<div><span>All</span> of the following conditions must be met</div>
+                ? <div><span>All</span> of the following conditions must be met</div>
                 : <div><span>One</span> of the following conditions must be met</div>}
             {!props.isParent && <InputIconButton className="btn-delete" icon={faTrashCan} onClick={() => props.setQuery(null)} />}
         </div>
-        
+
         <div className="filter-group--children">
             {props.query.children.map((child, i) => <React.Fragment key={i}>
                 {i > 0 && (props.query.type === SearchGroupType.And
@@ -61,16 +58,16 @@ function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | n
             </React.Fragment>)}
             <div className="buttons">
                 <InputButton onClick={() => addCondition()}>
-                    Add condition    
+                    Add condition
                 </InputButton>
                 <InputButton onClick={() => addGroup()}>
-                    Add group    
+                    Add group
                 </InputButton>
             </div>
         </div>
     </div>;
 
-    function addCondition() {
+    function addCondition (): void {
         props.setQuery({
             ...props.query,
             children: [...props.query.children, {
@@ -85,7 +82,7 @@ function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | n
         });
     }
 
-    function addGroup() {
+    function addGroup (): void {
         props.setQuery({
             ...props.query,
             children: [...props.query.children, {
@@ -103,10 +100,9 @@ function AndOrGroup(props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | n
         });
     }
 
-    function setChildQuery(query: SearchGroup | null, index: number) {
-        console.log(query);
+    function setChildQuery (query: SearchGroup | null, index: number): void {
         let children: SearchGroup[] = [];
-        if (query !== null && ! (query.type === SearchGroupType.Query && query.query === null)) {
+        if (query !== null && !(query.type === SearchGroupType.Query && query.query === null)) {
             if (query.type === props.query.type) {
                 children = query.children;
             } else {

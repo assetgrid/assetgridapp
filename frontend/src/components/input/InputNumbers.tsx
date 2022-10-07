@@ -1,23 +1,22 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as solid from "@fortawesome/free-solid-svg-icons"
+import * as solid from "@fortawesome/free-solid-svg-icons";
 import Decimal from "decimal.js";
 import * as React from "react";
 
-
 interface Props {
-    label?: string;
-    value: Decimal[];
-    disabled?: boolean;
-    onChange: (value: Decimal[]) => void;
-    allowDecimal: boolean;
+    label?: string
+    value: Decimal[]
+    disabled?: boolean
+    onChange: (value: Decimal[]) => void
+    allowDecimal: boolean
 }
 
-export default function InputNumbers(props: Props) {
+export default function InputNumbers (props: Props): React.ReactElement {
     const [enteringNumber, setEnteringNumber] = React.useState<number | " ">(" ");
     const inputElement = React.useRef<HTMLInputElement>(null);
 
     return <div className="field" onClick={() => inputElement?.current?.focus()}>
-        {props.label && <label className="label">{props.label}</label>}
+        {props.label !== undefined && <label className="label">{props.label}</label>}
         <div className="field input-multiple">
             {props.value.map((value, i) => <span className="tag is-primary" key={i}>
                 {value.toString()}
@@ -38,7 +37,7 @@ export default function InputNumbers(props: Props) {
         </div>
     </div>;
 
-    function input(e: React.ChangeEvent<HTMLInputElement>) {
+    function input (e: React.ChangeEvent<HTMLInputElement>): void {
         let valueAsNumber = e.target.valueAsNumber;
         if (!props.allowDecimal) {
             valueAsNumber = Math.round(valueAsNumber);
@@ -47,14 +46,14 @@ export default function InputNumbers(props: Props) {
         setEnteringNumber(isNaN(valueAsNumber) ? " " : valueAsNumber);
     }
 
-    function keydown(e: React.KeyboardEvent<HTMLInputElement> | null) {
-        if ((e == null || e.key == " " || e.key == "Enter") && enteringNumber !== " ") {
+    function keydown (e: React.KeyboardEvent<HTMLInputElement> | null): void {
+        if ((e == null || e.key === " " || e.key === "Enter") && enteringNumber !== " ") {
             // Append the current value to the list of values
             props.onChange([...props.value, new Decimal(enteringNumber)]);
             setEnteringNumber(" ");
             return;
         }
-        if (e && e.key == "Backspace" && enteringNumber === " " && props.value.length > 0) {
+        if ((e != null) && e.key === "Backspace" && enteringNumber === " " && props.value.length > 0) {
             props.onChange(props.value.slice(0, props.value.length - 1));
         }
     }

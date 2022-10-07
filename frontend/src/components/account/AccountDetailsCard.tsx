@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { Api, useApi } from "../../lib/ApiClient";
+import { useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
 import { formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
@@ -12,20 +12,19 @@ import InputCheckbox from "../input/InputCheckbox";
 import InputIconButton from "../input/InputIconButton";
 import InputText from "../input/InputText";
 import YesNoDisplay from "../input/YesNoDisplay";
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import * as regular from "@fortawesome/free-regular-svg-icons"
+import * as solid from "@fortawesome/free-solid-svg-icons";
+import * as regular from "@fortawesome/free-regular-svg-icons";
 import InputTextMultiple from "../input/InputTextMultiple";
 
 interface Props {
-    account: Account,
-    updatingFavorite: boolean,
-    toggleFavorite: () => void,
-    onChange: (account: Account) => void;
+    account: Account
+    updatingFavorite: boolean
+    toggleFavorite: () => void
+    onChange: (account: Account) => void
     updateAccountFavoriteInPreferences: (account: Account, favorite: boolean) => void
 }
 
-export default function AccountDetailsCard(props: Props): React.ReactElement {
-    
+export default function AccountDetailsCard (props: Props): React.ReactElement {
     const [editingModel, setEditingModel] = React.useState<Account | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const { user } = React.useContext(userContext);
@@ -37,21 +36,21 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
         return <Card
             style={{ flexGrow: 1 }}
             title={<>
-            <span style={{ flexGrow: 1 }}>Account details</span>
-            {props.updatingFavorite
-                ? <span className="icon">
-                    <FontAwesomeIcon icon={solid.faSpinner} pulse />
-                </span>
-                : <span className="icon" onClick={() => props.toggleFavorite()} style={{ cursor: "pointer" }}>
-                    {props.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
-                </span>}
-            <InputIconButton icon={solid.faPen} onClick={() => setEditingModel(props.account)} />
-            <InputIconButton icon={regular.faTrashCan} onClick={() => {
+                <span style={{ flexGrow: 1 }}>Account details</span>
+                {props.updatingFavorite
+                    ? <span className="icon">
+                        <FontAwesomeIcon icon={solid.faSpinner} pulse />
+                    </span>
+                    : <span className="icon" onClick={() => props.toggleFavorite()} style={{ cursor: "pointer" }}>
+                        {props.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
+                    </span>}
+                <InputIconButton icon={solid.faPen} onClick={() => setEditingModel(props.account)} />
+                <InputIconButton icon={regular.faTrashCan} onClick={() => {
                 // Balance breaks navigation. Luckily we don't need it on the delete page
-                const { balance, ...accountWithoutBalance } = props.account;
-                navigate(routes.accountDelete(props.account.id.toString()), { state: { account: accountWithoutBalance, allowBack: true } })
-            }} />
-        </>} isNarrow={false}>
+                    const { balance, ...accountWithoutBalance } = props.account;
+                    navigate(routes.accountDelete(props.account.id.toString()), { state: { account: accountWithoutBalance, allowBack: true } });
+                }} />
+            </>} isNarrow={false}>
             <table className="table">
                 <tbody>
                     <tr>
@@ -64,7 +63,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                     </tr>
                     <tr>
                         <td>Description</td>
-                        <td style={{maxWidth: "300px"}}>{props.account.description}</td>
+                        <td style={{ maxWidth: "300px" }}>{props.account.description}</td>
                     </tr>
                     <tr>
                         <td>Identifiers</td>
@@ -84,7 +83,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                     </tr>
                 </tbody>
             </table>
-        </Card>
+        </Card>;
     } else {
         return <Card title="Account details" isNarrow={false}>
             <table className="table">
@@ -100,7 +99,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                                 value={editingModel.name}
                                 onChange={e => setEditingModel({ ...editingModel, name: e.target.value })}
                                 disabled={isUpdating}
-                                errors={errors["Name"]} />
+                                errors={errors.Name} />
                         </td>
                     </tr>
                     <tr>
@@ -110,7 +109,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                                 value={editingModel.description}
                                 onChange={e => setEditingModel({ ...editingModel, description: e.target.value })}
                                 disabled={isUpdating}
-                                errors={errors["Description"]}/>
+                                errors={errors.Description}/>
                         </td>
                     </tr>
                     <tr>
@@ -120,7 +119,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                                 value={editingModel.identifiers}
                                 onChange={value => setEditingModel({ ...editingModel, identifiers: value })}
                                 disabled={isUpdating}
-                                errors={errors["Identifiers"]}/>
+                                errors={errors.Identifiers}/>
                         </td>
                     </tr>
                     <tr>
@@ -130,7 +129,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                                 value={editingModel.favorite}
                                 onChange={e => setEditingModel({ ...editingModel, favorite: e.target.checked })}
                                 disabled={isUpdating}
-                                errors={errors["Favorite"]}/>  
+                                errors={errors.Favorite}/>
                         </td>
                     </tr>
                     <tr>
@@ -140,7 +139,7 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                                 value={editingModel.includeInNetWorth}
                                 onChange={e => setEditingModel({ ...editingModel, includeInNetWorth: e.target.checked })}
                                 disabled={isUpdating}
-                                errors={errors["IncludeInNetWorth"]}/>
+                                errors={errors.IncludeInNetWorth}/>
                         </td>
                     </tr>
                 </tbody>
@@ -149,10 +148,10 @@ export default function AccountDetailsCard(props: Props): React.ReactElement {
                 <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
                 <InputButton onClick={() => setEditingModel(null)}>Cancel</InputButton>
             </div>
-        </Card>
+        </Card>;
     }
 
-    async function saveChanges() {
+    async function saveChanges (): Promise<void> {
         if (editingModel === null || api === null) return;
 
         setIsUpdating(true);

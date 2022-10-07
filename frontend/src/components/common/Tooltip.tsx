@@ -2,11 +2,11 @@ import * as React from "react";
 import DropdownContent from "./DropdownContent";
 
 export interface Props {
-    content: React.ReactNode;
-    children: React.ReactNode;
+    content: React.ReactNode
+    children: React.ReactNode
 }
 
-export default function Tooltip(props: Props) {
+export default function Tooltip (props: Props): React.ReactElement {
     const [isOpen, setIsOpen] = React.useState(false);
     return <div className="tooltip-container" onMouseOver={mouseOver} onMouseLeave={mouseOut}>
         {props.children}
@@ -17,11 +17,11 @@ export default function Tooltip(props: Props) {
         </DropdownContent>
     </div>;
 
-    function mouseOver(e: React.MouseEvent) {
+    function mouseOver (e: React.MouseEvent): void {
         setIsOpen(true);
     }
 
-    function mouseOut() {
+    function mouseOut (): void {
         setIsOpen(false);
     }
 }

@@ -1,40 +1,40 @@
-import axios from "axios";
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { DateTime } from "luxon";
 import { Calendar } from "react-date-range";
-import { formatDateTimeWithUser, formatDateWithUser } from "../../lib/Utils";
+import { formatDateTimeWithUser } from "../../lib/Utils";
 import { userContext } from "../App";
 import InputNumber from "./InputNumber";
 import Decimal from "decimal.js";
 import DropdownContent from "../common/DropdownContent";
 
 export interface Props {
-    label?: string,
-    value: DateTime,
-    disabled?: boolean,
-    onChange: (date: DateTime) => void;
-    fullwidth: boolean;
-    errors?: string[];
+    label?: string
+    value: DateTime
+    disabled?: boolean
+    onChange: (date: DateTime) => void
+    fullwidth: boolean
+    errors?: string[]
 }
 
-export default function InputDateTime (props: Props) {
+export default function InputDateTime (props: Props): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const { user } = React.useContext(userContext);
     const isError = props.errors !== undefined && props.errors.length > 0;
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-    var value: string;
+    let value: string;
     if (props.value == null) {
         value = "Select date";
     } else {
         value = formatDateTimeWithUser(props.value, user);
     }
-    
+
+    const disabled = props.disabled === true;
     return <div className="field input-datetime">
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && !props.disabled ? " is-active" : "") + (isError ? " is-danger" : "")} onBlur={onBlur}>
+        <div className={"dropdown" + (props.fullwidth ? " is-fullwidth" : "") + (open && disabled ? " is-active" : "") + (isError ? " is-danger" : "")} onBlur={onBlur}>
             <div className="dropdown-trigger">
                 <button className="button" aria-haspopup="true" onClick={e => setOpen(true) } disabled={props.disabled}>
                     <span>{value}</span>
@@ -44,7 +44,7 @@ export default function InputDateTime (props: Props) {
                 </button>
             </div>
             <DropdownContent active={open} fullWidth={false}>
-                <div ref={dropdownRef} className={"dropdown-menu"} role="menu" tabIndex={0} style={{maxWidth: "none"}}>
+                <div ref={dropdownRef} className={"dropdown-menu"} role="menu" tabIndex={0} style={{ maxWidth: "none" }}>
                     <div className="input-datetime dropdown-content">
                         <Calendar
                             date={props.value.startOf("day").toJSDate()}
@@ -72,8 +72,8 @@ export default function InputDateTime (props: Props) {
         </p>}
     </div>;
 
-    function onBlur(e: React.FocusEvent) {
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+    function onBlur (e: React.FocusEvent): void {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !(dropdownRef.current?.contains(e.relatedTarget as Node) ?? false)) {
             setOpen(false);
         }
     }

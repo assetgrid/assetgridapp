@@ -1,12 +1,10 @@
 import * as React from "react";
-import { Account, GetMovementAllResponse, GetMovementResponse, TimeResolution } from "../../models/account";
+import { Account, GetMovementAllResponse, TimeResolution } from "../../models/account";
 import { Api, useApi } from "../../lib/ApiClient";
-import { DateTime, Duration, DurationLike } from "luxon";
-import { Preferences } from "../../models/preferences";
-import Utils, { formatDateWithUser, formatNumber, formatNumberWithUser } from "../../lib/Utils";
+import { formatDateWithUser, formatNumberWithUser } from "../../lib/Utils";
 import Decimal from "decimal.js";
 import { Period, PeriodFunctions } from "../../models/period";
-import 'chartjs-adapter-luxon';
+import "chartjs-adapter-luxon";
 import {
     Chart as ChartJS,
     LinearScale,
@@ -18,13 +16,13 @@ import {
     Tooltip,
     Legend,
     BarElement,
-    BarController,
-} from 'chart.js'
-import { Chart } from 'react-chartjs-2'
+    BarController
+} from "chart.js";
+import { Chart } from "react-chartjs-2";
 import { userContext } from "../App";
 import Card from "../common/Card";
 import AccountLink from "./AccountLink";
-  
+
 ChartJS.register(
     LinearScale,
     PointElement,
@@ -36,14 +34,14 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend
-)
+);
 
 interface Props {
-    period: Period;
-    showTable: boolean;
+    period: Period
+    showTable: boolean
 }
 
-export default function (props: Props) {
+export default function NetWorthChart (props: Props): React.ReactElement {
     const [movements, setMovements] = React.useState<GetMovementAllResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
     const [perAccount, setPerAccount] = React.useState(true);
@@ -54,9 +52,9 @@ export default function (props: Props) {
 
     React.useEffect(() => {
         if (api !== null) {
-            updateData(api, props.period, setDisplayingPeriod, resolution, setMovements);
+            void updateData(api, props.period, setDisplayingPeriod, resolution, setMovements);
         }
-    }, [api, props.period, resolution])
+    }, [api, props.period, resolution]);
 
     if (movements === "fetching") {
         return <div className="columns m-0 is-multiline">
@@ -73,7 +71,7 @@ export default function (props: Props) {
         </div>;
     }
 
-    let [start, end] = PeriodFunctions.getRange(displayingPeriod);
+    const [start, end] = PeriodFunctions.getRange(displayingPeriod);
     let timepoints = Object.keys(movements.items)
         .flatMap(key => movements.items[Number(key)].items.map(item => item.dateTime))
         .sort((a, b) => a.diff(b).valueOf());
@@ -84,12 +82,12 @@ export default function (props: Props) {
         timepoints.push(end);
     }
 
-    let revenue: { [accountId: number]: number[] } = {}; 
-    let totalRevenue: number[] = [];
-    let expenses: { [accountId: number]: number[] } = {};
-    let totalExpenses: number[] = [];
-    let balances: { [accountId: number]: number[] } = {};
-    let totalBalance: number[] = [];
+    const revenue: { [accountId: number]: number[] } = {};
+    const totalRevenue: number[] = [];
+    const expenses: { [accountId: number]: number[] } = {};
+    const totalExpenses: number[] = [];
+    const balances: { [accountId: number]: number[] } = {};
+    const totalBalance: number[] = [];
 
     Object.keys(movements.items).forEach(key => {
         const accountId = Number(key);
@@ -128,24 +126,24 @@ export default function (props: Props) {
                     account,
                     balance: balances[account.id][balances[account.id].length - 1],
                     expenses: expenses[account.id].reduce((sum, current) => sum + current, 0),
-                    revenue: revenue[account.id].reduce((sum, current) => sum + current, 0),
+                    revenue: revenue[account.id].reduce((sum, current) => sum + current, 0)
                 }))}
             />
         </div>}
         <div className="column p-0 is-flex is-12-tablet is-reset-desktop">
             <Card title="Development in net worth" isNarrow={false} style={{ flexGrow: 1 }}>
                 <div style={{ height: "400px", position: "relative" }}>
-                    <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
+                    <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
                         <Chart type={"line"} height="400px" data={{
                             labels: timepoints,
                             datasets: perAccount
                                 ? Object.keys(movements.items).map(Number).flatMap((accountId, index) => [{
-                                    label: movements.accounts.find(account => account.id == accountId)?.name,
+                                    label: movements.accounts.find(account => account.id === accountId)?.name,
                                     data: balances[accountId],
                                     type: "line",
                                     stepped: true,
                                     borderColor: colors[index % colors.length],
-                                    backgroundColor: "transparent",
+                                    backgroundColor: "transparent"
                                 }])
                                 : [{
                                     label: "Net worth",
@@ -153,7 +151,7 @@ export default function (props: Props) {
                                     type: "line",
                                     stepped: true,
                                     borderColor: "#558eb3",
-                                    backgroundColor: "transparent",
+                                    backgroundColor: "transparent"
                                 },
                                 {
                                     label: "Revenue",
@@ -168,13 +166,13 @@ export default function (props: Props) {
                                     type: "bar",
                                     borderColor: "transparent",
                                     backgroundColor: "#ff6b6b"
-                                }],
+                                }]
                         }} options={{
                             maintainAspectRatio: false,
                             responsive: true,
                             scales: {
                                 x: {
-                                    type: 'time',
+                                    type: "time",
                                     display: true,
                                     offset: true,
                                     time: {
@@ -182,12 +180,12 @@ export default function (props: Props) {
                                     },
                                     min: start.valueOf(),
                                     max: end.valueOf()
-                                },
+                                }
                             },
                             interaction: {
-                                intersect: false,
+                                intersect: false
                             }
-                            }}>
+                        }}>
                         </Chart>
                     </div>
                 </div>
@@ -195,7 +193,7 @@ export default function (props: Props) {
                     <p>Aggregate by (click to change):</p>&nbsp;
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
                         onClick={() => {
-                            let options = ["day", "week", "month", "year"];
+                            const options = ["day", "week", "month", "year"];
                             setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
                         }}>{["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
@@ -206,10 +204,10 @@ export default function (props: Props) {
     </div>;
 }
 
-function updateData(api: Api, period: Period, setDisplayingPeriod: (period: Period) => void,
-    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementAllResponse>) {
+async function updateData (api: Api, period: Period, setDisplayingPeriod: (period: Period) => void,
+    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementAllResponse>): Promise<void> {
     let resolution: TimeResolution;
-    let [start, end] = PeriodFunctions.getRange(period);
+    const [start, end] = PeriodFunctions.getRange(period);
     switch (resolutionString) {
         case "day":
             resolution = TimeResolution.Daily;
@@ -225,22 +223,20 @@ function updateData(api: Api, period: Period, setDisplayingPeriod: (period: Peri
             break;
     }
 
-    api.Account.getMovementsAll(start, end, resolution)
-        .then(result => {
-            setDisplayingPeriod(period);
-            if (result.status === 200) {
-                setData(result.data);
-            }
-        });
+    const result = await api.Account.getMovementsAll(start, end, resolution);
+    setDisplayingPeriod(period);
+    if (result.status === 200) {
+        setData(result.data);
+    }
 }
 
 interface NetWorthTableProps {
-    period: Period,
-    accountBalances: { account: Account, balance: number, revenue: number, expenses: number }[];
+    period: Period
+    accountBalances: Array<{ account: Account, balance: number, revenue: number, expenses: number }>
 }
-function NetWorthTable(props: NetWorthTableProps) {
+function NetWorthTable (props: NetWorthTableProps): React.ReactElement {
     const { user } = React.useContext(userContext);
-    
+
     return <Card isNarrow={true} title="Net worth">
         <table className="table">
             <thead>

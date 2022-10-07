@@ -4,11 +4,11 @@ import { routes } from "../../lib/routes";
 import { Link } from "react-router-dom";
 
 interface Props {
-    setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
-    sidebarVisible: boolean;
+    setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>
+    sidebarVisible: boolean
 }
 
-export default function MobileHeader(props: Props) {
+export default function MobileHeader (props: Props): React.ReactElement {
     return <div className="mobile-header has-background-dark">
         <Link className="logo" to={routes.dashboard()}><img src={logo}></img></Link>
         <a role="button"
@@ -22,7 +22,7 @@ export default function MobileHeader(props: Props) {
         </a>
     </div>;
 
-    function toggleSidebar() {
+    function toggleSidebar (): void {
         props.setShowSidebar(value => !value);
     }
 }

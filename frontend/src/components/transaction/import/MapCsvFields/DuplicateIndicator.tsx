@@ -4,11 +4,11 @@ import * as React from "react";
 import Tooltip from "../../../common/Tooltip";
 
 interface Props {
-    identifier: string;
-    duplicateIdentifiers: Set<string> | "fetching";
+    identifier: string
+    duplicateIdentifiers: Set<string> | "fetching"
 }
 
-export default function DuplicateIndicator(props: Props): React.ReactElement {
+export default function DuplicateIndicator (props: Props): React.ReactElement {
     if (props.duplicateIdentifiers === "fetching") {
         return <Tooltip content="Checking for duplicates">
             <span className="icon">

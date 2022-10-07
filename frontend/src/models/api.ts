@@ -1,33 +1,33 @@
-export type Ok<T> = {
-    status: 200;
-    data: T;
+export interface Ok<T> {
+    status: 200
+    data: T
 }
 
-export type NotFound = {
-    status: 404;
+export interface NotFound {
+    status: 404
 }
 
 export const NotFoundResult = {
-    status: 404,
+    status: 404
 } as const;
 
-export type Forbid = {
-    status: 403;
+export interface Forbid {
+    status: 403
 }
 
 export const ForbidResult = {
     status: 403
 } as const;
 
-export type BadRequest = {
-    status: 400;
-    title: string;
-    errors: { [key: string]: string[] };
+export interface BadRequest {
+    status: 400
+    title: string
+    errors: { [key: string]: string[] }
 }
 
-export type Unauthorized = {
-    status: 401;
+export interface Unauthorized {
+    status: 401
 }
 export const UnauthorizedResult = {
-    status: 401,
+    status: 401
 } as const;

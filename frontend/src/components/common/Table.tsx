@@ -4,80 +4,78 @@ import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from
 import { Api, useApi } from "../../lib/ApiClient";
 
 export type Props<T> = {
-    pageSize: number;
-    paginationSize?: number;
-    reversePagination?: boolean;
-    
-    draw?: number;
-    afterDraw?: (items: T[]) => void;
-    page: number;
+    pageSize: number
+    paginationSize?: number
+    reversePagination?: boolean
+
+    draw?: number
+    afterDraw?: (items: T[]) => void
+    page: number
 } & (
-    /* Support three different ways of fetching data*/
+    /* Support three different ways of fetching data */
     {
         /* A list of items is provided and the table with paginate this. No fetching is done */
-        type: "sync";
-        items: T[];
-        goToPage: (page: number) => void;
+        type: "sync"
+        items: T[]
+        goToPage: (page: number) => void
     } | {
         /* An API request to fetch items will be used. Only the current page is fetched */
-        type: "async";
-        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
-        goToPage: (page: number) => void;
+        type: "async"
+        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>
+        goToPage: (page: number) => void
     } | {
-        /* 
+        /*
          * Same as async but also allows for incrementing and decrementing beyond the last of first page
          * Used on data that is grouped by period as well as being paginated
          * This type of table will only redraw explicitely and not on page changes, as page changes are needed to handle period transitions
          */
-        type: "async-increment";
-        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>;
-        goToPage: (page: number | "increment" | "decrement") => void;
+        type: "async-increment"
+        fetchItems: (api: Api, from: number, to: number, draw: number) => Promise<FetchItemsResult<T>>
+        goToPage: (page: number | "increment" | "decrement") => void
     }
 ) & (
     /* Different render styles */
     {
         /* The table is rendered as an ordinary HTML table */
-        renderType: "table";
-        headings: React.ReactNode;
-        renderItem: (item: T, index: number) => React.ReactNode;
+        renderType: "table"
+        headings: React.ReactNode
+        renderItem: (item: T, index: number) => React.ReactNode
     } | {
         /* The table uses a custom rendering function */
-        renderType: "custom";
-        render: (items: { item: T, index: number }[], renderPagination: () => React.ReactElement) => React.ReactElement;
-    } 
-)
+        renderType: "custom"
+        render: (items: Array<{ item: T, index: number }>, renderPagination: () => React.ReactElement) => React.ReactElement
+    }
+);
 
 interface FetchItemsResult<T> {
-    items: T[];
-    totalItems: number;
-    offset: number;
-    draw: number;
+    items: T[]
+    totalItems: number
+    offset: number
+    draw: number
 }
 
-export default function Table<T>(props: Props<T>) {
+export default function Table<T> (props: Props<T>): React.ReactElement {
     const [items, setItems] = React.useState<T[]>([]);
 
-    const [displayingPage, setDisplayingPage] = React.useState<number>(1);
     const [totalItems, setTotalItems] = React.useState<number>(0);
     const api = useApi();
 
-    let paginatedItems = items
-        .map((item, index) => ({ item: item, index: index + (props.page - 1) * props.pageSize }));
-    
-    function goToPage(page: number): void {
+    const paginatedItems = items
+        .map((item, index) => ({ item, index: index + (props.page - 1) * props.pageSize }));
+
+    function goToPage (page: number): void {
         page = Math.max(1, Math.min(page, Math.ceil(totalItems / props.pageSize)));
         props.goToPage(page);
     }
 
     React.useEffect(() => {
         if (api !== null) {
-            fetchItems(api, props.page, props.draw);
+            void fetchItems(api, props.page, props.draw);
         }
     }, props.type === "async-increment" ? [api, props.draw] : [api, props.draw, props.page]);
 
-    if (props.renderType === "custom")
-    {
-        return props.render(paginatedItems, renderPagination); 
+    if (props.renderType === "custom") {
+        return props.render(paginatedItems, renderPagination);
     }
     return <>
         <table className="table is-fullwidth is-hoverable" style={{ marginBottom: 0 }}>
@@ -96,7 +94,7 @@ export default function Table<T>(props: Props<T>) {
         {renderPagination()}
     </>;
 
-    function renderPagination<T>() {
+    function renderPagination (): React.ReactElement {
         const page = props.page;
         const lastPage = Math.max(1, Math.ceil(totalItems / props.pageSize));
         const pagesBesideCurrent = ((props.paginationSize ?? 9) - 3) / 2;
@@ -115,7 +113,7 @@ export default function Table<T>(props: Props<T>) {
                     to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
                     of {totalItems}
                 </p>
-                
+
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
@@ -132,8 +130,8 @@ export default function Table<T>(props: Props<T>) {
                                 </a>}
                         </li>
                         {lastPage !== 1 && <li>
-                            <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
-                                aria-label={"Goto page " + lastPage} onClick={() => goToPage(lastPage)}>{lastPage}</a>
+                            <a className={`pagination-link ${page === lastPage ? " is-current" : ""}`}
+                                aria-label={`Goto page ${lastPage}`} onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => paginationTo - page - 1)
@@ -142,10 +140,10 @@ export default function Table<T>(props: Props<T>) {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
+                                        onClick={() => goToPage(p)} aria-label={`Goto page ${p}`}>{p}</a></li>
                             )}
                         <li>
-                            <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
+                            <a className={`pagination-link ${page === 1 ? " is-current" : ""}`}
                                 aria-label="Goto page 1" onClick={() => goToPage(1)}>1</a>
                         </li>
                         <li>
@@ -172,7 +170,7 @@ export default function Table<T>(props: Props<T>) {
                     to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
                     of {totalItems}
                 </p>
-                
+
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
@@ -199,11 +197,11 @@ export default function Table<T>(props: Props<T>) {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => goToPage(p)} aria-label={"Goto page " + p}>{p}</a></li>
+                                        onClick={() => goToPage(p)} aria-label={`Goto page ${p}`}>{p}</a></li>
                             )}
                         {lastPage !== 1 && <li>
                             <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
-                                aria-label={"Goto page " + lastPage} onClick={() => goToPage(lastPage)}>{lastPage}</a>
+                                aria-label={`Goto page ${lastPage}`} onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         <li>
                             {page === lastPage && props.type === "async-increment"
@@ -224,23 +222,23 @@ export default function Table<T>(props: Props<T>) {
         }
     }
 
-    async function fetchItems(api: Api, page: number, draw?: number): Promise<void> {
+    async function fetchItems (api: Api, page: number, draw?: number): Promise<void> {
         const from = (page - 1) * props.pageSize;
         const to = page * props.pageSize;
 
         if (props.type === "sync") {
             setItems(props.items.slice(from, to));
             setTotalItems(props.items.length);
-            setDisplayingPage(props.page);
-            props.afterDraw && props.afterDraw(props.items.slice(from, to));
+            ;(props.afterDraw != null) && props.afterDraw(props.items.slice(from, to));
         } else {
             props.fetchItems(api, from, to, draw ?? 0)
                 .then(result => {
                     if (result.draw === (props.draw ?? 0)) {
                         setItems(result.items);
                         setTotalItems(result.totalItems);
-                        setDisplayingPage(props.page);
-                        props.afterDraw && props.afterDraw(result.items);
+                        if (props.afterDraw !== undefined) {
+                            props.afterDraw(result.items);
+                        }
                     }
                 });
         }

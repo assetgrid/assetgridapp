@@ -2,9 +2,7 @@ import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../../lib/Utils";
-import { Account } from "../../../../models/account";
 import { CsvImportProfile } from "../../../../models/csvImportProfile";
-import { Transaction } from "../../../../models/transaction";
 import AccountLink from "../../../account/AccountLink";
 import { userContext } from "../../../App";
 import Table from "../../../common/Table";
@@ -13,22 +11,22 @@ import { CsvCreateTransaction } from "../importModels";
 import DuplicateIndicator from "./DuplicateIndicator";
 
 interface Props {
-    transactions: CsvCreateTransaction[];
-    duplicateIdentifiers: Set<string> | "fetching";
-    tableFilter: (transaction: CsvCreateTransaction) => boolean;
-    tableDraw: number;
-    options: CsvImportProfile;
+    transactions: CsvCreateTransaction[]
+    duplicateIdentifiers: Set<string> | "fetching"
+    tableFilter: (transaction: CsvCreateTransaction) => boolean
+    tableDraw: number
+    options: CsvImportProfile
 }
 
-export default function CsvMappingTransactionTable(props: Props): React.ReactElement {
+export default function CsvMappingTransactionTable (props: Props): React.ReactElement {
     const { user } = React.useContext(userContext);
     const [page, setPage] = React.useState(1);
-    
+
     if (props.transactions === null) {
         return <p>Loading</p>;
     }
 
-    let items = props.transactions.filter(props.tableFilter);
+    const items = props.transactions.filter(props.tableFilter);
 
     return <Table pageSize={20}
         items={items}
@@ -48,7 +46,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         renderType="table"
         renderItem={transaction =>
             <tr key={transaction.rowNumber}>
-                <td>{transaction.identifier && <DuplicateIndicator identifier={transaction.identifier} duplicateIdentifiers={props.duplicateIdentifiers} />}
+                <td>{transaction.identifier !== null && <DuplicateIndicator identifier={transaction.identifier} duplicateIdentifiers={props.duplicateIdentifiers} />}
                     {displayIdentifier(transaction)}
                 </td>
                 <td>{displayTimestamp(transaction)}</td>
@@ -76,7 +74,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
             </tr>}
     />;
 
-    function displayIdentifier(transaction: CsvCreateTransaction) {
+    function displayIdentifier (transaction: CsvCreateTransaction): React.ReactElement {
         if (props.options.duplicateHandling === "automatic") {
             if (transaction.identifier === null || transaction.identifier.trim() === "") {
                 return <Tooltip content="Could not calculate identifier for this transaction">
@@ -95,7 +93,7 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
             </Tooltip>;
         } else {
             if (transaction.identifier.length < 20) {
-                return transaction.identifier;
+                return <>transaction.identifier</>;
             } else {
                 return <Tooltip content={transaction.identifier}>
                     {transaction.identifier.substring(0, 20) + "…"}
@@ -104,13 +102,13 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         }
     }
 
-    function displayTimestamp(transaction: CsvCreateTransaction) {
+    function displayTimestamp (transaction: CsvCreateTransaction): React.ReactElement {
         if (transaction.dateTime.isValid) {
-            return <Tooltip content={<>Parsed from: "{transaction.dateText}"</>}>
+            return <Tooltip content={<>Parsed from: &ldquo;{transaction.dateText}&rdquo;</>}>
                 {formatDateTimeWithUser(transaction.dateTime, user)}
             </Tooltip>;
         } else {
-            return <Tooltip content={<>Parsed from: "{transaction.dateText}"</>}>
+            return <Tooltip content={<>Parsed from: &ldquo;{transaction.dateText}&rdquo;</>}>
                 <span className="icon has-text-danger">
                     <FontAwesomeIcon icon={faExclamationTriangle} />
                 </span> Could not parse timestamp
@@ -118,13 +116,13 @@ export default function CsvMappingTransactionTable(props: Props): React.ReactEle
         }
     }
 
-    function displayAmount(transaction: CsvCreateTransaction) {
+    function displayAmount (transaction: CsvCreateTransaction): React.ReactElement {
         if (transaction.amount !== "invalid") {
-            return <Tooltip content={<>Parsed from: "{transaction.amountText}"</>}>
+            return <Tooltip content={<>Parsed from: &ldquo;{transaction.amountText}&rdquo;</>}>
                 {formatNumberWithUser(transaction.amount, user)}
             </Tooltip>;
         } else {
-            return <Tooltip content={<>Parsed from: "{transaction.amountText}"</>}>
+            return <Tooltip content={<>Parsed from: &ldquo;{transaction.amountText}&rdquo;</>}>
                 <span className="icon has-text-danger">
                     <FontAwesomeIcon icon={faExclamationTriangle} />
                 </span> Could not parse amount

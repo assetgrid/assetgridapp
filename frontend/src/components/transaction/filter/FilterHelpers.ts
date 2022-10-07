@@ -12,107 +12,107 @@ const stringScalarOperators = [SearchOperator.Equals, SearchOperator.Contains] a
 const stringOperators = [...stringScalarOperators, ...arrayOperators] as const;
 
 export const Operators = [{
-        operator: SearchOperator.Equals,
-        negated: false,
-        label: "Equals"
-    }, {
-        operator: SearchOperator.Equals,
-        negated: true,
-        label: "Does not equal"
-    }, {
-        operator: SearchOperator.Contains,
-        negated: false,
-        label: "Contains"
-    }, {
-        operator: SearchOperator.Contains,
-        negated: true,
-        label: "Does not contain"
-    }, {
-        operator: SearchOperator.GreaterThan,
-        negated: false,
-        label: "Greater than"
-    }, {
-        operator: SearchOperator.GreaterThanOrEqual,
-        negated: false,
-        label: "Greater than or equal"
-    }, {
-        operator: SearchOperator.GreaterThanOrEqual,
-        negated: true,
-        label: "Less than"
-    }, {
-        operator: SearchOperator.GreaterThan,
-        negated: true,
-        label: "Less than or equal"
-    }, {
-        operator: SearchOperator.In,
-        negated: false,
-        label: "In list of values"
-    }, {
-        operator: SearchOperator.In,
-        negated: true,
-        label: "Not in list of values"
-    },
+    operator: SearchOperator.Equals,
+    negated: false,
+    label: "Equals"
+}, {
+    operator: SearchOperator.Equals,
+    negated: true,
+    label: "Does not equal"
+}, {
+    operator: SearchOperator.Contains,
+    negated: false,
+    label: "Contains"
+}, {
+    operator: SearchOperator.Contains,
+    negated: true,
+    label: "Does not contain"
+}, {
+    operator: SearchOperator.GreaterThan,
+    negated: false,
+    label: "Greater than"
+}, {
+    operator: SearchOperator.GreaterThanOrEqual,
+    negated: false,
+    label: "Greater than or equal"
+}, {
+    operator: SearchOperator.GreaterThanOrEqual,
+    negated: true,
+    label: "Less than"
+}, {
+    operator: SearchOperator.GreaterThan,
+    negated: true,
+    label: "Less than or equal"
+}, {
+    operator: SearchOperator.In,
+    negated: false,
+    label: "In list of values"
+}, {
+    operator: SearchOperator.In,
+    negated: true,
+    label: "Not in list of values"
+}
 ] as const;
 
 export type ConditionModel = {
-    column: "Id";
-    operator: typeof numericScalarOperators[number];
-    negated: boolean;
-    valueType: "number";
-    value: number;
-    onChange: (value: number) => void;
+    column: "Id"
+    operator: typeof numericScalarOperators[number]
+    negated: boolean
+    valueType: "number"
+    value: number
+    onChange: (value: number) => void
 } | {
-    column: "Id";
-    operator: typeof arrayOperators[number];
-    negated: boolean;
-    valueType: "number[]";
-    value: number[];
-    onChange: (value: number[]) => void;
+    column: "Id"
+    operator: typeof arrayOperators[number]
+    negated: boolean
+    valueType: "number[]"
+    value: number[]
+    onChange: (value: number[]) => void
 } | {
-    column: "Total";
-    operator: typeof numericScalarOperators[number];
-    negated: boolean;
-    valueType: "decimal";
-    value: Decimal;
-    onChange: (value: Decimal) => void;
+    column: "Total"
+    operator: typeof numericScalarOperators[number]
+    negated: boolean
+    valueType: "decimal"
+    value: Decimal
+    onChange: (value: Decimal) => void
 } | {
-    column: "Total";
-    operator: typeof arrayOperators[number];
-    negated: boolean;
-    valueType: "decimal[]";
-    value: Decimal[];
-    onChange: (value: Decimal[]) => void;
+    column: "Total"
+    operator: typeof arrayOperators[number]
+    negated: boolean
+    valueType: "decimal[]"
+    value: Decimal[]
+    onChange: (value: Decimal[]) => void
 } | {
-    column: "SourceAccountId" | "DestinationAccountId";
-    operator: typeof accountOperators[number];
-    negated: boolean;
-    valueType: "account";
-    value: number | null;
-    onChange: (value: Account | null) => void;
+    column: "SourceAccountId" | "DestinationAccountId"
+    operator: typeof accountOperators[number]
+    negated: boolean
+    valueType: "account"
+    value: number | null
+    onChange: (value: Account | null) => void
 } | {
-    column: "DateTime";
-    operator: typeof dateTimeOperators[number];
-    negated: boolean;
-    valueType: "datetime";
-    value: DateTime;
-    onChange: (value: DateTime) => void;
+    column: "DateTime"
+    operator: typeof dateTimeOperators[number]
+    negated: boolean
+    valueType: "datetime"
+    value: DateTime
+    onChange: (value: DateTime) => void
 } | {
-    column: "Category" | "Description";
-    operator: typeof stringScalarOperators[number];
-    negated: boolean;
-    valueType: "string";
-    value: string;
-    onChange: (value: string) => void;
+    column: "Category" | "Description"
+    operator: typeof stringScalarOperators[number]
+    negated: boolean
+    valueType: "string"
+    value: string
+    onChange: (value: string) => void
 } | {
-    column: "Category" | "Description";
-    operator: typeof arrayOperators[number];
-    negated: boolean;
-    valueType: "string[]";
-    value: string[];
-    onChange: (value: string[]) => void;
+    column: "Category" | "Description"
+    operator: typeof arrayOperators[number]
+    negated: boolean
+    valueType: "string[]"
+    value: string[]
+    onChange: (value: string[]) => void
 };
 
-export function getPossibleOperators(column: ConditionModel["column"]): (typeof Operators[number])[] {
+export function getPossibleOperators (column: ConditionModel["column"]): Array<typeof Operators[number]> {
     switch (column) {
         case "Id":
         case "Total":
@@ -128,19 +128,17 @@ export function getPossibleOperators(column: ConditionModel["column"]): (typeof 
     }
 }
 
-export function getValueType(column: ConditionModel['column'], operator: SearchOperator): ConditionModel['valueType'] {
+export function getValueType (column: ConditionModel["column"], operator: SearchOperator): ConditionModel["valueType"] {
     switch (column) {
         case "Id":
-            switch (operator)
-            {
+            switch (operator) {
                 case SearchOperator.In:
                     return "number[]";
                 default:
                     return "number";
             }
         case "Total":
-            switch (operator)
-            {
+            switch (operator) {
                 case SearchOperator.In:
                     return "decimal[]";
                 default:
@@ -165,19 +163,19 @@ export function getValueType(column: ConditionModel['column'], operator: SearchO
 /*
 Serialize objects so they can be stored in history state
 */
-export function serializeDecimalForHistory(value: Decimal): string {
+export function serializeDecimalForHistory (value: Decimal): string {
     return value.toString();
 }
-export function deserializeDecimalForHistory(value: string): Decimal {
+export function deserializeDecimalForHistory (value: string): Decimal {
     return new Decimal(value);
 }
-export function serializeDateTimeForHistory(value: DateTime): string {
+export function serializeDateTimeForHistory (value: DateTime): string {
     return value.toISO();
 }
-export function deserializeDateTimeForHistory(value: string): DateTime {
+export function deserializeDateTimeForHistory (value: string): DateTime {
     return DateTime.fromISO(value);
 }
-export function serializeQueryForHistory(value: SearchGroup): SearchGroup {
+export function serializeQueryForHistory (value: SearchGroup): SearchGroup {
     if (value.type === SearchGroupType.Query) {
         const valueType = getValueType(value.query.column as ConditionModel["column"], value.query.operator);
         switch (valueType) {
@@ -212,10 +210,10 @@ export function serializeQueryForHistory(value: SearchGroup): SearchGroup {
         return {
             type: value.type,
             children: value.children.map(serializeQueryForHistory)
-        }
+        };
     }
 }
-export function deserializeQueryForHistory(value: SearchGroup): SearchGroup {
+export function deserializeQueryForHistory (value: SearchGroup): SearchGroup {
     if (value.type === SearchGroupType.Query) {
         const valueType = getValueType(value.query.column as ConditionModel["column"], value.query.operator);
         switch (valueType) {
@@ -250,6 +248,6 @@ export function deserializeQueryForHistory(value: SearchGroup): SearchGroup {
         return {
             type: value.type,
             children: value.children.map(deserializeQueryForHistory)
-        }
+        };
     }
 }

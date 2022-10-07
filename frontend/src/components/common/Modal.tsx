@@ -3,17 +3,17 @@ import { createPortal } from "react-dom";
 import { modalContainerContext } from "../App";
 
 export interface Props {
-    active: boolean;
-    close?: () => void;
-    footer?: React.ReactNode;
-    title: string;
-    children: React.ReactNode;
+    active: boolean
+    close?: () => void
+    footer?: React.ReactNode
+    title: string
+    children: React.ReactNode
 }
 
-export default function Modal (props: Props) {
+export default function Modal (props: Props): React.ReactElement {
     const { container } = React.useContext(modalContainerContext);
 
-    if (!container) { return null; }
+    if (container == null) { return <></>; }
 
     return createPortal(<div className={"modal" + (props.active ? " is-active" : "")}>
         <div className="modal-background"></div>

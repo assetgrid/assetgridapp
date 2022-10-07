@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Navigate, Route, Routes, useNavigate  } from "react-router";
+import { Route, Routes, useNavigate } from "react-router";
 import { routes } from "../lib/routes";
 import PageTransactions from "./pages/transaction/PageTransactions";
 import PageCreateTransaction from "./pages/transaction/PageCreateTransaction";
@@ -7,7 +7,6 @@ import PageDashboard from "./pages/PageDashboard";
 import PageImportTransactionsCsv from "./pages/transaction/PageImportTransactionsCsv";
 import PageAccount from "./pages/account/PageAccount";
 import { Preferences } from "../models/preferences";
-import axios from "axios";
 import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./pages/account/PageAccountOverview";
 import * as Api from "../lib/ApiClient";
@@ -28,22 +27,22 @@ export const userContext = React.createContext<UserContext>({ user: "fetching", 
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
 
 interface UserContext {
-    user: User | "fetching";
-    updatePreferences: (newPreferences: Preferences) => void;
-    updateFavoriteAccounts: (newFavoriteAccounts: Account[]) => void;
-    setUser: (user: User | null) => void;
+    user: User | "fetching"
+    updatePreferences: (newPreferences: Preferences) => void
+    updateFavoriteAccounts: (newFavoriteAccounts: Account[]) => void
+    setUser: (user: User | null) => void
 }
 
-export default function FairFitPortalApp () {
+export default function AssetgridApp (): React.ReactElement {
     const [user, setUser] = React.useState<User | "fetching">("fetching");
     const modalContainer = React.useRef<HTMLDivElement>(null);
     const [showSidebar, setShowSidebar] = React.useState(false);
     const navigate = useNavigate();
 
-    React.useEffect(() => { authenticate(); }, []);
+    React.useEffect(() => { void authenticate(); }, []);
 
     return <React.StrictMode>
-        <userContext.Provider value={{ user: user, updatePreferences, updateFavoriteAccounts, setUser: updateUser }}>
+        <userContext.Provider value={{ user, updatePreferences, updateFavoriteAccounts, setUser: updateUser }}>
             <Routes>
                 <Route path={routes.login()} element={<PageLogin />} />
                 <Route path={routes.signup()} element={<PageSignup />} />
@@ -51,7 +50,7 @@ export default function FairFitPortalApp () {
                     <modalContainerContext.Provider value={{ container: modalContainer.current }}>
                         <div className="mobile-header-spacing"></div>
                         <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
-                        <div style={{display: "flex", flexGrow: 1}}>
+                        <div style={{ display: "flex", flexGrow: 1 }}>
                             <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
                             <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
                                 <Routes>
@@ -79,8 +78,8 @@ export default function FairFitPortalApp () {
         </userContext.Provider>
     </React.StrictMode>;
 
-    async function authenticate() {
-        var result = await Api.getUser();
+    async function authenticate (): Promise<void> {
+        const result = await Api.getUser();
         if (result.status === 200) {
             setUser(result.data);
         } else {
@@ -88,17 +87,17 @@ export default function FairFitPortalApp () {
             navigate(routes.login());
         }
     }
-    
-    function updatePreferences(newPreferences: Preferences) {
+
+    function updatePreferences (newPreferences: Preferences): void {
         if (user === "fetching") return;
-        
+
         setUser({
             ...user,
             preferences: newPreferences
         });
     }
 
-    function updateFavoriteAccounts(newFavoriteAccounts: Account[]) {
+    function updateFavoriteAccounts (newFavoriteAccounts: Account[]): void {
         if (user === "fetching") return;
 
         setUser({
@@ -107,7 +106,7 @@ export default function FairFitPortalApp () {
         });
     }
 
-    function updateUser(newUser: User | null) {
+    function updateUser (newUser: User | null): void {
         if (newUser === null) {
             localStorage.removeItem("token");
             setUser("fetching");

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { useParams } from "react-router";
-import { useNavigate } from "react-router";
+import { useParams, useNavigate } from "react-router";
+
 import { Link } from "react-router-dom";
-import { Api, useApi } from "../../../lib/ApiClient";
+import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
@@ -14,7 +14,7 @@ import TransactionList from "../../transaction/TransactionList";
 import Page404 from "../Page404";
 import PageError from "../PageError";
 
-export default function PageAccountConfirmDelete() {
+export default function PageAccountConfirmDelete (): React.ReactElement {
     const id = Number(useParams().id);
     const [isDeleting, setisDeleting] = React.useState(false);
     const [account, setAccount] = React.useState<Account | null | "fetching" | "error">(history.state.usr?.account ? history.state.usr.account : "fetching");
@@ -40,7 +40,7 @@ export default function PageAccountConfirmDelete() {
                     setAccount("error");
                 });
         }
-    }, [api, id])
+    }, [api, id]);
 
     if (account === "fetching") {
         return <>Please wait</>;
@@ -52,10 +52,10 @@ export default function PageAccountConfirmDelete() {
         return <PageError />;
     }
 
-    /* Query returning transactions that reference this account and no other account*/
+    /* Query returning transactions that reference this account and no other account */
     const query: SearchGroup = {
         type: SearchGroupType.Or,
-        children: [ {
+        children: [{
             type: SearchGroupType.And,
             children: [
                 {
@@ -109,7 +109,7 @@ export default function PageAccountConfirmDelete() {
                 <p>Are you sure you want to delete this account? This action is irreversible!</p>
                 <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
                 <div className="buttons mt-3">
-                    <InputButton onClick={() => deleteAccount()} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
+                    <InputButton onClick={deleteAccount} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
                     {allowBack
                         ? <button className="button" onClick={() => navigate(-1)}>Cancel</button>
                         : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>Cancel</Link>}
@@ -121,7 +121,7 @@ export default function PageAccountConfirmDelete() {
         </div>
     </>;
 
-    async function deleteAccount() {
+    async function deleteAccount (): Promise<void> {
         if (account === null || account === "fetching" || account === "error" || api === null) return;
 
         setisDeleting(true);

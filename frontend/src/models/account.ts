@@ -1,38 +1,38 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 
-export type Account = {
-    id: number;
-    name: string;
-    description: string;
-    favorite: boolean;
-    identifiers: string[];
-    balance?: Decimal;
-    includeInNetWorth: boolean;
+export interface Account {
+    id: number
+    name: string
+    description: string
+    favorite: boolean
+    identifiers: string[]
+    balance?: Decimal
+    includeInNetWorth: boolean
 }
 
-export type CreateAccount = {
-    name: string;
-    description: string;
-    identifiers: string[];
-    includeInNetWorth: boolean;
-    favorite: boolean;
+export interface CreateAccount {
+    name: string
+    description: string
+    identifiers: string[]
+    includeInNetWorth: boolean
+    favorite: boolean
 }
 
-export type MovementItem = {
-    revenue: Decimal;
-    expenses: Decimal;
-    dateTime: DateTime;
+export interface MovementItem {
+    revenue: Decimal
+    expenses: Decimal
+    dateTime: DateTime
 }
 
-export type GetMovementResponse = {
-    initialBalance: Decimal;
-    items: MovementItem[];
+export interface GetMovementResponse {
+    initialBalance: Decimal
+    items: MovementItem[]
 }
 
-export type GetMovementAllResponse = {
-    accounts: Account[];
-    items: { [accountId: number]: GetMovementResponse };
+export interface GetMovementAllResponse {
+    accounts: Account[]
+    items: { [accountId: number]: GetMovementResponse }
 }
 
 export enum TimeResolution {

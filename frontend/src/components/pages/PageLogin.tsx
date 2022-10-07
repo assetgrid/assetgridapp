@@ -7,7 +7,7 @@ import Card from "../common/Card";
 import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 
-export default function (): React.ReactElement {
+export default function PageLogin (): React.ReactElement {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [state, setState] = React.useState<"signing-in" | "waiting" | "error">("waiting");
@@ -19,7 +19,7 @@ export default function (): React.ReactElement {
             if (result.status === 200 && !result.data) {
                 navigate(routes.signup());
             }
-        });
+        }).catch(null);
     }, []);
 
     return <section className="page-login">
@@ -32,9 +32,9 @@ export default function (): React.ReactElement {
         </Card>
     </section>;
 
-    async function signIn() {
+    async function signIn (): Promise<void> {
         setState("signing-in");
-        let result = await Api.authenticate(email, password);
+        const result = await Api.authenticate(email, password);
         setPassword("");
         if (result.status === 200) {
             setState("waiting");

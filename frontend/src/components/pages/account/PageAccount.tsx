@@ -1,27 +1,20 @@
 import * as React from "react";
 import Card from "../../common/Card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import * as regular from "@fortawesome/free-regular-svg-icons"
+import * as solid from "@fortawesome/free-solid-svg-icons";
+import * as regular from "@fortawesome/free-regular-svg-icons";
 import { Account } from "../../../models/account";
-import axios from "axios";
 import AccountTransactionList from "../../transaction/AccountTransactionList";
-import { Preferences } from "../../../models/preferences";
 import { Api, useApi } from "../../../lib/ApiClient";
-import { debounce, formatNumber, formatNumberWithUser } from "../../../lib/Utils";
+import { debounce } from "../../../lib/Utils";
 import AccountBalanceChart from "../../account/AccountBalanceChart";
-import { useNavigate, useParams } from "react-router";
-import PeriodSelector from "../../common/PeriodSelector";
+import { useParams } from "react-router";
 import { DateTime } from "luxon";
 import { Period, PeriodFunctions } from "../../../models/period";
 import AccountCategoryChart from "../../account/AccountCategoryChart";
-import InputIconButton from "../../input/InputIconButton";
-import YesNoDisplay from "../../input/YesNoDisplay";
 import { routes } from "../../../lib/routes";
 import { userContext } from "../../App";
 import InputButton from "../../input/InputButton";
-import InputText from "../../input/InputText";
-import InputCheckbox from "../../input/InputCheckbox";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Page404 from "../Page404";
 import PageError from "../PageError";
@@ -31,19 +24,19 @@ import { Link } from "react-router-dom";
 
 const pageSize = 20;
 
-export default function () {
+export default function PageAccount (): React.ReactElement {
     const idString = useParams().id;
     const id = Number(idString);
 
     // Get state from history
     let defaultPeriod: Period = {
         type: "month",
-        start: DateTime.now().startOf("month"),
+        start: DateTime.now().startOf("month")
     };
     if (window.history.state.usr?.period) {
         try {
             const period = PeriodFunctions.parse(window.history.state.usr.period);
-            if (period) {
+            if (period != null) {
                 defaultPeriod = period;
             }
         } catch { }
@@ -52,7 +45,7 @@ export default function () {
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
-    const [page, setPage] = React.useState(typeof(window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
+    const [page, setPage] = React.useState(typeof (window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
     const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
     const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(window.history.state.usr?.selectedTransactions ? window.history.state.usr?.selectedTransactions : {});
@@ -83,12 +76,12 @@ export default function () {
                     setAccount("error");
                 });
         }
-    }, [api, id])
+    }, [api, id]);
 
     if (account === "fetching") {
         return layout(period,
             <Hero title={<>#{id} &hellip;</>} subtitle={<>&hellip;</>} />,
-            <Card title="Account details" isNarrow={false} style={{flexGrow: 1}}>
+            <Card title="Account details" isNarrow={false} style={{ flexGrow: 1 }}>
                 <>Please wait&hellip;</>
             </Card>,
             <>Please wait&hellip;</>,
@@ -117,8 +110,8 @@ export default function () {
                     {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
                 </span>} #{account.id} {account.name}
         </>}
-            subtitle={account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
-            period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
+        subtitle={account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
+        period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
         <AccountDetailsCard account={account}
             updatingFavorite={updatingFavorite || api === null}
             toggleFavorite={toggleFavorite}
@@ -143,7 +136,7 @@ export default function () {
         </>
     );
 
-    function updateHistory(period: Period, page: number, selectedTransactions: { [id: number]: boolean }) {
+    function updateHistory (period: Period, page: number, selectedTransactions: { [id: number]: boolean }) {
         window.history.replaceState({
             ...window.history.state,
             usr: {
@@ -153,8 +146,8 @@ export default function () {
             }
         }, "");
     }
-    
-    async function goToPage(page: number | "increment" | "decrement") {
+
+    async function goToPage (page: number | "increment" | "decrement") {
         if (api === null) return;
 
         if (page === "increment") {
@@ -163,7 +156,7 @@ export default function () {
             const lastPage = Math.max(1, Math.ceil(transactionCount / pageSize));
             setPeriod(nextPeriod);
             setPage(lastPage);
-        } else if (page === "decrement") { 
+        } else if (page === "decrement") {
             setPeriod(PeriodFunctions.decrement(period));
             setPage(1);
         } else {
@@ -172,7 +165,7 @@ export default function () {
         setDraw(draw => draw + 1);
     }
 
-    function updateAccountFavoriteInPreferences(account: Account, favorite: boolean) {
+    function updateAccountFavoriteInPreferences (account: Account, favorite: boolean) {
         if (user !== "fetching") {
             if (favorite) {
                 updateFavoriteAccounts([...user.favoriteAccounts, account]);
@@ -182,13 +175,13 @@ export default function () {
         }
     }
 
-    function toggleFavorite() {
+    function toggleFavorite () {
         if (account === "error" || account === "fetching" || account === null || api === null) {
             throw "error";
         }
 
-        let favorite = ! account.favorite;
-        let { balance, id, ...newAccount } = account;
+        const favorite = !account.favorite;
+        const { balance, id, ...newAccount } = account;
         newAccount.favorite = favorite;
 
         setUpdatingFavorite(true);
@@ -207,11 +200,11 @@ export default function () {
             });
     }
 
-    function countTransactions(api: Api, period: Period): Promise<number> {
-        let [start, end] = PeriodFunctions.getRange(period);
-        let query: SearchGroup = {
+    async function countTransactions (api: Api, period: Period): Promise<number> {
+        const [start, end] = PeriodFunctions.getRange(period);
+        const query: SearchGroup = {
             type: SearchGroupType.And,
-            children: [ {
+            children: [{
                 type: SearchGroupType.Query,
                 query: {
                     column: "DateTime",
@@ -229,14 +222,14 @@ export default function () {
                 }
             }]
         };
-        return new Promise(resolve => {
+        return await new Promise(resolve => {
             api.Account.countTransactions(id, query)
                 .then(result => result.status == 200 && resolve(result.data));
         });
     }
 }
 
-function layout(
+function layout (
     period: Period,
     hero: React.ReactElement,
     accountDetails: React.ReactElement,
@@ -244,7 +237,6 @@ function layout(
     balanceChart: React.ReactElement,
     transactions: React.ReactElement,
     actions: React.ReactElement): React.ReactElement {
-    
     return <>
         {hero}
         <div className="p-3">
@@ -253,7 +245,7 @@ function layout(
                     {accountDetails}
                 </div>
                 <div className="column p-0 is-flex">
-                    <Card title="Categories" style={{flexGrow: 1}} isNarrow={false}>
+                    <Card title="Categories" style={{ flexGrow: 1 }} isNarrow={false}>
                         {categoryChart}
                     </Card>
                 </div>

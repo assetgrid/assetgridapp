@@ -1,15 +1,13 @@
 import * as React from "react";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
-import Image404 from "../../assets/404.svg";
 import { userContext } from "../App";
 import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
-import Modal from "../common/Modal";
 import DeleteUserModal from "../user/DeleteUserModal";
 import { useApi } from "../../lib/ApiClient";
 
-export default function () {
+export default function PageProfile (): React.ReactElement {
     const { user } = React.useContext(userContext);
     const api = useApi();
     const [isUpdating, setIsUpdating] = React.useState(false);
@@ -37,19 +35,19 @@ export default function () {
                     onChange={e => setCurrentPassword(e.target.value)}
                     password={true}
                     disabled={isUpdating}
-                    errors={changePasswordErrors["OldPassword"]} />
+                    errors={changePasswordErrors.OldPassword} />
                 <InputText label="New password"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     password={true}
                     disabled={isUpdating}
-                    errors={changePasswordErrors["NewPassword"] !== undefined}/>
+                    errors={changePasswordErrors.NewPassword !== undefined}/>
                 <InputText label="Repeat password"
                     value={repeatPassword}
                     onChange={e => setRepeatPassword(e.target.value)}
                     password={true}
                     disabled={isUpdating}
-                    errors={changePasswordErrors["NewPassword"]}/>
+                    errors={changePasswordErrors.NewPassword}/>
                 <InputButton className="is-primary"
                     disabled={isUpdating || api === null}
                     onClick={updatePassword}>Change password</InputButton>
@@ -63,17 +61,17 @@ export default function () {
         <DeleteUserModal active={showConfirmDeleteModal} close={() => setShowConfirmDeleteModal(false)} />
     </>;
 
-    async function updatePassword() {
+    async function updatePassword (): Promise<void> {
         setChangePasswordErrors({});
         setPasswordWasChanged(false);
         setIsUpdating(true);
         if (newPassword !== repeatPassword) {
             setChangePasswordErrors({ NewPassword: ["Passwords do not match"] });
-        } else if(api !== null) {
-            let result = await api.User.changePassword(currentPassword, newPassword);
+        } else if (api !== null) {
+            const result = await api.User.changePassword(currentPassword, newPassword);
             if (result.status === 400) {
                 setChangePasswordErrors(result.errors);
-            } else if(result.status === 200) {
+            } else if (result.status === 200) {
                 setPasswordWasChanged(true);
                 setCurrentPassword("");
                 setNewPassword("");

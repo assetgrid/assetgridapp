@@ -1,31 +1,30 @@
-import axios from "axios";
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDown, faCross, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
 import { debounce } from "../../lib/Utils";
 import DropdownContent from "../common/DropdownContent";
 
 type Props = {
-    label?: string;
-    disabled: boolean;
-    errors?: string[];
-    refreshSuggestions: (api: Api, prefix: string) => Promise<string[]>;
-    maxItems?: number;
-    fullwidth?: boolean;
-    helpText?: string;
+    label?: string
+    disabled: boolean
+    errors?: string[]
+    refreshSuggestions: (api: Api, prefix: string) => Promise<string[]>
+    maxItems?: number
+    fullwidth?: boolean
+    helpText?: string
 } & ({
-    allowNull: true;
-    nullText: string;
-    value: string | null;
-    onChange: (value: string | null) => void;
+    allowNull: true
+    nullText: string
+    value: string | null
+    onChange: (value: string | null) => void
 } | {
-    allowNull: false;
-    value: string;
-    onChange: (value: string) => void;
+    allowNull: false
+    value: string
+    onChange: (value: string) => void
 });
 
-export default function InputAutoComplete (props: Props) {
+export default function InputAutoComplete (props: Props): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const [autocompleteSuggestions, setAutocompleteSuggestions] = React.useState<string[] | null>(null);
     const api = useApi();
@@ -38,19 +37,20 @@ export default function InputAutoComplete (props: Props) {
             setOpen(false);
             setAutocompleteSuggestions(null);
         } else if (api !== null) {
-            refreshSuggestionsDebounced(api, props.value)
+            refreshSuggestionsDebounced(api, props.value);
         }
     }, [api, props.value]);
     const refreshSuggestionsDebounced = React.useCallback(debounce(refreshSuggestions, 300), []);
 
+    const fullwidth = props.fullwidth !== false;
     if (props.value === null) {
         return <div className="field">
-            {props.label && <label className="label">{props.label}</label>}
+            {props.label !== undefined && <label className="label">{props.label}</label>}
             <div className="field has-addons">
-                <div className={"control" + (props.fullwidth ? " is-expanded" : "")}>
-                    <span style={props.disabled ? { color: "#999"} : { cursor: "pointer" }}
+                <div className={"control" + (fullwidth ? " is-expanded" : "")}>
+                    <span style={props.disabled ? { color: "#999" } : { cursor: "pointer" }}
                         className="input"
-                        onClick={() => ! props.disabled && props.onChange("")}>
+                        onClick={() => !props.disabled && props.onChange("")}>
                         {props.allowNull ? props.nullText : ""}
                     </span>
                     {props.helpText !== undefined && <p className="help">
@@ -63,7 +63,7 @@ export default function InputAutoComplete (props: Props) {
 
     return <div className="field" onBlur={onBlur}>
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown" + (props.fullwidth ? " is-n" : "") + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
+        <div className={"dropdown" + (fullwidth ? " is-n" : "") + (open && !props.disabled ? " is-active" : "") + (isError ? " is-danger" : "")}>
             <div className="dropdown-trigger">
                 <input className="input"
                     placeholder={props.label}
@@ -100,7 +100,7 @@ export default function InputAutoComplete (props: Props) {
         </p>}
     </div>;
 
-    function prefixChanged(e: React.ChangeEvent<HTMLInputElement>) {
+    function prefixChanged (e: React.ChangeEvent<HTMLInputElement>): void {
         if (!open) {
             // Clear autocomplete suggestions before showing, as they could contain content from a previous input
             setAutocompleteSuggestions(null);
@@ -109,15 +109,15 @@ export default function InputAutoComplete (props: Props) {
         props.onChange(e.target.value);
     }
 
-    async function refreshSuggestions(api: Api, prefix: string) {
+    async function refreshSuggestions (api: Api, prefix: string): Promise<void> {
         if (prefix !== "" && api !== null) {
-            let result = await props.refreshSuggestions(api, prefix);
+            const result = await props.refreshSuggestions(api, prefix);
             setAutocompleteSuggestions(result.slice(0, props.maxItems ?? 5));
         }
     }
 
-    function onBlur(e: React.FocusEvent) {
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+    function onBlur (e: React.FocusEvent): void {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !(dropdownRef.current?.contains(e.relatedTarget as Node) ?? false)) {
             setOpen(false);
             setAutocompleteSuggestions(null);
         }

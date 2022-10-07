@@ -4,8 +4,8 @@ import { routes } from "../../lib/routes";
 import { Transaction } from "../../models/transaction";
 import Tooltip from "../common/Tooltip";
 
-export default function TransactionLink(props: { transaction: Transaction, disabled?: boolean }) {
-    if (props.disabled) {
+export default function TransactionLink (props: { transaction: Transaction, disabled?: boolean }): React.ReactElement {
+    if (props.disabled === true) {
         return <span className="transaction-link">
             <span>#</span>{props.transaction.id}
         </span>;

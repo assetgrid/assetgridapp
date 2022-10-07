@@ -2,18 +2,17 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { routes } from "../../lib/routes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faStar, faUser } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../assets/logo.svg";
-import { Preferences } from "../../models/preferences";
 import { userContext } from "../App";
 import { useLocation } from "react-router";
 
 interface Props {
-    show: boolean;
-    setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+    show: boolean
+    setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Sidebar(props: Props) {
+export default function Sidebar (props: Props): React.ReactElement {
     const { user, setUser } = React.useContext(userContext);
     const ref = React.useRef<HTMLDivElement>(null);
     const location = useLocation();
@@ -71,14 +70,14 @@ export default function Sidebar(props: Props) {
             </ul>
         </aside>
     </div>;
-    
-    function onBlur(e: React.FocusEvent<HTMLDivElement>) {
+
+    function onBlur (e: React.FocusEvent<HTMLDivElement>): void {
         if (!e.currentTarget.contains(e.relatedTarget as Node) && (e.relatedTarget === null || e.relatedTarget.closest(".navbar-burger") === null)) {
             props.setShowSidebar(false);
         }
     }
 
-    function signOut() {
+    function signOut (): void {
         setUser(null);
     }
 }

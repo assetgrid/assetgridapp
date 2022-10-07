@@ -13,10 +13,9 @@ import {
     Legend,
     BarController,
     BarElement
-} from 'chart.js'
-import { Chart } from 'react-chartjs-2'
-import { userContext } from "../App";
-  
+} from "chart.js";
+import { Chart } from "react-chartjs-2";
+
 ChartJS.register(
     LinearScale,
     PointElement,
@@ -27,22 +26,22 @@ ChartJS.register(
     Tooltip,
     BarController,
     Legend
-)
+);
 interface Props {
-    id: number;
-    period: Period;
-    type?: "bar" | "pie";
+    id: number
+    period: Period
+    type?: "bar" | "pie"
 }
 
-type DataType = { category: string, revenue: number, expenses: number }[];
+type DataType = Array<{ category: string, revenue: number, expenses: number }>;
 
-export default function AccountCategoryChart(props: Props) {
-    let [data, setData] = React.useState<DataType | "fetching">("fetching");
+export default function AccountCategoryChart (props: Props): React.ReactElement {
+    const [data, setData] = React.useState<DataType | "fetching">("fetching");
     const api = useApi();
 
     React.useEffect(() => {
         if (api !== null) {
-            updateData(api, props.id, props.period, setData);
+            void updateData(api, props.id, props.period, setData);
         }
     }, [api, props.id, props.period]);
 
@@ -50,13 +49,13 @@ export default function AccountCategoryChart(props: Props) {
         return <>Please wait&hellip;</>;
     }
 
-    const sortedData = data.sort((a, b) => a.expenses == b.expenses ? (a.revenue - b.revenue) : b.expenses - a.expenses);
+    const sortedData = data.sort((a, b) => a.expenses === b.expenses ? (a.revenue - b.revenue) : b.expenses - a.expenses);
 
     // Generate colors by selecting evenly spaced hues on the color wheel
-    let colors = Array.from(Array(sortedData.length).keys()).map((_, i) => "hsl(" + (i / sortedData.length * 360) + ", 70%, 70%)");
+    // const colors = Array.from(Array(sortedData.length).keys()).map((_, i) => "hsl(" + (i / sortedData.length * 360) + ", 70%, 70%)");
     return <>
         <div style={{ height: "400px", position: "relative" }}>
-            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0}}>
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
                 <Chart type={"line"} height="400px" data={{
                     labels: sortedData.map(point => point.category),
                     datasets: [{
@@ -72,12 +71,12 @@ export default function AccountCategoryChart(props: Props) {
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#ff6b6b"
-                    }],
+                    }]
                 }} options={{
                     maintainAspectRatio: false,
                     responsive: true,
                     interaction: {
-                        intersect: false,
+                        intersect: false
                     },
                     scales: {
                         x: {
@@ -91,11 +90,11 @@ export default function AccountCategoryChart(props: Props) {
     </>;
 }
 
-async function updateData(api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">) {
-    let [start, end] = PeriodFunctions.getRange(period);
-    let query: SearchGroup = {
+async function updateData (api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">): Promise<void> {
+    const [start, end] = PeriodFunctions.getRange(period);
+    const query: SearchGroup = {
         type: SearchGroupType.And,
-        children: [ {
+        children: [{
             type: SearchGroupType.Query,
             query: {
                 column: "DateTime",
@@ -114,7 +113,7 @@ async function updateData(api: Api, id: number, period: Period, setData: React.D
         }]
     };
 
-    let result = await api.Account.getCategorySummary(id, query);
+    const result = await api.Account.getCategorySummary(id, query);
     if (result.status === 200) {
         setData(result.data.map(obj => ({
             category: obj.category !== "" ? obj.category : "No category",

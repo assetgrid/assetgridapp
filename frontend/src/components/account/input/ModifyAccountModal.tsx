@@ -1,18 +1,18 @@
 import * as React from "react";
-import { Api, useApi } from "../../../lib/ApiClient";
-import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
+import { useApi } from "../../../lib/ApiClient";
+import { Account } from "../../../models/account";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
 import InputModifyAccount from "./InputModifyAccount";
 
 interface Props {
-    close: () => void;
-    closeOnChange?: boolean;
-    updated: (account: Account) => void;
-    account: Account;
+    close: () => void
+    closeOnChange?: boolean
+    updated: (account: Account) => void
+    account: Account
 }
 
-export default function ModifyAccountModal(props: Props) {
+export default function ModifyAccountModal (props: Props): React.ReactElement {
     const [model, setModel] = React.useState(props.account);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
@@ -23,7 +23,7 @@ export default function ModifyAccountModal(props: Props) {
         title={"Modify account"}
         close={() => props.close()}
         footer={<>
-            <InputButton className="is-success" onClick={() => update()} disabled={isUpdating || api === null}>Save changes</InputButton>
+            <InputButton className="is-success" onClick={update} disabled={isUpdating || api === null}>Save changes</InputButton>
             <InputButton onClick={() => props.close()}>Cancel</InputButton>
         </>}>
         <InputModifyAccount
@@ -36,11 +36,11 @@ export default function ModifyAccountModal(props: Props) {
                 identifiers: account.identifiers,
                 description: account.description,
                 includeInNetWorth: account.includeInNetWorth,
-                name: account.name,
+                name: account.name
             })}/>
     </Modal>;
 
-    async function update() {
+    async function update (): Promise<void> {
         if (api === null) return;
 
         setIsUpdating(true);
@@ -49,10 +49,8 @@ export default function ModifyAccountModal(props: Props) {
         setIsUpdating(false);
         if (result.status === 200) {
             setModel(result.data);
-            if (props.updated !== undefined) {
-                props.updated(result.data);
-            }
-            if (props.closeOnChange) {
+            props.updated(result.data);
+            if (props.closeOnChange !== undefined) {
                 props.close();
             }
         } else if (result.status === 400) {

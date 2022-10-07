@@ -1,12 +1,11 @@
 import * as React from "react";
-import { Transaction, TransactionListResponse } from "../../models/transaction";
+import { Transaction } from "../../models/transaction";
 import Table from "../common/Table";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import Decimal from "decimal.js";
 import { Api } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import TransactionTableLine from "./TransactionTableLine";
-import { userContext } from "../App";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../lib/routes";
@@ -14,24 +13,24 @@ import { serializeQueryForHistory } from "./filter/FilterHelpers";
 import MergeTransactionsModal from "./input/MergeTransactionsModal";
 
 interface Props {
-    draw?: number;
-    accountId: number;
-    period: Period;
-    goToPage: (page: number | "increment" | "decrement") => void;
-    page: number;
-    pageSize?: number;
-    totalItems?: number;
-    selectedTransactions: { [id: number]: boolean };
-    setSelectedTransactions: (value: { [id: number]: boolean }) => void;
+    draw?: number
+    accountId: number
+    period: Period
+    goToPage: (page: number | "increment" | "decrement") => void
+    page: number
+    pageSize?: number
+    totalItems?: number
+    selectedTransactions: { [id: number]: boolean }
+    setSelectedTransactions: (value: { [id: number]: boolean }) => void
 }
 
 interface TableLine {
-    balance: Decimal;
-    transaction: Transaction;
+    balance: Decimal
+    transaction: Transaction
 }
 
-export default function AccountTransactionList(props: Props) {
-    const [descending, setDescending] = React.useState(true);
+export default function AccountTransactionList (props: Props): React.ReactElement {
+    const descending = true;
     const [draw, setDraw] = React.useState(0);
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const firstRender = React.useRef(true);
@@ -53,14 +52,14 @@ export default function AccountTransactionList(props: Props) {
         <MergeTransactionsModal active={isMergingTransactions}
             close={() => setIsMergingTransactions(false)}
             transactions={props.selectedTransactions}
-            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1)}} />
+            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1); }} />
     </>;
 
-    function fetchItems(api: Api, from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
-        let [start, end] = PeriodFunctions.getRange(props.period);
-        let query: SearchGroup = {
+    async function fetchItems (api: Api, from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
+        const [start, end] = PeriodFunctions.getRange(props.period);
+        const query: SearchGroup = {
             type: SearchGroupType.And,
-            children: [ {
+            children: [{
                 type: SearchGroupType.Query,
                 query: {
                     column: "DateTime",
@@ -78,20 +77,20 @@ export default function AccountTransactionList(props: Props) {
                 }
             }]
         };
-        return new Promise(resolve => {
+        return await new Promise(resolve => {
             api.Account.listTransactions(props.accountId, from, to, descending, query).then(result => {
                 if (result.status === 200) {
                     const transactions: Transaction[] = result.data.data;
-                    let balances: Decimal[] = [];
+                    const balances: Decimal[] = [];
                     if (descending) {
                         for (let i = 0; i < transactions.length; i++) {
                             balances[transactions.length - 1 - i] = (balances[transactions.length - 1 - i + 1] ?? new Decimal(result.data.total))
-                                .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === props.accountId ? 1 : -1))
+                                .add(transactions[transactions.length - 1 - i].total.mul(transactions[transactions.length - 1 - i].destination?.id === props.accountId ? 1 : -1));
                         }
                     } else {
                         for (let i = 0; i < transactions.length; i++) {
                             balances[i] = (balances[i - 1] ?? new Decimal(result.data.total))
-                                .add(transactions[i].total.mul(transactions[i].destination?.id === props.accountId ? 1 : -1))
+                                .add(transactions[i].total.mul(transactions[i].destination?.id === props.accountId ? 1 : -1));
                         }
                     }
 
@@ -103,22 +102,22 @@ export default function AccountTransactionList(props: Props) {
                     setShownTransactions(transactions);
 
                     resolve({
-                        items: transactions.map((t, i) => ({ 
+                        items: transactions.map((t, i) => ({
                             balance: balances[i],
-                            transaction: t,
+                            transaction: t
                         })),
-                        draw: draw,
+                        draw,
                         offset: from,
                         totalItems: result.data.totalItems
                     });
                 }
-            })
+            });
         });
     }
 
-    function renderTable(items: { item: TableLine, index: number }[], renderPagination: () => React.ReactElement): React.ReactElement {
+    function renderTable (items: Array<{ item: TableLine, index: number }>, renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
-             <div>
+            <div>
                 <TransactionSelectDropdownButton
                     clearSelection={() => props.setSelectedTransactions({})}
                     selectAll={() => selectAllTransactions()}
@@ -153,10 +152,10 @@ export default function AccountTransactionList(props: Props) {
                             allowSelection={true}
                             allowLinks={true}
                             updateItem={() => setDraw(draw => draw + 1)}
-                            selected={props.selectedTransactions[line.transaction.id] === true}
-                            toggleSelected={() => props.selectedTransactions[line.transaction.id] === true
+                            selected={props.selectedTransactions[line.transaction.id]}
+                            toggleSelected={() => props.selectedTransactions[line.transaction.id]
                                 ? deselectTransaction(line.transaction)
-                                : props.setSelectedTransactions({ ...props.selectedTransactions, [line.transaction.id]: true })} />
+                                : props.setSelectedTransactions({ ...props.selectedTransactions, [line.transaction.id]: true })} />;
                     })}
                 </div>
                 {heading}
@@ -165,7 +164,7 @@ export default function AccountTransactionList(props: Props) {
         </>;
     }
 
-    function beginEditMultiple(type: "selection" | "all") {
+    function beginEditMultiple (type: "selection" | "all") {
         const query: SearchGroup = type == "all"
             ? {
                 type: SearchGroupType.Or,
@@ -202,23 +201,23 @@ export default function AccountTransactionList(props: Props) {
                     }
                 }]
             };
-        
+
         navigate(routes.transactionEditMultiple(), {
             state: {
                 query: serializeQueryForHistory(query),
-                showBack: true,
+                showBack: true
             }
         });
     }
 
-    function deselectTransaction(transaction: Transaction) {
-        let newSelectedTransactions = { ...props.selectedTransactions };
+    function deselectTransaction (transaction: Transaction) {
+        const newSelectedTransactions = { ...props.selectedTransactions };
         delete newSelectedTransactions[transaction.id];
         props.setSelectedTransactions(newSelectedTransactions);
     }
 
-    function selectAllTransactions() {
-        let newSelectedTransactions: {[id: number]: boolean} = {};
+    function selectAllTransactions () {
+        const newSelectedTransactions: { [id: number]: boolean } = {};
         shownTransactions.forEach(t => newSelectedTransactions[t.id] = true);
         props.setSelectedTransactions(newSelectedTransactions);
     }

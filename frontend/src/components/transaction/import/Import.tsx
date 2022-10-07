@@ -1,15 +1,10 @@
-import axios from "axios";
-import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { formatDateTimeWithUser } from "../../../lib/Utils";
-import { Account, CreateAccount, GetMovementAllResponse, GetMovementResponse, TimeResolution } from "../../../models/account";
-import { Ok, BadRequest, NotFound, Forbid } from "../../../models/api";
+import { Account } from "../../../models/account";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
-import { Preferences } from "../../../models/preferences";
-import { SearchRequest, SearchResponse, SearchGroup } from "../../../models/search";
-import { CreateTransaction, Transaction, TransactionListResponse, UpdateTransaction } from "../../../models/transaction";
+import { CreateTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
@@ -17,24 +12,23 @@ import Modal from "../../common/Modal";
 import Table from "../../common/Table";
 import InputAutoComplete from "../../input/InputAutoComplete";
 import InputButton from "../../input/InputButton";
-import InputText from "../../input/InputText";
 import { CsvCreateTransaction } from "./importModels";
 
 interface Props {
-    profile: CsvImportProfile;
-    transactions: CsvCreateTransaction[];
-    batchSize: number;
-    goToPrevious: () => void;
-    accounts: Account[];
+    profile: CsvImportProfile
+    transactions: CsvCreateTransaction[]
+    batchSize: number
+    goToPrevious: () => void
+    accounts: Account[]
 }
 
 /*
  * React object class
  */
-export function Import (props: Props) {
-    const [succeeded, setSucceeded] = React.useState<CreateTransaction[]>([])
-    const [failed, setFailed] = React.useState<CreateTransaction[]>([])
-    const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([])
+export function Import (props: Props): React.ReactElement {
+    const [succeeded, setSucceeded] = React.useState<CreateTransaction[]>([]);
+    const [failed, setFailed] = React.useState<CreateTransaction[]>([]);
+    const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([]);
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
     const [page, setPage] = React.useState(1);
@@ -47,7 +41,7 @@ export function Import (props: Props) {
         case "waiting":
             return <Card isNarrow={true} title="Begin import">
                 <div className="buttons mt-3">
-                    <InputButton className="is-primary" disabled={api === null} onClick={() => importTransactions()}>Import Transactions</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={async () => await importTransactions()}>Import Transactions</InputButton>
                     <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
@@ -55,9 +49,9 @@ export function Import (props: Props) {
             </Card>;
         case "importing":
             return <Card isNarrow={true} title="Importing&hellip;">
-                    <p>{progress} of {props.transactions.length} transactions have been imported.</p>
-                    <p>Please wait while the import is completed</p>
-                </Card>;
+                <p>{progress} of {props.transactions.length} transactions have been imported.</p>
+                <p>Please wait while the import is completed</p>
+            </Card>;
         case "imported":
             return <>
                 <Card title="Import complete" isNarrow={true}>
@@ -82,7 +76,7 @@ export function Import (props: Props) {
             </>;
     }
 
-    function transactionTable(transactions: CreateTransaction[]) {
+    function transactionTable (transactions: CreateTransaction[]) {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifiers[0] ?? "None"}</td>
@@ -104,57 +98,57 @@ export function Import (props: Props) {
             </tr>} items={transactions} />;
     }
 
-    async function importTransactions() {
+    async function importTransactions () {
         if (api === null) return;
 
         setState("importing");
 
         // Don't send transactions with known errors to the server
-        let errors = props.transactions.map(t =>
+        const errors = props.transactions.map(t =>
             t.amount === "invalid" ||
             !t.dateTime.isValid ||
             (t.source?.id === t.destination?.id)
         );
-        let invalidTransactions = props.transactions.filter((_, i) => errors[i]).map(transaction => {
+        const invalidTransactions = props.transactions.filter((_, i) => errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
                 description: transaction.description,
                 sourceId: transaction.source?.id,
                 destinationId: transaction.destination?.id,
-                identifiers: [ transaction.identifier ],
+                identifiers: [transaction.identifier],
                 category: transaction.category,
                 total: transaction.amount,
                 lines: []
-            } as CreateTransaction
+            } as CreateTransaction;
         });
         let progress = invalidTransactions.length;
         let succeeded: CreateTransaction[] = [];
-        let failed: CreateTransaction[]  = invalidTransactions;
-        let duplicate: CreateTransaction[]  = []
+        let failed: CreateTransaction[] = invalidTransactions;
+        let duplicate: CreateTransaction[] = [];
 
         setProgress(progress);
         setSucceeded(succeeded);
         setFailed(failed);
         setDuplicate(duplicate);
-        
-        let createModels = props.transactions.filter((_, i) => ! errors[i]).map(transaction => {
+
+        const createModels = props.transactions.filter((_, i) => !errors[i]).map(transaction => {
             return {
                 dateTime: transaction.dateTime,
                 description: transaction.description,
                 sourceId: transaction.source?.id,
                 destinationId: transaction.destination?.id,
-                identifiers: [ transaction.identifier ],
+                identifiers: [transaction.identifier],
                 category: transaction.category,
                 total: transaction.amount,
                 lines: []
-            } as CreateTransaction
+            } as CreateTransaction;
         });
 
         while (progress - invalidTransactions.length < createModels.length - 1) {
-            let result = await api.Transaction.createMany(
+            const result = await api.Transaction.createMany(
                 createModels.slice(progress - invalidTransactions.length, progress - invalidTransactions.length + props.batchSize)
             );
-            
+
             progress += props.batchSize;
             succeeded = [...succeeded, ...result.succeeded];
             failed = [...failed, ...result.failed];
@@ -171,11 +165,11 @@ export function Import (props: Props) {
 }
 
 interface SaveProfileModalProps {
-    active: boolean;
-    close: () => void;
-    profile: CsvImportProfile;
+    active: boolean
+    close: () => void
+    profile: CsvImportProfile
 }
-function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
+function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     const [name, setName] = React.useState("");
     const [nameError, setNameError] = React.useState<string | null>(null);
     const [isCreating, setIsSaving] = React.useState(false);
@@ -186,7 +180,7 @@ function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
         title={"Merge transactions"}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={() => saveProfile()} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
+            {<InputButton onClick={async () => await saveProfile()} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <div style={{ minHeight: "20rem" }}>
@@ -199,7 +193,7 @@ function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
         </div>
     </Modal>;
 
-    async function saveProfile() {
+    async function saveProfile () {
         if (api === null) return;
 
         setIsSaving(true);
@@ -209,13 +203,13 @@ function SaveProfileModal(props: SaveProfileModalProps): React.ReactElement {
 }
 
 interface InputImportProfileProps {
-    value: string;
-    onChange: (value: string) => void;
-    label?: string;
-    disabled: boolean;
-    errors?: string[];
+    value: string
+    onChange: (value: string) => void
+    label?: string
+    disabled: boolean
+    errors?: string[]
 }
-function InputImportProfile(props: InputImportProfileProps) {
+function InputImportProfile (props: InputImportProfileProps) {
     const profilesRef = React.useRef<string[] | Promise<string[]> | null>(null);
 
     return <InputAutoComplete value={props.value}
@@ -224,24 +218,24 @@ function InputImportProfile(props: InputImportProfileProps) {
         allowNull={false}
         label={props.label}
         errors={props.errors}
-        refreshSuggestions={(api: Api, prefix: string) => {
+        refreshSuggestions={async (api: Api, prefix: string) => {
             if (profilesRef.current === null) {
                 // No profiles have been fetched. Start the fetch job
                 profilesRef.current = new Promise<string[]>(resolve => {
                     api.User.getCsvImportProfiles().then(result => {
                         profilesRef.current = result.data;
-                        resolve(result.data.filter(profile => profile.toLowerCase().indexOf(prefix.toLowerCase()) >= 0));
+                        resolve(result.data.filter(profile => profile.toLowerCase().includes(prefix.toLowerCase())));
                     });
                 });
-                return profilesRef.current;
+                return await profilesRef.current;
             } else if (Array.isArray(profilesRef.current)) {
                 // Profiles have been fetched
-                return new Promise<string[]>(resolve => {
-                    resolve((profilesRef.current as string[]).filter(profile => profile.toLowerCase().indexOf(prefix.toLowerCase()) >= 0));
+                return await new Promise<string[]>(resolve => {
+                    resolve((profilesRef.current as string[]).filter(profile => profile.toLowerCase().includes(prefix.toLowerCase())));
                 });
             } else {
                 // Profiles are fetching
-                return profilesRef.current;
+                return await profilesRef.current;
             }
         }} />;
 }

@@ -6,39 +6,38 @@ import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/se
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
-import InputTextOrNull from "../../input/InputTextOrNull";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
 import TransactionList from "../../transaction/TransactionList";
 import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 
-export default function PageTransactions() {
+export default function PageTransactions (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const history = window.history.state.usr;
     const [query, setQuery] = React.useState<SearchGroup>(history?.query ? deserializeQueryForHistory(history.query) : emptyQuery);
-    const [searchString, setSearchString] = React.useState<string>(typeof(history?.searchString) === "string" ? history.searchString : "");
+    const [searchString, setSearchString] = React.useState<string>(typeof (history?.searchString) === "string" ? history.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(history?.orderBy ? history.orderBy : { column: "DateTime", descending: true });
-    const [page, setPage] = React.useState(typeof(history?.page) === "number" ? history.page : 1);
+    const [page, setPage] = React.useState(typeof (history?.page) === "number" ? history.page : 1);
     const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(history?.selectedTransactions ? history.selectedTransactions : {});
 
     // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
     const isFirst = React.useRef(true);
     React.useEffect(() => {
-        if (! isFirst.current) {
+        if (!isFirst.current) {
             updateSearchQueryFromText();
         }
         isFirst.current = false;
-    }, [searchString])
+    }, [searchString]);
 
     // Keep history state updated
     const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
     React.useEffect(() => {
-        updateHistoryDebounced({ query, searchMode, page, orderBy, searchString, selectedTransactions })
+        updateHistoryDebounced({ query, searchMode, page, orderBy, searchString, selectedTransactions });
     }, [query, searchMode, page, orderBy, searchString, selectedTransactions]);
 
     // The table query is modified separately and debounced from the main query to prevent excessive redraws when modifying the query
     const [tableQuery, setTableQuery] = React.useState<SearchGroup>(query);
-    const setTableQueryDebounced = React.useCallback(debounce((query: SearchGroup) => { setTableQuery(query); setDraw(draw => draw + 1) }, 300), []);
+    const setTableQueryDebounced = React.useCallback(debounce((query: SearchGroup) => { setTableQuery(query); setDraw(draw => draw + 1); }, 300), []);
     const first = React.useRef(true);
     React.useEffect(() => {
         if (!first.current) {
@@ -77,14 +76,14 @@ export default function PageTransactions() {
                     allowLinks={true}
                     allowEditing={true}
                     page={[page, setPage]}
-                    orderBy={[orderBy, orderBy => { setOrderBy(orderBy); setDraw(draw => draw + 1) }]}
+                    orderBy={[orderBy, orderBy => { setOrderBy(orderBy); setDraw(draw => draw + 1); }]}
                     selectedTransactions={[selectedTransactions, setSelectedTransactions]}
                 />
             </Card>
         </div>
     </>;
 
-    function updateHistory(state: any) {
+    function updateHistory (state: any): void {
         const { query, searchMode, page, orderBy, searchString, selectedTransactions } = state;
         window.history.replaceState({
             ...window.history.state,
@@ -99,7 +98,7 @@ export default function PageTransactions() {
         }, "");
     }
 
-    function updateSearchQueryFromText() {
+    function updateSearchQueryFromText (): void {
         if (searchString?.trim() === "") {
             setQuery(emptyQuery);
             return;
@@ -113,7 +112,7 @@ export default function PageTransactions() {
                     column: "Id",
                     not: false,
                     operator: SearchOperator.Equals,
-                    value: Number(searchString.replace(/\D/g, '')),
+                    value: Number(searchString.replace(/\D/g, ""))
                 }
             },
             {
@@ -122,9 +121,9 @@ export default function PageTransactions() {
                     column: "Description",
                     not: false,
                     operator: SearchOperator.Contains,
-                    value: searchString,
+                    value: searchString
                 }
             }]
-        })
+        });
     }
 }

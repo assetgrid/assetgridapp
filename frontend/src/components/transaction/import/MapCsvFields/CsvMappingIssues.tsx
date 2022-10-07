@@ -1,16 +1,14 @@
 import * as React from "react";
-import { Account } from "../../../../models/account";
-import { Message } from "../../../common/Message";
-import InputButton from "../../../input/InputButton";
+import Message from "../../../common/Message";
 import { CsvCreateTransaction } from "../importModels";
 
 interface Props {
-    transactions: CsvCreateTransaction[];
-    duplicateIdentifiers: Set<string> | "fetching";
-    setTableFilter: (message: string, filter: ((transaction: CsvCreateTransaction) => boolean)) => void;
+    transactions: CsvCreateTransaction[]
+    duplicateIdentifiers: Set<string> | "fetching"
+    setTableFilter: (message: string, filter: ((transaction: CsvCreateTransaction) => boolean)) => void
 }
 
-export default function CsvMappingIssues(props: Props): React.ReactElement {
+export default function CsvMappingIssues (props: Props): React.ReactElement {
     // Waiting for a server call before the issues can be shown
     const fetching = props.duplicateIdentifiers === "fetching";
 
@@ -18,14 +16,14 @@ export default function CsvMappingIssues(props: Props): React.ReactElement {
         return <>Processing&hellip; Please wait.</>;
     }
 
-    const noAccountFilter = (t: CsvCreateTransaction) => t.source === null && t.destination === null;
-    const sameSourceDestinationFilter = (t: CsvCreateTransaction) => t.source !== null && t.source?.id === t.destination?.id;
-    const duplicateFilter = (t: CsvCreateTransaction) => t.identifier !== null && (props.duplicateIdentifiers as Set<string>).has(t.identifier);
-    const errorFilter = (t: CsvCreateTransaction) => t.amount === "invalid" || !t.dateTime.isValid;
+    const noAccountFilter = (t: CsvCreateTransaction): boolean => t.source === null && t.destination === null;
+    const sameSourceDestinationFilter = (t: CsvCreateTransaction): boolean => t.source !== null && t.source?.id === t.destination?.id;
+    const duplicateFilter = (t: CsvCreateTransaction): boolean => t.identifier !== null && (props.duplicateIdentifiers as Set<string>).has(t.identifier);
+    const errorFilter = (t: CsvCreateTransaction): boolean => t.amount === "invalid" || !t.dateTime.isValid;
     const totalIssueCount = props.transactions.filter(t => noAccountFilter(t) || sameSourceDestinationFilter(t) || duplicateFilter(t) || errorFilter(t)).length;
 
     return <>
-        {totalIssueCount == 0
+        {totalIssueCount === 0
             ? <p className="mb-3">No issues detected</p>
             : <Message title="Problems detected" type="danger">
                 The following issues were detected:
@@ -45,14 +43,14 @@ export default function CsvMappingIssues(props: Props): React.ReactElement {
                                 Show transactions
                             </a>
                         </li>}
-                        {props.transactions.filter(duplicateFilter).length  > 0 && <li>
+                        {props.transactions.filter(duplicateFilter).length > 0 && <li>
                             {props.transactions.filter(duplicateFilter).length } transactions have duplicate identifiers. Only one transaction can exist for each identifier.{" "}
                             <a className="has-text-link"
                                 onClick={() => props.setTableFilter("Currently only duplicate transactions are shown.", duplicateFilter)}>
                                 Show transactions
                             </a>
                         </li>}
-                        {props.transactions.filter(errorFilter).length  > 0 && <li>
+                        {props.transactions.filter(errorFilter).length > 0 && <li>
                             {props.transactions.filter(errorFilter).length } transactions have errors. They will not be created{" "}
                             <a className="has-text-link"
                                 onClick={() => props.setTableFilter("Currently only transactions with parsing errors are shown.", errorFilter)}>

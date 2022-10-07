@@ -19,18 +19,18 @@ const encodings = ["Big5", "GB2312", " GB18030", "EUC-TW", "HZ-GB-2312", "ISO-20
     "windows-1255", "TIS-620", "UTF-32", "UTF-16", "UTF-8", "ASCII"];
 
 interface Props {
-    csvParsed: (data: any[], lines: string[]) => void;
-    fileChanged: (file: File) => void;
-    optionsChanged: (options: CsvImportProfile) => void;
-    options: CsvImportProfile;
-    csvFile: File | null;
-    goToNext: () => void;
+    csvParsed: (data: any[], lines: string[]) => void
+    fileChanged: (file: File) => void
+    optionsChanged: (options: CsvImportProfile) => void
+    options: CsvImportProfile
+    csvFile: File | null
+    goToNext: () => void
 }
 
 const pageSize: number = 20;
 const columnPageSize: number = 5;
 
-export default function ImportCsv(props: Props) {
+export default function ImportCsv (props: Props): React.ReactElement {
     const [csvData, setCsvData] = React.useState<Papa.ParseResult<any> | null | "error">(null);
     const [columnOffset, setColumnOffset] = React.useState(0);
     const [page, setPage] = React.useState(1);
@@ -43,7 +43,7 @@ export default function ImportCsv(props: Props) {
         if (props.csvFile !== null) {
             reparseFile(props.csvFile);
         }
-    }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter, props.options.csvTextEncoding])
+    }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter, props.options.csvTextEncoding]);
 
     React.useEffect(() => {
         setEncoding(props.options.csvTextEncoding);
@@ -52,7 +52,8 @@ export default function ImportCsv(props: Props) {
     React.useEffect(() => {
         if (api !== null) {
             api.User.getCsvImportProfiles()
-                .then(result => setProfileNames(result.data));
+                .then(result => setProfileNames(result.data))
+                .catch(null);
         }
     }, [api]);
 
@@ -78,31 +79,31 @@ export default function ImportCsv(props: Props) {
             <InputCheckbox label="Parse header"
                 value={props.options.csvParseHeader}
                 onChange={e => props.optionsChanged({ ...props.options, csvParseHeader: e.target.checked })} />
-            
+
             <InputCheckbox label="Auto-detect delimiter"
-                value={props.options.csvDelimiter == "auto"}
-                onChange={e => e.target.checked == true
+                value={props.options.csvDelimiter === "auto"}
+                onChange={e => e.target.checked
                     ? props.optionsChanged({ ...props.options, csvDelimiter: "auto" })
                     : props.optionsChanged({ ...props.options, csvDelimiter: "" })}
             />
 
-            {props.options.csvDelimiter != "auto" &&
+            {props.options.csvDelimiter !== "auto" &&
                 <InputText label="Delimiter" value={props.options.csvDelimiter} onChange={e => props.optionsChanged({ ...props.options, csvDelimiter: e.target.value })} />}
-            
+
             <InputSelect label="Newline character"
                 value={props.options.csvNewlineCharacter}
-                onChange={result => props.optionsChanged({ ...props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
+                onChange={result => props.optionsChanged({ ...props.options, csvNewlineCharacter: result })}
                 items={[
                     { key: "auto", value: "Detect automatically" },
                     { key: "\n", value: "\\n" },
                     { key: "\r", value: "\\r" },
                     { key: "\r\n", value: "\\r\\n" }
                 ]} />
-            
+
             <InputCheckbox label="Auto-detect text encoding"
                 value={props.options.csvTextEncoding == null}
                 helpText={props.options.csvTextEncoding === null && encoding !== null ? "Automatically detected as '" + encoding + "'" : ""}
-                onChange={e => e.target.checked == true
+                onChange={e => e.target.checked
                     ? props.optionsChanged({ ...props.options, csvTextEncoding: null })
                     : props.optionsChanged({ ...props.options, csvTextEncoding: "" })}
             />
@@ -114,7 +115,7 @@ export default function ImportCsv(props: Props) {
                 fullwidth={false}
                 allowNull={false}
                 onChange={value => props.optionsChanged({ ...props.options, csvTextEncoding: value })}
-                refreshSuggestions={(api: Api, prefix: string) => new Promise<string[]>(
+                refreshSuggestions={async (api: Api, prefix: string) => await new Promise<string[]>(
                     resolve => resolve(encodings.sort((a, b) => a.localeCompare(b)).filter(x => x.toLocaleLowerCase().includes(prefix.toLocaleLowerCase())))
                 )} />}
 
@@ -135,7 +136,7 @@ export default function ImportCsv(props: Props) {
                 </label>
             </div>
 
-            <p>If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <a href="https://github.com/Assetgrid/assetgridapp/issues/new?assignees=&labels=CSV+issue&template=csv-file-cannot-be-imported.md&title=" target="_blank">Github page</a></p>
+            <p>If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <a href="https://github.com/Assetgrid/assetgridapp/issues/new?assignees=&labels=CSV+issue&template=csv-file-cannot-be-imported.md&title=" target="_blank" rel="noreferrer">Github page</a></p>
         </Card>
 
         {props.csvFile != null && <Card title="CSV data" isNarrow={false}>
@@ -147,21 +148,20 @@ export default function ImportCsv(props: Props) {
         </Card>}
     </>;
 
-    function renderCsvTable()
-    {
+    function renderCsvTable (): React.ReactElement {
         if (csvData == null) {
             return <p>Loading…</p>;
         }
-        if (csvData == "error") {
+        if (csvData === "error") {
             return <p>CSV file could not be parsed</p>;
         }
-        if (csvData.data.length == 0) {
+        if (csvData.data.length === 0) {
             return <p>No lines could be parsed</p>;
         }
 
         const columnCount = Object.keys(csvData.data[0]).length;
         const columns = Object.keys(csvData.data[0])
-            .map((column, i) => { return { columnName: column, index: i } })
+            .map((column, i) => { return { columnName: column, index: i }; })
             .slice(columnOffset * columnPageSize, (columnOffset + 1) * columnPageSize);
         return <>
             <p>Displaying columns {(columnOffset) * columnPageSize + 1} to&nbsp;
@@ -174,7 +174,7 @@ export default function ImportCsv(props: Props) {
                     {columns.map((column, i) => <th key={i}>
                         {column.columnName}
                     </th>)}
-                    {(columnOffset + 1) * columnPageSize < columnCount && <th style={{width: "1px"}}>
+                    {(columnOffset + 1) * columnPageSize < columnCount && <th style={{ width: "1px" }}>
                         <InputIconButton icon={faChevronRight} onClick={() => setColumnOffset(columnOffset + 1)} />
                     </th>}
                 </tr>}
@@ -187,46 +187,46 @@ export default function ImportCsv(props: Props) {
                 renderItem={(row, i) => <tr key={i}>
                     {columnOffset !== 0 && <td></td>}
                     {columns.map(column =>
-                        <td key={column.index}>{(row as any)[column.columnName]}</td>
+                        <td key={column.index}>{(row)[column.columnName]}</td>
                     )}
                     {(columnOffset + 1) * columnPageSize < columnCount && <td></td>}
                 </tr>}
             />
         </>;
     }
-    
-    function fileUploaded(e: React.ChangeEvent<HTMLInputElement>) {
-        if (!e.target?.files) return;
 
-        let file = e.target.files[0];
+    function fileUploaded (e: React.ChangeEvent<HTMLInputElement>): void {
+        if ((e.target?.files) == null) return;
+
+        const file = e.target.files[0];
         setColumnOffset(0);
         setPage(1);
-        props.fileChanged(e.target.files[0]);
+        props.fileChanged(file);
     }
 
-    function reparseFile(file: File) {
+    function reparseFile (file: File): void {
         setCsvData(null);
         props.fileChanged(file);
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            if (!event.target?.result) return;
+            if (event.target === null || event.target.result === null || typeof event.target.result !== "string") return;
 
             let encoding = props.options.csvTextEncoding ?? "";
-            if (encoding.trim() == "") {
-                encoding = jschardet.detect(event.target.result.toString()).encoding;
+            if (encoding.trim() === "") {
+                encoding = jschardet.detect(event.target.result).encoding;
             }
             setEncoding(encoding);
 
             const decoder = new TextDecoder(encoding);
-            const decodedString = decoder.decode(Uint8Array.from(event.target.result.toString(), x => x.charCodeAt(0)));
+            const decodedString = decoder.decode(Uint8Array.from(event.target.result, x => x.charCodeAt(0)));
             Papa.parse(decodedString, {
                 header: props.options.csvParseHeader,
-                delimiter: props.options.csvDelimiter == "auto" ? undefined : props.options.csvDelimiter,
-                newline: props.options.csvNewlineCharacter == "auto" ? undefined : props.options.csvNewlineCharacter,
+                delimiter: props.options.csvDelimiter === "auto" ? undefined : props.options.csvDelimiter,
+                newline: props.options.csvNewlineCharacter === "auto" ? undefined : props.options.csvNewlineCharacter,
                 download: false,
                 complete: (a) => {
-                    props.csvParsed(a.data, event.target!.result!.toString().split(a.meta.linebreak));
+                    props.csvParsed(a.data, ((event?.target?.result ?? "") as string).split(a.meta.linebreak));
                     setCsvData(a);
                 }
             });
@@ -234,11 +234,11 @@ export default function ImportCsv(props: Props) {
         reader.onerror = (event) => {
             console.log(event);
             setCsvData("error");
-        }
+        };
         reader.readAsBinaryString(file);
     }
 
-    async function updateSelectedProfile(name: string) {
+    async function updateSelectedProfile (name: string): Promise<void> {
         if (api === null) return;
 
         setSelectedProfile(name);

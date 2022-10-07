@@ -1,34 +1,34 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 
-export type SearchRequest = {
-    from: number;
-    to: number;
-    query?: SearchGroup;
-    descending: boolean;
-    orderByColumn: string;
+export interface SearchRequest {
+    from: number
+    to: number
+    query?: SearchGroup
+    descending: boolean
+    orderByColumn: string
 }
 
 export type SearchGroup = {
-    type: SearchGroupType.Query;
-    query: SearchQuery;
+    type: SearchGroupType.Query
+    query: SearchQuery
 } | AndSearchGroup | OrSearchGroup;
 
-export type AndSearchGroup = {
-    type: SearchGroupType.And;
-    children: SearchGroup[];
+export interface AndSearchGroup {
+    type: SearchGroupType.And
+    children: SearchGroup[]
 }
 
-export type OrSearchGroup = {
-    type: SearchGroupType.Or;
-    children: SearchGroup[];
+export interface OrSearchGroup {
+    type: SearchGroupType.Or
+    children: SearchGroup[]
 }
 
-export type SearchQuery = {
-    column: string;
-    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null;
-    operator: SearchOperator;
-    not: boolean;
+export interface SearchQuery {
+    column: string
+    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null
+    operator: SearchOperator
+    not: boolean
 }
 
 export enum SearchOperator {
@@ -45,7 +45,7 @@ export enum SearchGroupType {
     Query = 2,
 }
 
-export type SearchResponse<T> = {
-    data: T[];
-    totalItems: number;
+export interface SearchResponse<T> {
+    data: T[]
+    totalItems: number
 }

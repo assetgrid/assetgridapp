@@ -1,33 +1,28 @@
-import axios from "axios";
 import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CsvImportProfile, ParseOptions } from "../../../models/csvImportProfile";
-import { Preferences } from "../../../models/preferences";
-import { SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../../../models/search";
-import { Transaction } from "../../../models/transaction";
 import Hero from "../../common/Hero";
-import InputButton from "../../input/InputButton";
 import { Import } from "../../transaction/import/Import";
 import ImportCsv from "../../transaction/import/ImportCsv";
 import { CsvCreateTransaction } from "../../transaction/import/importModels";
 import MapCsvFields, { updateAutoIdentifiers } from "../../transaction/import/MapCsvFields/MapCsvFields";
 
-const defaultParseOptions = {
+const defaultParseOptions: ParseOptions = {
     trimWhitespace: true,
     regex: null,
     pattern: "{0}"
-} as ParseOptions;
+};
 
 /*
  * React object class
  */
-export default function PageImportTransactionsCsv () {
+export default function PageImportTransactionsCsv (): React.ReactElement {
     const [data, setData] = React.useState<any[] | null>(null);
     const [accounts, setAccounts] = React.useState<Account[] | "fetching">("fetching");
     const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
-    const [lines, setLines] = React.useState<string[]>([]);
+    const [_, setLines] = React.useState<string[]>([]);
     const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
@@ -58,12 +53,12 @@ export default function PageImportTransactionsCsv () {
         descriptionColumn: null,
         descriptionParseOptions: defaultParseOptions,
         categoryColumn: null,
-        categoryParseOptions: defaultParseOptions,
+        categoryParseOptions: defaultParseOptions
     });
 
     const updateDuplicateAccountsDebounced = React.useCallback(debounce(updateDuplicateAccounts, 500), []);
     const api = useApi();
-    
+
     React.useEffect(() => {
         if (api !== null) {
             api.Account.search({ from: 0, to: 1000, descending: false, orderByColumn: "Id" }).then(result => {
@@ -88,7 +83,7 @@ export default function PageImportTransactionsCsv () {
         </div>
     </>;
 
-    function renderSections(): React.ReactNode {
+    function renderSections (): React.ReactNode {
         switch (currentTab) {
             case "parse-csv":
                 return <>
@@ -127,14 +122,14 @@ export default function PageImportTransactionsCsv () {
         }
     }
 
-    function mappingsChanged(newTransactions: CsvCreateTransaction[], options: CsvImportProfile): void {
+    function mappingsChanged (newTransactions: CsvCreateTransaction[], options: CsvImportProfile): void {
         // The CSV mapping window is disabled until the API is loaded to prevent the mappings from changing and triggering an API call
         if (api === null) return;
 
         // If any account identifier changed, update duplicates
-        if ((transactions === null && newTransactions !== null)
-            || newTransactions.length !== transactions?.length
-            || newTransactions.some((transaction, i) => transactions[i].identifier !== transaction.identifier)) {
+        if ((transactions === null && newTransactions !== null) ||
+            newTransactions.length !== transactions?.length ||
+            newTransactions.some((transaction, i) => transactions[i].identifier !== transaction.identifier)) {
             setDuplicateIdentifiers("fetching");
             updateDuplicateAccountsDebounced(api, newTransactions);
         }
@@ -143,7 +138,7 @@ export default function PageImportTransactionsCsv () {
         setProfile(options);
     }
 
-    function accountsChanged(newAccounts: Account[]) {
+    function accountsChanged (newAccounts: Account[]) {
         if (transactions !== null) {
             // Create object from identifiers to speed up lookups
             const identifierDictionary: { [identifier: string]: Account } = {};
@@ -157,17 +152,17 @@ export default function PageImportTransactionsCsv () {
                 updateAutoIdentifiers([...transactions.map(transaction => ({
                     ...transaction,
                     source: identifierDictionary[transaction.sourceText] ?? null,
-                    destination: identifierDictionary[transaction.destinationText] ?? null,
+                    destination: identifierDictionary[transaction.destinationText] ?? null
                 }))], profile)
             );
         }
         setAccounts(newAccounts);
     }
 
-    function updateDuplicateAccounts(api: Api, newTransactions: CsvCreateTransaction[]) {
-        let identifierCounts: { [identifier: string]: number } = {};
+    function updateDuplicateAccounts (api: Api, newTransactions: CsvCreateTransaction[]) {
+        const identifierCounts: { [identifier: string]: number } = {};
         for (let i = 0; i < newTransactions.length; i++) {
-            let id = newTransactions[i].identifier;
+            const id = newTransactions[i].identifier;
             if (id !== null) {
                 identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
             }

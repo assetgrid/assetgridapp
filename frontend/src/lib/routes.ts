@@ -12,5 +12,5 @@ export const routes = {
     preferences: () => "/preferences",
     login: () => "/login",
     signup: () => "/signup",
-    profile: () => "/user/profile",
+    profile: () => "/user/profile"
 };

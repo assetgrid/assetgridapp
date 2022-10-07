@@ -4,13 +4,13 @@ import { routes } from "../../lib/routes";
 import { Account } from "../../models/account";
 
 export interface Props {
-    account: Account;
-    targetBlank?: boolean;
-    disabled?: boolean;
+    account: Account
+    targetBlank?: boolean
+    disabled?: boolean
 }
 
-export default function AccountLink(props: Props) {
-    if (props.disabled) {
+export default function AccountLink (props: Props): React.ReactElement {
+    if (props.disabled === undefined) {
         return <span className="transaction-link">
             <span>#{props.account.id}</span> {props.account.name}
         </span>;

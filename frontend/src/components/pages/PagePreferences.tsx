@@ -1,11 +1,8 @@
-import axios from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { Api, useApi } from "../../lib/ApiClient";
-import { routes } from "../../lib/routes";
-import { formatDateTimeWithPreferences, formatDateTimeWithUser, formatDateWithPreferences, formatDateWithUser, formatNumber, formatNumberWithPreferences, formatNumberWithUser } from "../../lib/Utils";
+import { useApi } from "../../lib/ApiClient";
+import { formatDateTimeWithPreferences, formatDateWithPreferences, formatNumberWithPreferences } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
 import { userContext } from "../App";
 import Card from "../common/Card";
@@ -15,7 +12,7 @@ import InputNumber from "../input/InputNumber";
 import InputText from "../input/InputText";
 import InputTextOrNull from "../input/InputTextOrNull";
 
-export default function PagePreferences(): React.ReactElement {
+export default function PagePreferences (): React.ReactElement {
     const { user, updatePreferences } = React.useContext(userContext);
     const [model, setModel] = React.useState<Preferences | "fetching">(user === "fetching" ? "fetching" : user.preferences);
     const [isUpdating, setIsUpdating] = React.useState(false);
@@ -28,7 +25,7 @@ export default function PagePreferences(): React.ReactElement {
             setModel(user.preferences);
         }
     }, [user === "fetching" ? "fetching" : user.preferences]);
-    const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), [])
+    const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), []);
 
     return <>
         <Hero title="Preferences" subtitle="Modify preferences" />
@@ -37,7 +34,7 @@ export default function PagePreferences(): React.ReactElement {
         </div>
     </>;
 
-    function renderContent() {
+    function renderContent (): React.ReactElement {
         if (model === "fetching") {
             // This will only be shown until the global preferences are loaded.
             // Then the model will be set and will never be "fetching again"
@@ -52,7 +49,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputText value={model.decimalSeparator}
                         disabled={isUpdating}
                         label="Decimal Separator"
-                        errors={errors["DecimalSeparator"]}
+                        errors={errors.DecimalSeparator}
                         onChange={(event => setModel({
                             ...model,
                             decimalSeparator: event.target.value
@@ -62,7 +59,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputText value={model.thousandsSeparator}
                         disabled={isUpdating}
                         label="Thousands Separator"
-                        errors={errors["ThousandsSeparator"]}
+                        errors={errors.ThousandsSeparator}
                         onChange={(event => setModel({
                             ...model,
                             thousandsSeparator: event.target.value
@@ -71,7 +68,7 @@ export default function PagePreferences(): React.ReactElement {
                 <div className="column">
                     <InputNumber value={new Decimal(model.decimalDigits)}
                         disabled={isUpdating}
-                        errors={errors["DecimalDigits"]}
+                        errors={errors.DecimalDigits}
                         label="Digits after decimal point"
                         allowNull={false}
                         onChange={(value => setModel({
@@ -80,17 +77,17 @@ export default function PagePreferences(): React.ReactElement {
                         }))} />
                 </div>
             </div>
-                
+
             <p className="pb-3 pt-1">Example: {
                 formatNumberWithPreferences(new Decimal("123456789.123456789"), model)}
             </p>
-                
+
             <div className="columns pt-3">
                 <div className="column">
                     <InputTextOrNull value={model.dateFormat}
                         disabled={isUpdating}
                         noValueText="System default"
-                        errors={errors["DateFormat"]}
+                        errors={errors.DateFormat}
                         label="Date format"
                         onChange={(value => setModel({
                             ...model,
@@ -102,7 +99,7 @@ export default function PagePreferences(): React.ReactElement {
                     <InputTextOrNull value={model.dateTimeFormat}
                         disabled={isUpdating}
                         label="Date and time format"
-                        errors={errors["DateTimeFormat"]}
+                        errors={errors.DateTimeFormat}
                         noValueText="System default"
                         onChange={(value => setModel({
                             ...model,
@@ -111,7 +108,7 @@ export default function PagePreferences(): React.ReactElement {
                     <p>Example: {formatDateTimeWithPreferences(exampleDateTime, model)}</p>
                 </div>
             </div>
-            <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank">More information on date formats</a>
+            <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank" rel="noreferrer">More information on date formats</a>
 
             <div className="buttons mt-5">
                 <InputButton
@@ -123,8 +120,8 @@ export default function PagePreferences(): React.ReactElement {
             </div>
         </Card>;
     }
-    
-    function saveChanges() {
+
+    function saveChanges (): void {
         if (isUpdating || model === "fetching" || api === null) {
             return;
         }
