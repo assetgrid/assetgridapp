@@ -152,7 +152,7 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             allowSelection={true}
                             allowLinks={true}
                             updateItem={() => setDraw(draw => draw + 1)}
-                            selected={props.selectedTransactions[line.transaction.id]}
+                            selected={props.selectedTransactions[line.transaction.id] === true}
                             toggleSelected={() => props.selectedTransactions[line.transaction.id]
                                 ? deselectTransaction(line.transaction)
                                 : props.setSelectedTransactions({ ...props.selectedTransactions, [line.transaction.id]: true })} />;

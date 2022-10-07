@@ -131,7 +131,7 @@ function TransactionList (props: Props): React.ReactElement {
                             allowSelection={props.selectedTransaction !== undefined || props.selectedTransactions !== undefined}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}
-                            selected={selectedTransactions[transaction.id] || props.selectedTransaction?.[0] === transaction.id}
+                            selected={selectedTransactions[transaction.id] === true || props.selectedTransaction?.[0] === transaction.id}
                             toggleSelected={() => toggleSelected(transaction)} />;
                     })}
                 </div>

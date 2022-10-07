@@ -33,7 +33,7 @@ export default function PageTransaction (): React.ReactElement {
     const navigate = useNavigate();
     const api = useApi();
 
-    React.useEffect(() => (void fetchTransaction), [id, api]);
+    React.useEffect(() => { fetchTransaction(); }, [id, api]);
 
     if (transaction === null) {
         return <Page404 />;
@@ -131,7 +131,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
 
     if (transaction === "fetching") {
         return <Card title="Transaction details" isNarrow={false}>
-            {transaction && <table className="table is-fullwidth">
+            <table className="table is-fullwidth">
                 <tbody>
                     <tr>
                         <td>Id</td>
@@ -166,7 +166,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         <td>&hellip;</td>
                     </tr>
                 </tbody>
-            </table>}
+            </table>
         </Card>;
     }
 

@@ -75,7 +75,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
