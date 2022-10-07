@@ -27,7 +27,8 @@ export default function DropdownContent(props: Props) {
         <span ref={ref}></span>
         {createPortal(<div ref={parentRef} style={{
                 position: "fixed",
-                transition: "top 0.1s, bottom 0.1s"
+                transition: "top 0.1s, bottom 0.1s",
+                zIndex: 50,
             }}
             className={props.active ? "dropdown is-active" : ""}>
             {props.children}

@@ -221,6 +221,7 @@ function InputImportProfile(props: InputImportProfileProps) {
     return <InputAutoComplete value={props.value}
         disabled={props.disabled}
         onChange={props.onChange}
+        allowNull={false}
         label={props.label}
         errors={props.errors}
         refreshSuggestions={(api: Api, prefix: string) => {

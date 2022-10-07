@@ -15,7 +15,9 @@ interface Props {
 }
 
 export default function InputCategory (props: Props) {
-    return <InputAutoComplete refreshSuggestions={refreshSuggestions} {...props} />;
+    return <InputAutoComplete
+        allowNull={false}
+        refreshSuggestions={refreshSuggestions} {...props} />;
 
     function refreshSuggestions(api: Api, prefix: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {

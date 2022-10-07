@@ -54,6 +54,7 @@
     "chart.js": "^3.9.1",
     "chartjs-adapter-luxon": "^1.2.0",
     "decimal.js": "^10.3.1",
+    "jschardet": "^3.0.0",
     "luxon": "^2.4.0",
     "papaparse": "^5.3.2",
     "react": "^18.1.0",

@@ -6,15 +6,24 @@ import { Api, useApi } from "../../lib/ApiClient";
 import { debounce } from "../../lib/Utils";
 import DropdownContent from "../common/DropdownContent";
 
-interface Props {
+type Props = {
     label?: string;
-    value: string;
     disabled: boolean;
-    onChange: (value: string) => void;
     errors?: string[];
     refreshSuggestions: (api: Api, prefix: string) => Promise<string[]>;
     maxItems?: number;
-}
+    fullwidth?: boolean;
+    helpText?: string;
+} & ({
+    allowNull: true;
+    nullText: string;
+    value: string | null;
+    onChange: (value: string | null) => void;
+} | {
+    allowNull: false;
+    value: string;
+    onChange: (value: string) => void;
+});
 
 export default function InputAutoComplete (props: Props) {
     const [open, setOpen] = React.useState(false);
@@ -24,26 +33,45 @@ export default function InputAutoComplete (props: Props) {
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
-        if (props.value === "") {
+        if (props.value === "" || props.value === null) {
             // Don't suggest anything if nothing has been entered
             setOpen(false);
             setAutocompleteSuggestions(null);
-        } else {
-            refreshSuggestionsDebounced(props.value)
+        } else if (api !== null) {
+            refreshSuggestionsDebounced(api, props.value)
         }
     }, [api, props.value]);
     const refreshSuggestionsDebounced = React.useCallback(debounce(refreshSuggestions, 300), []);
 
+    if (props.value === null) {
+        return <div className="field">
+            {props.label && <label className="label">{props.label}</label>}
+            <div className="field has-addons">
+                <div className={"control" + (props.fullwidth ? " is-expanded" : "")}>
+                    <span style={props.disabled ? { color: "#999"} : { cursor: "pointer" }}
+                        className="input"
+                        onClick={() => ! props.disabled && props.onChange("")}>
+                        {props.allowNull ? props.nullText : ""}
+                    </span>
+                    {props.helpText !== undefined && <p className="help">
+                        {props.helpText}
+                    </p>}
+                </div>
+            </div>
+        </div>;
+    }
+
     return <div className="field" onBlur={onBlur}>
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown is-fullwidth" + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
+        <div className={"dropdown" + (props.fullwidth ? " is-n" : "") + (open && ! props.disabled  ? " is-active" : "") + (isError ? " is-danger" : "")}>
             <div className="dropdown-trigger">
                 <input className="input"
+                    placeholder={props.label}
                     value={props.value}
                     disabled={props.disabled}
                     onChange={prefixChanged} />
-                {!props.disabled && props.value !== "" && <button className="button"
-                    onClick={() => { setOpen(false); props.onChange(""); }}
+                {!props.disabled && (props.value !== "" || props.allowNull) && <button className="button"
+                    onClick={() => { setOpen(false); props.onChange(props.allowNull ? null! : ""); }}
                     disabled={props.disabled}>
                     <span className="icon is-small">
                         <FontAwesomeIcon icon={faXmark} />
@@ -67,6 +95,9 @@ export default function InputAutoComplete (props: Props) {
         {isError && <p className="help has-text-danger">
             {props.errors![0]}
         </p>}
+        {props.helpText !== undefined && <p className="help">
+            {props.helpText}
+        </p>}
     </div>;
 
     function prefixChanged(e: React.ChangeEvent<HTMLInputElement>) {
@@ -78,7 +109,7 @@ export default function InputAutoComplete (props: Props) {
         props.onChange(e.target.value);
     }
 
-    async function refreshSuggestions(prefix: string) {
+    async function refreshSuggestions(api: Api, prefix: string) {
         if (prefix !== "" && api !== null) {
             let result = await props.refreshSuggestions(api, prefix);
             setAutocompleteSuggestions(result.slice(0, props.maxItems ?? 5));

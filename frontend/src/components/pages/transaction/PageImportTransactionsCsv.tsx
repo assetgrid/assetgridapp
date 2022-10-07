@@ -35,6 +35,7 @@ export default function PageImportTransactionsCsv () {
         csvDelimiter: "auto",
         csvNewlineCharacter: "auto",
         csvParseHeader: true,
+        csvTextEncoding: null,
 
         duplicateHandling: "automatic",
         identifierColumn: null,

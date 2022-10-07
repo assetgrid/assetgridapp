@@ -28,7 +28,8 @@ namespace assetgrid_backend.Models
 
         [MaxLength(50)]
         public string CsvNewlineCharacter { get; set; } = null!;
-
+        [MaxLength(20)]
+        public string? CsvTextEncoding { get; set; }
         public bool CsvParseHeader { get; set; }
 
         // Mapping options

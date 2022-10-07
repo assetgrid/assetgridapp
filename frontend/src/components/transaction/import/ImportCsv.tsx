@@ -9,8 +9,14 @@ import InputText from "../../input/InputText";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import InputIconButton from "../../input/InputIconButton";
-import { useApi } from "../../../lib/ApiClient";
+import { Api, useApi } from "../../../lib/ApiClient";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
+import InputAutoComplete from "../../input/InputAutoComplete";
+import * as jschardet from "jschardet";
+
+const encodings = ["Big5", "GB2312", " GB18030", "EUC-TW", "HZ-GB-2312", "ISO-2022-CN", "EUC-JP", "SHIFT_JIS", "ISO-2022-JP", "EUC-KR", "ISO-2022-KR", "KOI8-R", "MacCyrillic",
+    "IBM855", "IBM866", "ISO-8859-5", "ISO-8859-2", "windows-1250", "ISO-8859-5", "windows-1251", "windows-1252", "ISO-8859-7", "windows-1253", "ISO-8859-8",
+    "windows-1255", "TIS-620", "UTF-32", "UTF-16", "UTF-8", "ASCII"];
 
 interface Props {
     csvParsed: (data: any[], lines: string[]) => void;
@@ -30,13 +36,18 @@ export default function ImportCsv(props: Props) {
     const [page, setPage] = React.useState(1);
     const [profileNames, setProfileNames] = React.useState<string[] | "fetching">("fetching");
     const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
+    const [encoding, setEncoding] = React.useState<string | null>(props.options.csvTextEncoding);
     const api = useApi();
 
     React.useEffect(() => {
         if (props.csvFile !== null) {
             reparseFile(props.csvFile);
         }
-    }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter])
+    }, [props.csvFile, props.options.csvParseHeader, props.options.csvNewlineCharacter, props.options.csvDelimiter, props.options.csvTextEncoding])
+
+    React.useEffect(() => {
+        setEncoding(props.options.csvTextEncoding);
+    }, [props.options.csvTextEncoding]);
 
     React.useEffect(() => {
         if (api !== null) {
@@ -67,14 +78,17 @@ export default function ImportCsv(props: Props) {
             <InputCheckbox label="Parse header"
                 value={props.options.csvParseHeader}
                 onChange={e => props.optionsChanged({ ...props.options, csvParseHeader: e.target.checked })} />
+            
             <InputCheckbox label="Auto-detect delimiter"
                 value={props.options.csvDelimiter == "auto"}
                 onChange={e => e.target.checked == true
                     ? props.optionsChanged({ ...props.options, csvDelimiter: "auto" })
                     : props.optionsChanged({ ...props.options, csvDelimiter: "" })}
             />
+
             {props.options.csvDelimiter != "auto" &&
                 <InputText label="Delimiter" value={props.options.csvDelimiter} onChange={e => props.optionsChanged({ ...props.options, csvDelimiter: e.target.value })} />}
+            
             <InputSelect label="Newline character"
                 value={props.options.csvNewlineCharacter}
                 onChange={result => props.optionsChanged({ ...props.options, csvNewlineCharacter: result as "auto" | "\n" | "\r\n" | "\r" })}
@@ -84,6 +98,26 @@ export default function ImportCsv(props: Props) {
                     { key: "\r", value: "\\r" },
                     { key: "\r\n", value: "\\r\\n" }
                 ]} />
+            
+            <InputCheckbox label="Auto-detect text encoding"
+                value={props.options.csvTextEncoding == null}
+                helpText={props.options.csvTextEncoding === null && encoding !== null ? "Automatically detected as '" + encoding + "'" : ""}
+                onChange={e => e.target.checked == true
+                    ? props.optionsChanged({ ...props.options, csvTextEncoding: null })
+                    : props.optionsChanged({ ...props.options, csvTextEncoding: "" })}
+            />
+
+            {props.options.csvTextEncoding !== null && <InputAutoComplete
+                value={props.options.csvTextEncoding}
+                label="File text encoding"
+                disabled={false}
+                fullwidth={false}
+                allowNull={false}
+                onChange={value => props.optionsChanged({ ...props.options, csvTextEncoding: value })}
+                refreshSuggestions={(api: Api, prefix: string) => new Promise<string[]>(
+                    resolve => resolve(encodings.sort((a, b) => a.localeCompare(b)).filter(x => x.toLocaleLowerCase().includes(prefix.toLocaleLowerCase())))
+                )} />}
+
             <div className={"file mb-3 " + (props.csvFile != null ? " has-name" : "")}>
                 <label className="file-label">
                     <input className="file-input" type="file" name="resume" onChange={e => fileUploaded(e)} />
@@ -178,7 +212,15 @@ export default function ImportCsv(props: Props) {
         reader.onload = (event) => {
             if (!event.target?.result) return;
 
-            Papa.parse(event.target.result.toString(), {
+            let encoding = props.options.csvTextEncoding ?? "";
+            if (encoding.trim() == "") {
+                encoding = jschardet.detect(event.target.result.toString()).encoding;
+            }
+            setEncoding(encoding);
+
+            const decoder = new TextDecoder(encoding);
+            const decodedString = decoder.decode(Uint8Array.from(event.target.result.toString(), x => x.charCodeAt(0)));
+            Papa.parse(decodedString, {
                 header: props.options.csvParseHeader,
                 delimiter: props.options.csvDelimiter == "auto" ? undefined : props.options.csvDelimiter,
                 newline: props.options.csvNewlineCharacter == "auto" ? undefined : props.options.csvNewlineCharacter,
@@ -193,7 +235,7 @@ export default function ImportCsv(props: Props) {
             console.log(event);
             setCsvData("error");
         }
-        reader.readAsText(file, "UTF-8");
+        reader.readAsBinaryString(file);
     }
 
     async function updateSelectedProfile(name: string) {

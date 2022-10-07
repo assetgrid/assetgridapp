@@ -6,6 +6,7 @@ interface Props {
     value: boolean;
     errors?: string[] | boolean;
     disabled?: boolean;
+    helpText?: string
 }
 
 export default function InputCheckbox(props: Props) {
@@ -24,10 +25,13 @@ export default function InputCheckbox(props: Props) {
         <div className="control">
             <label className="checkbox">
                 <input type="checkbox" onChange={e => props.onChange(e)} checked={props.value} disabled={props.disabled} /> {props.label}
+                {typeof props.errors === "object"  && props.errors.length > 0 && <p className="help has-text-danger">
+                    {props.errors[0]}
+                </p>}
+                {props.helpText !== undefined && <p className="help">
+                    {props.helpText}
+                </p>}
             </label>
-            {typeof props.errors === "object"  && props.errors.length > 0 && <p className="help has-text-danger">
-                {props.errors[0]}
-            </p>}
         </div>
     </div>;
 }

@@ -8,6 +8,7 @@ export interface CsvImportProfile {
     csvDelimiter: string;
     csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r";
     csvParseHeader: boolean;
+    csvTextEncoding: string | null;
     
     // Mapping options
     duplicateHandling: DuplicateHandlingOptions;

@@ -1,13 +1,16 @@
 /*
  * Dropdown
  */
-.dropdown.is-fullwidth {
-    display: flex;
+.dropdown {
+    display: inline-flex;
   
-    .dropdown-trigger,
-    .dropdown-menu {
-        min-width: 100%;
-        max-width: calc(max(100%, 300px));
+    &.is-fullwidth {
+        display: flex;
+        .dropdown-trigger,
+        .dropdown-menu {
+            min-width: 100%;
+            max-width: calc(max(100%, 300px));
+        }
     }
 
     .dropdown-trigger {
@@ -76,12 +79,14 @@
         &::-webkit-outer-spin-button,
         &::-webkit-inner-spin-button {
             -webkit-appearance: none;
+            appearance: none;
             margin: 0;
         }
 
         /* Remove up/down arrows for input[number] for Firefox */
         &[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
     }
 
