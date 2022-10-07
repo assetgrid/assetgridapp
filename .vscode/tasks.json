@@ -55,8 +55,24 @@
             ],
             "options": {
                 "cwd": "./frontend"
-            }, 
+            },
             "problemMatcher": []
         },
+        {
+            "label": "lint frontend",
+            "command": "${workspaceFolder}/frontend/node_modules/.bin/eslint",
+            "windows": {
+                "command": "${workspaceFolder}/frontend/node_modules/.bin/eslint.cmd"
+            },
+            "args": [
+                "./src/**/*"
+            ],
+            "problemMatcher": [
+                "$eslint-stylish"
+            ],
+            "options": {
+                "cwd": "./frontend"
+            }
+        }
     ]
 }
