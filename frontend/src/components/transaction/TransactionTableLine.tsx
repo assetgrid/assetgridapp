@@ -26,14 +26,14 @@ import { SearchGroupType, SearchOperator } from "../../models/search";
 
 interface Props {
     transaction: Transaction
-    updateItem: (item: Transaction | null) => void
+    updateItem: (id: number, item: Transaction | null) => void
     accountId?: number
     balance?: Decimal
     allowSelection?: boolean
     allowEditing?: boolean
     allowLinks?: boolean
     selected?: boolean
-    toggleSelected?: () => void
+    toggleSelected?: (transaction: Transaction) => void
 }
 
 interface TransactionEditingModel {
@@ -75,7 +75,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
@@ -115,7 +115,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
             {/* Deletion modal */}
             {props.isConfirmingDeletion && <DeleteTransactionModal
                 close={() => props.setState(null)}
-                deleted={() => props.updateItem(null)}
+                deleted={() => props.updateItem(props.transaction.id, null)}
                 transaction={props.transaction} />}
         </div>}
         {expandSplit && <div className="transaction-lines split">
@@ -165,7 +165,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     return <div key={props.transaction.id} className="table-row editing">
         <div>
             {props.selected !== undefined && props.allowSelection === true &&
-                <InputCheckbox onChange={() => props.toggleSelected?.()} value={props.selected} />}
+                <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
             <TransactionLink transaction={props.transaction} />
         </div>
         <div>
@@ -268,7 +268,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         });
 
         if (result.status === 200) {
-            props.updateItem(result.data);
+            props.updateItem(props.transaction.id, result.data);
             props.stopEditing();
         } else if (result.status === 400) {
             setErrors(result.errors);

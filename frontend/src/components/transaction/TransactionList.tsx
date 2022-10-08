@@ -127,12 +127,12 @@ function TransactionList (props: Props): React.ReactElement {
                         return <TransactionTableLine
                             key={transaction.id}
                             transaction={transaction}
-                            updateItem={() => setDraw(draw => draw + 1)}
+                            updateItem={redrawTable}
                             allowSelection={props.selectedTransaction !== undefined || props.selectedTransactions !== undefined}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}
                             selected={selectedTransactions.has(transaction.id) || props.selectedTransaction?.[0] === transaction.id}
-                            toggleSelected={() => toggleSelected(transaction)} />;
+                            toggleSelected={toggleSelected} />;
                     })}
                 </div>
                 {heading}
@@ -232,6 +232,10 @@ function TransactionList (props: Props): React.ReactElement {
         if (props.orderBy === undefined) {
             setDraw(draw => draw + 1);
         }
+    }
+
+    function redrawTable (): void {
+        setDraw(draw => draw + 1);
     }
 }
 

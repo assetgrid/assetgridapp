@@ -151,7 +151,7 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             allowEditing={true}
                             allowSelection={true}
                             allowLinks={true}
-                            updateItem={() => setDraw(draw => draw + 1)}
+                            updateItem={redrawTable}
                             selected={props.selectedTransactions.has(line.transaction.id)}
                             toggleSelected={() => props.selectedTransactions.has(line.transaction.id)
                                 ? deselectTransaction(line.transaction)
@@ -219,5 +219,9 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
     function selectAllTransactions (): void {
         const newSelectedTransactions = new Set(shownTransactions.map(t => t.id));
         props.setSelectedTransactions(newSelectedTransactions);
+    }
+
+    function redrawTable (): void {
+        setDraw(draw => draw + 1);
     }
 }
