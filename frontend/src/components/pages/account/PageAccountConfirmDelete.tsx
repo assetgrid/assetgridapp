@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router";
 import { Link } from "react-router-dom";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
+import { forget } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import { userContext } from "../../App";
@@ -17,7 +18,9 @@ import PageError from "../PageError";
 export default function PageAccountConfirmDelete (): React.ReactElement {
     const id = Number(useParams().id);
     const [isDeleting, setisDeleting] = React.useState(false);
-    const [account, setAccount] = React.useState<Account | null | "fetching" | "error">(history.state.usr?.account ? history.state.usr.account : "fetching");
+    const [account, setAccount] = React.useState<Account | null | "fetching" | "error">(typeof history.state.usr?.account === "object"
+        ? history.state.usr.account
+        : "fetching");
     const allowBack = history.state.usr?.allowBack === true;
     const navigate = useNavigate();
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
@@ -109,7 +112,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                 <p>Are you sure you want to delete this account? This action is irreversible!</p>
                 <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
                 <div className="buttons mt-3">
-                    <InputButton onClick={deleteAccount} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
+                    <InputButton onClick={forget(deleteAccount)} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
                     {allowBack
                         ? <button className="button" onClick={() => navigate(-1)}>Cancel</button>
                         : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>Cancel</Link>}

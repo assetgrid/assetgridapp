@@ -1,3 +1,3 @@
-./src/assets/*
-./src/styles/*
-./src/mystyles.scss
+src/assets/**/*
+src/styles/**/*
+src/mystyles.scss

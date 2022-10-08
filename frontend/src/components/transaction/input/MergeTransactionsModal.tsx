@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useApi } from "../../../lib/ApiClient";
+import { forget } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
@@ -8,7 +9,7 @@ import TransactionList from "../TransactionList";
 interface Props {
     close: () => void
     merged: () => void
-    transactions: { [id: number]: boolean }
+    transactions: Set<number>
     active: boolean
 }
 
@@ -25,7 +26,7 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
             operator: SearchOperator.In,
             value: Object.keys(props.transactions)
                 .map(x => Number(x))
-                .filter(x => props.transactions[x]),
+                .filter(x => props.transactions.has(x)),
             not: false
         }
     }), [props.active]);
@@ -41,7 +42,7 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
         title={"Merge transactions"}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={async () => await deleteTransaction()} disabled={isMerging || api === null || selectedTransaction === null} className="is-primary">Merge transactions</InputButton>}
+            {<InputButton onClick={forget(deleteTransaction)} disabled={isMerging || api === null || selectedTransaction === null} className="is-primary">Merge transactions</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <p>Do you want to merge the following transactions. Merging will add the identifiers from all transactions to a single one and delete the others.</p>

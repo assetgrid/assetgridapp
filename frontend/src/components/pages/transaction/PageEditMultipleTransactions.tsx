@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
-import { debounce, emptyQuery } from "../../../lib/Utils";
+import { debounce, emptyQuery, forget } from "../../../lib/Utils";
 import { SearchGroup } from "../../../models/search";
 import { TransactionLine, UpdateTransaction } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
@@ -38,7 +38,7 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
     const [action, setAction] = React.useState<Action | null>(null);
     const [draw, setDraw] = React.useState(0);
     const [model, setModel] = React.useState<UpdateTransaction | null>(null);
-    const [query, setQuery] = React.useState<SearchGroup>(window.history.state.usr?.query
+    const [query, setQuery] = React.useState<SearchGroup>(typeof window.history.state.usr?.query === "object"
         ? deserializeQueryForHistory(window.history.state.usr.query)
         : emptyQuery);
 
@@ -100,7 +100,7 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
                 {renderAction(action, setAction, model, setModel, isUpdating)}
 
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={update} disabled={isUpdating || model === null || api === null}>Apply changes</InputButton>
+                    <InputButton className="is-primary" onClick={forget(update)} disabled={isUpdating || model === null || api === null}>Apply changes</InputButton>
                     {showBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>
             </Card>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Account } from "../../../models/account";
-import { SearchGroup, SearchRequest } from "../../../models/search";
+import { SearchGroup } from "../../../models/search";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../../lib/ApiClient";

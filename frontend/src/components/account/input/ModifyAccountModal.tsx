@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useApi } from "../../../lib/ApiClient";
+import { forget } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
@@ -23,7 +24,7 @@ export default function ModifyAccountModal (props: Props): React.ReactElement {
         title={"Modify account"}
         close={() => props.close()}
         footer={<>
-            <InputButton className="is-success" onClick={update} disabled={isUpdating || api === null}>Save changes</InputButton>
+            <InputButton className="is-success" onClick={forget(update)} disabled={isUpdating || api === null}>Save changes</InputButton>
             <InputButton onClick={() => props.close()}>Cancel</InputButton>
         </>}>
         <InputModifyAccount

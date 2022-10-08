@@ -10,7 +10,7 @@ export interface Props {
 }
 
 export default function AccountLink (props: Props): React.ReactElement {
-    if (props.disabled === undefined) {
+    if (props.disabled === true) {
         return <span className="transaction-link">
             <span>#{props.account.id}</span> {props.account.name}
         </span>;

@@ -3,7 +3,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { formatNumberWithUser } from "../../lib/Utils";
+import { forget, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { userContext } from "../App";
 import Card from "../common/Card";
@@ -145,7 +145,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                 </tbody>
             </table>
             <div className="buttons">
-                <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={saveChanges}>Save changes</InputButton>
+                <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={forget(saveChanges)}>Save changes</InputButton>
                 <InputButton onClick={() => setEditingModel(null)}>Cancel</InputButton>
             </div>
         </Card>;

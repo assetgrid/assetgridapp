@@ -12,7 +12,14 @@ const Utils = {
 };
 export default Utils;
 
-function arrayToObject<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]) {
+/**
+ * Creates an object by mapping through all the elements of the array
+ * @param array The array to create an object from
+ * @param selector A function taking an array element and returning an array where the
+ *                 first item is the key of the object and the second is the value
+ * @returns An object
+ */
+function arrayToObject<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]): { [key in string | number]: V } {
     const output: { [key: string]: V } = {};
 
     for (const item of array) {
@@ -23,7 +30,13 @@ function arrayToObject<A, K extends string | number, V> (array: A[], selector: (
     return output;
 }
 
-function groupBy<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]) {
+/**
+ * Groups the items of the array by a specified key
+ * @param array The array to group
+ * @param selector A function selecting the key to group by for each array element
+ * @returns An object where the key is the group and the value is an array grouped by the selected key
+ */
+function groupBy<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]): { [key in string | number]: V[] } {
     const output: { [key: string]: V[] } = {};
 
     for (const item of array) {
@@ -46,7 +59,13 @@ function objectMap<A, B> (object: { [key: string]: A }, selector: (item: A) => B
     return output;
 }
 
-function range (start: number, end: number) {
+/**
+ * Generate a range of integer numbers
+ * @param start The beginning of the range (inclusive)
+ * @param end The end of the range (inclusive)
+ * @returns An array of numbers from start to end
+ */
+function range (start: number, end: number): number[] {
     const ans = [];
     for (let i = start; i <= end; i++) {
         ans.push(i);
@@ -169,8 +188,8 @@ export function formatNumber (number: Decimal, decimals: number, decimalSeparato
     if (s[0].length > 3) {
         s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousandsSeparator);
     }
-    if ((s[1] || "").length < decimals) {
-        s[1] = s[1] || "";
+    if ((s[1] ?? "").length < decimals) {
+        s[1] = s[1] ?? "";
         s[1] += new Array(decimals - s[1].length + 1).join("0");
     }
     return s.join(decimalSeparator);
@@ -180,11 +199,12 @@ export function debounce<T1 extends (...args: any) => T2, T2 extends void | Prom
     let timeoutId: NodeJS.Timeout | null = null;
 
     return (...args: Parameters<T1>) => {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const context = this;
 
-        const later = () => {
+        const later = (): void => {
             timeoutId = null;
-            func.apply(context, args);
+            void func.apply(context, args);
         };
 
         const callNow = wait === undefined || wait === 0;
@@ -194,7 +214,7 @@ export function debounce<T1 extends (...args: any) => T2, T2 extends void | Prom
         }
 
         if (callNow) {
-            func.apply(context, args);
+            void func.apply(context, args);
         } else {
             timeoutId = setTimeout(later, wait);
         }
@@ -208,3 +228,14 @@ export const emptyQuery: SearchGroup = {
     type: SearchGroupType.And,
     children: []
 };
+
+/**
+ * Turn an async function into a function that will fire and forget without waiting for completion
+ * @param asyncFunction An async function returning void
+ * @returns A function that is still asynchronous but does not expect to be awaited
+ */
+export function forget (asyncFunction: (...args: any) => Promise<void>): (...args: any) => void {
+    return (...args: any) => {
+        void asyncFunction(...args);
+    };
+}

@@ -56,6 +56,8 @@ export default function Condition (props: ConditionProps): React.ReactElement {
 
         {/* Value */}
         <div className="column">
+            {/* We disable the warning here as a cast is necessary as we guarantee a valid column/operator/value combination elsewhere in the code */ }
+            {/* eslint-disable-next-line @typescript-eslint/consistent-type-assertions */ }
             <ConditionValueEditor condition={{
                 column,
                 operator: props.query.operator,
@@ -149,33 +151,38 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
     switch (props.condition.operator) {
         case SearchOperator.In:
             switch (props.condition.valueType) {
-                case "number[]":
+                case "number[]": {
                     const intArrayCondition = props.condition;
                     return <InputNumbers
                         allowDecimal={props.condition.column !== "Id"}
                         value={props.condition.value.map(number => new Decimal(number))}
                         onChange={value => intArrayCondition.onChange(value.map(number => number.toNumber()))} />;
-                case "decimal[]":
+                }
+                case "decimal[]": {
                     const decimalArrayCondition = props.condition;
                     return <InputNumbers
                         value={props.condition.value}
                         allowDecimal={true}
                         onChange={value => decimalArrayCondition.onChange(value)} />;
+                }
             }
+            break;
         default:
             switch (props.condition.valueType) {
-                case "number":
+                case "number": {
                     const intCondition = props.condition;
                     return <InputNumber
                         allowNull={false}
                         value={new Decimal(props.condition.value)}
                         onChange={value => intCondition.onChange(props.condition.column === "Id" ? Math.round(value.toNumber()) : value.toNumber())} />;
-                case "decimal":
+                }
+                case "decimal": {
                     const decimalCondtition = props.condition;
                     return <InputNumber
                         allowNull={false}
                         value={props.condition.value}
                         onChange={value => decimalCondtition.onChange(new Decimal(value))} />;
+                }
             }
     }
 }
@@ -196,12 +203,14 @@ function ConditionValueEditorText (props: { condition: FilterHelpers.ConditionMo
 
     switch (props.condition.operator) {
         case SearchOperator.Equals:
-        case SearchOperator.Contains:
+        case SearchOperator.Contains: {
             const conditionScalar = props.condition;
             return <InputText value={conditionScalar.value} onChange={e => conditionScalar.onChange(e.target.value)} />;
-        case SearchOperator.In:
+        }
+        case SearchOperator.In: {
             const conditionArray = props.condition;
             return <InputTextMultiple value={conditionArray.value} onChange={value => conditionArray.onChange(value)} />;
+        }
     }
 }
 

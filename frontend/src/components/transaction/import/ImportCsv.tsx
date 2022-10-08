@@ -13,6 +13,7 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
 import InputAutoComplete from "../../input/InputAutoComplete";
 import * as jschardet from "jschardet";
+import { forget } from "../../../lib/Utils";
 
 const encodings = ["Big5", "GB2312", " GB18030", "EUC-TW", "HZ-GB-2312", "ISO-2022-CN", "EUC-JP", "SHIFT_JIS", "ISO-2022-JP", "EUC-KR", "ISO-2022-KR", "KOI8-R", "MacCyrillic",
     "IBM855", "IBM866", "ISO-8859-5", "ISO-8859-2", "windows-1250", "ISO-8859-5", "windows-1251", "windows-1252", "ISO-8859-7", "windows-1253", "ISO-8859-8",
@@ -72,7 +73,7 @@ export default function ImportCsv (props: Props): React.ReactElement {
                 disabled={api === null}
                 items={profileNames.map(x => ({ key: x, value: x }))}
                 value={selectedProfile}
-                onChange={updateSelectedProfile} />}
+                onChange={forget(updateSelectedProfile)} />}
         </Card>
 
         <Card title="Import options" isNarrow={true}>

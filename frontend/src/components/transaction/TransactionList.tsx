@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Transaction } from "../../models/transaction";
 import Table from "../common/Table";
-import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest } from "../../models/search";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import { Api } from "../../lib/ApiClient";
 import TransactionTableLine from "./TransactionTableLine";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,7 +23,7 @@ interface Props {
 
     page?: [number, (page: number) => void]
     orderBy?: [{ column: string, descending: boolean }, (value: { column: string, descending: boolean }) => void]
-    selectedTransactions?: [{ [id: number]: boolean }, (transactions: { [id: number]: boolean }) => void]
+    selectedTransactions?: [Set<number>, (transactions: Set<number>) => void]
     selectedTransaction?: [number | null, (value: number | null) => void]
 }
 
@@ -40,7 +40,7 @@ export default React.memo(TransactionList, (a, b) =>
 function TransactionList (props: Props): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const [orderBy, setOrderBy] = (props.orderBy != null) ? props.orderBy : React.useState<{ column: string, descending: boolean }>({ column: "DateTime", descending: true });
-    const [selectedTransactions, setSelectedTransactions] = (props.selectedTransactions != null) ? props.selectedTransactions : React.useState<{ [id: number]: boolean }>({});
+    const [selectedTransactions, setSelectedTransactions] = (props.selectedTransactions != null) ? props.selectedTransactions : React.useState<Set<number>>(new Set());
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const [page, setPage] = (props.page != null) ? props.page : React.useState(1);
@@ -78,7 +78,7 @@ function TransactionList (props: Props): React.ReactElement {
 
         // If it's not the first render, reset selected transactions
         if (!firstRender.current) {
-            setSelectedTransactions({});
+            setSelectedTransactions(new Set());
         }
         firstRender.current = false;
 
@@ -93,12 +93,12 @@ function TransactionList (props: Props): React.ReactElement {
     function renderTable (items: Array<{ item: Transaction, index: number }>, renderPagination: () => React.ReactElement): React.ReactElement {
         const heading = <div className="table-heading">
             <div>
-                {props.allowEditing && <TransactionSelectDropdownButton
-                    clearSelection={() => setSelectedTransactions({})}
+                {props.allowEditing === true && <TransactionSelectDropdownButton
+                    clearSelection={() => setSelectedTransactions(new Set())}
                     selectAll={() => selectAllTransactions()}
-                    selected={Object.keys(selectedTransactions).length > 0}
+                    selected={selectedTransactions.size > 0}
                     editSelection={() => beginEditMultiple("selection")}
-                    editSelectionDisabled={Object.keys(selectedTransactions).length === 0}
+                    editSelectionDisabled={selectedTransactions.size === 0}
                     editAll={() => beginEditMultiple("all")}
                     editAllText="Modify all transactions matching current search"
                     mergeSelection={() => setIsMergingTransactions(true)}
@@ -110,7 +110,7 @@ function TransactionList (props: Props): React.ReactElement {
             {renderColumnHeader("Source", "SourceAccountId", "numeric")}
             {renderColumnHeader("Destination", "DestinationAccountId", "numeric")}
             {renderColumnHeader("Category", "Category", "string")}
-            {props.allowEditing && <div>
+            {props.allowEditing === true && <div>
                 Actions
             </div>}
         </div>;
@@ -131,7 +131,7 @@ function TransactionList (props: Props): React.ReactElement {
                             allowSelection={props.selectedTransaction !== undefined || props.selectedTransactions !== undefined}
                             allowEditing={props.allowEditing}
                             allowLinks={props.allowLinks}
-                            selected={selectedTransactions[transaction.id] === true || props.selectedTransaction?.[0] === transaction.id}
+                            selected={selectedTransactions.has(transaction.id) || props.selectedTransaction?.[0] === transaction.id}
                             toggleSelected={() => toggleSelected(transaction)} />;
                     })}
                 </div>
@@ -140,12 +140,12 @@ function TransactionList (props: Props): React.ReactElement {
             {renderPagination()}
         </>;
 
-        function toggleSelected (transaction: Transaction) {
+        function toggleSelected (transaction: Transaction): void {
             if (props.selectedTransactions != null) {
-                if (selectedTransactions[transaction.id]) {
+                if (selectedTransactions.has(transaction.id)) {
                     deselectTransaction(transaction);
                 } else {
-                    setSelectedTransactions({ ...selectedTransactions, [transaction.id]: true });
+                    setSelectedTransactions(new Set([...selectedTransactions, transaction.id]));
                 }
             }
 
@@ -159,13 +159,13 @@ function TransactionList (props: Props): React.ReactElement {
         }
     }
 
-    function beginEditMultiple (type: "selection" | "all") {
+    function beginEditMultiple (type: "selection" | "all"): void {
         if (props.query == null) {
             // Multi edit requires a query
             return;
         }
 
-        const query: SearchGroup = type == "all"
+        const query: SearchGroup = type === "all"
             ? props.query
             : {
                 type: SearchGroupType.And,
@@ -175,7 +175,7 @@ function TransactionList (props: Props): React.ReactElement {
                         column: "Id",
                         not: false,
                         operator: SearchOperator.In,
-                        value: Object.keys(selectedTransactions).map(id => Number(id))
+                        value: [...selectedTransactions]
                     }
                 }]
             };
@@ -188,15 +188,14 @@ function TransactionList (props: Props): React.ReactElement {
         });
     }
 
-    function deselectTransaction (transaction: Transaction) {
-        const newSelectedTransactions = { ...selectedTransactions };
-        delete newSelectedTransactions[transaction.id];
+    function deselectTransaction (transaction: Transaction): void {
+        const newSelectedTransactions = new Set(selectedTransactions);
+        newSelectedTransactions.delete(transaction.id);
         setSelectedTransactions(newSelectedTransactions);
     }
 
-    function selectAllTransactions () {
-        const newSelectedTransactions: { [id: number]: boolean } = {};
-        shownTransactions.forEach(t => newSelectedTransactions[t.id] = true);
+    function selectAllTransactions (): void {
+        const newSelectedTransactions: Set<number> = new Set(shownTransactions.map(t => t.id));
         setSelectedTransactions(newSelectedTransactions);
     }
 
@@ -217,14 +216,14 @@ function TransactionList (props: Props): React.ReactElement {
             }
         }
 
-        return <div className={"column-header sortable" + (rightAligned ? " has-text-right" : "")}
+        return <div className={"column-header sortable" + (rightAligned === true ? " has-text-right" : "")}
             onClick={() => switchOrderBy(columnName)}>
             {title}
             {sortIcon}
         </div>;
     }
 
-    function switchOrderBy (column: string) {
+    function switchOrderBy (column: string): void {
         if (orderBy.column === column) {
             setOrderBy({ column, descending: !orderBy.descending });
         } else {
@@ -281,8 +280,8 @@ export function TransactionSelectDropdownButton (props: DropdownButtonProps): Re
         </DropdownContent>
     </div>;
 
-    function onBlur (e: React.FocusEvent) {
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && !dropdownRef.current?.contains(e.relatedTarget as Node)) {
+    function onBlur (e: React.FocusEvent): void {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && !(dropdownRef.current?.contains(e.relatedTarget as Node) ?? false)) {
             setOpen(false);
         }
     }

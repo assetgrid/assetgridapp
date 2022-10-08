@@ -74,6 +74,9 @@
             outline: none;
             width: 3rem;
         }
+        &::placeholder {
+            color: $input-placeholder-color
+        }
 
         /* Remove up/down arrows for input[number] for Blink/Webkit */
         &::-webkit-outer-spin-button,

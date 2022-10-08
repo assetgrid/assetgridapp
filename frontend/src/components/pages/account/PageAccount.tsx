@@ -6,7 +6,7 @@ import * as regular from "@fortawesome/free-regular-svg-icons";
 import { Account } from "../../../models/account";
 import AccountTransactionList from "../../transaction/AccountTransactionList";
 import { Api, useApi } from "../../../lib/ApiClient";
-import { debounce } from "../../../lib/Utils";
+import { debounce, forget } from "../../../lib/Utils";
 import AccountBalanceChart from "../../account/AccountBalanceChart";
 import { useParams } from "react-router";
 import { DateTime } from "luxon";
@@ -33,7 +33,7 @@ export default function PageAccount (): React.ReactElement {
         type: "month",
         start: DateTime.now().startOf("month")
     };
-    if (window.history.state.usr?.period) {
+    if (typeof window.history.state.usr?.period === "object") {
         try {
             const period = PeriodFunctions.parse(window.history.state.usr.period);
             if (period != null) {
@@ -48,7 +48,10 @@ export default function PageAccount (): React.ReactElement {
     const [page, setPage] = React.useState(typeof (window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
     const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
-    const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(window.history.state.usr?.selectedTransactions ? window.history.state.usr?.selectedTransactions : {});
+    const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(
+        typeof window.history.state.usr?.selectedTransactions === "object"
+            ? new Set(window.history.state.usr?.selectedTransactions)
+            : new Set());
     const api = useApi();
 
     // Keep state updated
@@ -110,7 +113,7 @@ export default function PageAccount (): React.ReactElement {
                     {account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
                 </span>} #{account.id} {account.name}
         </>}
-        subtitle={account.description.trim() != "" ? account.description : PeriodFunctions.print(period)}
+        subtitle={account.description.trim() !== "" ? account.description : PeriodFunctions.print(period)}
         period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
         <AccountDetailsCard account={account}
             updatingFavorite={updatingFavorite || api === null}
@@ -124,7 +127,7 @@ export default function PageAccount (): React.ReactElement {
             accountId={id}
             period={period}
             page={page}
-            goToPage={goToPage}
+            goToPage={forget(goToPage)}
             pageSize={pageSize}
             draw={draw}
             selectedTransactions={selectedTransactions}
@@ -136,18 +139,18 @@ export default function PageAccount (): React.ReactElement {
         </>
     );
 
-    function updateHistory (period: Period, page: number, selectedTransactions: { [id: number]: boolean }) {
+    function updateHistory (period: Period, page: number, selectedTransactions: Set<number>): void {
         window.history.replaceState({
             ...window.history.state,
             usr: {
                 period: PeriodFunctions.serialize(period),
                 page,
-                selectedTransactions
+                selectedTransactions: [...selectedTransactions]
             }
         }, "");
     }
 
-    async function goToPage (page: number | "increment" | "decrement") {
+    async function goToPage (page: number | "increment" | "decrement"): Promise<void> {
         if (api === null) return;
 
         if (page === "increment") {
@@ -165,7 +168,7 @@ export default function PageAccount (): React.ReactElement {
         setDraw(draw => draw + 1);
     }
 
-    function updateAccountFavoriteInPreferences (account: Account, favorite: boolean) {
+    function updateAccountFavoriteInPreferences (account: Account, favorite: boolean): void {
         if (user !== "fetching") {
             if (favorite) {
                 updateFavoriteAccounts([...user.favoriteAccounts, account]);
@@ -175,9 +178,9 @@ export default function PageAccount (): React.ReactElement {
         }
     }
 
-    function toggleFavorite () {
+    function toggleFavorite (): void {
         if (account === "error" || account === "fetching" || account === null || api === null) {
-            throw "error";
+            throw new Error();
         }
 
         const favorite = !account.favorite;
@@ -222,10 +225,12 @@ export default function PageAccount (): React.ReactElement {
                 }
             }]
         };
-        return await new Promise(resolve => {
-            api.Account.countTransactions(id, query)
-                .then(result => result.status == 200 && resolve(result.data));
-        });
+
+        const result = await api.Account.countTransactions(id, query);
+        if (result.status === 404) {
+            throw new Error(`Account ${id} not found.`);
+        }
+        return result.data;
     }
 }
 

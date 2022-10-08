@@ -5,7 +5,7 @@ import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMove
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
-import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction, Transaction } from "../models/transaction";
+import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
@@ -100,6 +100,7 @@ export async function anyUsers (): Promise<Ok<boolean>> {
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const User = (token: string) => ({
     /**
      * Update preferences for the current user
@@ -242,6 +243,7 @@ const User = (token: string) => ({
     }
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const Account = (token: string) => ({
     /**
      * Search for accounts
@@ -356,7 +358,7 @@ const Account = (token: string) => ({
      */
     delete: async function (id: number): Promise<Ok<null> | Forbid | NotFound> {
         return await new Promise<Ok<null> | Forbid | NotFound>((resolve, reject) => {
-            axios.delete<void>(`${rootUrl}/api/v1/account/${id}`, {
+            axios.delete(`${rootUrl}/api/v1/account/${id}`, {
                 headers: { authorization: "Bearer: " + token }
             })
                 .then(() => resolve({ status: 200, data: null }))
@@ -384,7 +386,7 @@ const Account = (token: string) => ({
      */
     listTransactions: async function (id: number, from: number, to: number, descending: boolean, query?: SearchGroup): Promise<Ok<TransactionListResponse> | NotFound> {
         return await new Promise<Ok<TransactionListResponse> | NotFound>((resolve, reject) => {
-            axios.post<TransactionListResponse>(`${rootUrl}/api/v1/account/${id }/transactions`, {
+            axios.post<TransactionListResponse>(`${rootUrl}/api/v1/account/${id}/transactions`, {
                 from,
                 to,
                 descending,
@@ -427,7 +429,7 @@ const Account = (token: string) => ({
      */
     countTransactions: async function (id: number, query?: SearchGroup): Promise<Ok<number> | NotFound> {
         return await new Promise<Ok<number> | NotFound>((resolve, reject) => {
-            axios.post<number>(`${rootUrl}/api/v1/account/${id }/counttransactions`, query, {
+            axios.post<number>(`${rootUrl}/api/v1/account/${id}/counttransactions`, query, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({ status: 200, data: result.data }))
                 .catch((error: AxiosError) => {
@@ -548,22 +550,23 @@ const Account = (token: string) => ({
     }
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const Transaction = (token: string) => ({
     /**
      * Get a single transaction
      * @param id Transaction id
      * @returns The transaction with the specified id
      */
-    get: async function (id: number): Promise<Ok<Transaction> | NotFound> {
-        return await new Promise<Ok<Transaction> | NotFound>((resolve, reject) => {
-            axios.get<Transaction>(`${rootUrl}/api/v1/transaction/${Number(id)}`, {
+    get: async function (id: number): Promise<Ok<TransactionModel> | NotFound> {
+        return await new Promise<Ok<TransactionModel> | NotFound>((resolve, reject) => {
+            axios.get<TransactionModel>(`${rootUrl}/api/v1/transaction/${Number(id)}`, {
                 headers: { authorization: "Bearer: " + token }
             })
                 .then(result => {
                     resolve({ status: 200, data: fixTransaction(result.data) });
                 })
                 .catch((e: AxiosError) => {
-                    if (e.response?.status == 404) {
+                    if (e.response?.status === 404) {
                         resolve(NotFoundResult);
                     } else {
                         console.log(e);
@@ -636,10 +639,10 @@ const Transaction = (token: string) => ({
      * @param transaction The changes to make
      * @returns The updated transaction
      */
-    update: async function (id: number, transaction: UpdateTransaction): Promise<Ok<Transaction> | NotFound | Forbid | BadRequest> {
-        return await new Promise<Ok<Transaction> | NotFound | Forbid | BadRequest>((resolve, reject) => {
+    update: async function (id: number, transaction: UpdateTransaction): Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest> {
+        return await new Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.put<Transaction>(`${rootUrl}/api/v1/transaction/${id}`, {
+            axios.put<TransactionModel>(`${rootUrl}/api/v1/transaction/${id}`, {
                 ...model,
                 totalString: (transaction.total != null) ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
                 lines: (transaction.lines != null)
@@ -679,7 +682,7 @@ const Transaction = (token: string) => ({
     updateMultiple: async function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
         return await new Promise<Ok<null>>((resolve, reject) => {
             const { total, ...model } = transaction;
-            axios.post<Transaction>(`${rootUrl}/api/v1/transaction/updateMultiple`, {
+            axios.post<TransactionModel>(`${rootUrl}/api/v1/transaction/updateMultiple`, {
                 query: fixAccountQuery(query),
                 model: {
                     ...model,
@@ -708,7 +711,7 @@ const Transaction = (token: string) => ({
      */
     delete: async function (id: number): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
-            axios.delete<void>(`${rootUrl}/api/v1/transaction/` + id, {
+            axios.delete(`${rootUrl}/api/v1/transaction/${id}`, {
                 headers: { authorization: "Bearer: " + token }
             }).then(() => resolve())
                 .catch(e => {
@@ -724,7 +727,7 @@ const Transaction = (token: string) => ({
      */
     deleteMultiple: async function (query: SearchGroup): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
-            axios.delete<Transaction>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
+            axios.delete<TransactionModel>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
                 data: fixAccountQuery(query),
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
@@ -777,7 +780,7 @@ function fixAccountQuery (query: SearchGroup): SearchGroup {
                 type: query.type,
                 children: query.children.map(child => fixAccountQuery(child))
             };
-        case SearchGroupType.Query:
+        case SearchGroupType.Query: {
             const result: SearchGroup = {
                 type: query.type,
                 query: {
@@ -792,6 +795,7 @@ function fixAccountQuery (query: SearchGroup): SearchGroup {
                 }
             }
             return result;
+        }
     }
 }
 
@@ -799,8 +803,8 @@ function fixAccountQuery (query: SearchGroup): SearchGroup {
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
  */
-function fixTransaction (transaction: Transaction | CreateTransaction): Transaction {
-    const { totalString, ...rest } = transaction as Transaction & { totalString: string };
+function fixTransaction (transaction: TransactionModel | CreateTransaction): TransactionModel {
+    const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
     return {
         ...rest,
         dateTime: DateTime.fromISO(transaction.dateTime as any as string),
@@ -813,6 +817,7 @@ function fixTransaction (transaction: Transaction | CreateTransaction): Transact
     };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const Taxonomy = (token: string) => ({
     /**
      * Search for accounts
@@ -834,6 +839,7 @@ const Taxonomy = (token: string) => ({
     }
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const ApiClient = (token: string) => ({
     User: User(token),
     Account: Account(token),

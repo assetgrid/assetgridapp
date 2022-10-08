@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApi } from "../../../lib/ApiClient";
-import { formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
+import { forget, formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
 import { Transaction, TransactionLine } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
@@ -33,7 +33,7 @@ export default function PageTransaction (): React.ReactElement {
     const navigate = useNavigate();
     const api = useApi();
 
-    React.useEffect(() => { fetchTransaction(); }, [id, api]);
+    React.useEffect(forget(fetchTransaction), [id, api]);
 
     if (transaction === null) {
         return <Page404 />;
@@ -53,7 +53,7 @@ export default function PageTransaction (): React.ReactElement {
                         editModel={editModel}
                         onChange={transaction => setEditModel(transaction)}
                         onDelete={() => setIsDeleting(true)}
-                        onSaveChanges={update}
+                        onSaveChanges={forget(update)}
                         errors={errors} />
                 </div>
                 <div className="column p-0 is-narrow is-flex">
@@ -62,7 +62,8 @@ export default function PageTransaction (): React.ReactElement {
                         transaction => setEditModel(transaction),
                         editModel,
                         () => setIsDeleting(true),
-                        update)}
+                        forget(update)
+                    )}
                 </div>
             </div>
         </div>
@@ -80,7 +81,7 @@ export default function PageTransaction (): React.ReactElement {
         if (isNaN(id)) {
             setTransaction("error");
         } else if (api !== null) {
-            const result = await api.Transaction.get(id)
+            const result = await api.Transaction.get(id);
             switch (result.status) {
                 case 200:
                     setTransaction(result.data);

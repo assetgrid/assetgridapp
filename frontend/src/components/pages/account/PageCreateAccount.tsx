@@ -2,6 +2,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
+import { forget } from "../../../lib/Utils";
 import { Account, CreateAccount } from "../../../models/account";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
@@ -69,8 +70,8 @@ export default function PageCreateAccount (): React.ReactElement {
                     disabled={isCreating} />
 
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={async () => await create(true)} disabled={isCreating || api === null}>Create and stay</InputButton>
-                    <InputButton className="is-primary" onClick={async () => await create(false)} disabled={isCreating || api === null}>Create and view account</InputButton>
+                    <InputButton className="is-primary" onClick={forget(async () => await create(true))} disabled={isCreating || api === null}>Create and stay</InputButton>
+                    <InputButton className="is-primary" onClick={forget(async () => await create(false))} disabled={isCreating || api === null}>Create and view account</InputButton>
                     {allowBack && <InputButton onClick={() => navigate(-1)}>Cancel</InputButton>}
                 </div>
             </Card>

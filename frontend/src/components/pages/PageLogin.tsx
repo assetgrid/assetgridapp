@@ -2,6 +2,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import * as Api from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
+import { forget } from "../../lib/Utils";
 import { userContext } from "../App";
 import Card from "../common/Card";
 import InputButton from "../input/InputButton";
@@ -24,9 +25,21 @@ export default function PageLogin (): React.ReactElement {
 
     return <section className="page-login">
         <Card title="Sign in to Assetgrid" isNarrow={true}>
-            <InputText value={email} label="Email" onChange={e => setEmail(e.target.value)} errors={state === "error"} />
-            <InputText value={password} password={true} label="Password" onChange={e => setPassword(e.target.value)} errors={state === "error" ? ["Invalid username or password"] : undefined} />
-            <InputButton className="is-primary" onClick={signIn}>
+            <InputText
+                value={email}
+                label="Email"
+                disabled={state === "signing-in"}
+                onChange={e => setEmail(e.target.value)} errors={state === "error"} />
+            <InputText
+                value={password}
+                password={true}
+                label="Password"
+                disabled={state === "signing-in"}
+                onChange={e => setPassword(e.target.value)} errors={state === "error" ? ["Invalid username or password"] : undefined} />
+            <InputButton
+                className="is-primary"
+                disabled={state === "signing-in"}
+                onClick={forget(signIn)}>
                 Sign in
             </InputButton>
         </Card>

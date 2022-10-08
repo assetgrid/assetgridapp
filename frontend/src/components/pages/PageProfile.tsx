@@ -6,6 +6,7 @@ import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 import DeleteUserModal from "../user/DeleteUserModal";
 import { useApi } from "../../lib/ApiClient";
+import { forget } from "../../lib/Utils";
 
 export default function PageProfile (): React.ReactElement {
     const { user } = React.useContext(userContext);
@@ -50,7 +51,7 @@ export default function PageProfile (): React.ReactElement {
                     errors={changePasswordErrors.NewPassword}/>
                 <InputButton className="is-primary"
                     disabled={isUpdating || api === null}
-                    onClick={updatePassword}>Change password</InputButton>
+                    onClick={forget(updatePassword)}>Change password</InputButton>
             </Card>
             <Card title="Delete user" isNarrow={true}>
                 <InputButton className="is-danger"

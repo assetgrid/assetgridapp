@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../lib/ApiClient";
+import { forget } from "../../lib/Utils";
 import Modal from "../common/Modal";
 import InputButton from "../input/InputButton";
 
@@ -19,7 +20,7 @@ export default function DeleteUserModal (props: Props): React.ReactElement {
         title={"Delete user"}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={async () => await deleteUser()} disabled={isDeleting || api === null} className="is-danger">Delete user</InputButton>}
+            {<InputButton onClick={forget(deleteUser)} disabled={isDeleting || api === null} className="is-danger">Delete user</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <p>Are you sure you want to delete your user account? This action is irreversible!</p>

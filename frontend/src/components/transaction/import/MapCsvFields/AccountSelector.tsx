@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useApi } from "../../../../lib/ApiClient";
+import { forget } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
 import { CsvImportProfile } from "../../../../models/csvImportProfile";
 import InputAccount from "../../../account/input/InputAccount";
@@ -48,7 +49,7 @@ export default function AccountSelector (props: Props): React.ReactElement {
                     disabled={api === null || isUpdating}
                     allowNull={true}
                     nullSelectedText={"No account"}
-                    onChange={async value => await accountSelected(identifier, value)}
+                    onChange={forget(async value => await accountSelected(identifier, value))}
                     allowCreateNewAccount={true} /></td>
             </tr>}
             page={page}

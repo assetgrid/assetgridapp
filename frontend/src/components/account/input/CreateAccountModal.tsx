@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useApi } from "../../../lib/ApiClient";
+import { forget } from "../../../lib/Utils";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
 import { userContext } from "../../App";
 import Modal from "../../common/Modal";
@@ -24,7 +25,7 @@ export default function CreateAccountModal (props: Props): React.ReactElement {
         title={"Create account"}
         close={() => props.close()}
         footer={<>
-            <button className="button is-success" onClick={create} disabled={isCreating || api === null}>Create account</button>
+            <button className="button is-success" onClick={forget(create)} disabled={isCreating || api === null}>Create account</button>
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <InputModifyAccount

@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { formatDateTimeWithUser, formatNumberWithUser } from "../../lib/Utils";
+import { forget, formatDateTimeWithUser, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import { Transaction, TransactionLine } from "../../models/transaction";
 import InputAccount from "../account/input/InputAccount";
@@ -75,7 +75,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
 
     return <div key={props.transaction.id} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.lines.length > 0 && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
@@ -106,7 +106,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
                 {props.transaction.category}
             </Link>
         </div>
-        {props.allowEditing && <div>
+        {props.allowEditing === true && <div>
             {!props.disabled && <>
                 <InputIconButton icon={solid.faPen} onClick={() => props.setState("editing")} />
                 <InputIconButton icon={regular.faTrashCan} onClick={() => props.setState("confirm-delete")} />
@@ -142,7 +142,7 @@ type TransactionEditorProps = Props & {
     stopEditing: () => void
 };
 
-function TransactionEditor (props: TransactionEditorProps) {
+function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     const defaultModel = {
         total: props.transaction.total,
         dateTime: props.transaction.dateTime,
@@ -160,21 +160,12 @@ function TransactionEditor (props: TransactionEditorProps) {
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     // If the current account is the source, all amounts should be negative
-    const amountMultiplier = props.accountId && props.accountId === props.transaction.source?.id ? new Decimal(-1) : new Decimal(1);
-
-    // When this component is present, don't allow the user to refresh to prevent them discarding their changes
-    React.useEffect(() => {
-        const onUnload = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            return false;
-        };
-        window.addEventListener("beforeunload", onUnload);
-        return () => window.removeEventListener("beforeunload", onUnload);
-    }, []);
+    const amountMultiplier = props.accountId !== undefined && props.accountId === props.transaction.source?.id ? new Decimal(-1) : new Decimal(1);
 
     return <div key={props.transaction.id} className="table-row editing">
         <div>
-            {props.selected !== undefined && props.allowSelection && <InputCheckbox onChange={() => (props.toggleSelected != null) && props.toggleSelected()} value={props.selected} />}
+            {props.selected !== undefined && props.allowSelection === true &&
+                <InputCheckbox onChange={() => props.toggleSelected?.()} value={props.selected} />}
             <TransactionLink transaction={props.transaction} />
         </div>
         <div>
@@ -228,8 +219,8 @@ function TransactionEditor (props: TransactionEditorProps) {
         </div>
         <div>
             {!props.disabled && api !== null && <>
-                <InputIconButton icon={solid.faSave} onClick={() => saveChanges()} />
-                <InputIconButton icon={solid.faXmark} onClick={() => props.stopEditing()} />
+                <InputIconButton icon={solid.faSave} onClick={forget(saveChanges)} />
+                <InputIconButton icon={solid.faXmark} onClick={props.stopEditing} />
             </>}
         </div>
         {model.lines !== null
@@ -239,7 +230,7 @@ function TransactionEditor (props: TransactionEditorProps) {
                     update={changes => updateLine(changes, i)}
                     delete={() => deleteLine(i)}
                     disabled={props.disabled}
-                    inverse={amountMultiplier.toNumber() == -1}
+                    inverse={amountMultiplier.toNumber() === -1}
                     last={i === model.lines!.length} />)}
                 <div style={{ gridColumn: "span 3" }}></div>
                 <div className="btn-add-line">
@@ -260,13 +251,13 @@ function TransactionEditor (props: TransactionEditorProps) {
             </div>}
     </div>;
 
-    function saveChanges (): void {
+    async function saveChanges (): Promise<void> {
         if (model === null || api === null) return;
 
         props.setDisabled(true);
         setErrors({});
 
-        api.Transaction.update(props.transaction.id, {
+        const result = await api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
             description: model.description,
             sourceId: model.source?.id ?? -1,
@@ -274,15 +265,15 @@ function TransactionEditor (props: TransactionEditorProps) {
             category: model.category,
             total: model.total,
             lines: model.lines ?? []
-        }).then(result => {
-            if (result.status === 200) {
-                props.updateItem(result.data);
-                props.stopEditing();
-            } else if (result.status === 400) {
-                setErrors(result.errors);
-            }
-            props.setDisabled(false);
         });
+
+        if (result.status === 200) {
+            props.updateItem(result.data);
+            props.stopEditing();
+        } else if (result.status === 400) {
+            setErrors(result.errors);
+        }
+        props.setDisabled(false);
     }
 
     function updateLine (newLine: Partial<TransactionLine>, index: number): void {

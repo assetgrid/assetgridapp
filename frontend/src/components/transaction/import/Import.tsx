@@ -1,7 +1,8 @@
+import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { Api, useApi } from "../../../lib/ApiClient";
-import { formatDateTimeWithUser } from "../../../lib/Utils";
+import { forget, formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
 import { CreateTransaction } from "../../../models/transaction";
@@ -41,7 +42,7 @@ export function Import (props: Props): React.ReactElement {
         case "waiting":
             return <Card isNarrow={true} title="Begin import">
                 <div className="buttons mt-3">
-                    <InputButton className="is-primary" disabled={api === null} onClick={async () => await importTransactions()}>Import Transactions</InputButton>
+                    <InputButton className="is-primary" disabled={api === null} onClick={forget(importTransactions)}>Import Transactions</InputButton>
                     <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
                     <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
                 </div>
@@ -76,14 +77,14 @@ export function Import (props: Props): React.ReactElement {
             </>;
     }
 
-    function transactionTable (transactions: CreateTransaction[]) {
+    function transactionTable (transactions: CreateTransaction[]): React.ReactElement {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifiers[0] ?? "None"}</td>
                 <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                 <td>{transaction.description}</td>
-                <td>{transaction.sourceId && <AccountLink account={props.accounts.find(account => account.id === transaction.sourceId)!} targetBlank={true} />}</td>
-                <td>{transaction.destinationId && <AccountLink account={props.accounts.find(account => account.id === transaction.destinationId)!} targetBlank={true} />}</td>
+                <td>{transaction.sourceId !== null && <AccountLink account={props.accounts.find(account => account.id === transaction.sourceId)!} targetBlank={true} />}</td>
+                <td>{transaction.destinationId !== null && <AccountLink account={props.accounts.find(account => account.id === transaction.destinationId)!} targetBlank={true} />}</td>
             </tr>}
             page={page}
             goToPage={setPage}
@@ -98,7 +99,7 @@ export function Import (props: Props): React.ReactElement {
             </tr>} items={transactions} />;
     }
 
-    async function importTransactions () {
+    async function importTransactions (): Promise<void> {
         if (api === null) return;
 
         setState("importing");
@@ -109,18 +110,16 @@ export function Import (props: Props): React.ReactElement {
             !t.dateTime.isValid ||
             (t.source?.id === t.destination?.id)
         );
-        const invalidTransactions = props.transactions.filter((_, i) => errors[i]).map(transaction => {
-            return {
-                dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
-                description: transaction.description,
-                sourceId: transaction.source?.id,
-                destinationId: transaction.destination?.id,
-                identifiers: [transaction.identifier],
-                category: transaction.category,
-                total: transaction.amount,
-                lines: []
-            } as CreateTransaction;
-        });
+        const invalidTransactions: CreateTransaction[] = props.transactions.filter((_, i) => errors[i]).map(transaction => ({
+            dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
+            description: transaction.description,
+            sourceId: transaction.source?.id ?? null,
+            destinationId: transaction.destination?.id ?? null,
+            identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
+            category: transaction.category,
+            total: transaction.amount === "invalid" ? new Decimal(0) : transaction.amount,
+            lines: []
+        }));
         let progress = invalidTransactions.length;
         let succeeded: CreateTransaction[] = [];
         let failed: CreateTransaction[] = invalidTransactions;
@@ -131,18 +130,16 @@ export function Import (props: Props): React.ReactElement {
         setFailed(failed);
         setDuplicate(duplicate);
 
-        const createModels = props.transactions.filter((_, i) => !errors[i]).map(transaction => {
-            return {
-                dateTime: transaction.dateTime,
-                description: transaction.description,
-                sourceId: transaction.source?.id,
-                destinationId: transaction.destination?.id,
-                identifiers: [transaction.identifier],
-                category: transaction.category,
-                total: transaction.amount,
-                lines: []
-            } as CreateTransaction;
-        });
+        const createModels: CreateTransaction[] = props.transactions.filter((_, i) => !errors[i]).map(transaction => ({
+            dateTime: transaction.dateTime,
+            description: transaction.description,
+            sourceId: transaction.source?.id ?? null,
+            destinationId: transaction.destination?.id ?? null,
+            identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
+            category: transaction.category,
+            total: transaction.amount as Decimal, // We know it's not invalid as we filter those out earlier
+            lines: []
+        }));
 
         while (progress - invalidTransactions.length < createModels.length - 1) {
             const result = await api.Transaction.createMany(
@@ -171,6 +168,7 @@ interface SaveProfileModalProps {
 }
 function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     const [name, setName] = React.useState("");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [nameError, setNameError] = React.useState<string | null>(null);
     const [isCreating, setIsSaving] = React.useState(false);
     const api = useApi();
@@ -180,7 +178,7 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
         title={"Merge transactions"}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={async () => await saveProfile()} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
+            {<InputButton onClick={forget(saveProfile)} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <div style={{ minHeight: "20rem" }}>
@@ -189,11 +187,11 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
                 value={name}
                 onChange={value => setName(value)}
                 disabled={isCreating}
-                errors={nameError ? [nameError] : undefined} />
+                errors={nameError !== null ? [nameError] : undefined} />
         </div>
     </Modal>;
 
-    async function saveProfile () {
+    async function saveProfile (): Promise<void> {
         if (api === null) return;
 
         setIsSaving(true);
@@ -209,7 +207,7 @@ interface InputImportProfileProps {
     disabled: boolean
     errors?: string[]
 }
-function InputImportProfile (props: InputImportProfileProps) {
+function InputImportProfile (props: InputImportProfileProps): React.ReactElement {
     const profilesRef = React.useRef<string[] | Promise<string[]> | null>(null);
 
     return <InputAutoComplete value={props.value}
@@ -221,12 +219,11 @@ function InputImportProfile (props: InputImportProfileProps) {
         refreshSuggestions={async (api: Api, prefix: string) => {
             if (profilesRef.current === null) {
                 // No profiles have been fetched. Start the fetch job
-                profilesRef.current = new Promise<string[]>(resolve => {
-                    api.User.getCsvImportProfiles().then(result => {
-                        profilesRef.current = result.data;
-                        resolve(result.data.filter(profile => profile.toLowerCase().includes(prefix.toLowerCase())));
-                    });
-                });
+                profilesRef.current = (async () => {
+                    const result = await api.User.getCsvImportProfiles();
+                    profilesRef.current = result.data;
+                    return result.data.filter(profile => profile.toLowerCase().includes(prefix.toLowerCase()));
+                })();
                 return await profilesRef.current;
             } else if (Array.isArray(profilesRef.current)) {
                 // Profiles have been fetched

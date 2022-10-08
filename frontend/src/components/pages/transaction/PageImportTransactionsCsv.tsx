@@ -22,7 +22,8 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
     const [data, setData] = React.useState<any[] | null>(null);
     const [accounts, setAccounts] = React.useState<Account[] | "fetching">("fetching");
     const [transactions, setTransactions] = React.useState<CsvCreateTransaction[] | null>(null);
-    const [_, setLines] = React.useState<string[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [lines, setLines] = React.useState<string[]>([]);
     const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
@@ -65,7 +66,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
                 if (result.status === 200) {
                     setAccounts(result.data.data);
                 }
-            });
+            }).catch(null);
         }
     }, [api]);
 
@@ -117,8 +118,6 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
                         profile={profile}
                         accounts={accounts === "fetching" ? [] : accounts} />
                 </>;
-            default:
-                throw "Unknown state";
         }
     }
 
@@ -138,7 +137,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
         setProfile(options);
     }
 
-    function accountsChanged (newAccounts: Account[]) {
+    function accountsChanged (newAccounts: Account[]): void {
         if (transactions !== null) {
             // Create object from identifiers to speed up lookups
             const identifierDictionary: { [identifier: string]: Account } = {};
@@ -159,7 +158,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
         setAccounts(newAccounts);
     }
 
-    function updateDuplicateAccounts (api: Api, newTransactions: CsvCreateTransaction[]) {
+    async function updateDuplicateAccounts (api: Api, newTransactions: CsvCreateTransaction[]): Promise<void> {
         const identifierCounts: { [identifier: string]: number } = {};
         for (let i = 0; i < newTransactions.length; i++) {
             const id = newTransactions[i].identifier;
@@ -167,10 +166,10 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
                 identifierCounts[id] = identifierCounts[id] === undefined ? 1 : identifierCounts[id] + 1;
             }
         }
-        api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1))
-            .then(result => setDuplicateIdentifiers(new Set([
-                ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
-                ...result
-            ])));
+        const result = await api.Transaction.findDuplicates(Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] === 1));
+        setDuplicateIdentifiers(new Set([
+            ...Object.keys(identifierCounts).filter(identifier => identifierCounts[identifier] > 1),
+            ...result
+        ]));
     }
 }

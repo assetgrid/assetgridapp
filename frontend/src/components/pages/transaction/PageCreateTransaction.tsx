@@ -5,6 +5,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
+import { forget } from "../../../lib/Utils";
 import { CreateTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
@@ -144,11 +145,11 @@ export default function PageCreateTransaction (): React.ReactElement {
             <Card title="Actions" isNarrow={true}>
                 <div className="buttons">
                     {actionOnComplete === "chose" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={async () => await create("stay")}>Create and stay</InputButton>
-                        <InputButton className="is-primary" disabled={api === null} onClick={async () => await create("view")}>Create and view transaction</InputButton>
+                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("stay"))}>Create and stay</InputButton>
+                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("view"))}>Create and view transaction</InputButton>
                     </>}
                     {actionOnComplete === "back" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={async () => await create("back")}>Create transaction</InputButton>
+                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("back"))}>Create transaction</InputButton>
                     </>}
                     {allowBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
                 </div>

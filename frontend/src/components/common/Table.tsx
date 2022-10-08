@@ -229,18 +229,18 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
         if (props.type === "sync") {
             setItems(props.items.slice(from, to));
             setTotalItems(props.items.length);
-            ;(props.afterDraw != null) && props.afterDraw(props.items.slice(from, to));
+            if (props.afterDraw != null) {
+                props.afterDraw(props.items.slice(from, to));
+            }
         } else {
-            props.fetchItems(api, from, to, draw ?? 0)
-                .then(result => {
-                    if (result.draw === (props.draw ?? 0)) {
-                        setItems(result.items);
-                        setTotalItems(result.totalItems);
-                        if (props.afterDraw !== undefined) {
-                            props.afterDraw(result.items);
-                        }
-                    }
-                });
+            const result = await props.fetchItems(api, from, to, draw ?? 0);
+            if (result.draw === (props.draw ?? 0)) {
+                setItems(result.items);
+                setTotalItems(result.totalItems);
+                if (props.afterDraw !== undefined) {
+                    props.afterDraw(result.items);
+                }
+            }
         }
     }
 }

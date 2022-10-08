@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useApi } from "../../../lib/ApiClient";
+import { forget } from "../../../lib/Utils";
 import { Transaction } from "../../../models/transaction";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
@@ -19,7 +20,7 @@ export default function DeleteTransactionModal (props: Props): React.ReactElemen
         title={"Delete transaction"}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={async () => await deleteTransaction()} disabled={isDeleting || api === null} className="is-danger">Delete transaction</InputButton>}
+            {<InputButton onClick={forget(deleteTransaction)} disabled={isDeleting || api === null} className="is-danger">Delete transaction</InputButton>}
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <p>Are you sure you want to delete transaction &ldquo;#{props.transaction.id} {props.transaction.description}&rdquo;? This action is irreversible!</p>

@@ -13,12 +13,12 @@ import { deserializeQueryForHistory, serializeQueryForHistory } from "../../tran
 export default function PageTransactions (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const history = window.history.state.usr;
-    const [query, setQuery] = React.useState<SearchGroup>(history?.query ? deserializeQueryForHistory(history.query) : emptyQuery);
+    const [query, setQuery] = React.useState<SearchGroup>(typeof history?.query === "object" ? deserializeQueryForHistory(history.query) : emptyQuery);
     const [searchString, setSearchString] = React.useState<string>(typeof (history?.searchString) === "string" ? history.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
-    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(history?.orderBy ? history.orderBy : { column: "DateTime", descending: true });
+    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof history?.orderBy === "object" ? history.orderBy : { column: "DateTime", descending: true });
     const [page, setPage] = React.useState(typeof (history?.page) === "number" ? history.page : 1);
-    const [selectedTransactions, setSelectedTransactions] = React.useState<{ [id: number]: boolean }>(history?.selectedTransactions ? history.selectedTransactions : {});
+    const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(typeof history?.selectedTransactions === "object" ? history.selectedTransactions : new Set());
 
     // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
     const isFirst = React.useRef(true);
