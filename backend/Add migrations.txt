@@ -1,0 +1,3 @@
+﻿Run this script at the root folder
+dotnet ef migrations add <Migration Name> --project ./backend.migrations/MySql
+dotnet ef migrations add <Migration Name> --project ./backend.migrations/Sqlite

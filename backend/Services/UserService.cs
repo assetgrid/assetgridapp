@@ -1,5 +1,5 @@
 ﻿using assetgrid_backend.Data;
-using assetgrid_backend.models;
+using assetgrid_backend.Models;
 using assetgrid_backend.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

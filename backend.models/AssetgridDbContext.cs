@@ -1,9 +1,9 @@
-﻿using assetgrid_backend.models;
+﻿using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
 
-namespace assetgrid_backend.Data
+namespace assetgrid_backend.Models
 {
     public class AssetgridDbContext : DbContext
     {

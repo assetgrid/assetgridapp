@@ -3,4 +3,3 @@ obj
 .vs
 appsettings.Development.json
 wwwroot
-assetgrid_database.*

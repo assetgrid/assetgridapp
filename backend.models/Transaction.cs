@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
-namespace assetgrid_backend.models
+namespace assetgrid_backend.Models
 {
     public class Transaction : IValidatableObject
     {

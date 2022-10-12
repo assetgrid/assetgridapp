@@ -1,5 +1,6 @@
 ﻿using assetgrid_backend.Data;
 using Microsoft.EntityFrameworkCore;
+using assetgrid_backend.Models;
 
 namespace assetgrid_backend.Services
 {

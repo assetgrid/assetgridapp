@@ -1,20 +1,16 @@
 using assetgrid_backend;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.models;
+using assetgrid_backend.Models;
 using assetgrid_backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using static assetgrid_backend.Helpers.DatabaseProvider;
+using System.Data.SqlTypes;
 using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-if (connectionString == null)
-{
-    connectionString = builder.Configuration.GetConnectionString("MySQL");
-}
 
 // Add services to the container.
 {
@@ -55,10 +51,27 @@ if (connectionString == null)
 #if DEBUG
 
     builder.Services.AddDbContext<AssetgridDbContext>(options =>
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-            .EnableSensitiveDataLogging()
-            .EnableDetailedErrors()
-        );
+    {
+        // Support legacy configuration from before multi DB support
+        var legacyConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+        var provider = legacyConnectionString == null ? builder.Configuration.GetValue("provider", Sqlite.Name) : Mysql.Name;
+        if (provider == Sqlite.Name)
+        {
+            options.UseSqlite(
+                builder.Configuration.GetConnectionString(Sqlite.Name)!,
+                x => x.MigrationsAssembly(Sqlite.Assembly)
+            );
+        }
+        if (provider == Mysql.Name)
+        {
+            var connectionString = legacyConnectionString ?? builder.Configuration.GetConnectionString(Mysql.Name);
+            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+                .EnableSensitiveDataLogging()
+                .EnableDetailedErrors();
+        }
+    });
+        
 
 #else
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace assetgrid_backend.models
+namespace assetgrid_backend.Models
 {
     public class User
     {

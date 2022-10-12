@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.models;
+﻿using assetgrid_backend.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;

@@ -1,4 +1,4 @@
-﻿namespace assetgrid_backend.models
+﻿namespace assetgrid_backend.Models
 {
     public class UserAccount
     {

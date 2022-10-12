@@ -3,12 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using assetgrid_backend.Data;
 using assetgrid_backend.Models;
 
 #nullable disable
 
-namespace assetgrid_backend.Migrations
+namespace assetgrid_backend.Migrations.MySql
 {
     [DbContext(typeof(AssetgridDbContext))]
     partial class AssetgridDbContextModelSnapshot : ModelSnapshot
@@ -38,7 +37,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.AccountUniqueIdentifier", b =>
@@ -59,7 +58,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("AccountUniqueIdentifiers");
+                    b.ToTable("AccountUniqueIdentifiers", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
@@ -101,7 +100,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("SourceAccountId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.TransactionLine", b =>
@@ -128,7 +127,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("TransactionLines");
+                    b.ToTable("TransactionLines", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.TransactionUniqueIdentifier", b =>
@@ -151,7 +150,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("TransactionUniqueIdentifiers");
+                    b.ToTable("TransactionUniqueIdentifiers", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.User", b =>
@@ -180,7 +179,7 @@ namespace assetgrid_backend.Migrations
                     b.HasIndex("NormalizedEmail")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.UserAccount", b =>
@@ -210,7 +209,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserAccounts");
+                    b.ToTable("UserAccounts", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.UserCsvImportProfile", b =>
@@ -238,7 +237,7 @@ namespace assetgrid_backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserCsvImportProfiles");
+                    b.ToTable("UserCsvImportProfiles", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.UserPreferences", b =>
@@ -276,7 +275,7 @@ namespace assetgrid_backend.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserPreferences");
+                    b.ToTable("UserPreferences", (string)null);
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.AccountUniqueIdentifier", b =>
