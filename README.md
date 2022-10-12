@@ -43,24 +43,24 @@ MySQL/MariaDB is also supported as a database if you prefer that. The following 
 ```yaml
 version: "3.1"
 services:
-    db:
-      image: mariadb:latest
-      container_name: mariadb
-      volumes:
-        -  ./mariadb:/var/lib/mysql
-      environment:
-        MYSQL_ROOT_PASSWORD: secret
+  db:
+    image: mariadb:latest
+    container_name: mariadb
+    volumes:
+      -  ./mariadb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
 
-    assetgrid:
-      image: assetgrid/assetgrid
-      container_name: assetgrid
-      links:
-        - db:db
-      environment:
-        Provider: "MySQL"
-        "ConnectionStrings:MySQL": "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
-      ports:
-        - 80:8080
+  assetgrid:
+    image: assetgrid/assetgrid
+    container_name: assetgrid
+    links:
+      - db:db
+    environment:
+      Provider: "MySQL"
+      "ConnectionStrings:MySQL": "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
+    ports:
+      - 80:8080
 ```
 
 Example docker run command:
