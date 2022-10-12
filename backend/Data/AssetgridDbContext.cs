@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;

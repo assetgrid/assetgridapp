@@ -1,6 +1,6 @@
 ﻿using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.Models;
+using assetgrid_backend.models;
 using assetgrid_backend.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Cors;

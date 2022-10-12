@@ -1,0 +1,5 @@
+bin
+obj
+.vs
+appsettings.Development.json
+wwwroot

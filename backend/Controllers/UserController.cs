@@ -1,5 +1,4 @@
 ﻿using assetgrid_backend.Data;
-using assetgrid_backend.Models;
 using assetgrid_backend.ViewModels;
 using assetgrid_backend.Services;
 using assetgrid_backend.Helpers;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using assetgrid_backend.models;
 
 namespace assetgrid_backend.Controllers
 {

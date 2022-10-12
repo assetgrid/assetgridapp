@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models;
 using assetgrid_backend.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

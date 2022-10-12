@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 using System;
 using System.Web;
 using Xunit;
-using assetgrid_backend.Models;
+using assetgrid_backend.models;
 using System.Collections.Generic;
 using System.Linq;
 

@@ -1,7 +1,7 @@
 using assetgrid_backend;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.Models;
+using assetgrid_backend.models;
 using assetgrid_backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 if (connectionString == null)
 {
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    connectionString = builder.Configuration.GetConnectionString("MySQL");
 }
 
 // Add services to the container.

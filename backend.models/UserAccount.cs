@@ -1,6 +1,4 @@
-﻿using assetgrid_backend.ViewModels;
-
-namespace assetgrid_backend.Models
+﻿namespace assetgrid_backend.models
 {
     public class UserAccount
     {
@@ -12,23 +10,6 @@ namespace assetgrid_backend.Models
         public UserAccountPermissions Permissions { get; set; }
         public bool Favorite { get; set; }
         public bool IncludeInNetWorth { get; set; }
-    }
-
-    public static class AccountQueryableExtensions
-    {
-        public static IQueryable<ViewAccount> SelectView(this IQueryable<UserAccount> query)
-        {
-            return query.Select(account => new ViewAccount(
-                account.AccountId,
-                account.Account.Name,
-                account.Account.Description,
-                account.Account.Identifiers!.Select(x => x.Identifier).ToList(),
-                account.Favorite,
-                account.IncludeInNetWorth,
-                (ViewAccount.AccountPermissions)(account.Permissions + 1),
-                0
-            ));
-        }
     }
 
     public enum UserAccountPermissions

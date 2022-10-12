@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

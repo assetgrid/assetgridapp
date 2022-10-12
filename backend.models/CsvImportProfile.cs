@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace assetgrid_backend.Models
+namespace assetgrid_backend.models
 {
     /*
      * If multiple versions are added, create classes for each version.

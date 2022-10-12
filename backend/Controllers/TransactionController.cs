@@ -1,6 +1,6 @@
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.Models;
+using assetgrid_backend.models;
 using assetgrid_backend.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -609,7 +609,7 @@ namespace assetgrid_backend.Controllers
                                 }).ToList(),
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
                                 Category = transaction.Category,
-                                TransactionLines = transaction.Lines.Select((line, i) => new Models.TransactionLine
+                                TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
                                 {
                                     Amount = line.Amount,
                                     Description = line.Description,

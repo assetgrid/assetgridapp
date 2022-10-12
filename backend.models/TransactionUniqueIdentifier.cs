@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace assetgrid_backend.Models
+namespace assetgrid_backend.models
 {
     public class TransactionUniqueIdentifier
     {
