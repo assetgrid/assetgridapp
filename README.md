@@ -25,6 +25,7 @@ We recommend that you use our docker image which is preconfigured. Assetgrid use
 
 Example docker-compose.yml file:
 
+```yaml
 version: "3.1"
   services:
     db:
@@ -44,6 +45,7 @@ version: "3.1"
         CONNECTION_STRING: "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
       ports:
         - 80:8080
+```
 
 Example docker run commands:
 
