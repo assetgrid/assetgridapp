@@ -27,7 +27,7 @@ Example docker-compose.yml file:
 
 ```yaml
 version: "3.1"
-  services:
+services:
     db:
       image: mariadb:latest
       container_name: mariadb
