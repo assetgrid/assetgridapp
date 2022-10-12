@@ -25,8 +25,9 @@ We recommend that you use our docker image which is preconfigured. Assetgrid use
 
 Example docker-compose.yml file:
 
+```yaml
 version: "3.1"
-  services:
+services:
     db:
       image: mariadb:latest
       container_name: mariadb
@@ -44,11 +45,12 @@ version: "3.1"
         CONNECTION_STRING: "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
       ports:
         - 80:8080
+```
 
 Example docker run commands:
 
-docker run -v ./mariadb:/var/lib/mysql --env "MYSQL_ROOT_PASSWORD=secret" --name db mariadb:latest
-docker run --link db --env "CONNECTION_STRING='Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret'" -p 80:8080 --name assetgrid assetgrid/assetgrid
+    docker run -v ./mariadb:/var/lib/mysql --env "MYSQL_ROOT_PASSWORD=secret" --name db mariadb:latest
+    docker run --link db --env "CONNECTION_STRING='Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret'" -p 80:8080 --name assetgrid assetgrid/assetgrid
 
 ## Custom installation
 
