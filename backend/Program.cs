@@ -11,6 +11,7 @@ using System.Data.SqlTypes;
 using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables("");
 
 // Create data directory
 var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, "./assetgrid_data");
@@ -59,8 +60,8 @@ if (!Directory.Exists(dataDirectory)) {
         // Support legacy configuration from before multi DB support
         var legacyConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-        var provider = string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("provider", Sqlite.Name) : Mysql.Name;
-        if (provider == Sqlite.Name)
+        var provider = string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("Provider", Sqlite.Name) : Mysql.Name;
+        if (provider.ToLower() == Sqlite.Name.ToLower())
         {
             options.UseSqlite(
                 builder.Configuration.GetConnectionString(Sqlite.Name)!,
@@ -73,7 +74,7 @@ if (!Directory.Exists(dataDirectory)) {
                 options.EnableDetailedErrors();
             }
         }
-        if (provider == Mysql.Name)
+        if (provider.ToLower() == Mysql.Name.ToLower())
         {
             var connectionString = legacyConnectionString ?? builder.Configuration.GetConnectionString(Mysql.Name);
             options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
