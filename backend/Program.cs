@@ -12,6 +12,12 @@ using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Create data directory
+var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, "./assetgrid_data");
+if (!Directory.Exists(dataDirectory)) {
+    Directory.CreateDirectory(dataDirectory);
+}
+
 // Add services to the container.
 {
     builder.Services.AddControllers();
@@ -46,50 +52,47 @@ var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
-    builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(Environment.CurrentDirectory, "./jwt_secret.txt")));
-
-#if DEBUG
+    builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(dataDirectory, "./jwt_secret.txt")));
 
     builder.Services.AddDbContext<AssetgridDbContext>(options =>
     {
         // Support legacy configuration from before multi DB support
         var legacyConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-        var provider = legacyConnectionString == null ? builder.Configuration.GetValue("provider", Sqlite.Name) : Mysql.Name;
+        var provider = string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("provider", Sqlite.Name) : Mysql.Name;
         if (provider == Sqlite.Name)
         {
             options.UseSqlite(
                 builder.Configuration.GetConnectionString(Sqlite.Name)!,
                 x => x.MigrationsAssembly(Sqlite.Assembly)
             );
+
+            if (builder.Environment.IsDevelopment())
+            {
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
+            }
         }
         if (provider == Mysql.Name)
         {
             var connectionString = legacyConnectionString ?? builder.Configuration.GetConnectionString(Mysql.Name);
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-                .EnableSensitiveDataLogging()
-                .EnableDetailedErrors();
+            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+
+            if (builder.Environment.IsDevelopment())
+            {
+                options.EnableSensitiveDataLogging();
+                options.EnableDetailedErrors();
+            }
         }
     });
-        
-
-#else
-
-    builder.Services.AddDbContext<AssetgridDbContext>(options =>
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-#endif
 }
 
 var app = builder.Build();
 
 // configure HTTP request pipeline
 {
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     app.UseStaticFiles();
     app.UseHttpsRedirection();
