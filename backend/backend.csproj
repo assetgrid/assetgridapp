@@ -37,7 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\backend.migrations\MySql\MySql.csproj" />
     <ProjectReference Include="..\backend.migrations\Sqlite\Sqlite.csproj" />
-    <ProjectReference Include="..\backend.models\backend.Models.csproj" />
+    <ProjectReference Include="..\backend.models\backend.models.csproj" />
   </ItemGroup>
 
 </Project>
