@@ -21,9 +21,24 @@ For information on how to get started using Assetgrid, check our website https:/
 
 ## Docker
 
-We recommend that you use our docker image which is preconfigured. Assetgrid uses a MySQL/MariaDB database, which you will need to run and configure. The following examples assumes that a database exist with the name “assetgrid” and a user with the name “assetgrid” and the password “secret”.
+We recommend that you use our docker image which is preconfigured. Example docker-compose.yml file using SQLite as the database:
 
-Example docker-compose.yml file:
+```yaml
+version: "3.1"
+services:
+  assetgrid:
+    image: assetgrid/assetgrid
+    container_name: assetgrid
+    volumes:
+      - assetgrid-data:/usr/share/assetgrid/assetgrid_data
+    ports:
+      - 80:8080
+
+volumes:
+  assetgrid-data:
+```
+
+MySQL/MariaDB is also supported as a database if you prefer that. The following example assumes that a database exist with the name “assetgrid” and a user with the name “assetgrid” and the password “secret”. You will need to create this database and user manually.
 
 ```yaml
 version: "3.1"
@@ -42,15 +57,15 @@ services:
       links:
         - db:db
       environment:
-        CONNECTION_STRING: "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
+        Provider: "MySQL"
+        "ConnectionStrings:MySQL": "Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret"
       ports:
         - 80:8080
 ```
 
-Example docker run commands:
+Example docker run command:
 
-    docker run -v ./mariadb:/var/lib/mysql --env "MYSQL_ROOT_PASSWORD=secret" --name db mariadb:latest
-    docker run --link db --env "CONNECTION_STRING='Server=db;Database=assetgrid;Uid=assetgrid;Pwd=secret'" -p 80:8080 --name assetgrid assetgrid/assetgrid
+    docker run -p 80:8080 --name assetgrid assetgrid/assetgrid --volume assetgrid-data:/usr/share/assetgrid/assetgrid_data
 
 ## Custom installation
 
