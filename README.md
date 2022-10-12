@@ -87,7 +87,7 @@ We have included a Visual Studio Code launch config and some tasks to ease build
 
 ### Backend
 
-To run the backend you must first copy /backend/appsettings.json to /backend/appsettings.development.json and update this with database information. You must run a mysql/mariadb server separately. After doing this, you can just use the Visual Studio code launch config to run the project. Alternatively you can build it and run it with the dotnet command from the dotnet SDK.
+To run the backend you must first copy /backend/appsettings.json to /backend/appsettings.development.json and update this with database information. The default appsettings will run an Sqlite database which is fine for development. After doing this, you can just use the Visual Studio code launch config to run the project. Alternatively you can build it and run it with the dotnet command from the dotnet SDK.
 
 ### Frontend
 
