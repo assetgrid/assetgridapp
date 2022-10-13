@@ -89,9 +89,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "Account A category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "Account A category") }
             };
 
             // Create account and transaction with User A

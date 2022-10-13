@@ -116,9 +116,9 @@ export function Import (props: Props): React.ReactElement {
             sourceId: transaction.source?.id ?? null,
             destinationId: transaction.destination?.id ?? null,
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
-            category: transaction.category,
             total: transaction.amount === "invalid" ? new Decimal(0) : transaction.amount,
-            lines: []
+            isSplit: false,
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
         let progress = invalidTransactions.length;
         let succeeded: CreateTransaction[] = [];
@@ -136,9 +136,9 @@ export function Import (props: Props): React.ReactElement {
             sourceId: transaction.source?.id ?? null,
             destinationId: transaction.destination?.id ?? null,
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
-            category: transaction.category,
             total: transaction.amount as Decimal, // We know it's not invalid as we filter those out earlier
-            lines: []
+            isSplit: false,
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
 
         while (progress - invalidTransactions.length < createModels.length - 1) {

@@ -11,7 +11,7 @@ import { userContext } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
-import TransactionList from "../../transaction/TransactionList";
+import TransactionList from "../../transaction/table/TransactionList";
 import Page404 from "../Page404";
 import PageError from "../PageError";
 

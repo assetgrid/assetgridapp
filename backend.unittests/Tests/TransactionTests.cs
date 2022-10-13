@@ -87,9 +87,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
             var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
@@ -98,7 +97,7 @@ namespace backend.unittests.Tests
             Assert.Equal(transaction.Description, model.Description);
             Assert.Equal(transaction.Source!.Id, model.SourceId);
             Assert.Equal(transaction.Destination!.Id, model.DestinationId);
-            Assert.Equal(transaction.Category, model.Category);
+            Assert.Equal(transaction.Lines.First().Category, model.Lines.First().Category);
 
             transaction.DateTime = DateTime.Now.AddDays(-100);
             var updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
@@ -123,10 +122,10 @@ namespace backend.unittests.Tests
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
-            transaction.Category = "";
+            transaction.Lines.First().Category = "";
             updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
             {
-                Category = "",
+                Lines = transaction.Lines,
             })).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
@@ -180,9 +179,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category" )}
             };
 
             model.SourceId = AccountA.Id;
@@ -220,9 +218,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             model.SourceId = AccountA.Id;
@@ -243,9 +240,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountA.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             var validationResultList = new List<ValidationResult>();
@@ -263,9 +259,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -282,9 +277,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -309,9 +303,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
             };
 
             var accountA = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
@@ -391,9 +384,8 @@ namespace backend.unittests.Tests
                 Description = "Test description",
                 SourceId = unknownAccountType == "source" ? unknownAccount.Id : AccountA.Id,
                 DestinationId = unknownAccountType == "destination" ? unknownAccount.Id : AccountA.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             // Cannot create transaction yet as no write permission to the unknown account
@@ -442,30 +434,30 @@ namespace backend.unittests.Tests
         {
             var transaction = (await TransactionController.Create(new ViewCreateTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
             var oppositeTransaction = (await TransactionController.Create(new ViewCreateTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountB.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
 
@@ -475,16 +467,16 @@ namespace backend.unittests.Tests
             // Create transaction with negative total
             var negativeTransaction = (await TransactionController.Create(new ViewCreateTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = -100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: -120, description: "Line 1"),
-                    new ViewTransactionLine(amount: 20, description: "Line 2"),
+                    new ViewTransactionLine(amount: -120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: 20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
             // Update id so the equivalence check passes
@@ -496,15 +488,16 @@ namespace backend.unittests.Tests
             {
                 Total = -100,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: -120, description: "Line 1"),
-                    new ViewTransactionLine(amount: 20, description: "Line 2"),
+                    new ViewTransactionLine(amount: -120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: 20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
             negativeTransaction.Id = oppositeTransaction.Id;
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
 
             // Remove transaction lines and make total negative again
-            var updatedTransaction = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Lines = new List<ViewTransactionLine>(), Total = -100 })).OkValue<ViewTransaction>();
+            var updatedTransaction = (await TransactionController.Update(transaction.Id,
+                new ViewUpdateTransaction { Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-100, "", "") }, Total = -100 })).OkValue<ViewTransaction>();
             transaction.Lines = new List<ViewTransactionLine>();
             Assert.Equivalent(transaction, updatedTransaction);
         }
@@ -529,7 +522,6 @@ namespace backend.unittests.Tests
         public async void DeleteTransaction(ViewAccount.AccountPermissions accountAPermissions, ViewAccount.AccountPermissions accountBPermissions)
         {
             var model = new ViewCreateTransaction {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
@@ -537,8 +529,8 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             };
 
@@ -601,14 +593,13 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             var model = new ViewCreateTransaction {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = accountC.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")}
             };
             var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
@@ -692,13 +683,12 @@ namespace backend.unittests.Tests
             var otherUser = await UserService.CreateUser("other", "test");
             var model = new ViewCreateTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 Identifiers = new List<string> { "Identifier" }
             };
 
@@ -765,14 +755,13 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             var model = new ViewCreateTransaction {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = accountC.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
             };
             var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
@@ -902,42 +891,38 @@ namespace backend.unittests.Tests
                 new ViewCreateTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
                 new ViewCreateTransaction {
                     Identifiers = new List<string>(),
                     Total = 200,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "inverse",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
                 },
                 new ViewCreateTransaction {
                     Identifiers = new List<string>(),
                     Total = 300,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = accountC.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(300, "", "")},
                 },
                 new ViewCreateTransaction {
                     Identifiers = new List<string>(),
                     Total = 400,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = accountC.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(400, "", "")},
                 }
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -979,22 +964,20 @@ namespace backend.unittests.Tests
                 new ViewCreateTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
                 new ViewCreateTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 200,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -1020,12 +1003,11 @@ namespace backend.unittests.Tests
                 new ViewCreateTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = accountC.Id,
                     DestinationId = null,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -1054,12 +1036,11 @@ namespace backend.unittests.Tests
                 new ViewCreateTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Failed);
@@ -1072,22 +1053,22 @@ namespace backend.unittests.Tests
         {
             var lines = new List<ViewTransactionLine>
             {
-                new ViewTransactionLine(amount: 100, description: "Line"),
-                new ViewTransactionLine(amount: 150, description: "Line"),
-                new ViewTransactionLine(amount: -350, description:  "Line"),
-                new ViewTransactionLine(amount: -100, description:  "Line")
+                new ViewTransactionLine(amount: 100, description: "Line", ""),
+                new ViewTransactionLine(amount: 150, description: "Line", ""),
+                new ViewTransactionLine(amount: -350, description:  "Line", ""),
+                new ViewTransactionLine(amount: -100, description:  "Line", "")
             };
             var result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
             {
                 new ViewCreateTransaction {
                     Identifiers = new List<string>(),
                     Total = -100,
-                    Lines = new List<ViewTransactionLine>(),
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-100, "", "") },
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "A",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    IsSplit = true
                 },
                 new ViewCreateTransaction {
                     Identifiers = new List<string>(),
@@ -1097,7 +1078,7 @@ namespace backend.unittests.Tests
                     Description = "B",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = "",
+                    IsSplit = true
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -1118,13 +1099,13 @@ namespace backend.unittests.Tests
             Assert.Equal(100, transactionA.Total);
             Assert.Equal(AccountB.Id, transactionA.Source!.Id);
             Assert.Equal(AccountA.Id, transactionA.Destination!.Id);
-            Assert.Empty(transactionA.Lines);
+            Assert.Single(transactionA.Lines);
 
             var transactionB = transactions.Single(t => t.Description == "B");
             Assert.Equal(200, transactionB.Total);
             Assert.Equal(AccountB.Id, transactionB.Source!.Id);
             Assert.Equal(AccountA.Id, transactionB.Destination!.Id);
-            Assert.Equivalent(lines.Select(item => new ViewTransactionLine(-item.Amount, item.Description)), transactionB.Lines);
+            Assert.Equivalent(lines.Select(item => new ViewTransactionLine(-item.Amount, item.Description, "")), transactionB.Lines);
         }
 
         [Theory]
@@ -1136,12 +1117,11 @@ namespace backend.unittests.Tests
             {
                 Identifiers = new List<string>(),
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "test",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = ""
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
             })).OkValue<ViewTransaction>();
 
             // Remove access to an account
@@ -1160,12 +1140,11 @@ namespace backend.unittests.Tests
             {
                 Identifiers = new List<string>(),
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "test",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = ""
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
             }));
 
             // Can update transaction
@@ -1175,13 +1154,13 @@ namespace backend.unittests.Tests
                 Total = 200,
                 Lines = new List<ViewTransactionLine>
                 {
-                    new ViewTransactionLine(100, "Line A"),
-                    new ViewTransactionLine(100, "Line B"),
+                    new ViewTransactionLine(100, "Line A", "test category"),
+                    new ViewTransactionLine(100, "Line B", "test category"),
                 },
                 Description = "New description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "test category",
+                IsSplit = true
             });
             Assert.IsType<OkObjectResult>(await result);
 
@@ -1190,12 +1169,12 @@ namespace backend.unittests.Tests
             Assert.Equal(new DateTime(2021, 01, 02), updatedTransaction.DateTime);
             Assert.Equivalent(new List<ViewTransactionLine>
                 {
-                    new ViewTransactionLine(100, "Line A"),
-                    new ViewTransactionLine(100, "Line B"),
+                    new ViewTransactionLine(100, "Line A", "test category"),
+                    new ViewTransactionLine(100, "Line B", "test category"),
                 },
                 updatedTransaction.Lines);
             Assert.Equal("New description", updatedTransaction.Description);
-            Assert.Equal("test category", updatedTransaction.Category);
+            Assert.Equal("test category", updatedTransaction.Lines.First().Category);
         }
     }
 

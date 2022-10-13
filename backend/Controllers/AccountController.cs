@@ -549,15 +549,21 @@ namespace assetgrid_backend.Controllers
                 return NotFound();
             }
 
-            return Ok(await _context.Transactions
-                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+            return Ok(await _context.TransactionLines
+                .Where(line => line.Transaction.SourceAccountId == id || line.Transaction.DestinationAccountId == id)
                 .ApplySearch(query)
-                .GroupBy(transaction => transaction.Category)
+                .GroupBy(line => line.Category)
                 .Select(group => new ViewCategorySummary
                 {
                     Category = group.Key,
-                    Revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
-                    Expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
+                    Revenue = group
+                        .Where(line => (line.Transaction.DestinationAccountId == id && line.Amount > 0) || (line.Transaction.SourceAccountId == id && line.Amount < 0))
+                        .Select(line => line.Amount)
+                        .Sum(),
+                    Expenses = group
+                        .Where(line => (line.Transaction.DestinationAccountId == id && line.Amount < 0) || (line.Transaction.SourceAccountId == id && line.Amount > 0))
+                        .Select(line => line.Amount)
+                        .Sum()
                 })
                 .ToListAsync());
         }

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Principal;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.Controllers
 {
@@ -91,16 +92,17 @@ namespace assetgrid_backend.Controllers
                         SourceAccountId = model.SourceId,
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
+                        IsSplit = model.IsSplit,
                         Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
                         {
                             Identifier = x
                         }).ToList(),
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
-                        Category = string.IsNullOrWhiteSpace(model.Category) ? "" : model.Category,
                         TransactionLines = model.Lines.Select((line, i) => new TransactionLine
                         {
                             Amount = line.Amount,
                             Description = line.Description,
+                            Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
                             Order = i + 1,
                         }).ToList(),
                     };
@@ -131,8 +133,8 @@ namespace assetgrid_backend.Controllers
                         Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
                         DateTime = result.DateTime,
                         Description = result.Description,
-                        Category = result.Category,
                         Total = result.Total,
+                        IsSplit = result.IsSplit,
                         Source = result.SourceAccount != null
                             ? userAccountSource == null ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
                                 id: result.SourceAccount.Id,
@@ -157,7 +159,7 @@ namespace assetgrid_backend.Controllers
                             ) : null,
                         Lines = result.TransactionLines
                             .OrderBy(line => line.Order)
-                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
                     });
                 }
@@ -333,11 +335,6 @@ namespace assetgrid_backend.Controllers
                 }).ToList();
                 _context.Entry(dbObject).Collection(nameof(dbObject.Identifiers)).IsModified = true;
             }
-            if (model.Category != null)
-            {
-                dbObject.Category = model.Category;
-                _context.Entry(dbObject).Property(nameof(dbObject.Category)).IsModified = true;
-            }
             if (model.Total != null && dbObject.TransactionLines.Count == 0)
             {
                 dbObject.Total = model.Total.Value;
@@ -353,6 +350,10 @@ namespace assetgrid_backend.Controllers
                 }
                 _context.Entry(dbObject).Property(nameof(dbObject.Total)).IsModified = true;
             }
+            if (model.IsSplit != null)
+            {
+                dbObject.IsSplit = model.IsSplit.Value;
+            }
             if (model.Lines != null)
             {
                 if (model.Total != null)
@@ -366,6 +367,7 @@ namespace assetgrid_backend.Controllers
                     {
                         Amount = line.Amount,
                         Description = line.Description,
+                        Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
                         Order = index,
                         Transaction = dbObject,
                         TransactionId = dbObject.Id,
@@ -398,6 +400,17 @@ namespace assetgrid_backend.Controllers
                 ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Source and destination must be different.");
                 return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
             }
+            if (dbObject.TransactionLines.Count == 0)
+            {
+                ModelState.AddModelError(nameof(dbObject.TransactionLines), $"A transaction must have at least one line");
+                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
+            }
+
+            if (! dbObject.IsSplit && dbObject.TransactionLines.Count > 1)
+            {
+                ModelState.AddModelError(nameof(dbObject.TransactionLines), $"Only split transactions can have more than one line");
+                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
+            }
 
             var sourceUserAccount = dbObject.SourceAccount?.Users?
                 .SingleOrDefault(x => x.UserId == user.Id);
@@ -410,8 +423,8 @@ namespace assetgrid_backend.Controllers
                 Identifiers = dbObject.Identifiers.Select(x => x.Identifier).ToList(),
                 DateTime = dbObject.DateTime,
                 Description = dbObject.Description,
-                Category = dbObject.Category,
                 Total = dbObject.Total,
+                IsSplit = dbObject.IsSplit,
                 Source = dbObject.SourceAccount != null
                     ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
                         id: dbObject.SourceAccount.Id,
@@ -436,7 +449,7 @@ namespace assetgrid_backend.Controllers
                     ) : null,
                 Lines = dbObject.TransactionLines
                     .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                    .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                     .ToList(),
             });
         }
@@ -603,16 +616,17 @@ namespace assetgrid_backend.Controllers
                                 SourceAccountId = transaction.SourceId,
                                 Description = transaction.Description,
                                 DestinationAccountId = transaction.DestinationId,
+                                IsSplit = transaction.IsSplit,
                                 Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier
                                 {
                                     Identifier = x.Trim()
                                 }).ToList(),
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                                Category = transaction.Category,
                                 TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
                                 {
                                     Amount = line.Amount,
                                     Description = line.Description,
+                                    Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
                                     Order = i + 1,
                                 }).ToList(),
                             };

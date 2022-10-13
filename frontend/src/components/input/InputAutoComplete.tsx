@@ -2,7 +2,7 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
-import { debounce } from "../../lib/Utils";
+import { classList, debounce } from "../../lib/Utils";
 import DropdownContent from "../common/DropdownContent";
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
     maxItems?: number
     fullwidth?: boolean
     helpText?: string
+    isSmall?: boolean
 } & ({
     allowNull: true
     nullText: string
@@ -47,9 +48,9 @@ export default function InputAutoComplete (props: Props): React.ReactElement {
         return <div className="field">
             {props.label !== undefined && <label className="label">{props.label}</label>}
             <div className="field has-addons">
-                <div className={"control" + (fullwidth ? " is-expanded" : "")}>
+                <div className={"control " + classList({ "is-enabled": !props.disabled })}>
                     <span style={props.disabled ? { color: "#999" } : { cursor: "pointer" }}
-                        className="input"
+                        className={"input " + classList({ "is-small": props.isSmall })}
                         onClick={() => !props.disabled && props.onChange("")}>
                         {props.allowNull ? props.nullText : ""}
                     </span>
@@ -63,14 +64,16 @@ export default function InputAutoComplete (props: Props): React.ReactElement {
 
     return <div className="field" onBlur={onBlur}>
         {props.label !== undefined && <label className="label">{props.label}</label>}
-        <div className={"dropdown" + (fullwidth ? " is-n" : "") + (open && !props.disabled ? " is-active" : "") + (isError ? " is-danger" : "")}>
+        <div className={"dropdown " + classList({ "is-danger": isError, "is-fullwidth": fullwidth, "is-active": open && !props.disabled })}>
             <div className="dropdown-trigger">
-                <input className="input"
+                <input className={"input " + classList({ "is-small": props.isSmall })}
                     placeholder={props.label}
                     value={props.value}
                     disabled={props.disabled}
                     onChange={prefixChanged} />
-                {!props.disabled && (props.value !== "" || props.allowNull) && <button className="button"
+
+                {!props.disabled && (props.value !== "" || props.allowNull) && <button
+                    className={"button  " + classList({ "is-small": props.isSmall })}
                     onClick={() => { setOpen(false); props.onChange(props.allowNull ? null! : ""); }}
                     disabled={props.disabled}>
                     <span className="icon is-small">

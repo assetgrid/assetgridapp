@@ -4,7 +4,7 @@ import { forget } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Modal from "../../common/Modal";
 import InputButton from "../../input/InputButton";
-import TransactionList from "../TransactionList";
+import TransactionList from "../table/TransactionList";
 
 interface Props {
     close: () => void

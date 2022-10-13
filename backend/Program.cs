@@ -77,7 +77,9 @@ if (!Directory.Exists(dataDirectory)) {
         if (provider.ToLower() == Mysql.Name.ToLower())
         {
             var connectionString = legacyConnectionString ?? builder.Configuration.GetConnectionString(Mysql.Name);
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            options.UseMySql(connectionString,
+                ServerVersion.AutoDetect(connectionString),
+                x => x.MigrationsAssembly(Mysql.Assembly));
 
             if (builder.Environment.IsDevelopment())
             {
@@ -117,7 +119,11 @@ var app = builder.Build();
     using (var scope = app.Services.CreateScope())
     {
         var dataContext = scope.ServiceProvider.GetRequiredService<AssetgridDbContext>();
-        dataContext.Database.Migrate();
+        using (var transaction = dataContext.Database.BeginTransaction())
+        {
+            dataContext.Database.Migrate();
+            transaction.Commit();
+        }
     }
 }
 

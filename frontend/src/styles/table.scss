@@ -86,12 +86,12 @@ div.table {
 }
 
 div.table.transaction-table {
-    grid-template-columns: [colstart] auto [innerstart] auto auto [innerend] auto auto auto auto [colend];
+    grid-template-columns: [colstart] auto [innerstart] auto auto auto auto auto [innerend] auto [colend];
     &.no-actions {
-        grid-template-columns: [colstart] max-content auto [innerstart] auto auto [innerend] auto auto auto [colend];
+        grid-template-columns: [colstart] max-content auto [innerstart] auto auto auto auto [innerend] auto [colend];
     }
     &.multi-select {
-        grid-template-columns: [colstart] max-content max-content [innerstart] auto max-content [innerend] auto auto auto max-content [colend];
+        grid-template-columns: [colstart] max-content max-content [innerstart] auto max-content auto auto auto [innerend] max-content [colend];
     }
     &.is-small {
         font-size: $size-7;
@@ -112,12 +112,11 @@ div.table.transaction-table {
                     display: contents;
                     font-size: $size-7;
 
-                    & > .description {
-                        grid-column: innerstart;
-                    }
                     & > .total {
-                        grid-column-end: innerend;
                         text-align: right;
+                    }
+                    & > .category {
+                        grid-column-end: innerend;
                     }
                     & > :first-child, & > :last-child {
                         position: relative;
@@ -171,7 +170,7 @@ div.table.transaction-table {
             }
             &.split {
                 & > .btn-add-line {
-                    grid-column: 4 / 6;
+                    grid-column: innerstart / innerend;
                     display: flex;
                     justify-content: center;
                     background-color: transparent;

@@ -28,10 +28,10 @@ namespace assetgrid_backend.Controllers
         {
             var user = _user.GetCurrent(HttpContext)!;
             var normalizedPrefix = prefix.ToLower();
-            return Ok(await _context.Transactions
-                .Where(t => t.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || t.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
-                .Where(transaction => transaction.Category.ToLower().Contains(normalizedPrefix))
-                .Select(transaction => transaction.Category)
+            return Ok(await _context.TransactionLines
+                .Where(line => line.Transaction.SourceAccount!.Users!.Any(u => u.UserId == user.Id) || line.Transaction.DestinationAccount!.Users!.Any(u => u.UserId == user.Id))
+                .Where(line => line.Category.ToLower().Contains(normalizedPrefix))
+                .Select(line => line.Category)
                 .Distinct()
                 .ToListAsync());
         }

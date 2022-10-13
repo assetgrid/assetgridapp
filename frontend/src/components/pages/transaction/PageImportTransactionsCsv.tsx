@@ -105,6 +105,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
                     transactions={transactions}
                     duplicateIdentifiers={duplicateIdentifiers}
                     data={data}
+                    addAccount={account => accounts !== "fetching" && setAccounts([...accounts, account])}
                     onChange={(transactions, options) => mappingsChanged(transactions, options)}
                     goToPrevious={() => setCurrentTab("parse-csv")}
                     goToNext={() => setCurrentTab("process")}

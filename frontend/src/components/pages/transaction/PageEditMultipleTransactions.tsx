@@ -19,7 +19,7 @@ import InputSelect from "../../input/InputSelect";
 import InputText from "../../input/InputText";
 import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
-import TransactionList from "../../transaction/TransactionList";
+import TransactionList from "../../transaction/table/TransactionList";
 
 const actions = [
     { key: "set-datetime", value: "Set timestamp" },
@@ -67,8 +67,9 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
                 setModel({ total: new Decimal(0) });
                 break;
             case "set-category":
-                setModel({ category: "" });
-                break;
+                throw new Error("ERROR CATEGORY");
+                // setModel({ category: "" });
+                // break;
             case "set-datetime":
                 setModel({ dateTime: DateTime.now() });
                 break;
@@ -217,13 +218,14 @@ function renderActionValue (action: Action, model: UpdateTransaction, setModel: 
                 value={model.description}
                 onChange={e => setModel({ ...model, description: e.target.value })} />;
         case "set-category":
-            if (model.category === undefined) {
+            throw new Error("Cannot edit multiple categories");
+             /* if (model.category === undefined) {
                 return <></>;
             }
             return <InputCategory label="Enter category"
                 value={model.category}
                 onChange={value => setModel({ ...model, category: value })}
-                disabled={disabled} />;
+                disabled={disabled} />; */
         case "set-amount":
             if (model.total === null) {
                 return <></>;
@@ -265,7 +267,7 @@ function TransactionLineEditor (props: TransactionLineEditorProps): React.ReactE
             <p>No lines have been added. This will remove all lines from the transaction (total will remain the same).</p>
             <p>To set the total, you can use the &ldquo;Set amount&rdquo; action on the same transactions after removing the lines.</p>
             <div className="buttons mb-3 mt-1">
-                <InputButton onClick={() => props.setLines([{ description: "Transaction line", amount: new Decimal(0) }])}>
+                <InputButton onClick={() => props.setLines([{ description: "Transaction line", amount: new Decimal(0), category: "" }])}>
                     Add lines
                 </InputButton>
             </div>
@@ -314,7 +316,8 @@ function TransactionLineEditor (props: TransactionLineEditorProps): React.ReactE
                     ...props.lines,
                     {
                         description: "Transaction line",
-                        amount: new Decimal(0)
+                        amount: new Decimal(0),
+                        category: ""
                     }
                 ])}>
                 Add line

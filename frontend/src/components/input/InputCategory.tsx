@@ -8,6 +8,7 @@ interface Props {
     disabled: boolean
     onChange: (value: string) => void
     errors?: string[]
+    isSmall?: boolean
 }
 
 export default function InputCategory (props: Props): React.ReactElement {

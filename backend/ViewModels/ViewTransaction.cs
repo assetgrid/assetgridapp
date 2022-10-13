@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using assetgrid_backend.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.ViewModels
 {
@@ -11,10 +12,8 @@ namespace assetgrid_backend.ViewModels
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
         public List<string> Identifiers { get; set; } = null!;
-
-        [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
-        public string Category { get; set; } = null!;
         public long? Total { get; set; }
+        public bool IsSplit { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
 
@@ -46,6 +45,20 @@ namespace assetgrid_backend.ViewModels
                     new[] { nameof(Total), nameof(Lines) });
             }
 
+            if (Lines.Count == 0)
+            {
+                yield return new ValidationResult(
+                    $"A transaction must have at least one line",
+                    new[] { nameof(Lines) });
+            }
+
+            if (! IsSplit && Lines.Count > 1)
+            {
+                yield return new ValidationResult(
+                    $"Only split transactions can have more than one line",
+                    new[] { nameof(Lines) });
+            }
+
             if (Identifiers.Any(x => x.Length > 100))
             {
                 yield return new ValidationResult(
@@ -64,8 +77,7 @@ namespace assetgrid_backend.ViewModels
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string? Description { get; set; }
 
-        [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
-        public string? Category { get; set; }
+        public bool? IsSplit { get; set; }
         public List<ViewTransactionLine>? Lines { get; set; }
         public long? Total { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
@@ -78,6 +90,23 @@ namespace assetgrid_backend.ViewModels
                 yield return new ValidationResult(
                     $"Identifier must be shorter than 100 characters.",
                     new[] { nameof(Identifiers) });
+            }
+
+            if (Lines != null)
+            {
+                if (Lines.Count == 0)
+                {
+                    yield return new ValidationResult(
+                        $"A transaction must have at least one line",
+                        new[] { nameof(Lines) });
+                }
+
+                if (IsSplit.HasValue && ! IsSplit.Value && Lines.Count > 1)
+                {
+                    yield return new ValidationResult(
+                        $"Only split transactions can have more than one line",
+                        new[] { nameof(Lines) });
+                }
             }
         }
     }
@@ -97,19 +126,14 @@ namespace assetgrid_backend.ViewModels
         public string Description { get; set; } = null!;
         public List<string> Identifiers { get; set; } = null!;
         public long Total { get; set; }
+        public bool IsSplit { get; set; }
 
-        public string Category { get; set; } = null!;
         public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
 
         public ViewTransaction()
         {
 
-        }
-
-        public ViewTransaction(int id, ViewAccount? source, ViewAccount? destination, List<string>? sourceIdentifiers)
-        {
-            
         }
     }
 
@@ -128,10 +152,14 @@ namespace assetgrid_backend.ViewModels
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
         public string Description { get; set; } = null!;
 
-        public ViewTransactionLine(long amount, string description)
+        [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
+        public string Category { get; set; } = null!;
+
+        public ViewTransactionLine(long amount, string description, string category)
         {
             Amount = amount;
             Description = description;
+            Category = category;
         }
     }
 

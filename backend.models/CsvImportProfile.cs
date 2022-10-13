@@ -41,7 +41,7 @@ namespace assetgrid_backend.Models
         public ParseOptions IdentifierParseOptions { get; set; } = null!;
 
         [MaxLength(50)]
-        public string SourceAccountColumn { get; set; } = null!;
+        public string? SourceAccountColumn { get; set; } = null!;
 
         public int? SourceAccountId { get; set; } = null!;
 

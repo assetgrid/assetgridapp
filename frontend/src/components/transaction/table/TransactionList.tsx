@@ -1,17 +1,17 @@
 import * as React from "react";
-import { Transaction } from "../../models/transaction";
-import Table from "../common/Table";
-import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
-import { Api } from "../../lib/ApiClient";
+import { Transaction } from "../../../models/transaction";
+import Table from "../../common/Table";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
+import { Api } from "../../../lib/ApiClient";
 import TransactionTableLine from "./TransactionTableLine";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZA, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import InputCheckbox from "../input/InputCheckbox";
+import InputCheckbox from "../../input/InputCheckbox";
 import { useNavigate } from "react-router";
-import { routes } from "../../lib/routes";
-import { serializeQueryForHistory } from "./filter/FilterHelpers";
-import MergeTransactionsModal from "./input/MergeTransactionsModal";
-import DropdownContent from "../common/DropdownContent";
+import { routes } from "../../../lib/routes";
+import { serializeQueryForHistory } from "./../filter/FilterHelpers";
+import MergeTransactionsModal from "./../input/MergeTransactionsModal";
+import DropdownContent from "../../common/DropdownContent";
 
 interface Props {
     draw?: number

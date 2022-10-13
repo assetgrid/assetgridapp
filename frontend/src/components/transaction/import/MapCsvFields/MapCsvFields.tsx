@@ -23,6 +23,7 @@ interface Props {
     duplicateIdentifiers: Set<string> | "fetching"
     options: CsvImportProfile
     apiReady: boolean
+    addAccount: (account: Account) => void
     onChange: (transactions: CsvCreateTransaction[], options: CsvImportProfile) => void
     goToNext: () => void
     goToPrevious: () => void
@@ -315,7 +316,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                         } />
                 </div>
                 <div className="column">
-                    {props.options.dateColumn !== null &&
+                    {props.options.amountColumn !== null &&
                         <InputText label="Decimal separator"
                             value={props.options.decimalSeparator}
                             disabled={!props.apiReady}
@@ -554,6 +555,9 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
         if (accountType === "single") {
             column = null;
+            if (value !== null && !props.accounts.some(account => account.id === value!.id)) {
+                props.addAccount(value);
+            }
         } else {
             value = null;
         }

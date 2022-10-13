@@ -106,6 +106,38 @@ namespace assetgrid_backend.Data
             }, false);
         }
 
+        /// <summary>
+        /// Search transaction lines based on their parent transaction
+        /// </summary>
+        /// <param name="items"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static IQueryable<TransactionLine> ApplySearch(this IQueryable<TransactionLine> items, ViewSearchGroup? query)
+        {
+            var columns = new[] {
+                ("Id", typeof(int), false),
+                ("SourceAccountId", typeof(int), true),
+                ("DestinationAccountId", typeof(int), true),
+                ("Description", typeof(string), false),
+                ("Category", typeof(string), false),
+                ("DateTime", typeof(DateTime), false),
+                ("Total", typeof(long), true),
+            };
+            var parameter = Expression.Parameter(typeof(TransactionLine), "transaction");
+            var parentTransactionExpression = Expression.Property(parameter, "Transaction")!;
+
+            if (query != null)
+            {
+                var expression = SearchGroupToExpression(query, columns, parentTransactionExpression);
+                if (expression != null)
+                {
+                    items = items.Where(Expression.Lambda<Func<TransactionLine, bool>>(expression, parameter));
+                }
+            }
+
+            return items;
+        }
+
         private static Expression? SearchGroupToExpression(ViewSearchGroup group, (string name, Type type, bool allowNull)[] columns, Expression parameter)
         {
             Expression? result = null;
@@ -344,6 +376,7 @@ namespace assetgrid_backend.Data
                 Id = transaction.Id,
                 DateTime = transaction.DateTime,
                 Description = transaction.Description,
+                IsSplit = transaction.IsSplit,
                 Source = transaction.SourceAccount == null ? null
                         : !transaction.SourceAccount.Users!.Any(user => user.UserId == userId) ? ViewAccount.GetNoReadAccess(transaction.SourceAccount.Id)
                             : new ViewAccount(
@@ -371,12 +404,11 @@ namespace assetgrid_backend.Data
                                 ViewAccount.PermissionsFromDbPermissions(transaction.DestinationAccount.Users!.Single(user => user.UserId == userId).Permissions),
                                 0),
                 Identifiers = transaction.Identifiers.Select(x => x.Identifier).ToList(),
-                Category = transaction.Category,
                 Lines = transaction.TransactionLines
                     .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine(line.Amount, line.Description))
+                    .Select(line => new ViewTransactionLine(line.Amount, line.Description, line.Category))
                     .ToList(),
-                Total = transaction.Total
+                Total = transaction.TransactionLines.Select(line => line.Amount).Sum()
             });
         }
 

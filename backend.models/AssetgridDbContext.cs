@@ -38,11 +38,14 @@ namespace assetgrid_backend.Models
 
             builder.Entity<Transaction>(entity => {
                 entity.HasIndex(e => e.DateTime);
-                entity.HasIndex(e => e.Category).HasFilter("Category IS NOT NULL");
                 entity.HasMany(e => e.Identifiers)
                     .WithOne(e => e.Transaction)
                     .HasForeignKey(e => e.TransactionId)
                     .HasPrincipalKey(e => e.Id);
+            });
+            builder.Entity<TransactionLine>(entity =>
+            {
+                entity.HasIndex(e => e.Category).HasFilter("Category IS NOT NULL");
             });
 
             builder.Entity<TransactionUniqueIdentifier>(entity =>

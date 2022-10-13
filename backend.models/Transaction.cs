@@ -15,10 +15,7 @@ namespace assetgrid_backend.Models
         [MaxLength(250)]
         public string Description { get; set; } = null!;
         public long Total { get; set; }
-
-        [MaxLength(50)]
-        public string Category { get; set; } = null!;
-
+        public bool IsSplit { get; set; }
         public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
         public virtual List<TransactionUniqueIdentifier> Identifiers { get; set; } = null!;
 
@@ -37,11 +34,25 @@ namespace assetgrid_backend.Models
                     new[] { nameof(SourceAccountId), nameof(DestinationAccountId) });
             }
 
-            if (TransactionLines.Count > 0 && Total != TransactionLines.Select(line => line.Amount).Sum())
+            if (Total != TransactionLines.Select(line => line.Amount).Sum())
             {
                 yield return new ValidationResult(
                     $"Sum of line amounts does not match transaction total",
                     new[] { nameof(Total), nameof(TransactionLines) });
+            }
+
+            if (TransactionLines.Count == 0)
+            {
+                yield return new ValidationResult(
+                    $"A transaction must have at least one line",
+                    new[] { nameof(TransactionLines) });
+            }
+
+            if (! IsSplit && TransactionLines.Count > 1)
+            {
+                yield return new ValidationResult(
+                    $"Only split transactions can have more than one line",
+                    new[] { nameof(TransactionLines) });
             }
         }
     }

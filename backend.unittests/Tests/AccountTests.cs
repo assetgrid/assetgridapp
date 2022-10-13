@@ -276,15 +276,15 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 15; i++)
             {
+                var total = random.Next(-500, 500);
                 var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
                 {
                     DestinationId = testAccount.Id,
-                    Total = random.Next(-500, 500),
+                    Total = total,
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
-                    Lines = new List<ViewTransactionLine>()
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(total, "", "") }
                 })).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
@@ -374,7 +374,6 @@ namespace backend.unittests.Tests
                     Total = random.Next(-500, 500),
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 })).OkValue<ViewTransaction>();
@@ -415,7 +414,6 @@ namespace backend.unittests.Tests
                     Total = random.Next(-500, 500),
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 })).OkValue<ViewTransaction>();
@@ -481,7 +479,6 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
-                Category = "",
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
@@ -555,28 +552,31 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
-                Category = "",
-                Lines = new List<ViewTransactionLine>(),
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "") },
                 Identifiers = new List<string>(),
             };
 
-            transactionModel.Category = "A";
+            transactionModel.Lines.First().Category = "A";
             transactionModel.Total = 100;
+            transactionModel.Lines.First().Amount = 100;
             var catA1 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             transactionModel.Total = -150;
+            transactionModel.Lines.First().Amount = -150;
             var catA2 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
-            transactionModel.Category = "B";
+            transactionModel.Lines.First().Category = "B";
             transactionModel.Total = 200;
+            transactionModel.Lines.First().Amount = 200;
             var catB1 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             transactionModel.Total = -250;
+            transactionModel.Lines.First().Amount = -250;
             var catB2 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
             var result = (await AccountController.CategorySummary(account.Id, null)).OkValue<List<ViewCategorySummary>>();
-            Assert.Equal(100, result.Single(x => x.Category == catA1.Category).Revenue);
-            Assert.Equal(150, result.Single(x => x.Category == catA1.Category).Expenses);
-            Assert.Equal(200, result.Single(x => x.Category == catB1.Category).Revenue);
-            Assert.Equal(250, result.Single(x => x.Category == catB1.Category).Expenses);
+            Assert.Equal(100, result.Single(x => x.Category == catA1.Lines.First().Category).Revenue);
+            Assert.Equal(150, result.Single(x => x.Category == catA1.Lines.First().Category).Expenses);
+            Assert.Equal(200, result.Single(x => x.Category == catB1.Lines.First().Category).Revenue);
+            Assert.Equal(250, result.Single(x => x.Category == catB1.Lines.First().Category).Expenses);
 
             Context.UserAccounts.Remove(Context.UserAccounts.Single(account => account.UserId == User.Id && account.AccountId == account.Id));
             Context.SaveChanges();

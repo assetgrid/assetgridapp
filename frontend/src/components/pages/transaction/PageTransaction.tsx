@@ -22,6 +22,7 @@ import Page404 from "../Page404";
 import PageError from "../PageError";
 import Hero from "../../common/Hero";
 import InputTextMultiple from "../../input/InputTextMultiple";
+import TransactionCategory from "../../transaction/table/TransactionCategory";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -214,7 +215,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                     <tr>
                         <td>Category</td>
                         <td>
-                            {transaction.category}
+                            <TransactionCategory categories={transaction.lines.map(line => line.category)} />
                         </td>
                     </tr>
                 </tbody>
@@ -261,10 +262,14 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                     </tr>
                     <tr>
                         <td>Total</td>
-                        {editModel.lines.length === 0
+                        {!editModel.isSplit
                             ? <td><InputNumber
                                 value={editModel.total}
-                                onChange={value => props.onChange({ ...editModel, total: value })}
+                                onChange={value => props.onChange({
+                                    ...editModel,
+                                    total: value,
+                                    lines: [{ ...editModel.lines[0], amount: value }]
+                                })}
                                 allowNull={false}
                                 disabled={props.isUpdating}
                                 errors={props.errors.DateTime} />
@@ -298,11 +303,13 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                     <tr>
                         <td>Category</td>
                         <td>
-                            <InputCategory
-                                value={editModel.category}
-                                onChange={value => props.onChange({ ...editModel, category: value })}
-                                disabled={props.isUpdating}
-                                errors={props.errors.Category} />
+                            {editModel.isSplit
+                                ? <TransactionCategory categories={editModel.lines.map(line => line.category)} />
+                                : <InputCategory
+                                    value={editModel.lines[0].category}
+                                    onChange={value => props.onChange({ ...editModel, lines: [{ ...editModel.lines[0], category: value }] })}
+                                    disabled={props.isUpdating}
+                                    errors={props.errors.Category} /> }
                         </td>
                     </tr>
                 </tbody>
@@ -335,7 +342,7 @@ function transactionLines (
         /*
          * Not currently editing
          */
-        if (transaction.lines.length === 0) {
+        if (!transaction.isSplit) {
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
                 <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
@@ -352,12 +359,14 @@ function transactionLines (
                         <tr>
                             <th>Description</th>
                             <th className="has-text-right">Amount</th>
+                            <th>Category</th>
                         </tr>
                     </thead>
                     <tbody>
                         {transaction.lines.map((line, i) => <tr key={i}>
-                            <td>{ line.description }</td>
+                            <td>{line.description}</td>
                             <td className="has-text-right">{formatNumberWithUser(line.amount, user)}</td>
+                            <td>{line.category}</td>
                         </tr>)}
                     </tbody>
                 </table>
@@ -367,13 +376,13 @@ function transactionLines (
         /*
          * Currently editing
          */
-        if (editModel.lines.length === 0) {
+        if (!editModel.isSplit) {
             return <Card title="Transaction lines" isNarrow={false}>
                 <p>This transaction does not have any lines.</p>
                 <p>Split the transaction to add lines.</p>
                 <div className="buttons mt-3">
                     <InputButton disabled={isUpdating}
-                        onClick={() => onChange({ ...editModel, lines: [{ description: "Transaction line", amount: editModel.total }] })}>
+                        onClick={splitTransaction}>
                         Split Transaction
                     </InputButton>
                 </div>
@@ -385,6 +394,7 @@ function transactionLines (
                         <tr>
                             <th>Description</th>
                             <th className="has-text-right">Amount</th>
+                            <th>Category</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -403,6 +413,12 @@ function transactionLines (
                                     disabled={isUpdating}
                                 />
                             }</td>
+                            <td>
+                                <InputCategory
+                                    value={line.category}
+                                    onChange={value => updateLine({ ...line, category: value }, i)}
+                                    disabled={isUpdating} />
+                            </td>
                             <td style={{ verticalAlign: "middle" }}>
                                 <InputIconButton icon={regular.faTrashCan} onClick={() => deleteLine(i)} />
                             </td>
@@ -413,13 +429,26 @@ function transactionLines (
                     <InputButton disabled={isUpdating}
                         onClick={() => onChange({
                             ...editModel,
-                            lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0) }]
+                            lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0), category: "" }]
                         })}>
                         Add line
                     </InputButton>
                 </div>
             </Card>;
         }
+    }
+
+    function splitTransaction (): void {
+        if (editModel === null) return;
+
+        onChange({
+            ...editModel,
+            isSplit: true,
+            lines: [{
+                ...editModel.lines[0],
+                description: editModel.lines[0].description.trim() === "" ? "Transaction line" : editModel.description
+            }]
+        });
     }
 
     function updateLine (newLine: TransactionLine, index: number): void {
@@ -445,7 +474,8 @@ function transactionLines (
         onChange({
             ...editModel,
             total,
-            lines: newLines
+            lines: newLines.length > 0 ? newLines : editModel.lines,
+            isSplit: newLines.length > 0
         });
     }
 }

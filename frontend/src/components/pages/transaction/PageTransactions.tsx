@@ -7,7 +7,7 @@ import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
-import TransactionList from "../../transaction/TransactionList";
+import TransactionList from "../../transaction/table/TransactionList";
 import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 
 export default function PageTransactions (): React.ReactElement {

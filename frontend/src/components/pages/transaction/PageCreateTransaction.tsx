@@ -17,18 +17,19 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
+import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionLink from "../../transaction/TransactionLink";
 
 export default function PageCreateTransaction (): React.ReactElement {
     const defaultModel: CreateTransaction = {
-        category: "",
         dateTime: DateTime.now(),
         description: "",
         destinationId: window.history.state.usr?.destinationId ?? null,
         sourceId: window.history.state.usr?.sourceId ?? null,
         identifiers: [],
-        lines: [],
-        total: new Decimal(0)
+        lines: [{ amount: new Decimal(0), description: "", category: "" }],
+        total: new Decimal(0),
+        isSplit: false
     };
 
     const [model, setModel] = React.useState<CreateTransaction>(defaultModel);
@@ -65,8 +66,12 @@ export default function PageCreateTransaction (): React.ReactElement {
                 <InputNumber label={"Total"}
                     allowNull={false}
                     value={model.total}
-                    disabled={model.lines.length > 0 || creating}
-                    onChange={value => setModel({ ...model, total: new Decimal(value) })}
+                    disabled={model.isSplit || creating}
+                    onChange={value => setModel({
+                        ...model,
+                        total: new Decimal(value),
+                        lines: [{ ...model.lines[0], amount: new Decimal(value) }]
+                    })}
                     errors={modelErrors?.Total}/>
                 <InputText label="Description"
                     value={model.description}
@@ -93,16 +98,24 @@ export default function PageCreateTransaction (): React.ReactElement {
                             errors={modelErrors?.DestinationId} />
                     </div>
                 </div>
-                <InputCategory label="Category"
-                    value={model.category}
-                    disabled={creating}
-                    onChange={value => setModel({ ...model, category: value })}
-                    errors={modelErrors?.Category} />
+                {model.isSplit
+                    ? <div>
+                        <label className="label">Category</label>
+                        <TransactionCategory categories={model.lines.map(line => line.category)} />
+                    </div>
+                    : <InputCategory label="Category"
+                        value={model.lines[0].category}
+                        disabled={creating}
+                        onChange={value => setModel({
+                            ...model,
+                            lines: [{ ...model.lines[0], category: value }]
+                        })}
+                        errors={modelErrors?.Category} />}
             </Card>
 
             <Card title="Transaction lines" isNarrow={true}>
-                {model.lines.length === 0
-                    ? < InputButton onClick={() => setModel({ ...model, lines: [{ description: "Transaction line", amount: model.total }] })}>
+                {!model.isSplit
+                    ? < InputButton onClick={splitTransaction}>
                         Split transaction
                     </InputButton>
                     : <>
@@ -123,6 +136,15 @@ export default function PageCreateTransaction (): React.ReactElement {
                                     onChange={e => updateLine(i, {
                                         ...model.lines[i],
                                         description: e.target.value
+                                    })}
+                                    disabled={creating} />
+                            </div>
+                            <div className="column">
+                                <InputCategory label={i === 0 ? "Category" : undefined}
+                                    value={line.category}
+                                    onChange={value => updateLine(i, {
+                                        ...model.lines[i],
+                                        category: value
                                     })}
                                     disabled={creating} />
                             </div>
@@ -157,12 +179,21 @@ export default function PageCreateTransaction (): React.ReactElement {
         </div>
     </>;
 
+    function splitTransaction (): void {
+        setModel({
+            ...model,
+            isSplit: true,
+            lines: [{ ...model.lines[0], description: model.description === "" ? "Transaction line" : model.description }]
+        });
+    }
+
     function deleteLine (index: number): void {
         const lines = [...model.lines.slice(0, index), ...model.lines.slice(index + 1)];
         setModel({
             ...model,
-            lines,
-            total: lines.length === 0 ? model.lines[index].amount : lines.reduce((sum, line) => sum.add(line.amount), new Decimal(0))
+            lines: lines.length > 0 ? lines : model.lines,
+            total: lines.length === 0 ? model.lines[index].amount : lines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)),
+            isSplit: lines.length > 0
         });
     }
 
@@ -173,7 +204,8 @@ export default function PageCreateTransaction (): React.ReactElement {
                 ...model.lines,
                 {
                     amount: new Decimal(0),
-                    description: "Transaction line"
+                    description: "Transaction line",
+                    category: ""
                 }
             ]
         });
