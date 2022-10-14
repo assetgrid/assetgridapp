@@ -32,6 +32,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
         csvNewlineCharacter: "auto",
         csvParseHeader: true,
         csvTextEncoding: null,
+        csvSkipLines: 0,
 
         duplicateHandling: "automatic",
         identifierColumn: null,

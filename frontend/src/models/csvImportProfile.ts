@@ -7,6 +7,7 @@ export interface CsvImportProfile {
     csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r"
     csvParseHeader: boolean
     csvTextEncoding: string | null
+    csvSkipLines: number
 
     // Mapping options
     duplicateHandling: DuplicateHandlingOptions
