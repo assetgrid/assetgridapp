@@ -1,8 +1,11 @@
 ﻿using assetgrid_backend.Models;
 using assetgrid_backend.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
@@ -29,6 +32,8 @@ namespace assetgrid_backend.Data.Search
                 { "Description", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(parameter, "Description")) },
                 { "DateTime", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(DateTime), false, Expression.Property(parameter, "DateTime")) },
                 { "Total", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(long), true, Expression.Property(parameter, "Total")) },
+                { "Category", (query, parameter) => TransactionLinesAny(parameter,
+                    childParameter => DataExtensionMethods.StringExpression(query, true, Expression.Property(childParameter, "Category"))) },
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
 
@@ -112,5 +117,33 @@ namespace assetgrid_backend.Data.Search
 
             return items;
         }
+
+        #region Custom expression functions
+
+        /// <summary>
+        /// Generates a new expression that returns true if the child expression is true for any lines for this transaction
+        /// </summary>
+        public static Expression TransactionLinesAny(Expression transactionParameter, Func<Expression, Expression> childExpression)
+        {
+            var method = typeof(Enumerable)
+                .GetMethods()
+                .Single(method => method.Name == "Any" &&
+                    method.GetParameters().Length == 2)
+            .MakeGenericMethod(typeof(TransactionLine));
+
+            var childParameter = Expression.Parameter(typeof(TransactionLine), "line");
+            var childLambda = Expression.Lambda<Func<TransactionLine, bool>>(childExpression(childParameter), childParameter);
+
+            var expression = Expression.Call(
+                // Call method Any on the transaction's lines with the child lambda as the parameter
+                null,
+                method,
+                Expression.Property(transactionParameter, "TransactionLines"),
+                childLambda);
+
+            return expression;
+        }
+
+        #endregion
     }
 }
