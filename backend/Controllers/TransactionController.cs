@@ -10,6 +10,7 @@ using System.Security.Principal;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.ComponentModel.DataAnnotations;
 using assetgrid_backend.Data.Search;
+using assetgrid_backend.models.Search;
 
 namespace assetgrid_backend.Controllers
 {
@@ -210,51 +211,6 @@ namespace assetgrid_backend.Controllers
                     transaction.Commit();
                     return result;
                 }
-            }
-            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
-        }
-
-        [HttpPost()]
-        [Route("/api/v1/[controller]/[Action]")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> UpdateMultiple(ViewUpdateMultipleTransactions request)
-        {
-            var user = _user.GetCurrent(HttpContext)!;
-            if (ModelState.IsValid)
-            {
-                using (var transaction = _context.Database.BeginTransaction())
-                {
-                    _context.ChangeTracker.AutoDetectChangesEnabled = false;
-
-                    // Get a list of all accounts the user can write to
-                    var writeAccountIds = await _context.UserAccounts
-                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                        .Select(account => account.AccountId)
-                        .ToListAsync();
-
-                    var query = _context.Transactions
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.SourceAccount!.Identifiers)
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.DestinationAccount!.Identifiers)
-                        .Include(t => t.TransactionLines)
-                        .Include(t => t.Identifiers)
-                        .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(request.query);
-
-                    var transactions = await query.ToListAsync();
-                    foreach (var dbObject in transactions)
-                    {
-                        // We ignore any errors returned
-                        await UpdateTransaction(dbObject, user, request.model);
-                    }
-
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
-                }
-
-                _context.ChangeTracker.AutoDetectChangesEnabled = true;
-                return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
@@ -496,7 +452,7 @@ namespace assetgrid_backend.Controllers
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/[Action]")]
-        public async Task<IActionResult> DeleteMultiple(ViewSearchGroup query)
+        public async Task<IActionResult> DeleteMultiple(SearchGroup query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)

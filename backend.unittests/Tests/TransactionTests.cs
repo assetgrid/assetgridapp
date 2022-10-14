@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
+using assetgrid_backend.models.Search;
 
 namespace backend.unittests.Tests
 {
@@ -625,10 +626,10 @@ namespace backend.unittests.Tests
             var transaction0B = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
 
             // Delete all transactions (query accepts all transactions)
-            await TransactionController.DeleteMultiple(new ViewSearchGroup
+            await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
 
             // Can delete own transactions
@@ -649,10 +650,10 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             UserService.MockUser = await UserService.GetById(User.Id);
-            var deleteResult = await TransactionController.DeleteMultiple(new ViewSearchGroup
+            var deleteResult = await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
             Assert.IsType<OkResult>(deleteResult);
 
@@ -666,10 +667,10 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             UserService.MockUser = await UserService.GetById(User.Id);
-            await TransactionController.DeleteMultiple(new ViewSearchGroup
+            await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
 
             Assert.IsType<NotFoundResult>(await TransactionController.Get(transactionC0.Id));
@@ -735,140 +736,6 @@ namespace backend.unittests.Tests
             Assert.Equivalent((await TransactionController.FindDuplicates(model.Identifiers)).OkValue<List<string>>(), model.Identifiers);
             Assert.IsType<BadRequestResult>(await TransactionController.Create(model));
             TransactionController.ModelState.Clear();
-        }
-
-        [Fact]
-        public async void UpdateAllTransactions()
-        {
-            var otherUser = await UserService.CreateUser("other", "test");
-            UserService.MockUser = otherUser;
-            var accountC = (await AccountController.Create(new ViewCreateAccount
-            {
-                Name = "C",
-                Description = "no access",
-                Identifiers = new List<string> { },
-                Favorite = false,
-                IncludeInNetWorth = false,
-            })).OkValue<ViewAccount>();
-            // Give the other user permission to create transactions on account A
-            Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
-            Context.SaveChanges();
-
-            var model = new ViewCreateTransaction {
-                DateTime = new DateTime(2020, 01, 01),
-                Description = "Test transaction",
-                SourceId = accountC.Id,
-                DestinationId = AccountA.Id,
-                Total = 100,
-                Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
-            };
-            var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = AccountA.Id;
-            model.DestinationId = accountC.Id;
-            var transactionAC = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = accountC.Id;
-            model.DestinationId = null;
-            var transactionC0 = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = null;
-            model.DestinationId = accountC.Id;
-            var transaction0C = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-
-            // Switch back to user A
-            UserService.MockUser = await UserService.GetById(User.Id);
-            model.SourceId = AccountA.Id;
-            model.DestinationId = AccountB.Id;
-            var transactionAB = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = AccountA.Id;
-            model.DestinationId = null;
-            var transactionA0 = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = null;
-            model.DestinationId = AccountB.Id;
-            var transaction0B = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-
-            // Update all transactions (query accepts all transactions)
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            // Can update own transactions
-            Assert.Equal("Updated", (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Description);
-            // Can update shared transactions
-            Assert.Equal("Updated", (await TransactionController.Get(transactionCA.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transactionAC.Id)).OkValue<ViewTransaction>().Description);
-            // Cannot update other users transactions
-            UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>());
-            Assert.Equivalent(transaction0C, (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>());
-
-            // Cannot change source or destination to destination with no write permission
-            // Process fails silently but nothing is updated
-            UserService.MockUser = await UserService.GetById(User.Id);
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { DestinationId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { SourceId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.Equivalent(transactionA0.Source, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transaction0B.Source, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionAB.Source, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionA0.Destination, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transaction0B.Destination, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transactionAB.Destination, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Destination);
-
-            // Give user read permission to account C
-            var userAccount = new UserAccount { AccountId = accountC.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
-            Context.UserAccounts.Add(userAccount);
-            Context.SaveChanges();
-
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            // Stil cannot update other users transactions
-            UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>());
-            Assert.Equivalent(transaction0C, (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>());
-
-            // Still fails (silently) when trying to update source and destination to account C
-            UserService.MockUser = await UserService.GetById(User.Id);
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { DestinationId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { SourceId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.Equivalent(transactionA0.Source, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transaction0B.Source, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionAB.Source, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionA0.Destination, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transaction0B.Destination, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transactionAB.Destination, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Destination);
-
-            // Change permission to write
-            userAccount.Permissions = UserAccountPermissions.ModifyTransactions;
-            Context.SaveChanges();
-
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            Assert.Equal("Updated", (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>().Description);
         }
 
         [Fact]
@@ -1018,10 +885,10 @@ namespace backend.unittests.Tests
             {
                 From = 0,
                 To = 1,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.And,
-                    Children = new List<ViewSearchGroup>()
+                    Type = SearchGroupType.And,
+                    Children = new List<SearchGroup>()
                 }
             })).OkValue<ViewSearchResponse<ViewTransaction>>().Data.Single();
             await TransactionController.Delete(transaction.Id);
@@ -1088,10 +955,10 @@ namespace backend.unittests.Tests
             var transactions = (await TransactionController.Search(new ViewSearch {
                 From = 0,
                 To = 20,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.And,
-                    Children = new List<ViewSearchGroup>()
+                    Type = SearchGroupType.And,
+                    Children = new List<SearchGroup>()
                 }
             })).OkValue<ViewSearchResponse<ViewTransaction>>().Data;
 

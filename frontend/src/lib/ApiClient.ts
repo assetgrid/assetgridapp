@@ -4,13 +4,14 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
-import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
+import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
 import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
+import { serializeTransactionAutomation, TransactionAutomation } from "../models/automation/transactionAutomation";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -677,37 +678,6 @@ const Transaction = (token: string) => ({
     },
 
     /**
-     * Updates all transactions matching the specified query
-     * @param query A query describing which transactions to modify
-     * @param transaction The changes to make
-     */
-    updateMultiple: async function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
-        return await new Promise<Ok<null>>((resolve, reject) => {
-            const { total, ...model } = transaction;
-            axios.post<TransactionModel>(`${rootUrl}/api/v1/transaction/updateMultiple`, {
-                query: fixAccountQuery(query),
-                model: {
-                    ...model,
-                    totalString: (transaction.total != null) ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
-                    lines: (transaction.lines != null)
-                        ? transaction.lines.map(line => ({
-                            ...line,
-                            amountString: line.amount.mul(new Decimal(10000)).round().toString(),
-                            amount: undefined
-                        }))
-                        : undefined
-                }
-            }, {
-                headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ status: 200, data: null }))
-                .catch(e => {
-                    console.log(e);
-                    reject(e);
-                });
-        });
-    },
-
-    /**
      * Deletes a transaction
      * @param id The id of the transaction to be deleted
      */
@@ -730,7 +700,7 @@ const Transaction = (token: string) => ({
     deleteMultiple: async function (query: SearchGroup): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
             axios.delete<TransactionModel>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
-                data: fixAccountQuery(query),
+                data: serializeTransactionQuery(query),
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
@@ -761,7 +731,7 @@ const Transaction = (token: string) => ({
         return await new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
             const fixedQuery = query;
             if (query.query != null) {
-                query.query = fixAccountQuery(query.query);
+                query.query = serializeTransactionQuery(query.query);
             }
             axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, fixedQuery, {
                 headers: { authorization: "Bearer: " + token }
@@ -774,32 +744,26 @@ const Transaction = (token: string) => ({
     }
 });
 
-function fixAccountQuery (query: SearchGroup): SearchGroup {
-    switch (query.type) {
-        case SearchGroupType.And:
-        case SearchGroupType.Or:
-            return {
-                type: query.type,
-                children: query.children.map(child => fixAccountQuery(child))
-            };
-        case SearchGroupType.Query: {
-            const result: SearchGroup = {
-                type: query.type,
-                query: {
-                    ...query.query
-                }
-            };
-            if (query.query.column === "Total") {
-                if (query.query.operator === SearchOperator.In) {
-                    result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
-                } else {
-                    result.query.value = (result.query.value as Decimal).times(10000).toNumber();
-                }
-            }
-            return result;
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const Automation = (token: string) => ({
+    Transaction: {
+        /**
+         * Runs a transaction action a single time
+         * @param action The action to run
+         */
+        runSingle: async function (action: TransactionAutomation): Promise<undefined> {
+            return await new Promise<undefined>((resolve, reject) => {
+                axios.post(`${rootUrl}/api/v1/automation/transaction/runSingle`, serializeTransactionAutomation(action), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve(result.data))
+                    .catch(error => {
+                        console.log(error);
+                        reject(error);
+                    });
+            });
         }
     }
-}
+});
 
 /**
  * Converts fields from RAW json into complex javascript types
@@ -846,7 +810,8 @@ const ApiClient = (token: string) => ({
     User: User(token),
     Account: Account(token),
     Transaction: Transaction(token),
-    Taxonomy: Taxonomy(token)
+    Taxonomy: Taxonomy(token),
+    Automation: Automation(token)
 });
 export default ApiClient;
 

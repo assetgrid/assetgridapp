@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models.Search;
+using assetgrid_backend.Models;
 using assetgrid_backend.ViewModels;
 using System.Linq.Expressions;
 
@@ -14,7 +15,7 @@ namespace assetgrid_backend.Data.Search
 
         public static IQueryable<UserAccount> ApplySearch(this IQueryable<UserAccount> items, ViewSearch query, bool applyOrder)
         {
-            var columns = new Dictionary<string, Func<ViewSearchQuery, Expression, Expression>> {
+            var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
                 { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
                 { "Name", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(parameter, "Name")) },
                 { "Description", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(parameter, "Description")) },

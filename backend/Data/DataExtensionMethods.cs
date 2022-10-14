@@ -2,6 +2,7 @@
 using assetgrid_backend.Models;
 using System.Linq.Expressions;
 using System.Text.Json;
+using assetgrid_backend.models.Search;
 
 namespace assetgrid_backend.Data
 {
@@ -9,12 +10,12 @@ namespace assetgrid_backend.Data
     {
         #region Search
 
-        public static Expression? SearchGroupToExpression(ViewSearchGroup group, Dictionary<string, Func<ViewSearchQuery, Expression, Expression>> columnExpressions, Expression parameter)
+        public static Expression? SearchGroupToExpression(SearchGroup group, Dictionary<string, Func<SearchQuery, Expression, Expression>> columnExpressions, Expression parameter)
         {
             Expression? result = null;
             switch (group.Type)
             {
-                case ViewSearchGroupType.Query:
+                case SearchGroupType.Query:
                     if (group.Query == null)
                     {
                         throw new Exception("Query must be specified");
@@ -26,7 +27,7 @@ namespace assetgrid_backend.Data
 
                     return columnExpressions[group.Query.Column](group.Query, parameter);
 
-                case ViewSearchGroupType.And:
+                case SearchGroupType.And:
                     if (group.Children == null)
                     {
                         throw new Exception("Children must not be null with operator 'and'");
@@ -48,7 +49,7 @@ namespace assetgrid_backend.Data
                     }
                     return result;
 
-                case ViewSearchGroupType.Or:
+                case SearchGroupType.Or:
                     if (group.Children == null)
                     {
                         throw new Exception("Children must not be null with operator 'or'");
@@ -77,13 +78,13 @@ namespace assetgrid_backend.Data
 
         #region Generic column expression handlers
 
-        public static Expression StringExpression(ViewSearchQuery query, bool allowNull, Expression parameter)
+        public static Expression StringExpression(SearchQuery query, bool allowNull, Expression parameter)
         {
             Expression result;
             switch (query.Operator)
             {
-                case ViewSearchOperator.Equals:
-                case ViewSearchOperator.Contains:
+                case SearchOperator.Equals:
+                case SearchOperator.Contains:
                 {
                     /*
                     * First parse the JSON value into the correct type
@@ -103,10 +104,10 @@ namespace assetgrid_backend.Data
                     */
                     switch (query.Operator)
                     {
-                        case ViewSearchOperator.Equals:
+                        case SearchOperator.Equals:
                             result = Expression.Equal(parameter, Expression.Constant(value));
                             break;
-                        case ViewSearchOperator.Contains:
+                        case SearchOperator.Contains:
                             result = Expression.Call(
                                     // Call method Contains on the column with the value as the parameter
                                     parameter,
@@ -118,7 +119,7 @@ namespace assetgrid_backend.Data
                     }
                     break;
                 }
-                case ViewSearchOperator.In:
+                case SearchOperator.In:
                 {
                     /*
                      * First parse the JSON value into the correct type
@@ -165,14 +166,14 @@ namespace assetgrid_backend.Data
             }
         }
 
-        public static Expression NumericExpression(ViewSearchQuery query, Type numericType, bool allowNull, Expression parameter)
+        public static Expression NumericExpression(SearchQuery query, Type numericType, bool allowNull, Expression parameter)
         {
             Expression result;
             switch (query.Operator)
             {
-                case ViewSearchOperator.Equals:
-                case ViewSearchOperator.GreaterThanOrEqual:
-                case ViewSearchOperator.GreaterThan:
+                case SearchOperator.Equals:
+                case SearchOperator.GreaterThanOrEqual:
+                case SearchOperator.GreaterThan:
                     /*
                      * First parse the JSON value into the correct type
                      */
@@ -218,20 +219,20 @@ namespace assetgrid_backend.Data
                      */
                     switch (query.Operator)
                     {
-                        case ViewSearchOperator.Equals:
+                        case SearchOperator.Equals:
                             result = Expression.Equal(parameter, Expression.Constant(value, numericType));
                             break;
-                        case ViewSearchOperator.GreaterThan:
+                        case SearchOperator.GreaterThan:
                             result = Expression.GreaterThan(parameter, Expression.Constant(value, numericType));
                             break;
-                        case ViewSearchOperator.GreaterThanOrEqual:
+                        case SearchOperator.GreaterThanOrEqual:
                             result = Expression.GreaterThanOrEqual(parameter, Expression.Constant(value, numericType));
                             break;
                         default:
                             throw new Exception("Unknown operator");
                     }
                     break;
-                case ViewSearchOperator.In:
+                case SearchOperator.In:
                     /*
                      * First parse the JSON value into the correct type
                      */

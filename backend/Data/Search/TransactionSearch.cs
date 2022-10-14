@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models.Search;
+using assetgrid_backend.Models;
 using assetgrid_backend.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
@@ -25,7 +26,7 @@ namespace assetgrid_backend.Data.Search
 
         public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder)
         {
-            var columns = new Dictionary<string, Func<ViewSearchQuery, Expression, Expression>> {
+            var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
                 { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
                 { "SourceAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "SourceAccountId")) },
                 { "DestinationAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "DestinationAccountId")) },
@@ -73,7 +74,7 @@ namespace assetgrid_backend.Data.Search
         /// <summary>
         /// Applies a search group but does not apply ordering
         /// </summary>
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearchGroup? query)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, SearchGroup? query)
         {
             if (query == null) return items;
 
@@ -93,9 +94,9 @@ namespace assetgrid_backend.Data.Search
         /// <param name="items"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        public static IQueryable<TransactionLine> ApplySearch(this IQueryable<TransactionLine> items, ViewSearchGroup? query)
+        public static IQueryable<TransactionLine> ApplySearch(this IQueryable<TransactionLine> items, SearchGroup? query)
         {
-            var columns = new Dictionary<string, Func<ViewSearchQuery, Expression, Expression>> {
+            var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
                 { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
                 { "SourceAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "SourceAccountId")) },
                 { "DestinationAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "DestinationAccountId")) },

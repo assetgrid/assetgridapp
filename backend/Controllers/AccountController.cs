@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using System.Globalization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using assetgrid_backend.Data.Search;
+using assetgrid_backend.models.Search;
 
 namespace assetgrid_backend.Controllers
 {
@@ -280,7 +281,7 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CountTransactions(int id, ViewSearchGroup? requestQuery)
+        public async Task<IActionResult> CountTransactions(int id, SearchGroup? requestQuery)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (! await _context.UserAccounts.AnyAsync(account => account.UserId == user.Id && account.AccountId == id))
@@ -542,7 +543,7 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ViewCategorySummary>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CategorySummary(int id, ViewSearchGroup? query)
+        public async Task<IActionResult> CategorySummary(int id, SearchGroup? query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (! await _context.UserAccounts.AnyAsync(u => u.UserId == user.Id && u.AccountId == id))

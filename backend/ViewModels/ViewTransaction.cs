@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models.Search;
+using assetgrid_backend.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.ViewModels
@@ -114,7 +115,7 @@ namespace assetgrid_backend.ViewModels
     public class ViewUpdateMultipleTransactions
     {
         public ViewUpdateTransaction model { get; set; } = null!;
-        public ViewSearchGroup query { get; set; } = null!;
+        public SearchGroup query { get; set; } = null!;
     }
 
     public class ViewTransaction
@@ -176,6 +177,6 @@ namespace assetgrid_backend.ViewModels
         public int To { get; set; }
         public bool Descending { get; set; }
 
-        public ViewSearchGroup? Query { get; set; }
+        public SearchGroup? Query { get; set; }
     }
 }

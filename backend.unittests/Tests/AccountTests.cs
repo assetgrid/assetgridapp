@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Web;
 using Xunit;
+using assetgrid_backend.models.Search;
 
 namespace backend.unittests.Tests
 {
@@ -204,14 +205,14 @@ namespace backend.unittests.Tests
                 To = 20,
                 OrderByColumn = "Description",
                 Descending = false,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.Query,
-                    Query = new ViewSearchQuery
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
                     {
                         Column = "Id",
                         Not = false,
-                        Operator = ViewSearchOperator.Equals,
+                        Operator = SearchOperator.Equals,
                         Value = System.Text.Json.JsonSerializer.Deserialize<object>(accountA.Id.ToString()),
                     }
                 }
@@ -236,7 +237,7 @@ namespace backend.unittests.Tests
             Assert.Empty(result.Data);
 
             // Search for multiple accounts
-            query.Query.Query.Operator = ViewSearchOperator.In;
+            query.Query.Query.Operator = SearchOperator.In;
             query.Query.Query.Value = System.Text.Json.JsonSerializer.Deserialize<object>($"[{accountA.Id}, {accountB.Id}, {accountNoPermissions.Id}]");
             result = (await AccountController.Search(query)).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(2, result.TotalItems);
