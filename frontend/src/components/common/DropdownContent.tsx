@@ -85,7 +85,6 @@ export default function DropdownContent (props: Props): React.ReactElement {
 
                     // Move so it isn't cut off by the edge of the screen
                     if (parentcenter - dropdownBounding.width * 0.5 < screnMargin) {
-                        console.log(dropdownBounding.width);
                         parentRef.current.style.left = `${screnMargin}px`;
                     } else if (parentcenter + dropdownBounding.width * 0.5 < window.innerWidth - 10) {
                         parentRef.current.style.right = `${screnMargin}px`;

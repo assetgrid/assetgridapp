@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using assetgrid_backend.Data.Search;
 
 namespace assetgrid_backend.Controllers
 {
