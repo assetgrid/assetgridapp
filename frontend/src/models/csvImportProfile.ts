@@ -14,8 +14,11 @@ export interface CsvImportProfile {
     identifierColumn: string | null
     identifierParseOptions: ParseOptions
 
-    amountColumn: string | null
-    amountParseOptions: ParseOptions
+    debitAmountColumn: string | null
+    debitAmountParseOptions: ParseOptions
+    separateCreditDebitColumns: boolean
+    creditAmountColumn: string | null
+    creditAmountParseOptions: ParseOptions
     decimalSeparator: string
 
     descriptionColumn: string | null

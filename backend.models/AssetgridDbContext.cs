@@ -36,7 +36,8 @@ namespace assetgrid_backend.Models
                     .HasPrincipalKey(e => e.Id);
             });
 
-            builder.Entity<Transaction>(entity => {
+            builder.Entity<Transaction>(entity =>
+            {
                 entity.HasIndex(e => e.DateTime);
                 entity.HasMany(e => e.Identifiers)
                     .WithOne(e => e.Transaction)
@@ -57,7 +58,7 @@ namespace assetgrid_backend.Models
             {
                 var valueConverter = new ValueConverter<CsvImportProfile, string>(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => JsonSerializer.Deserialize<CsvImportProfile>(v, (JsonSerializerOptions?)null) ?? new CsvImportProfile()
+                    v => UserCsvImportProfile.ParseJson(v)
                 );
                 entity.Property("ImportProfile")
                     .HasConversion(valueConverter)

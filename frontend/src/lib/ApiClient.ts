@@ -193,7 +193,8 @@ const User = (token: string) => ({
                     status: 200,
                     data: {
                         ...result.data,
-                        amountParseOptions: { ...result.data.amountParseOptions, regex: fixRegex(result.data.amountParseOptions.regex) },
+                        debitAmountParseOptions: { ...result.data.debitAmountParseOptions, regex: fixRegex(result.data.debitAmountParseOptions.regex) },
+                        creditAmountParseOptions: { ...result.data.creditAmountParseOptions, regex: fixRegex(result.data.creditAmountParseOptions.regex) },
                         categoryParseOptions: { ...result.data.categoryParseOptions, regex: fixRegex(result.data.categoryParseOptions.regex) },
                         dateParseOptions: { ...result.data.dateParseOptions, regex: fixRegex(result.data.dateParseOptions.regex) },
                         descriptionParseOptions: { ...result.data.descriptionParseOptions, regex: fixRegex(result.data.descriptionParseOptions.regex) },
@@ -224,7 +225,8 @@ const User = (token: string) => ({
                 sourceAccount: profile.sourceAccountId ?? null,
                 destinationAccount: profile.destinationAccountId ?? null,
 
-                amountParseOptions: { ...profile.amountParseOptions, regex: profile.amountParseOptions.regex?.source },
+                debitAmountParseOptions: { ...profile.debitAmountParseOptions, regex: profile.debitAmountParseOptions.regex?.source },
+                creditAmountParseOptions: { ...profile.creditAmountParseOptions, regex: profile.creditAmountParseOptions.regex?.source },
                 categoryParseOptions: { ...profile.categoryParseOptions, regex: profile.categoryParseOptions.regex?.source },
                 dateParseOptions: { ...profile.dateParseOptions, regex: profile.dateParseOptions.regex?.source },
                 descriptionParseOptions: { ...profile.descriptionParseOptions, regex: profile.descriptionParseOptions.regex?.source },

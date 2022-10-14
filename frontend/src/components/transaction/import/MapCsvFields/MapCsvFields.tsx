@@ -14,6 +14,7 @@ import CsvMappingTransactionTable from "./CsvMappingTransactionTable";
 import InputAccount from "../../../account/input/InputAccount";
 import { CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
 import AccountSelector from "./AccountSelector";
+import InputCheckbox from "../../../input/InputCheckbox";
 
 interface Props {
     data: any[]
@@ -285,12 +286,17 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Amount column"
+                    <InputSelect label={props.options.separateCreditDebitColumns ? "Debit amount column" : "Amount column"}
                         isFullwidth={true}
-                        value={props.options.amountColumn}
+                        value={props.options.debitAmountColumn}
                         placeholder={"Select column"}
                         disabled={!props.apiReady}
-                        onChange={result => updateAmountMapping(result, props.options.decimalSeparator, props.options.amountParseOptions)}
+                        onChange={result => updateAmountMapping(result,
+                            props.options.debitAmountParseOptions,
+                            props.options.creditAmountColumn,
+                            props.options.creditAmountParseOptions,
+                            props.options.separateCreditDebitColumns,
+                            props.options.decimalSeparator)}
                         items={Object.keys(props.data[0]).map(item => {
                             return {
                                 key: item,
@@ -298,14 +304,19 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                             };
                         })}
                         addOnAfter={
-                            props.options.amountColumn !== null
+                            props.options.debitAmountColumn !== null
                                 ? <div className="control">
                                     <button className="button is-primary"
                                         disabled={!props.apiReady}
                                         onClick={() => setModal(<InputParseOptionsModal
-                                            previewData={props.data.map(row => getValue(row, props.options.amountColumn))}
-                                            value={props.options.amountParseOptions}
-                                            onChange={options => updateAmountMapping(props.options.amountColumn, props.options.decimalSeparator, options)}
+                                            previewData={props.data.map(row => getValue(row, props.options.debitAmountColumn))}
+                                            value={props.options.debitAmountParseOptions}
+                                            onChange={options => updateAmountMapping(props.options.debitAmountColumn,
+                                                options,
+                                                props.options.creditAmountColumn,
+                                                props.options.creditAmountParseOptions,
+                                                props.options.separateCreditDebitColumns,
+                                                props.options.decimalSeparator)}
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
@@ -316,14 +327,74 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                         } />
                 </div>
                 <div className="column">
-                    {props.options.amountColumn !== null &&
+                    {props.options.debitAmountColumn !== null &&
                         <InputText label="Decimal separator"
                             value={props.options.decimalSeparator}
                             disabled={!props.apiReady}
-                            onChange={e => updateAmountMapping(props.options.amountColumn, e.target.value, props.options.amountParseOptions)}
+                            onChange={e => updateAmountMapping(props.options.debitAmountColumn,
+                                props.options.debitAmountParseOptions,
+                                props.options.creditAmountColumn,
+                                props.options.creditAmountParseOptions,
+                                props.options.separateCreditDebitColumns,
+                                e.target.value)}
                         />}
                 </div>
             </div>
+
+            {props.options.separateCreditDebitColumns && <div className="columns">
+                <div className="column">
+                    <InputSelect label={"Credit amount column"}
+                        isFullwidth={true}
+                        value={props.options.creditAmountColumn}
+                        placeholder={"Select column"}
+                        disabled={!props.apiReady}
+                        onChange={result => updateAmountMapping(props.options.debitAmountColumn,
+                            props.options.debitAmountParseOptions,
+                            result,
+                            props.options.creditAmountParseOptions,
+                            props.options.separateCreditDebitColumns,
+                            props.options.decimalSeparator)}
+                        items={Object.keys(props.data[0]).map(item => {
+                            return {
+                                key: item,
+                                value: item
+                            };
+                        })}
+                        addOnAfter={
+                            props.options.debitAmountColumn !== null
+                                ? <div className="control">
+                                    <button className="button is-primary"
+                                        disabled={!props.apiReady}
+                                        onClick={() => setModal(<InputParseOptionsModal
+                                            previewData={props.data.map(row => getValue(row, props.options.debitAmountColumn))}
+                                            value={props.options.debitAmountParseOptions}
+                                            onChange={options => updateAmountMapping(props.options.debitAmountColumn,
+                                                props.options.debitAmountParseOptions,
+                                                props.options.creditAmountColumn,
+                                                options,
+                                                props.options.separateCreditDebitColumns,
+                                                props.options.decimalSeparator)}
+                                            close={() => setModal(null)}
+                                            closeOnChange={true} />
+                                        )}>
+                                    Parse Options
+                                    </button>
+                                </div>
+                                : undefined
+                        } />
+                </div>
+                <div className="column"></div>
+            </div>}
+
+            <InputCheckbox label="Separate debit and credit amount columns"
+                disabled={!props.apiReady}
+                value={props.options.separateCreditDebitColumns}
+                onChange={e => updateAmountMapping(props.options.debitAmountColumn,
+                    props.options.debitAmountParseOptions,
+                    props.options.creditAmountColumn,
+                    props.options.creditAmountParseOptions,
+                    e.target.checked,
+                    props.options.decimalSeparator)} />
 
             <div className="columns">
                 <div className="column">
@@ -437,18 +508,30 @@ export default function MapCsvFields (props: Props): React.ReactElement {
     /**
      * Updates how the amount is parsed from the raw CSV data and recalculates it for all transactions
      */
-    function updateAmountMapping (column: string | null, decimalSeparator: string, parseOptions: ParseOptions): void {
+    function updateAmountMapping (
+        debitColumn: string | null,
+        debitParseOptions: ParseOptions,
+        creditColumn: string | null,
+        creditParseOptions: ParseOptions,
+        separateCreditDebitColumns: boolean,
+        decimalSeparator: string): void {
         props.onChange(updateAutoIdentifiers([
-            ...props.data.map((row, i) => ({
-                ...props.transactions![i],
-                amountText: parseWithOptions(getValue(row, column), parseOptions),
-                amount: parseAmount(getValue(row, column), decimalSeparator, parseOptions)
-            }))
+            ...props.data.map((row, i) => {
+                const amount = getAmount(row, debitColumn, debitParseOptions, creditColumn, creditParseOptions, separateCreditDebitColumns, decimalSeparator);
+                return {
+                    ...props.transactions![i],
+                    amountText: amount.text,
+                    amount: amount.value
+                };
+            })
         ], props.options), {
             ...props.options,
-            amountColumn: column,
-            decimalSeparator,
-            amountParseOptions: parseOptions
+            debitAmountColumn: debitColumn,
+            debitAmountParseOptions: debitParseOptions,
+            creditAmountColumn: creditColumn,
+            creditAmountParseOptions: creditParseOptions,
+            separateCreditDebitColumns,
+            decimalSeparator
         });
     }
 
@@ -692,6 +775,14 @@ function parseTransactions (data: any[], options: CsvImportProfile, accounts: Ac
         const destinationText = options.destinationAccountType === "column"
             ? parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions)
             : "";
+        const amount = getAmount(row,
+            options.debitAmountColumn,
+            options.debitAmountParseOptions,
+            options.creditAmountColumn,
+            options.creditAmountParseOptions,
+            options.separateCreditDebitColumns,
+            options.decimalSeparator);
+
         return {
             rowNumber: i,
             dateText,
@@ -709,12 +800,43 @@ function parseTransactions (data: any[], options: CsvImportProfile, accounts: Ac
                 : account.identifiers.some(x => x === destinationText)
             ) ?? null,
             identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, row),
-            amountText: parseWithOptions(getValue(row, options.amountColumn), options.amountParseOptions),
-            amount: parseAmount(getValue(row, options.amountColumn), options.decimalSeparator, options.amountParseOptions)
+            amountText: amount.text,
+            amount: amount.value
         };
     });
 
     return updateAutoIdentifiers(result, options);
+}
+
+function getAmount (row: { [key: string]: string },
+    debitAmountColumn: string | null,
+    debitAmountParseOptions: ParseOptions,
+    creditAmountColumn: string | null,
+    creditAmountParseOptions: ParseOptions,
+    separateCreditDebitColumns: boolean,
+    decimalSeparator: string): { text: string, value: Decimal | "invalid" } {
+    const debitValue = parseWithOptions(getValue(row, debitAmountColumn), debitAmountParseOptions);
+    const debitAmount = parseAmount(debitValue, decimalSeparator, debitAmountParseOptions);
+    const creditValue = parseWithOptions(getValue(row, creditAmountColumn), creditAmountParseOptions);
+    const creditAmount = parseAmount(creditValue, decimalSeparator, creditAmountParseOptions);
+
+    if (separateCreditDebitColumns) {
+        if (debitValue.trim() === "" || debitAmount === "invalid") {
+            return {
+                text: creditValue,
+                value: creditAmount === "invalid" ? "invalid" : creditAmount.times(-1)
+            };
+        }
+        return {
+            text: debitValue,
+            value: debitAmount
+        };
+    } else {
+        return {
+            text: debitValue,
+            value: debitAmount
+        };
+    }
 }
 
 /**
