@@ -126,7 +126,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetDescription
@@ -189,7 +188,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetAmount
@@ -237,7 +235,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetAmount
@@ -277,7 +274,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetLines
@@ -326,7 +322,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetLines
@@ -368,7 +363,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetLines
@@ -439,7 +433,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetAccount
@@ -518,7 +511,6 @@ namespace backend.unittests.Tests
                     Type = SearchGroupType.And,
                     Children = new List<SearchGroup>()
                 },
-                Triggers = TransactionAutomationTrigger.None,
                 Actions = new List<TransactionAutomationAction>
                 {
                     new ActionSetAccount

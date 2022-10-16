@@ -5,7 +5,10 @@ import { SearchGroup, serializeTransactionQuery } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
 
 export interface TransactionAutomation {
-    triggers: TransactionAutomationTrigger
+    name: string
+    description: string
+    triggerOnCreate: boolean
+    triggerOnModify: boolean
     query: SearchGroup
     actions: TransactionAction[]
 }

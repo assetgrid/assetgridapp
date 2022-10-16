@@ -77,7 +77,10 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
         }
 
         await api.Automation.Transaction.runSingle({
-            triggers: TransactionAutomationTrigger.None,
+            name: "",
+            description: "",
+            triggerOnCreate: false,
+            triggerOnModify: false,
             actions: [action],
             query
         });

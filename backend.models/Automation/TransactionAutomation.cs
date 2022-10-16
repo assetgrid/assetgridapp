@@ -13,23 +13,21 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using assetgrid_backend.Models.ViewModels;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.models.Automation
 {
     public class TransactionAutomation
     {
-        public int Version => 1;
-        public TransactionAutomationTrigger Triggers { get; set; }
+        [MaxLength(50)]
+        public string Name { get; set; } = null!;
+
+        [MaxLength(250)]
+        public string Description { get; set; } = null!;
+        public bool TriggerOnCreate { get; set; }
+        public bool TriggerOnModify { get; set; }
         public SearchGroup Query { get; set; } = null!;
         public List<TransactionAutomationAction> Actions { get; set; } = null!;
-    }
-
-    [Flags]
-    public enum TransactionAutomationTrigger
-    {
-        None = 0,
-        Create = 1,
-        Modify = 2
     }
 
     [JsonConverter(typeof(TransactionAutomationActionConverter))]
@@ -247,35 +245,6 @@ namespace assetgrid_backend.models.Automation
     #endregion
 
     #region JSON deserializers
-
-    public class TransactionAutomationConverter : JsonConverter<TransactionAutomation>
-    {
-        public override TransactionAutomation? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            var readerCopy = reader;
-            var version = JsonSerializer.Deserialize<VersionStruct?>(ref readerCopy, options);
-
-            #warning Use this JSONConverter when we begin having multiple versions of actions
-
-            if (version == null || version.Value.Version == null)
-            {
-                // Assume newest version. Use default converter as this function would otherwise be called in an infinate loop
-                return JsonSerializer.Deserialize<TransactionAutomation>(ref reader, options);
-            }
-            // Once more versions are added, this will switch between versions and automatically migrate them if needed
-            return JsonSerializer.Deserialize<TransactionAutomation>(ref reader, options);
-        }
-
-        public override void Write(Utf8JsonWriter writer, TransactionAutomation value, JsonSerializerOptions options)
-        {
-            JsonSerializer.Serialize(writer, value, options);
-        }
-
-        private struct VersionStruct
-        {
-            public int? Version { get; set; }
-        }
-    }
 
     public class TransactionAutomationActionConverter : JsonConverter<TransactionAutomationAction>
     {
