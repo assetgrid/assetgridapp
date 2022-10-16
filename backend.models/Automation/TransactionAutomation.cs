@@ -24,6 +24,7 @@ namespace assetgrid_backend.models.Automation
         public virtual TransactionAutomation TransactionAutomation { get; set; } = null!;
         public int UserId { get; set; }
         public virtual User User { get; set; } = null!;
+        public bool Enabled { get; set; }
 
         public AutomationPermissions Permissions { get; set; }
 

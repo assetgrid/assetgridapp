@@ -7,6 +7,7 @@ using assetgrid_backend.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using assetgrid_backend.models.ViewModels.Automation;
 
 namespace assetgrid_backend.Controllers.Automation
 {
@@ -31,7 +32,7 @@ namespace assetgrid_backend.Controllers.Automation
         /// <param name="automation">The automation to run</param>
         [HttpPost()]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> RunSingle(TransactionAutomation automation)
+        public async Task<IActionResult> RunSingle(ViewTransactionAutomation automation)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -65,6 +66,176 @@ namespace assetgrid_backend.Controllers.Automation
 
                 _context.ChangeTracker.AutoDetectChangesEnabled = true;
                 return Ok();
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        /// <summary>
+        /// Create a new transaction automation
+        /// </summary>
+        /// <param name="model">The automation to create</param>
+        [HttpPost("/api/v1/Automation/Transaction/")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionAutomation))]
+        public async Task<IActionResult> Create(ViewTransactionAutomation model)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (ModelState.IsValid)
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    var result = new TransactionAutomation
+                    {
+                        Actions = model.Actions,
+                        Description = model.Description,
+                        Name = model.Name,
+                        Query = model.Query,
+                        TriggerOnCreate = model.TriggerOnCreate,
+                        TriggerOnModify = model.TriggerOnModify
+                    };
+                    var userTransactionAutomation = new UserTransactionAutomation
+                    {
+                        Enabled = model.Enabled,
+                        Permissions = UserTransactionAutomation.AutomationPermissions.Modify,
+                        User = user,
+                        UserId = user.Id,
+                        TransactionAutomation = result,
+                    };
+                    _context.TransactionAutomations.Add(result);
+                    _context.UserTransactionAutomations.Add(userTransactionAutomation);
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    return Ok(new ViewTransactionAutomation
+                    {
+                        Actions = result.Actions,
+                        Description = result.Description,
+                        Enabled = userTransactionAutomation.Enabled,
+                        Id = result.Id,
+                        Name = result.Name,
+                        Query = result.Query,
+                        TriggerOnCreate = result.TriggerOnCreate,
+                        TriggerOnModify = result.TriggerOnModify,
+                        Permissions = userTransactionAutomation.Permissions
+                    });
+                }
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        /// <summary>
+        /// Get a transaction automation
+        /// </summary>
+        /// <param name="id">The id of the automation to get</param>
+        [HttpGet("/api/v1/Automation/Transaction/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionAutomation))]
+        public async Task<IActionResult> Get(int id)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (ModelState.IsValid)
+            {
+                var result = await _context.UserTransactionAutomations
+                    .Include(x => x.TransactionAutomation)
+                    .Where(x => x.UserId == user.Id && x.TransactionAutomationId == id)
+                    .SingleOrDefaultAsync();
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new ViewTransactionAutomation
+                {
+                    Actions = result.TransactionAutomation.Actions,
+                    Description = result.TransactionAutomation.Description,
+                    Enabled = result.Enabled,
+                    Id = result.Id,
+                    Name = result.TransactionAutomation.Name,
+                    Query = result.TransactionAutomation.Query,
+                    TriggerOnCreate = result.TransactionAutomation.TriggerOnCreate,
+                    TriggerOnModify = result.TransactionAutomation.TriggerOnModify,
+                    Permissions = result.Permissions
+                });
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        /// <summary>
+        /// Returns a summary of all transaction automations available for the current user
+        /// </summary>
+        [HttpGet("/api/v1/Automation/Transaction/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ViewTransactionAutomationSummary>))]
+        public async Task<IActionResult> List()
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            var automations = await _context.UserTransactionAutomations
+                .Where(x => x.UserId == user.Id)
+                .Select(x => new ViewTransactionAutomationSummary
+                {
+                    Description = x.TransactionAutomation.Description,
+                    Enabled = x.Enabled,
+                    Name = x.TransactionAutomation.Name,
+                    TriggerOnCreate = x.TransactionAutomation.TriggerOnCreate,
+                    TriggerOnModify = x.TransactionAutomation.TriggerOnModify
+                })
+                .ToListAsync();
+
+            return Ok(automations);
+        }
+
+        /// <summary>
+        /// Modify a transaction automation
+        /// </summary>
+        /// <param name="id">The id of the automation to modify</param>
+        /// <param name="model">The automation to create</param>
+        [HttpPut("/api/v1/Automation/Transaction/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionAutomation))]
+        public async Task<IActionResult> Modify(int id, ViewTransactionAutomation model)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (ModelState.IsValid)
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    var result = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.TransactionAutomationId == id)
+                        .SingleOrDefaultAsync();
+
+                    if (result == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (result.Permissions != UserTransactionAutomation.AutomationPermissions.Modify)
+                    {
+                        return Forbid();
+                    }
+
+                    result.TransactionAutomation.Query = model.Query;
+                    result.TransactionAutomation.Actions = model.Actions;
+                    result.TransactionAutomation.Description = model.Description;
+                    result.TransactionAutomation.Name = model.Name;
+                    result.TransactionAutomation.TriggerOnModify = model.TriggerOnModify;
+                    result.TransactionAutomation.TriggerOnCreate = model.TriggerOnCreate;
+                    result.Enabled = model.Enabled;
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    return Ok(new ViewTransactionAutomation
+                    {
+                        Actions = result.TransactionAutomation.Actions,
+                        Description = result.TransactionAutomation.Description,
+                        Enabled = result.Enabled,
+                        Id = result.Id,
+                        Name = result.TransactionAutomation.Name,
+                        Query = result.TransactionAutomation.Query,
+                        TriggerOnCreate = result.TransactionAutomation.TriggerOnCreate,
+                        TriggerOnModify = result.TransactionAutomation.TriggerOnModify,
+                        Permissions = result.Permissions
+                    });
+                }
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }

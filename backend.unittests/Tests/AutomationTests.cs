@@ -18,6 +18,7 @@ using Xunit;
 using assetgrid_backend.Controllers.Automation;
 using assetgrid_backend.models.Automation;
 using assetgrid_backend.models.Search;
+using assetgrid_backend.models.ViewModels.Automation;
 
 namespace backend.unittests.Tests
 {
@@ -119,7 +120,7 @@ namespace backend.unittests.Tests
             var transactionNoAccess = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
             UserService.MockUser = UserA;
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -181,7 +182,7 @@ namespace backend.unittests.Tests
             var transactionSplit = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
             UserService.MockUser = UserA;
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -228,7 +229,7 @@ namespace backend.unittests.Tests
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -267,7 +268,7 @@ namespace backend.unittests.Tests
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -315,7 +316,7 @@ namespace backend.unittests.Tests
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -356,7 +357,7 @@ namespace backend.unittests.Tests
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -426,7 +427,7 @@ namespace backend.unittests.Tests
             var transactionNewB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
 
-            await AutomationController.RunSingle(new TransactionAutomation
+            await AutomationController.RunSingle(new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
@@ -504,7 +505,7 @@ namespace backend.unittests.Tests
             }
             await Context.SaveChangesAsync();
 
-            var automation = new TransactionAutomation
+            var automation = new ViewTransactionAutomation
             {
                 Query = new SearchGroup
                 {
