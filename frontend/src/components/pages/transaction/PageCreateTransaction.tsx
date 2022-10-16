@@ -110,7 +110,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                             ...model,
                             lines: [{ ...model.lines[0], category: value }]
                         })}
-                        errors={modelErrors?.Category} />}
+                        errors={modelErrors?.["Lines[0].Category"]} />}
             </Card>
 
             <Card title="Transaction lines" isNarrow={true}>
@@ -128,7 +128,8 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         amount: new Decimal(value)
                                     })}
-                                    disabled={creating} />
+                                    disabled={creating}
+                                    errors={modelErrors?.[`Lines[${i}].Amount`]} />
                             </div>
                             <div className="column">
                                 <InputText label={i === 0 ? "Description" : undefined}
@@ -137,7 +138,8 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         description: e.target.value
                                     })}
-                                    disabled={creating} />
+                                    disabled={creating}
+                                    errors={modelErrors?.[`Lines[${i}].Description`]}/>
                             </div>
                             <div className="column">
                                 <InputCategory label={i === 0 ? "Category" : undefined}
@@ -146,7 +148,8 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         category: value
                                     })}
-                                    disabled={creating} />
+                                    disabled={creating}
+                                    errors={modelErrors?.[`Lines[${i}].Category`]} />
                             </div>
                             {model.lines.length !== 0 &&
                                 <div className="column is-narrow">

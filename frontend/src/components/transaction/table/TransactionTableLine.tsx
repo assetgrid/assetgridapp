@@ -203,7 +203,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 allowNull={true}
                 onChange={account => setModel({ ...model, source: account })}
                 allowCreateNewAccount={true}
-                errors={errors.SourceAccountId} />
+                errors={errors.SourceId} />
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
@@ -212,7 +212,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 allowNull={true}
                 onChange={account => setModel({ ...model, destination: account })}
                 allowCreateNewAccount={true}
-                errors={errors.DestinationAccountId} />
+                errors={errors.DestinationId} />
         </div>}
         <div>
             {model.isSplit
@@ -221,7 +221,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                     value={model.lines[0].category}
                     disabled={props.disabled}
                     onChange={category => updateLine({ ...model.lines[0], category }, 0)}
-                    errors={errors.Category} />}
+                    errors={errors["Lines[0].Category"]} />}
         </div>
         <div>
             {!props.disabled && api !== null && <>
@@ -232,11 +232,13 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         {model.isSplit
             ? < div className="transaction-lines split">
                 {model.lines.map((line, i) => <TransactionLineEditor key={i}
+                    index={i}
                     line={line}
                     update={changes => updateLine(changes, i)}
                     delete={() => deleteLine(i)}
                     disabled={props.disabled}
                     inverse={amountMultiplier.toNumber() === -1}
+                    errors={errors}
                     last={i === model.lines.length} />)}
                 <div style={{ gridColumn: "colstart / innerstart" }}></div>
                 <div className="btn-add-line">
@@ -324,12 +326,14 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
  * Inline editor for a transaction line
  */
 interface LineEditorProps {
+    index: number
     line: TransactionLine
     update: (changes: Partial<TransactionLine>) => void
     delete: () => void
     disabled: boolean
     last: boolean
     inverse: boolean
+    errors: { [key: string]: string[] }
 }
 function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
     const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
@@ -342,7 +346,8 @@ function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
             <InputText disabled={props.disabled}
                 isSmall={true}
                 value={props.line.description}
-                onChange={e => props.update({ description: e.target.value })} />
+                onChange={e => props.update({ description: e.target.value })}
+                errors={props.errors[`Lines[${props.index}].Description`]} />
         </div>
         <div className="total">
             <InputNumber
@@ -350,7 +355,8 @@ function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
                 allowNull={false}
                 isSmall={true}
                 value={props.line.amount.times(multiplier)}
-                onChange={value => props.update({ amount: value.times(multiplier) })} />
+                onChange={value => props.update({ amount: value.times(multiplier) })}
+                errors={props.errors[`Lines[${props.index}].Total`]} />
         </div>
         <div></div>
         <div></div>
@@ -359,7 +365,8 @@ function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
                 isSmall={true}
                 value={props.line.category}
                 disabled={props.disabled}
-                onChange={category => props.update({ category })} />
+                onChange={category => props.update({ category })}
+                errors={props.errors[`Lines[${props.index}].Category`]} />
         </div>
         <div style={{ gridColumn: "innerend/colend" }}>
             <InputIconButton icon={regular.faTrashCan} onClick={props.delete} />

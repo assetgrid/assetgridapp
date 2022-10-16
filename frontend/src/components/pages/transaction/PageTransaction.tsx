@@ -62,8 +62,7 @@ export default function PageTransaction (): React.ReactElement {
                         isUpdating,
                         transaction => setEditModel(transaction),
                         editModel,
-                        () => setIsDeleting(true),
-                        forget(update)
+                        errors
                     )}
                 </div>
             </div>
@@ -285,7 +284,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                                 allowNull={true}
                                 allowCreateNewAccount={true}
                                 disabled={props.isUpdating}
-                                errors={props.errors.SourceAccountId} />
+                                errors={props.errors.SourceId} />
                         </td>
                     </tr>
                     <tr>
@@ -297,7 +296,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                                 allowNull={true}
                                 allowCreateNewAccount={true}
                                 disabled={props.isUpdating}
-                                errors={props.errors.DestinationAccountId} />
+                                errors={props.errors.DestinationId} />
                         </td>
                     </tr>
                     <tr>
@@ -309,7 +308,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                                     value={editModel.lines[0].category}
                                     onChange={value => props.onChange({ ...editModel, lines: [{ ...editModel.lines[0], category: value }] })}
                                     disabled={props.isUpdating}
-                                    errors={props.errors.Category} /> }
+                                    errors={props.errors["Lines[0].Category"]} /> }
                         </td>
                     </tr>
                 </tbody>
@@ -327,8 +326,7 @@ function transactionLines (
     isUpdating: boolean,
     onChange: (transaction: Transaction) => void,
     editModel: Transaction | null,
-    beginDelete: () => void,
-    saveChanges: () => void
+    errors: { [key: string]: string[] }
 ): React.ReactElement {
     const { user } = React.useContext(userContext);
 
@@ -404,6 +402,7 @@ function transactionLines (
                                 <InputText value={line.description}
                                     onChange={e => updateLine({ ...line, description: e.target.value }, i)}
                                     disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Description`]}
                                 />
                             </td>
                             <td className="has-text-right">{
@@ -411,13 +410,16 @@ function transactionLines (
                                     onChange={value => updateLine({ ...line, amount: value }, i)}
                                     allowNull={false}
                                     disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Amount`]}
                                 />
                             }</td>
                             <td>
                                 <InputCategory
                                     value={line.category}
                                     onChange={value => updateLine({ ...line, category: value }, i)}
-                                    disabled={isUpdating} />
+                                    disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Category`]}
+                                />
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
                                 <InputIconButton icon={regular.faTrashCan} onClick={() => deleteLine(i)} />
