@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
-import { CreateTransaction, Transaction, TransactionLine } from "../../../models/transaction";
+import { ModifyTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
@@ -21,7 +21,7 @@ import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionLink from "../../transaction/TransactionLink";
 
 export default function PageCreateTransaction (): React.ReactElement {
-    const defaultModel: CreateTransaction = {
+    const defaultModel: ModifyTransaction = {
         dateTime: DateTime.now(),
         description: "",
         destinationId: window.history.state.usr?.destinationId ?? null,
@@ -32,7 +32,7 @@ export default function PageCreateTransaction (): React.ReactElement {
         isSplit: false
     };
 
-    const [model, setModel] = React.useState<CreateTransaction>(defaultModel);
+    const [model, setModel] = React.useState<ModifyTransaction>(defaultModel);
     const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
     const [creating, setCreating] = React.useState(false);
     const navigate = useNavigate();

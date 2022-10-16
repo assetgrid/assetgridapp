@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace assetgrid_backend.ViewModels
+namespace assetgrid_backend.Models.ViewModels
 {
     public class UserAuthenticatedResponse
     {

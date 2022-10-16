@@ -5,7 +5,7 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { forget, formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
-import { CreateTransaction } from "../../../models/transaction";
+import { ModifyTransaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
@@ -27,9 +27,9 @@ interface Props {
  * React object class
  */
 export function Import (props: Props): React.ReactElement {
-    const [succeeded, setSucceeded] = React.useState<CreateTransaction[]>([]);
-    const [failed, setFailed] = React.useState<CreateTransaction[]>([]);
-    const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([]);
+    const [succeeded, setSucceeded] = React.useState<ModifyTransaction[]>([]);
+    const [failed, setFailed] = React.useState<ModifyTransaction[]>([]);
+    const [duplicate, setDuplicate] = React.useState<ModifyTransaction[]>([]);
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
     const [page, setPage] = React.useState(1);
@@ -77,7 +77,7 @@ export function Import (props: Props): React.ReactElement {
             </>;
     }
 
-    function transactionTable (transactions: CreateTransaction[]): React.ReactElement {
+    function transactionTable (transactions: ModifyTransaction[]): React.ReactElement {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifiers[0] ?? "None"}</td>
@@ -110,7 +110,7 @@ export function Import (props: Props): React.ReactElement {
             !t.dateTime.isValid ||
             (t.source?.id === t.destination?.id)
         );
-        const invalidTransactions: CreateTransaction[] = props.transactions.filter((_, i) => errors[i]).map(transaction => ({
+        const invalidTransactions: ModifyTransaction[] = props.transactions.filter((_, i) => errors[i]).map(transaction => ({
             dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
             description: transaction.description,
             sourceId: transaction.source?.id ?? null,
@@ -121,16 +121,16 @@ export function Import (props: Props): React.ReactElement {
             lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
         let progress = invalidTransactions.length;
-        let succeeded: CreateTransaction[] = [];
-        let failed: CreateTransaction[] = invalidTransactions;
-        let duplicate: CreateTransaction[] = [];
+        let succeeded: ModifyTransaction[] = [];
+        let failed: ModifyTransaction[] = invalidTransactions;
+        let duplicate: ModifyTransaction[] = [];
 
         setProgress(progress);
         setSucceeded(succeeded);
         setFailed(failed);
         setDuplicate(duplicate);
 
-        const createModels: CreateTransaction[] = props.transactions.filter((_, i) => !errors[i]).map(transaction => ({
+        const createModels: ModifyTransaction[] = props.transactions.filter((_, i) => !errors[i]).map(transaction => ({
             dateTime: transaction.dateTime,
             description: transaction.description,
             sourceId: transaction.source?.id ?? null,

@@ -1,6 +1,6 @@
 ﻿using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using System.Linq.Expressions;
 
 namespace assetgrid_backend.Data.Search

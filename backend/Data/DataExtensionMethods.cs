@@ -1,4 +1,4 @@
-﻿using assetgrid_backend.ViewModels;
+﻿using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Models;
 using System.Linq.Expressions;
 using System.Text.Json;

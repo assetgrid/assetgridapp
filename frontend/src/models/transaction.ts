@@ -16,7 +16,7 @@ export interface Transaction {
     total: Decimal
 }
 
-export interface CreateTransaction {
+export interface ModifyTransaction {
     sourceId: number | null
     destinationId: number | null
     dateTime: DateTime
@@ -27,21 +27,18 @@ export interface CreateTransaction {
     isSplit: boolean
 }
 
-export interface UpdateTransaction {
-    identifiers?: string[]
-    sourceId?: number | null
-    destinationId?: number | null
-    dateTime?: DateTime
-    description?: string
-    total?: Decimal
-    lines?: TransactionLine[]
-    isSplit?: boolean
-}
-
 export interface TransactionLine {
     amount: Decimal
     description: string
     category: string
+}
+
+export function serializeTransactionLine (line: TransactionLine): TransactionLine {
+    const { amount, ...rest } = line;
+    return {
+        ...rest,
+        amountString: amount.times(10000).toString()
+    } as any;
 }
 
 export type TransactionListResponse = {

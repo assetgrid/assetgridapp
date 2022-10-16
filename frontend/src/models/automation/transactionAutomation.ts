@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "../account";
 import { SearchGroup, serializeTransactionQuery } from "../search";
-import { TransactionLine } from "../transaction";
+import { serializeTransactionLine, TransactionLine } from "../transaction";
 
 export interface TransactionAutomation {
     triggers: TransactionAutomationTrigger
@@ -25,7 +25,7 @@ export enum TransactionAutomationTrigger {
 }
 
 export type TransactionAction = ActionSetTimestmap | ActionSetDescription | ActionSetAmount | ActionSetLines
-| ActionSetSource | ActionSetDestination | ActionSetCategory | ActionDelete;
+| ActionSetAccount | ActionSetCategory | ActionDelete;
 
 export interface ActionSetTimestmap {
     key: "set-timestamp"
@@ -47,14 +47,10 @@ export interface ActionSetLines {
     value: TransactionLine[]
 }
 
-export interface ActionSetSource {
-    key: "set-source"
+export interface ActionSetAccount {
+    key: "set-account"
     value: Account | null
-}
-
-export interface ActionSetDestination {
-    key: "set-destination"
-    value: Account | null
+    account: "source" | "destination"
 }
 
 export interface ActionSetCategory {
@@ -72,11 +68,12 @@ export function serializeTransactionAction (action: TransactionAction): Transact
             const { value, ...rest } = action;
             return { ...rest, valueString: value.times(10000).toString() } as any as TransactionAction;
         }
-        case "set-source":
-        case "set-destination":
+        case "set-account":
             return { ...action, value: action.value === null ? null : action.value.id } as any as TransactionAction;
         case "set-timestamp":
             return { ...action, value: action.value.toISO() } as any as TransactionAction;
+        case "set-lines":
+            return { ...action, value: action.value.map(serializeTransactionLine) } as any as TransactionAction;
         default:
             return action;
     }

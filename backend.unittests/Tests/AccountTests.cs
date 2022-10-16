@@ -3,7 +3,7 @@ using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -278,7 +278,7 @@ namespace backend.unittests.Tests
             for (var i = 0; i < 15; i++)
             {
                 var total = random.Next(-500, 500);
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
                     Total = total,
@@ -369,7 +369,7 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 15; i++)
             {
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
                     Total = random.Next(-500, 500),
@@ -409,7 +409,7 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 365; i++)
             {
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
                     Total = random.Next(-500, 500),
@@ -474,7 +474,7 @@ namespace backend.unittests.Tests
             };
 
             var accountA = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 DestinationId = accountA.Id,
                 Total = 100,
@@ -547,7 +547,7 @@ namespace backend.unittests.Tests
                 Name = "Test account"
             })).OkValue<ViewAccount>();
 
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 DestinationId = account.Id,
                 Total = 100,

@@ -3,7 +3,7 @@ using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -82,7 +82,7 @@ namespace backend.unittests.Tests
         public async void CategoryAutocomplete()
         {
             var otherUser = await UserService.CreateUser("test2", "test");
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = -500,
                 DateTime = DateTime.Now,

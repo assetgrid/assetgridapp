@@ -113,7 +113,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
                 deleted={() => props.updateItem(props.transaction.id, null)}
                 transaction={props.transaction} />}
         </div>}
-        {expandSplit && <div className="transaction-lines split">
+        {expandSplit && props.transaction.isSplit && <div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
                 <div style={{ gridColumn: "colstart/innerstart" }}></div>
                 <div className="description">
@@ -263,11 +263,12 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         const result = await api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
             description: model.description,
-            sourceId: model.source?.id ?? -1,
-            destinationId: model.destination?.id ?? -1,
+            sourceId: model.source?.id ?? null,
+            destinationId: model.destination?.id ?? null,
             total: model.total,
             lines: model.lines,
-            isSplit: model.isSplit
+            isSplit: model.isSplit,
+            identifiers: props.transaction.identifiers
         });
 
         if (result.status === 200) {

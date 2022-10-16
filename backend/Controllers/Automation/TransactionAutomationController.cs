@@ -3,7 +3,7 @@ using assetgrid_backend.Helpers;
 using assetgrid_backend.models.Automation;
 using assetgrid_backend.Models;
 using assetgrid_backend.Services;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -56,7 +56,7 @@ namespace assetgrid_backend.Controllers.Automation
 
                     foreach (var action in automation.Actions)
                     {
-                        await action.Run(query, _context);
+                        await action.Run(query, _context, user);
                     }
 
                     await _context.SaveChangesAsync();

@@ -103,8 +103,8 @@ export default function PageTransaction (): React.ReactElement {
         setErors({});
         const result = await api.Transaction.update(id, {
             ...editModel,
-            sourceId: editModel.source?.id ?? -1,
-            destinationId: editModel.destination?.id ?? -1
+            sourceId: editModel.source?.id ?? null,
+            destinationId: editModel.destination?.id ?? null
         });
 
         if (result.status === 200) {

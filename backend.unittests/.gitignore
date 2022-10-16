@@ -3,3 +3,4 @@ obj
 .vs
 TestResults
 lcov.info
+coverage.json

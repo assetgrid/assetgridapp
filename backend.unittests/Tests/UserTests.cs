@@ -2,7 +2,7 @@ using assetgrid_backend;
 using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc;
@@ -191,7 +191,7 @@ namespace backend.unittests.Tests
             var accountB1 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Create transactions
-            var createTransaction = async (int? sourceId, int? destinationId) => (await TransactionController.Create(new ViewCreateTransaction
+            var createTransaction = async (int? sourceId, int? destinationId) => (await TransactionController.Create(new ViewModifyTransaction
             {
                 SourceId = sourceId,
                 DestinationId = destinationId,

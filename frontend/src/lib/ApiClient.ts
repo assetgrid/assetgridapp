@@ -5,7 +5,7 @@ import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMove
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
-import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction } from "../models/transaction";
+import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
@@ -584,7 +584,7 @@ const Transaction = (token: string) => ({
      * @param transaction The transaction to be created
      * @returns The newly created transaction
      */
-    create: async function (transaction: CreateTransaction): Promise<Ok<TransactionModel> | BadRequest | Forbid> {
+    create: async function (transaction: ModifyTransaction): Promise<Ok<TransactionModel> | BadRequest | Forbid> {
         return await new Promise<Ok<TransactionModel> | BadRequest | Forbid>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.post<TransactionModel>(`${rootUrl}/api/v1/transaction`, {
@@ -614,9 +614,9 @@ const Transaction = (token: string) => ({
      * @param transactions The transactions to be created
      * @returns An object containing information about transactions successfully created, those with errors and those with duplicate identifiers
      */
-    createMany: async function (transactions: CreateTransaction[]): Promise<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }> {
-        return await new Promise<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>((resolve, reject) => {
-            axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>(`${rootUrl}/api/v1/transaction/createmany`,
+    createMany: async function (transactions: ModifyTransaction[]): Promise<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }> {
+        return await new Promise<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>((resolve, reject) => {
+            axios.post<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>(`${rootUrl}/api/v1/transaction/createmany`,
                 transactions.map(transaction => ({
                     ...transaction,
                     total: undefined,
@@ -625,9 +625,9 @@ const Transaction = (token: string) => ({
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({
-                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as CreateTransaction),
-                failed: result.data.failed.map(t => fixTransaction(t) as any as CreateTransaction),
-                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as CreateTransaction)
+                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as ModifyTransaction),
+                failed: result.data.failed.map(t => fixTransaction(t) as any as ModifyTransaction),
+                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as ModifyTransaction)
             }))
                 .catch(e => {
                     console.log(e);
@@ -642,19 +642,17 @@ const Transaction = (token: string) => ({
      * @param transaction The changes to make
      * @returns The updated transaction
      */
-    update: async function (id: number, transaction: UpdateTransaction): Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest> {
+    update: async function (id: number, transaction: ModifyTransaction): Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest> {
         return await new Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.put<TransactionModel>(`${rootUrl}/api/v1/transaction/${id}`, {
                 ...model,
-                totalString: (transaction.total != null) ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
-                lines: (transaction.lines != null)
-                    ? transaction.lines.map(line => ({
-                        ...line,
-                        amountString: line.amount.mul(new Decimal(10000)).round().toString(),
-                        amount: undefined
-                    }))
-                    : undefined
+                totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
+                lines: transaction.lines.map(line => ({
+                    ...line,
+                    amountString: line.amount.mul(new Decimal(10000)).round().toString(),
+                    amount: undefined
+                }))
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({ status: 200, data: fixTransaction(result.data) }))
@@ -769,7 +767,7 @@ const Automation = (token: string) => ({
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
  */
-function fixTransaction (transaction: TransactionModel | CreateTransaction): TransactionModel {
+function fixTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
     const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
     return {
         ...rest,
