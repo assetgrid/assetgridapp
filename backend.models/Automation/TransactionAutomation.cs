@@ -17,8 +17,27 @@ using System.ComponentModel.DataAnnotations;
 
 namespace assetgrid_backend.models.Automation
 {
+    public class UserTransactionAutomation
+    {
+        public int Id { get; set; }
+        public int TransactionAutomationId { get; set; }
+        public virtual TransactionAutomation TransactionAutomation { get; set; } = null!;
+        public int UserId { get; set; }
+        public virtual User User { get; set; } = null!;
+
+        public AutomationPermissions Permissions { get; set; }
+
+        public enum AutomationPermissions
+        {
+            Read,
+            Modify
+        }
+    }
+
     public class TransactionAutomation
     {
+        public int Id { get; set; }
+
         [MaxLength(50)]
         public string Name { get; set; } = null!;
 

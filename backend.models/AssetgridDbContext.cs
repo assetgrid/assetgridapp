@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models.Automation;
+using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
@@ -75,5 +76,7 @@ namespace assetgrid_backend.Models
         public DbSet<TransactionUniqueIdentifier> TransactionUniqueIdentifiers { get; set; } = null!;
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
         public DbSet<UserCsvImportProfile> UserCsvImportProfiles { get; set; } = null!;
+        public DbSet<TransactionAutomation> TransactionAutomations { get; set; } = null!;
+        public DbSet<UserTransactionAutomation> UserTransactionAutomations { get; set; } = null!;
     }
 }
