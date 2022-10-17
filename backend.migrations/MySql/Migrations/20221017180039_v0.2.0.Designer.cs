@@ -11,7 +11,7 @@ using assetgrid_backend.Models;
 namespace assetgrid_backend.Migrations.MySql
 {
     [DbContext(typeof(AssetgridDbContext))]
-    [Migration("20221013131209_v0.2.0")]
+    [Migration("20221017180039_v0.2.0")]
     partial class v020
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,6 +61,68 @@ namespace assetgrid_backend.Migrations.MySql
                     b.HasIndex("AccountId");
 
                     b.ToTable("AccountUniqueIdentifiers");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.TransactionAutomation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Actions")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Query")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<bool>("TriggerOnCreate")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("TriggerOnModify")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TransactionAutomations");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TransactionAutomationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionAutomationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTransactionAutomations");
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
@@ -292,6 +354,25 @@ namespace assetgrid_backend.Migrations.MySql
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.Automation.TransactionAutomation", "TransactionAutomation")
+                        .WithMany()
+                        .HasForeignKey("TransactionAutomationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransactionAutomation");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
