@@ -180,7 +180,7 @@ namespace assetgrid_backend.models.Automation
 
         public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
         {
-            var valueAccount = ValueAccount(context, user);
+            var valueAccount = await ValueAccount(context, user);
 
             // Don't include transactions where the other account is the same as it would either result in transaction with same
             // source and destination or no accounts
