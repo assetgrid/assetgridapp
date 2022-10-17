@@ -93,11 +93,13 @@ namespace assetgrid_backend.Data
                     {
                         throw new Exception($"Operator '{query.Operator}' expects value of type 'string' but received type null");
                     }
-                    if (query.Value != null && ((JsonElement)query.Value).ValueKind != JsonValueKind.String)
+                    if (query.Value != null && query.Value is not string && ((JsonElement)query.Value).ValueKind != JsonValueKind.String)
                     {
                         throw new Exception($"Operator '{query.Operator}' expects value of type 'string' but received type {((JsonElement)query.Value).ValueKind}");
                     }
-                    var value = query.Value != null ? ((JsonElement)query.Value).GetString()?.ToUpper() : null;
+                    var value = query.Value != null ? (query.Value is string ? (string)query.Value : ((JsonElement)query.Value).GetString())?.ToUpper() : null;
+                    // {object}.{column}.ToUpper() for case insensitive string comparisons
+                    var upperCaseParameter = Expression.Call(parameter, typeof(string).GetMethod("ToUpper", new Type[] { })!);
 
                     /*
                     * Then generate the expression
@@ -105,12 +107,12 @@ namespace assetgrid_backend.Data
                     switch (query.Operator)
                     {
                         case SearchOperator.Equals:
-                            result = Expression.Equal(parameter, Expression.Constant(value));
+                            result = Expression.Equal(upperCaseParameter, Expression.Constant(value));
                             break;
                         case SearchOperator.Contains:
                             result = Expression.Call(
                                     // Call method Contains on the column with the value as the parameter
-                                    Expression.Call(parameter, typeof(string).GetMethod("ToUpper", new Type[] { })!),
+                                    upperCaseParameter,
                                     typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
                                     Expression.Constant(value));
                             break;

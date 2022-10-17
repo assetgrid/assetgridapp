@@ -5,7 +5,8 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { forget, formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
-import { ModifyTransaction } from "../../../models/transaction";
+import { SearchGroupType, SearchOperator } from "../../../models/search";
+import { ModifyTransaction, Transaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
@@ -13,6 +14,7 @@ import Modal from "../../common/Modal";
 import Table from "../../common/Table";
 import InputAutoComplete from "../../input/InputAutoComplete";
 import InputButton from "../../input/InputButton";
+import TransactionList from "../table/TransactionList";
 import { CsvCreateTransaction } from "./importModels";
 
 interface Props {
@@ -27,7 +29,7 @@ interface Props {
  * React object class
  */
 export function Import (props: Props): React.ReactElement {
-    const [succeeded, setSucceeded] = React.useState<ModifyTransaction[]>([]);
+    const [succeeded, setSucceeded] = React.useState<Transaction[]>([]);
     const [failed, setFailed] = React.useState<ModifyTransaction[]>([]);
     const [duplicate, setDuplicate] = React.useState<ModifyTransaction[]>([]);
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
@@ -63,7 +65,15 @@ export function Import (props: Props): React.ReactElement {
                 </Card>
                 <Card title="Succeeded" isNarrow={false}>
                     <p className="mb-3">The following transactions were successfully created:</p>
-                    {transactionTable(succeeded)}
+                    <TransactionList draw={0} allowEditing={false} allowLinks={false} query={{
+                        type: SearchGroupType.Query,
+                        query: {
+                            column: "Id",
+                            not: false,
+                            operator: SearchOperator.In,
+                            value: succeeded.map(x => x.id)
+                        }
+                    }} />
                 </Card>
                 <Card title="Duplicate" isNarrow={false}>
                     <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
@@ -121,7 +131,7 @@ export function Import (props: Props): React.ReactElement {
             lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
         let progress = invalidTransactions.length;
-        let succeeded: ModifyTransaction[] = [];
+        let succeeded: Transaction[] = [];
         let failed: ModifyTransaction[] = invalidTransactions;
         let duplicate: ModifyTransaction[] = [];
 

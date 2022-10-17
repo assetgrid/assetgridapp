@@ -149,7 +149,7 @@ namespace assetgrid_backend.Controllers.Automation
                     Actions = result.TransactionAutomation.Actions,
                     Description = result.TransactionAutomation.Description,
                     Enabled = result.Enabled,
-                    Id = result.Id,
+                    Id = result.TransactionAutomation.Id,
                     Name = result.TransactionAutomation.Name,
                     Query = result.TransactionAutomation.Query,
                     TriggerOnCreate = result.TransactionAutomation.TriggerOnCreate,

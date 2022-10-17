@@ -19,6 +19,8 @@ using assetgrid_backend.Controllers.Automation;
 using assetgrid_backend.models.Automation;
 using assetgrid_backend.models.Search;
 using assetgrid_backend.models.ViewModels.Automation;
+using System.Security.Principal;
+using System.Runtime.InteropServices;
 
 namespace backend.unittests.Tests
 {
@@ -543,6 +545,413 @@ namespace backend.unittests.Tests
                     Assert.Equivalent(transactionAB, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>());
                     break;
             }
+        }
+
+        [Fact]
+        public async void CreateGetModifyDelete()
+        {
+            var automationModel = new ViewTransactionAutomation
+            {
+                Name = "Test name",
+                Description = "Test description",
+                Enabled = true,
+                TriggerOnCreate = true,
+                TriggerOnModify = true,
+                Query = new SearchGroup
+                {
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
+                    {
+                        Column = "Description",
+                        Operator = SearchOperator.Equals,
+                        Not = false,
+                        Value = "run-automation"
+                    }
+                },
+                Actions = new List<TransactionAutomationAction>
+                {
+                    new ActionSetCategory
+                    {
+                        Value = "modified"
+                    }
+                },
+                Permissions = UserTransactionAutomation.AutomationPermissions.Modify
+            };
+
+            var createResult = await AutomationController.Create(automationModel);
+            Assert.IsType<OkObjectResult>(createResult);
+            var createdAutomation = createResult.OkValue<ViewTransactionAutomation>();
+            automationModel.Id = createdAutomation.Id;
+            Assert.Equivalent(automationModel, createdAutomation);
+
+            Assert.Equivalent(createdAutomation, (await AutomationController.Get(automationModel.Id)).OkValue<ViewTransactionAutomation>());
+
+            Assert.Single((await AutomationController.List()).OkValue<List<ViewTransactionAutomationSummary>>());
+
+            UserService.MockUser = UserB;
+            Assert.Empty((await AutomationController.List()).OkValue<List<ViewTransactionAutomationSummary>>());
+            UserService.MockUser = UserA;
+
+            automationModel.Description = "New description";
+            automationModel.Name = "New name";
+            automationModel.Enabled = false;
+            automationModel.TriggerOnCreate = false;
+            automationModel.TriggerOnModify = false;
+            automationModel.Actions = new List<TransactionAutomationAction> { new ActionSetDescription { Value = "New description" } };
+
+            var updateResult = await AutomationController.Modify(automationModel.Id, automationModel);
+            Assert.IsType<OkObjectResult>(updateResult);
+            var updatedAutomation = updateResult.OkValue<ViewTransactionAutomation>();
+            Assert.Equivalent(automationModel, updatedAutomation);
+
+            var deleteResult = await AutomationController.Delete(automationModel.Id);
+            Assert.IsType<OkResult>(deleteResult);
+
+            Assert.Empty(Context.UserTransactionAutomations.Where(x => x.UserId == UserA.Id && x.TransactionAutomationId == automationModel.Id));
+            Assert.Empty(Context.TransactionAutomations.Where(x => x.Id == automationModel.Id));
+        }
+
+        [Fact]
+        public async void AccessOtherUserAutomations()
+        {
+            var automationModel = (await AutomationController.Create(new ViewTransactionAutomation
+            {
+                Name = "Test name",
+                Description = "Test description",
+                Enabled = true,
+                TriggerOnCreate = true,
+                TriggerOnModify = true,
+                Query = new SearchGroup
+                {
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
+                    {
+                        Column = "Description",
+                        Operator = SearchOperator.Equals,
+                        Not = false,
+                        Value = "run-automation"
+                    }
+                },
+                Actions = new List<TransactionAutomationAction>
+                {
+                    new ActionSetCategory
+                    {
+                        Value = "modified"
+                    }
+                },
+                Permissions = UserTransactionAutomation.AutomationPermissions.Modify
+            })).OkValue<ViewTransactionAutomation>();
+
+            // User A can get the transaction
+            var getResult = await AutomationController.Get(automationModel.Id);
+            Assert.IsType<OkObjectResult>(getResult);
+
+            // User B cannot
+            UserService.MockUser = UserB;
+            Assert.IsType<NotFoundResult>(await AutomationController.Get(automationModel.Id));
+            Assert.Empty((await AutomationController.List()).OkValue<List<ViewTransactionAutomationSummary>>());
+
+            // User B cannot modify it either
+            var modifiedAutomation = getResult.OkValue<ViewTransactionAutomation>();
+            modifiedAutomation.Description = "Modified";
+            Assert.IsType<NotFoundResult>(await AutomationController.Modify(modifiedAutomation.Id, modifiedAutomation));
+            UserService.MockUser = UserA;
+            Assert.Equivalent(automationModel, (await AutomationController.Get(automationModel.Id)).OkValue<ViewTransactionAutomation>());
+
+            // Change user B's permissions to view
+            var userAutomation = new UserTransactionAutomation
+            {
+                Enabled = true,
+                Permissions = UserTransactionAutomation.AutomationPermissions.Read,
+                TransactionAutomationId = modifiedAutomation.Id,
+                UserId = UserB.Id
+            };
+            Context.Add(userAutomation);
+            await Context.SaveChangesAsync();
+
+            // User B can get transaction
+            UserService.MockUser = UserB;
+            getResult = await AutomationController.Get(automationModel.Id);
+            automationModel.Permissions = UserTransactionAutomation.AutomationPermissions.Read;
+            Assert.IsType<OkObjectResult>(getResult);
+            Assert.Equivalent(automationModel, getResult.OkValue<ViewTransactionAutomation>());
+
+            var listResult = (await AutomationController.List()).OkValue<List<ViewTransactionAutomationSummary>>();
+            Assert.Single(listResult);
+            Assert.Equal(automationModel.Name, listResult.Single().Name);
+            Assert.Equal(automationModel.Description, listResult.Single().Description);
+            Assert.Equal(automationModel.TriggerOnCreate, listResult.Single().TriggerOnCreate);
+            Assert.Equal(automationModel.TriggerOnModify, listResult.Single().TriggerOnModify);
+
+            // Still cannot modify
+            Assert.IsType<ForbidResult>(await AutomationController.Modify(modifiedAutomation.Id, modifiedAutomation));
+            Assert.Equivalent(automationModel, (await AutomationController.Get(automationModel.Id)).OkValue<ViewTransactionAutomation>());
+
+            // Change user B's permissions to write
+            userAutomation.Permissions = UserTransactionAutomation.AutomationPermissions.Modify;
+            automationModel.Permissions = UserTransactionAutomation.AutomationPermissions.Modify;
+
+            // User B can get transaction
+            getResult = await AutomationController.Get(automationModel.Id);
+            Assert.IsType<OkObjectResult>(getResult);
+            Assert.Equivalent(automationModel, getResult.OkValue<ViewTransactionAutomation>());
+
+            listResult = (await AutomationController.List()).OkValue<List<ViewTransactionAutomationSummary>>();
+            Assert.Single(listResult);
+            Assert.Equal(automationModel.Name, listResult.Single().Name);
+            Assert.Equal(automationModel.Description, listResult.Single().Description);
+            Assert.Equal(automationModel.TriggerOnCreate, listResult.Single().TriggerOnCreate);
+            Assert.Equal(automationModel.TriggerOnModify, listResult.Single().TriggerOnModify);
+
+            // Can modify now
+            var modifyResult = await AutomationController.Modify(modifiedAutomation.Id, modifiedAutomation);
+            Assert.IsType<OkObjectResult>(modifyResult);
+            var modifyObject = modifyResult.OkValue<ViewTransactionAutomation>();
+            Assert.Equivalent(modifiedAutomation, modifyObject);
+        }
+
+        [Theory]
+        [InlineData(true, true)]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public async void TriggerAutomationOnCreate(bool triggerOnCreate, bool multiple)
+        {
+            var create = (string description) =>
+            {
+                var model = new ViewModifyTransaction
+                {
+                    DateTime = DateTime.Now,
+                    Description = description,
+                    DestinationId = AccountB.Id,
+                    SourceId = AccountA.Id,
+                    Identifiers = new List<string>(),
+                    IsSplit = false,
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "Transaction line", "") },
+                    Total = 200
+                };
+
+                if (multiple)
+                {
+                    return TransactionController.CreateMany(new List<ViewModifyTransaction> { model }).Result.OkValue<ViewTransactionCreateManyResponse>().Succeeded.Single();
+                }
+                else
+                {
+                    return TransactionController.Create(model).Result.OkValue<ViewTransaction>();
+                }
+            };
+
+            var automationModel = (await AutomationController.Create(new ViewTransactionAutomation
+            {
+                Name = "Test name",
+                Description = "Test description",
+                Enabled = true,
+                TriggerOnCreate = triggerOnCreate,
+                TriggerOnModify = false,
+                Query = new SearchGroup
+                {
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
+                    {
+                        Column = "Description",
+                        Operator = SearchOperator.Equals,
+                        Not = false,
+                        Value = "run-automation"
+                    }
+                },
+                Actions = new List<TransactionAutomationAction>
+                {
+                    new ActionSetCategory
+                    {
+                        Value = "modified"
+                    }
+                },
+                Permissions = UserTransactionAutomation.AutomationPermissions.Modify
+            })).OkValue<ViewTransactionAutomation>();
+            Context.UserAccounts.Add(new UserAccount { AccountId = AccountA.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount { AccountId = AccountB.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            await Context.SaveChangesAsync();
+
+            // Create transaction with User A - should be modified
+            var transaction = create("run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal(triggerOnCreate ? "modified" : "", transaction.Lines.Single().Category);
+
+            // Modify transaction - should not trigger automation
+            transaction.Lines.First().Category = "";
+            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, new ViewModifyTransaction
+            {
+                Total = transaction.Total,
+                DateTime = transaction.DateTime,
+                Description = transaction.Description,
+                DestinationId = transaction.Destination?.Id,
+                SourceId = transaction.Source?.Id,
+                Identifiers = transaction.Identifiers,
+                Lines = transaction.Lines,
+                IsSplit = transaction.IsSplit,
+            })).OkValue<ViewTransaction>());
+            // Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+
+            // Create transaction with User A that doesn't match query - should not be modified
+            transaction = create("don't-run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal("", transaction.Lines.Single().Category);
+
+            UserService.MockUser = UserB;
+            // Create transaction with User A - should not be modified despite matching query
+            transaction = create("run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal("", transaction.Lines.Single().Category);
+
+            // Change user B's permissions to view
+            var userAutomation = new UserTransactionAutomation
+            {
+                Enabled = true,
+                Permissions = UserTransactionAutomation.AutomationPermissions.Read,
+                TransactionAutomationId = automationModel.Id,
+                UserId = UserB.Id
+            };
+            Context.Add(userAutomation);
+            await Context.SaveChangesAsync();
+
+            // Create transaction with User B - should now be modified as user B now sees the automation
+            transaction = create("run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal(triggerOnCreate ? "modified" : "", transaction.Lines.Single().Category);
+
+            // Change permission to modify automation - should still run
+            userAutomation.Permissions = UserTransactionAutomation.AutomationPermissions.Modify;
+            await Context.SaveChangesAsync();
+            transaction = create("run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal(triggerOnCreate ? "modified" : "", transaction.Lines.Single().Category);
+
+            // Disable the automation - now it won't run
+            userAutomation.Enabled = false;
+            await Context.SaveChangesAsync();
+            transaction = create("run-automation");
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.Equal("", transaction.Lines.Single().Category);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async void TriggerAutomationOnModify(bool triggerOnModify)
+        {
+            var model = new ViewModifyTransaction
+            {
+                DateTime = DateTime.Now,
+                Description = "run-automation",
+                DestinationId = AccountB.Id,
+                SourceId = AccountA.Id,
+                Identifiers = new List<string>(),
+                IsSplit = false,
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "Transaction line", "") },
+                Total = 200
+            };
+
+            var automationModel = (await AutomationController.Create(new ViewTransactionAutomation
+            {
+                Name = "Test name",
+                Description = "Test description",
+                Enabled = true,
+                TriggerOnCreate = false,
+                TriggerOnModify = triggerOnModify,
+                Query = new SearchGroup
+                {
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
+                    {
+                        Column = "Description",
+                        Operator = SearchOperator.Equals,
+                        Not = false,
+                        Value = "run-automation"
+                    }
+                },
+                Actions = new List<TransactionAutomationAction>
+                {
+                    new ActionSetCategory
+                    {
+                        Value = "modified"
+                    }
+                },
+                Permissions = UserTransactionAutomation.AutomationPermissions.Modify
+            })).OkValue<ViewTransactionAutomation>();
+            Context.UserAccounts.Add(new UserAccount { AccountId = AccountA.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount { AccountId = AccountB.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            await Context.SaveChangesAsync();
+
+            // Create a test transaction. Should not trigger automation
+            var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
+            Assert.Equal("", transaction.Lines.Single().Category);
+
+            // Create another transaction that doesn't match the query. Still shouldn't trigger automation
+            model.Description = "do-not-run-automation";
+            var transactionDontRun = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
+            Assert.Equal("", transactionDontRun.Lines.Single().Category);
+
+            // Modify first transaction by changing it's timestmap. Should trigger automation
+            model.Description = transaction.Description;
+            transaction.DateTime = DateTime.Now;
+            model.DateTime = transactionDontRun.DateTime;
+            Assert.IsType<OkObjectResult>(await TransactionController.Update(transaction.Id, model));
+            Assert.Equal(triggerOnModify ? "modified" : "", (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>().Lines.Single().Category);
+
+            // Modify second transaction by changing it's timestamp. Should not trigger automation
+            model.Description = transactionDontRun.Description;
+            transactionDontRun.DateTime = DateTime.Now;
+            model.DateTime = transactionDontRun.DateTime;
+            Assert.Equivalent(transactionDontRun, (await TransactionController.Update(transactionDontRun.Id, model)).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionDontRun, (await TransactionController.Get(transactionDontRun.Id)).OkValue<ViewTransaction>());
+
+            // Modify second transaction and set description to trigger value. Should trigger automation
+            model.Description = transaction.Description;
+            Assert.IsType<OkObjectResult>(await TransactionController.Update(transactionDontRun.Id, model));
+            Assert.Equal(triggerOnModify ? "modified" : "", (await TransactionController.Get(transactionDontRun.Id)).OkValue<ViewTransaction>().Lines.Single().Category);
+
+            // Modify so description no longer matches criterium. Shouldn't update
+            model.Description = "do-not-run-automation";
+            Assert.IsType<OkObjectResult>(await TransactionController.Update(transactionDontRun.Id, model));
+            Assert.Equivalent(transactionDontRun, (await TransactionController.Get(transactionDontRun.Id)).OkValue<ViewTransaction>());
+
+            // Switch to user B and create transaction - shouldn't be modified
+            UserService.MockUser = UserB;
+            transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
+            Assert.Equal("", transaction.Lines.Single().Category);
+
+            // Set description to trigger value - still shouldn't be modified
+            transaction.Description = "run-automation";
+            model.Description = "run-automation";
+            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, model)).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+
+            // Change user B's permissions to view
+            var userAutomation = new UserTransactionAutomation
+            {
+                Enabled = true,
+                Permissions = UserTransactionAutomation.AutomationPermissions.Read,
+                TransactionAutomationId = automationModel.Id,
+                UserId = UserB.Id
+            };
+            Context.Add(userAutomation);
+            await Context.SaveChangesAsync();
+
+            // Now the transaction runs
+            Assert.IsType<OkObjectResult>(await TransactionController.Update(transaction.Id, model));
+            Assert.Equal(triggerOnModify ? "modified" : "", (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>().Lines.Single().Category);
+
+            // It also runs if the user has write permission
+            userAutomation.Permissions = UserTransactionAutomation.AutomationPermissions.Modify;
+            await Context.SaveChangesAsync();
+            Assert.IsType<OkObjectResult>(await TransactionController.Update(transaction.Id, model));
+            Assert.Equal(triggerOnModify ? "modified" : "", (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>().Lines.Single().Category);
+
+            // It doesn't run when the automation is diabled
+            userAutomation.Enabled = false;
+            await Context.SaveChangesAsync();
+            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, model)).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
         }
     }
 }

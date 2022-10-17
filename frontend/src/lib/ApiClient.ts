@@ -614,8 +614,8 @@ const Transaction = (token: string) => ({
      * @param transactions The transactions to be created
      * @returns An object containing information about transactions successfully created, those with errors and those with duplicate identifiers
      */
-    createMany: async function (transactions: ModifyTransaction[]): Promise<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }> {
-        return await new Promise<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>((resolve, reject) => {
+    createMany: async function (transactions: ModifyTransaction[]): Promise<{ succeeded: TransactionModel[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }> {
+        return await new Promise<{ succeeded: TransactionModel[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>((resolve, reject) => {
             axios.post<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>(`${rootUrl}/api/v1/transaction/createmany`,
                 transactions.map(transaction => ({
                     ...transaction,
@@ -625,7 +625,7 @@ const Transaction = (token: string) => ({
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({
-                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as ModifyTransaction),
+                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as TransactionModel),
                 failed: result.data.failed.map(t => fixTransaction(t) as any as ModifyTransaction),
                 duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as ModifyTransaction)
             }))

@@ -85,7 +85,7 @@ namespace assetgrid_backend.Models.ViewModels
 
     public class ViewTransactionCreateManyResponse
     {
-        public List<ViewModifyTransaction> Succeeded { get; set; } = null!;
+        public List<ViewTransaction> Succeeded { get; set; } = null!;
         public List<ViewModifyTransaction> Failed { get; set; } = null!;
         public List<ViewModifyTransaction> Duplicate { get; set; } = null!;
     }

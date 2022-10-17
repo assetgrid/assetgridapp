@@ -456,12 +456,14 @@ namespace assetgrid_backend.Controllers
             {
                 var failed = new List<ViewModifyTransaction>();
                 var duplicate = new List<ViewModifyTransaction>();
-                var success = new List<ViewModifyTransaction>();
+                var success = new List<Transaction>();
 
-                var writeAccountIds = await _context.UserAccounts
+                var writeAccounts = await _context.UserAccounts
                     .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                    .Select(account => account.AccountId)
-                    .ToListAsync();
+                    .Include(account => account.Account)
+                    .Include(account => account.Account.Identifiers)
+                    .ToDictionaryAsync(x => x.AccountId, x => x);
+                var writeAccountIds = writeAccounts.Keys;
 
                 var identifiers = transactions
                     .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
@@ -489,8 +491,8 @@ namespace assetgrid_backend.Controllers
                     {
                         try
                         {
-                            if ((transaction.SourceId.HasValue && ! writeAccountIds.Contains(transaction.SourceId.Value)) ||
-                                (transaction.DestinationId.HasValue && !writeAccountIds.Contains(transaction.DestinationId.Value)))
+                            if ((transaction.SourceId.HasValue && !writeAccounts.ContainsKey(transaction.SourceId.Value)) ||
+                                (transaction.DestinationId.HasValue && !writeAccounts.ContainsKey(transaction.DestinationId.Value)))
                             {
                                 throw new Exception("Cannot write to this account");
                             }
@@ -534,7 +536,7 @@ namespace assetgrid_backend.Controllers
                             }
 
                             _context.Transactions.Add(result);
-                            success.Add(transaction);
+                            success.Add(result);
                         }
                         catch (Exception)
                         {
@@ -543,15 +545,51 @@ namespace assetgrid_backend.Controllers
                     }
                 }
                 await _context.SaveChangesAsync();
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
 
                 return Ok(new ViewTransactionCreateManyResponse
                 {
-                    Succeeded = success,
+                    Succeeded = success.Select(result => new ViewTransaction
+                    {
+                        Id = result.Id,
+                        Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
+                        DateTime = result.DateTime,
+                        Description = result.Description,
+                        Total = result.Total,
+                        IsSplit = result.IsSplit,
+                        Source = result.SourceAccount != null
+                                    ? !writeAccounts.ContainsKey(result.SourceAccount.Id) ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
+                                        id: result.SourceAccount.Id,
+                                        name: result.SourceAccount.Name,
+                                        description: result.SourceAccount.Description,
+                                        identifiers: result.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                        favorite: writeAccounts[result.SourceAccount.Id].Favorite,
+                                        includeInNetWorth: writeAccounts[result.SourceAccount.Id].IncludeInNetWorth,
+                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.SourceAccount.Id].Permissions),
+                                        balance: 0
+                                    ) : null,
+                        Destination = result.DestinationAccount != null
+                                     ? !writeAccounts.ContainsKey(result.DestinationAccount.Id) ? ViewAccount.GetNoReadAccess(result.DestinationAccount.Id) : new ViewAccount(
+                                        id: result.DestinationAccount.Id,
+                                        name: result.DestinationAccount.Name,
+                                        description: result.DestinationAccount.Description,
+                                        identifiers: result.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                        favorite: writeAccounts[result.DestinationAccount.Id].Favorite,
+                                        includeInNetWorth: writeAccounts[result.DestinationAccount.Id].IncludeInNetWorth,
+                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.DestinationAccount.Id].Permissions),
+                                        balance: 0
+                                    ) : null,
+                        Lines = result.TransactionLines
+                            .OrderBy(line => line.Order)
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
+                            .ToList(),
+                    }).ToList(),
                     Failed = failed,
                     Duplicate = duplicate,
                 });
             }
 
+            _context.ChangeTracker.AutoDetectChangesEnabled = true;
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
     }
