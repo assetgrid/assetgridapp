@@ -97,7 +97,7 @@ namespace assetgrid_backend.Data
                     {
                         throw new Exception($"Operator '{query.Operator}' expects value of type 'string' but received type {((JsonElement)query.Value).ValueKind}");
                     }
-                    var value = query.Value != null ? ((JsonElement)query.Value).GetString() : null;
+                    var value = query.Value != null ? ((JsonElement)query.Value).GetString()?.ToUpper() : null;
 
                     /*
                     * Then generate the expression
@@ -110,7 +110,7 @@ namespace assetgrid_backend.Data
                         case SearchOperator.Contains:
                             result = Expression.Call(
                                     // Call method Contains on the column with the value as the parameter
-                                    parameter,
+                                    Expression.Call(parameter, typeof(string).GetMethod("ToUpper", new Type[] { })!),
                                     typeof(string).GetMethod("Contains", new[] { typeof(string) })!,
                                     Expression.Constant(value));
                             break;
@@ -138,7 +138,7 @@ namespace assetgrid_backend.Data
                     /*
                      * Then generate the expression
                      */
-                    var method = typeof(Enumerable)
+                    var containsMethod = typeof(Enumerable)
                                     .GetMethods()
                                     .Single(method => method.Name == "Contains" &&
                                         method.GetParameters().Length == 2 &&
@@ -147,9 +147,9 @@ namespace assetgrid_backend.Data
                     result = Expression.Call(
                         // Call method Contains on the column with the value as the parameter
                         null,
-                        method,
+                        containsMethod,
                         Expression.Constant(value),
-                        parameter);
+                        Expression.Call(parameter, typeof(string).GetMethod("ToUpper", new Type[] { })!));
                     break;
                 }
                 default:

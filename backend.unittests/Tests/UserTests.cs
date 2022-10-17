@@ -28,6 +28,7 @@ namespace backend.unittests.Tests
         public TransactionController TransactionController { get; set; }
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
+        public AutomationService AutomationService { get; set; }
 
         public UserTests()
         {
@@ -41,9 +42,10 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
         }
 
         [Fact]

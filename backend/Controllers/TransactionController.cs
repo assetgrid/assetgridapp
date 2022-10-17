@@ -22,12 +22,14 @@ namespace assetgrid_backend.Controllers
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
+        private readonly IAutomationService _automation;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _automation = automationService;
         }
 
         [HttpGet()]
@@ -127,9 +129,20 @@ namespace assetgrid_backend.Controllers
                         result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                     }
 
+                    // Get all automations enabled for this user that trigger on create
+                    var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
+                        .ToListAsync();
+                    foreach (var automation in automations)
+                    {
+                        _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                    }
+
                     _context.Transactions.Add(result);
                     transaction.Commit();
                     await _context.SaveChangesAsync();
+
                     return Ok(new ViewTransaction {
                         Id = result.Id,
                         Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
@@ -269,6 +282,16 @@ namespace assetgrid_backend.Controllers
                         var temp = sourceUserAccount;
                         sourceUserAccount = destinationUserAccount;
                         destinationUserAccount = temp;
+                    }
+
+                    // Get all automations enabled for this user that trigger on create
+                    var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnModify)
+                        .ToListAsync();
+                    foreach (var automation in automations)
+                    {
+                        _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
                     }
 
                     await _context.SaveChangesAsync();
@@ -450,6 +473,12 @@ namespace assetgrid_backend.Controllers
                     .ToListAsync())
                     .ToHashSet();
 
+                // Get all automations that will be run on these transactions
+                var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
+                        .ToListAsync();
+
                 foreach (var transaction in transactions)
                 {
                     if (transaction.Identifiers.Any(x => duplicateIdentifiers.Contains(x.Trim())))
@@ -497,6 +526,11 @@ namespace assetgrid_backend.Controllers
                                 result.SourceAccountId = result.DestinationAccountId;
                                 result.DestinationAccountId = sourceId;
                                 result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                            }
+
+                            foreach (var automation in automations)
+                            {
+                                _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                             }
 
                             _context.Transactions.Add(result);

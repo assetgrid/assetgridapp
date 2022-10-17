@@ -64,7 +64,6 @@ namespace assetgrid_backend.Controllers.Automation
                     transaction.Commit();
                 }
 
-                _context.ChangeTracker.AutoDetectChangesEnabled = true;
                 return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();

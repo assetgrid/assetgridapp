@@ -53,6 +53,7 @@ if (!Directory.Exists(dataDirectory)) {
 
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<IAutomationService, AutomationService>();
     builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(dataDirectory, "./jwt_secret.txt")));
 
     builder.Services.AddDbContext<AssetgridDbContext>(options =>

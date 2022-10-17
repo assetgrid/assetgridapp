@@ -31,6 +31,7 @@ namespace backend.unittests.Tests
         public UserController UserController { get; set; }
         public UserAuthenticatedResponse User { get; set; }
         public UserService UserService { get; set; }
+        public AutomationService AutomationService { get; set; }
         public AccountService AccountService { get; set; }
 
         public ViewAccount AccountA;
@@ -48,6 +49,7 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -55,7 +57,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
 
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
