@@ -22,6 +22,9 @@ import { Account } from "../models/account";
 import PageLogin from "./pages/PageLogin";
 import PageSignup from "./pages/PageSignup";
 import PageProfile from "./pages/PageProfile";
+import PageAutomation from "./pages/automation/PageAutomation";
+import PageAutomationTransactionCreate from "./pages/automation/transaction/PageAutomationTransactionCreate";
+import PageAutomationTransactionModify from "./pages/automation/transaction/PageAutomationTransactionModify";
 
 export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -55,15 +58,22 @@ export default function AssetgridApp (): React.ReactElement {
                             <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
                                 <Routes>
                                     <Route path={routes.dashboard()} element={<PageDashboard />} />
-                                    <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />}/>
+                                    <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />} />
+
                                     <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
                                     <Route path={routes.transactions()} element={<PageTransactions />}/>
                                     <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
                                     <Route path={routes.transactionCreate()} element={<PageCreateTransaction />} />
+
                                     <Route path={routes.accounts()} element={<PageAccountOverview />} />
                                     <Route path={routes.account(":id")} element={<PageAccount />} />
                                     <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
                                     <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
+
+                                    <Route path={routes.automation()} element={<PageAutomation />} />
+                                    <Route path={routes.automationTransactionCreate()} element={<PageAutomationTransactionCreate />} />
+                                    <Route path={routes.automationTransactionEdit(":id")} element={<PageAutomationTransactionModify />} />
+
                                     <Route path={routes.preferences()} element={<PagePreferences />} />
                                     <Route path={routes.profile()} element={<PageProfile />} />
 

@@ -24,7 +24,6 @@ namespace assetgrid_backend.models.ViewModels.Automation
         public bool TriggerOnModify { get; set; }
         public SearchGroup Query { get; set; } = null!;
         public List<TransactionAutomationAction> Actions { get; set; } = null!;
-
         public UserTransactionAutomation.AutomationPermissions Permissions { get; set; }
     }
 
@@ -36,5 +35,6 @@ namespace assetgrid_backend.models.ViewModels.Automation
         public string Description { get; set; } = null!;
         public bool TriggerOnCreate { get; set; }
         public bool TriggerOnModify { get; set; }
+        public UserTransactionAutomation.AutomationPermissions Permissions { get; set; }
     }
 }

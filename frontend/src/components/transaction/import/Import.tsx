@@ -172,6 +172,7 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     const [nameError, setNameError] = React.useState<string | null>(null);
     const [isCreating, setIsSaving] = React.useState(false);
     const api = useApi();
+    const [hasSaved, setHasSaved] = React.useState(false);
 
     return <Modal
         active={props.active}
@@ -182,6 +183,11 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <div style={{ minHeight: "20rem" }}>
+            {hasSaved && <article className="message is-link">
+                <div className="message-body">
+                    Your changes have been saved
+                </div>
+            </article>}
             <InputImportProfile
                 label="Profile name"
                 value={name}
@@ -194,9 +200,11 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     async function saveProfile (): Promise<void> {
         if (api === null) return;
 
+        setHasSaved(false);
         setIsSaving(true);
         await api.User.updateCsvImportProfile(name, props.profile);
         setIsSaving(false);
+        setHasSaved(true);
     }
 }
 

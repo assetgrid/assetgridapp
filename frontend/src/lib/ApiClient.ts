@@ -11,7 +11,7 @@ import { userContext } from "../components/App";
 import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
-import { serializeTransactionAutomation, TransactionAutomation } from "../models/automation/transactionAutomation";
+import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -749,12 +749,119 @@ const Automation = (token: string) => ({
          * Runs a transaction action a single time
          * @param action The action to run
          */
-        runSingle: async function (action: TransactionAutomation): Promise<undefined> {
-            return await new Promise<undefined>((resolve, reject) => {
+        runSingle: async function (action: TransactionAutomation): Promise<void> {
+            return await new Promise<void>((resolve, reject) => {
                 axios.post(`${rootUrl}/api/v1/automation/transaction/runSingle`, serializeTransactionAutomation(action), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve(result.data))
                     .catch(error => {
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Get all transactions automations that the current user has access to
+         */
+        list: async function (): Promise<Ok<TransactionAutomationSummary[]>> {
+            return await new Promise<Ok<TransactionAutomationSummary[]>>((resolve, reject) => {
+                axios.get(`${rootUrl}/api/v1/automation/transaction`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => {
+                    resolve({ status: 200, data: result.data });
+                }).catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+            });
+        },
+
+        /**
+         * Get an automation byu id
+         * @param id The id of the automation to get
+         */
+        get: async function (id: number): Promise<Ok<TransactionAutomation> | NotFound> {
+            return await new Promise<Ok<TransactionAutomation> | NotFound>((resolve, reject) => {
+                axios.get(`${rootUrl}/api/v1/automation/transaction/${id}`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 404) {
+                            resolve(NotFoundResult);
+                            return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Create a new transaction automation
+         * @param automation The automation to create
+         */
+        create: async function (automation: TransactionAutomation): Promise<Ok<TransactionAutomation> | BadRequest> {
+            return await new Promise<Ok<TransactionAutomation> | BadRequest>((resolve, reject) => {
+                axios.post(`${rootUrl}/api/v1/automation/transaction`, serializeTransactionAutomation(automation), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 400) {
+                            resolve(error.response.data as BadRequest);
+                            return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Modify an existing transaction
+         * @param id The id of the automation to modify
+         * @param automation The new automation
+         */
+        modify: async function (id: number, automation: TransactionAutomation): Promise<Ok<TransactionAutomation> | BadRequest | NotFound | Forbid> {
+            return await new Promise<Ok<TransactionAutomation> | BadRequest | NotFound | Forbid>((resolve, reject) => {
+                axios.put(`${rootUrl}/api/v1/automation/transaction/${id}`, serializeTransactionAutomation(automation), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        switch (error.response?.status) {
+                            case 400:
+                                resolve(error.response.data as BadRequest);
+                                return;
+                            case 404:
+                                resolve(NotFoundResult);
+                                return;
+                            case 403:
+                                resolve(ForbidResult);
+                                return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Delete a transaction automation
+         * @param id The id of the automation to delete
+         */
+        delete: async function (id: number): Promise<Ok<undefined> | NotFound | Forbid> {
+            return await new Promise<Ok<undefined> | NotFound | Forbid>((resolve, reject) => {
+                axios.delete(`${rootUrl}/api/v1/automation/transaction/${id}`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: undefined }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 404) {
+                            resolve(NotFoundResult);
+                            return;
+                        } else if (error.response?.status === 403) {
+                            resolve(ForbidResult);
+                            return;
+                        }
                         console.log(error);
                         reject(error);
                     });

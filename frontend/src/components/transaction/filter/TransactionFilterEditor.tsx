@@ -10,29 +10,36 @@ import Condition from "./TransactionFilterConditionEditor";
 interface Props<T1, T2> {
     query: T1
     setQuery: (newQuery: T2) => void
+    disabled: boolean
 }
 
 export default function TransactionFilterEditor (props: Props<SearchGroup, SearchGroup>): React.ReactElement {
-    return <Group query={props.query} setQuery={query => (query != null) && props.setQuery(query)} isParent={true} />;
+    return <Group query={props.query}
+        disabled={props.disabled}
+        setQuery={query => (query != null) && props.setQuery(query)}
+        isParent={true} />;
 }
 
 function Group (props: Props<SearchGroup, SearchGroup | null> & { isParent: boolean }): React.ReactElement {
     switch (props.query.type) {
         case SearchGroupType.And:
         case SearchGroupType.Or:
-            return <AndOrGroup query={props.query} setQuery={props.setQuery} isParent={props.isParent} />;
+            return <AndOrGroup query={props.query} disabled={props.disabled} setQuery={props.setQuery} isParent={props.isParent} />;
         case SearchGroupType.Query:
             if (props.isParent) {
-            // Top level SearchGroups must not be queries
+                // Top level SearchGroups must not be queries
                 return <AndOrGroup
                     isParent={true}
+                    disabled={props.disabled}
                     setQuery={props.setQuery}
                     query={{
                         type: SearchGroupType.And,
                         children: [props.query]
                     }} />;
             }
-            return <Condition query={props.query.query} setQuery={query => query === null ? props.setQuery(null) : props.setQuery({ type: SearchGroupType.Query, query })}/>;
+            return <Condition query={props.query.query}
+                disabled={props.disabled}
+                setQuery={query => query === null ? props.setQuery(null) : props.setQuery({ type: SearchGroupType.Query, query })} />;
     }
 }
 
@@ -40,13 +47,18 @@ function AndOrGroup (props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | 
     return <div className="filter-group">
         <div className="filter-group--header">
             <InputButton className="is-small"
+                disabled={props.disabled}
                 onClick={() => props.setQuery({ ...props.query, type: props.query.type === SearchGroupType.And ? SearchGroupType.Or : SearchGroupType.And })}>
                 {props.query.type === SearchGroupType.And ? <>AND</> : <>OR</>}
             </InputButton>
             {props.query.type === SearchGroupType.And
                 ? <div><span>All</span> of the following conditions must be met</div>
                 : <div><span>One</span> of the following conditions must be met</div>}
-            {!props.isParent && <InputIconButton className="btn-delete" icon={faTrashCan} onClick={() => props.setQuery(null)} />}
+            {!props.isParent && <InputIconButton
+                className="btn-delete"
+                disabled={props.disabled}
+                icon={faTrashCan}
+                onClick={() => props.setQuery(null)} />}
         </div>
 
         <div className="filter-group--children">
@@ -54,13 +66,13 @@ function AndOrGroup (props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | 
                 {i > 0 && (props.query.type === SearchGroupType.And
                     ? <div className="filter-and-or">AND</div>
                     : <div className="filter-and-or">OR</div>)}
-                <Group query={child} setQuery={query => setChildQuery(query, i)} isParent={false} />
+                <Group disabled={props.disabled} query={child} setQuery={query => setChildQuery(query, i)} isParent={false} />
             </React.Fragment>)}
             <div className="buttons">
-                <InputButton onClick={() => addCondition()}>
+                <InputButton disabled={props.disabled} onClick={() => addCondition()}>
                     Add condition
                 </InputButton>
-                <InputButton onClick={() => addGroup()}>
+                <InputButton disabled={props.disabled} onClick={() => addGroup()}>
                     Add group
                 </InputButton>
             </div>

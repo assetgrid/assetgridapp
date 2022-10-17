@@ -2,7 +2,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { debounce, emptyQuery, forget } from "../../../lib/Utils";
-import { TransactionAction, TransactionAutomationTrigger } from "../../../models/automation/transactionAutomation";
+import { TransactionAction, TransactionAutomationPermissions } from "../../../models/automation/transactionAutomation";
 import { SearchGroup } from "../../../models/search";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
@@ -43,9 +43,9 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
         <Hero title="Edit transactions" subtitle="Modify multiple transaction at once" />
         <div className="p-3">
             <Card title="Query" isNarrow={false}>
-                <TransactionFilterEditor query={query} setQuery={query => { setQuery(query); } } />
+                <TransactionFilterEditor disabled={isUpdating} query={query} setQuery={query => { setQuery(query); } } />
             </Card>
-            <Card title="Actions" isNarrow={false}>
+            <Card title="Action" isNarrow={false}>
                 <TransactionActionEditor action={action} onChange={setAction} disabled={isUpdating} />
 
                 <div className="buttons">
@@ -82,7 +82,9 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
             triggerOnCreate: false,
             triggerOnModify: false,
             actions: [action],
-            query
+            enabled: true,
+            query,
+            permissions: TransactionAutomationPermissions.Modify
         });
 
         setIsUpdating(false);

@@ -5,12 +5,30 @@ import { SearchGroup, serializeTransactionQuery } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
 
 export interface TransactionAutomation {
+    id?: number
+    enabled: boolean
     name: string
     description: string
     triggerOnCreate: boolean
     triggerOnModify: boolean
     query: SearchGroup
     actions: TransactionAction[]
+    permissions: TransactionAutomationPermissions
+}
+
+export interface TransactionAutomationSummary {
+    id: number
+    enabled: boolean
+    name: string
+    description: string
+    triggerOnCreate: boolean
+    triggerOnModify: boolean
+    permissions: TransactionAutomationPermissions
+}
+
+export enum TransactionAutomationPermissions {
+    Read,
+    Modify
 }
 
 export function serializeTransactionAutomation (value: TransactionAutomation): TransactionAutomation {

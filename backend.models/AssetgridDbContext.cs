@@ -1,4 +1,5 @@
 ﻿using assetgrid_backend.models.Automation;
+using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -54,6 +55,28 @@ namespace assetgrid_backend.Models
             {
                 entity.HasIndex(e => e.Identifier);
             });
+            builder.Entity<TransactionAutomation>(entity =>
+            {
+                var queryValueConverter = new ValueConverter<SearchGroup, string>(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<SearchGroup>(v, (JsonSerializerOptions?)null) ?? new SearchGroup
+                    {
+                        Type = SearchGroupType.And,
+                        Children = new List<SearchGroup>()
+                    }
+                );
+                entity.Property(e => e.Query)
+                    .HasConversion(queryValueConverter)
+                    .HasColumnType("json");
+
+                var actionsValueConverter = new ValueConverter<List<TransactionAutomationAction>, string>(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<List<TransactionAutomationAction>>(v, (JsonSerializerOptions?)null) ?? new List<TransactionAutomationAction>()
+                );
+                entity.Property(e => e.Actions)
+                    .HasConversion(actionsValueConverter)
+                    .HasColumnType("json");
+            });
 
             builder.Entity<UserCsvImportProfile>(entity =>
             {
@@ -61,7 +84,7 @@ namespace assetgrid_backend.Models
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => UserCsvImportProfile.ParseJson(v)
                 );
-                entity.Property("ImportProfile")
+                entity.Property(e => e.ImportProfile)
                     .HasConversion(valueConverter)
                     .HasColumnType("json");
             });

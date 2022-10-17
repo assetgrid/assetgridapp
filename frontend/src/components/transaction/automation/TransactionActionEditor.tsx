@@ -2,6 +2,7 @@ import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
 import {
     ActionDelete,
     ActionSetAccount,
@@ -9,6 +10,7 @@ import {
 } from "../../../models/automation/transactionAutomation";
 import { TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
+import { userContext } from "../../App";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
@@ -20,7 +22,7 @@ import InputText from "../../input/InputText";
 const actions: Array<{ key: TransactionAction["key"], value: string }> = [
     { key: "set-timestamp", value: "Set timestamp" },
     { key: "set-description", value: "Set description" },
-    { key: "set-amount", value: "Set amount" },
+    { key: "set-amount", value: "Set total" },
     { key: "set-lines", value: "Set lines" },
     { key: "set-account", value: "Set account" },
     { key: "set-category", value: "Set category" },
@@ -31,6 +33,7 @@ interface Props<T> {
     action: T
     onChange: (action: TransactionAction) => void
     disabled: boolean
+    delete?: () => void
 }
 export default function TransactionActionEditor (props: Props<TransactionAction>): React.ReactElement {
     switch (props.action.key) {
@@ -81,23 +84,27 @@ export default function TransactionActionEditor (props: Props<TransactionAction>
     }
 }
 
-function DefaultEditorLayout (props: { children?: React.ReactNode, helpText?: string } & Props<TransactionAction>): React.ReactElement {
-    return <div className="columns">
-        <div className="column">
+function DefaultEditorLayout (props: { children?: React.ReactNode, description: string } & Props<TransactionAction>): React.ReactElement {
+    return <div className="filter-group">
+        <div className="filter-group--header">
             <InputSelect
+                isSmall={true}
                 disabled={props.disabled}
-                label="Action"
                 items={[...actions]}
                 value={props.action.key}
                 onChange={value => props.onChange({ ...props.action, key: value } as any as TransactionAction)} />
-            {props.helpText !== undefined && <div className="help">{props.helpText}</div>}
+            {props.description}
+            {props.delete !== undefined && <InputIconButton className="btn-delete" icon={faTrashCan} onClick={() => props.delete!()} />}
         </div>
-        <div className="column">{props.children}</div>
+
+        <div className="filter-group--children">
+            {props.children}
+        </div>
     </div>;
 }
 
 function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactElement {
-    return <DefaultEditorLayout {...props}>
+    return <DefaultEditorLayout {...props} description={`Set description to '${props.action.value}'`}>
         <InputText label="Enter description"
             disabled={props.disabled}
             value={props.action.value}
@@ -106,7 +113,8 @@ function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactE
 }
 
 function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactElement {
-    return <DefaultEditorLayout {...props}>
+    const { user } = React.useContext(userContext);
+    return <DefaultEditorLayout {...props} description={`Set timestamp to '${formatDateTimeWithUser(props.action.value, user)}'`}>
         <InputDateTime label="Select timestamp"
             disabled={props.disabled}
             fullwidth={false}
@@ -116,27 +124,33 @@ function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactEleme
 }
 
 function SetAmountEditor (props: Props<ActionSetAmount>): React.ReactElement {
-    return <DefaultEditorLayout {...props} helpText="Will not affect split transactions">
-        <InputNumber label="Enter amount"
+    const { user } = React.useContext(userContext);
+    return <DefaultEditorLayout {...props} description={`Set total to '${formatNumberWithUser(props.action.value, user)}'`}>
+        <InputNumber label="Enter total"
             value={props.action.value}
             onChange={value => props.onChange({ ...props.action, value })}
             disabled={props.disabled}
             allowNull={false} />
+        <p className="help">Will not affect split transactions</p>
     </DefaultEditorLayout>;
 }
 
 function SetCategoryEditor (props: Props<ActionSetCategory>): React.ReactElement {
-    return <DefaultEditorLayout {...props}>
+    return <DefaultEditorLayout {...props} description={`Set category to '${props.action.value}'`}>
         <InputCategory label="Enter category"
             value={props.action.value}
             onChange={value => props.onChange({ ...props.action, value })}
             disabled={props.disabled} />
+        <p className="help">Split transactions will get this category for all lines.</p>
     </DefaultEditorLayout>;
 }
 
 function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
     const accountTypes = [{ key: "source", value: "Source" }, { key: "destination", value: "Destination" }];
-    return <DefaultEditorLayout {...props}>
+    const description = props.action.value === null
+        ? `Set ${props.action.account} account to no account`
+        : `Set ${props.action.account} account to #${props.action.value.id} ${props.action.value.name}`;
+    return <DefaultEditorLayout {...props} description={description}>
         <InputSelect
             items={accountTypes}
             value={props.action.account}
@@ -153,20 +167,14 @@ function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
 }
 
 function DeleteEditor (props: Props<ActionDelete>): React.ReactElement {
-    return <DefaultEditorLayout {...props} />;
+    return <DefaultEditorLayout {...props} description="Delete transactions">
+        Running this will permanently delete all transactions matching the filter.
+    </DefaultEditorLayout>;
 }
 
 function SetLinesEditor (props: Props<ActionSetLines>): React.ReactElement {
-    const actionSelect = <InputSelect
-        disabled={props.disabled}
-        label="Action"
-        items={[...actions]}
-        value={props.action.key}
-        onChange={value => props.onChange({ ...props.action, key: value } as any as TransactionAction)} />;
-
     if (props.action.value.length === 0) {
-        return <div>
-            {actionSelect}
+        return <DefaultEditorLayout {...props} description="Turn split transactions into non-split transactinos">
             <p>No lines have been added. This will turn split transactions into non-split transactions with same total and the category of the first line.</p>
             <p>To set the total, you can use the &ldquo;Set amount&rdquo; action on the same transactions after removing the lines.</p>
             <div className="buttons mb-3 mt-1">
@@ -174,11 +182,10 @@ function SetLinesEditor (props: Props<ActionSetLines>): React.ReactElement {
                     Add lines
                 </InputButton>
             </div>
-        </div>;
+        </DefaultEditorLayout>;
     }
 
-    return <>
-        {actionSelect}
+    return <DefaultEditorLayout {...props} description="Split transactions and set lines">
         <table className="table is-fullwidth">
             <thead>
                 <tr>
@@ -237,7 +244,7 @@ function SetLinesEditor (props: Props<ActionSetLines>): React.ReactElement {
                 Add line
             </InputButton>
         </div>
-    </>;
+    </DefaultEditorLayout>;
 
     function onChange (lines: TransactionLine[]): void {
         props.onChange({

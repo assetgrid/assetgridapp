@@ -61,23 +61,18 @@ namespace assetgrid_backend.models.Automation
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TransactionActionAttribute : Attribute
     {
-        public int? Version { get; set; }
+        public int Version { get; set; }
         public string Key { get; set; }
         public TransactionActionAttribute (int version, string key)
         {
             Version = version;
             Key = key;
         }
-
-        public TransactionActionAttribute(string key)
-        {
-            Key = key;
-        }
     }
 
     #region Actions
 
-    [TransactionAction("set-timestamp")]
+    [TransactionAction(1, "set-timestamp")]
     public class ActionSetTimestamp : TransactionAutomationAction
     {
         public override string Key => "set-timestamp";
@@ -90,7 +85,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("set-description")]
+    [TransactionAction(1, "set-description")]
     public class ActionSetDescription : TransactionAutomationAction
     {
         public override string Key => "set-description";
@@ -103,7 +98,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("set-amount")]
+    [TransactionAction(1, "set-amount")]
     public class ActionSetAmount : TransactionAutomationAction
     {
         public override string Key => "set-amount";
@@ -133,7 +128,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("set-account")]
+    [TransactionAction(1, "set-account")]
     public class ActionSetAccount : TransactionAutomationAction
     {
         public override string Key => "set-account";
@@ -181,7 +176,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("set-category")]
+    [TransactionAction(1, "set-category")]
     public class ActionSetCategory : TransactionAutomationAction
     {
         public override string Key => "set-category";
@@ -197,7 +192,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("set-lines")]
+    [TransactionAction(1, "set-lines")]
     public class ActionSetLines : TransactionAutomationAction
     {
         public override string Key => "set-lines";
@@ -250,7 +245,7 @@ namespace assetgrid_backend.models.Automation
         }
     }
 
-    [TransactionAction("delete")]
+    [TransactionAction(1, "delete")]
     public class ActionDelete : TransactionAutomationAction
     {
         public override string Key => "delete";
@@ -274,33 +269,36 @@ namespace assetgrid_backend.models.Automation
             var version = JsonSerializer.Deserialize<VersionStruct?>(ref readerCopy, options)!;
 
             // Get all implementations of TransactionAction
-            var type = Assembly.GetAssembly(typeof(TransactionAutomationAction))!
+            var types = Assembly.GetAssembly(typeof(TransactionAutomationAction))!
                 .GetTypes()
                 .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(TransactionAutomationAction)))
-                .Where(myType =>
+                .Select(myType =>
                 {
                     var attribute = (TransactionActionAttribute)Attribute.GetCustomAttribute(myType, typeof(TransactionActionAttribute))!;
-                    return attribute.Key == version.Value.Key && (version.Value.Version == attribute.Version);
+                    return new
+                    {
+                        key = attribute.Key,
+                        version = attribute.Version,
+                        type = myType
+                    };
                 })
-                .SingleOrDefault();
+                .Where(myType => myType.key == version.Value.Key)
+                .OrderByDescending(myType => myType.version);
             
+            var type = types.FirstOrDefault(myType => version?.Version == null || myType.version == version.Value.Version)?.type;
             if (type == null)
             {
                 throw new Exception("Unable to parse JSON");
             }
 
-            if (version.Value.Version == null)
-            {
-                var result = (TransactionAutomationAction)JsonSerializer.Deserialize(ref reader, type, options)!;
-                return result;
-            }
-            // Automatically upgrade previous versions
-            throw new NotImplementedException();
+            #warning If more versions are imlpemented, automatically upgrade to the newest
+            var result = (TransactionAutomationAction)JsonSerializer.Deserialize(ref reader, type, options)!;
+            return result;
         }
 
         public override void Write(Utf8JsonWriter writer, TransactionAutomationAction value, JsonSerializerOptions options)
         {
-            JsonSerializer.Serialize(writer, value, options);
+            JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }
 
         private struct VersionStruct

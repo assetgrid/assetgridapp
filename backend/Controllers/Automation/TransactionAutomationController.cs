@@ -129,6 +129,7 @@ namespace assetgrid_backend.Controllers.Automation
         /// <param name="id">The id of the automation to get</param>
         [HttpGet("/api/v1/Automation/Transaction/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionAutomation))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
             var user = _user.GetCurrent(HttpContext)!;
@@ -163,7 +164,7 @@ namespace assetgrid_backend.Controllers.Automation
         /// <summary>
         /// Returns a summary of all transaction automations available for the current user
         /// </summary>
-        [HttpGet("/api/v1/Automation/Transaction/{id}")]
+        [HttpGet("/api/v1/Automation/Transaction/")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ViewTransactionAutomationSummary>))]
         public async Task<IActionResult> List()
         {
@@ -172,11 +173,13 @@ namespace assetgrid_backend.Controllers.Automation
                 .Where(x => x.UserId == user.Id)
                 .Select(x => new ViewTransactionAutomationSummary
                 {
+                    Id = x.TransactionAutomationId,
                     Description = x.TransactionAutomation.Description,
                     Enabled = x.Enabled,
                     Name = x.TransactionAutomation.Name,
                     TriggerOnCreate = x.TransactionAutomation.TriggerOnCreate,
-                    TriggerOnModify = x.TransactionAutomation.TriggerOnModify
+                    TriggerOnModify = x.TransactionAutomation.TriggerOnModify,
+                    Permissions = x.Permissions
                 })
                 .ToListAsync();
 
@@ -190,6 +193,8 @@ namespace assetgrid_backend.Controllers.Automation
         /// <param name="model">The automation to create</param>
         [HttpPut("/api/v1/Automation/Transaction/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionAutomation))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Modify(int id, ViewTransactionAutomation model)
         {
             var user = _user.GetCurrent(HttpContext)!;
@@ -228,13 +233,55 @@ namespace assetgrid_backend.Controllers.Automation
                         Actions = result.TransactionAutomation.Actions,
                         Description = result.TransactionAutomation.Description,
                         Enabled = result.Enabled,
-                        Id = result.Id,
+                        Id = result.TransactionAutomationId,
                         Name = result.TransactionAutomation.Name,
                         Query = result.TransactionAutomation.Query,
                         TriggerOnCreate = result.TransactionAutomation.TriggerOnCreate,
                         TriggerOnModify = result.TransactionAutomation.TriggerOnModify,
                         Permissions = result.Permissions
                     });
+                }
+            }
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        /// <summary>
+        /// Delete a transaction automation
+        /// </summary>
+        /// <param name="id">The id of the automation to delete</param>
+        [HttpDelete("/api/v1/Automation/Transaction/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+            if (ModelState.IsValid)
+            {
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    var result = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.TransactionAutomationId == id)
+                        .SingleOrDefaultAsync();
+
+                    if (result == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (result.Permissions != UserTransactionAutomation.AutomationPermissions.Modify)
+                    {
+                        return Forbid();
+                    }
+
+                    _context.TransactionAutomations.Remove(result.TransactionAutomation);
+                    _context.UserTransactionAutomations.RemoveRange(_context.UserTransactionAutomations.Where(x => x.TransactionAutomationId == result.TransactionAutomationId));
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    return Ok();
                 }
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
