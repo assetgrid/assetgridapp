@@ -714,7 +714,7 @@ export function updateAutoIdentifiers (transactions: CsvCreateTransaction[], opt
         if (counts[identifier] === undefined) counts[identifier] = 0;
         counts[identifier] += 1;
 
-        identifier = `${identifier} | + ${counts[identifier]}`;
+        identifier = `${identifier}|${counts[identifier]}`;
 
         return { ...t, identifier };
     });
