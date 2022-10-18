@@ -26,7 +26,7 @@ export interface OrSearchGroup {
 
 export interface SearchQuery {
     column: string
-    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null
+    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null | boolean
     operator: SearchOperator
     not: boolean
 }

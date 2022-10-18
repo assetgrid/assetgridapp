@@ -1,27 +1,14 @@
 import * as React from "react";
 import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
+import { SearchGroup } from "../../models/search";
 import Table from "../common/Table";
 import YesNoDisplay from "../input/YesNoDisplay";
 import AccountLink from "./AccountLink";
 
 interface Props {
     draw?: number
-}
-
-async function fetchItems (api: Api, from: number, to: number, draw: number): Promise<{ items: Account[], totalItems: number, offset: number, draw: number }> {
-    const result = await api.Account.search({
-        from,
-        to,
-        descending: false,
-        orderByColumn: "Id"
-    });
-    return {
-        items: result.data.data,
-        offset: from,
-        totalItems: result.data.totalItems,
-        draw
-    };
+    query?: SearchGroup
 }
 
 export default function AccountList (props: Props): React.ReactElement {
@@ -33,7 +20,6 @@ export default function AccountList (props: Props): React.ReactElement {
             <th>Description</th>
             <th>Identifiers</th>
             <th>Favorite</th>
-            <th>In net worth</th>
         </tr>}
         page={page}
         goToPage={setPage}
@@ -48,11 +34,24 @@ export default function AccountList (props: Props): React.ReactElement {
                 <td>{account.description}</td>
                 <td>{account.identifiers.join(", ")}</td>
                 <td>
-                    <YesNoDisplay value={account.favorite} />
-                </td>
-                <td>
                     <YesNoDisplay value={account.includeInNetWorth} />
                 </td>
             </tr>}
     />;
+
+    async function fetchItems (api: Api, from: number, to: number, draw: number): Promise<{ items: Account[], totalItems: number, offset: number, draw: number }> {
+        const result = await api.Account.search({
+            from,
+            to,
+            descending: false,
+            orderByColumn: "Id",
+            query: props.query
+        });
+        return {
+            items: result.data.data,
+            offset: from,
+            totalItems: result.data.totalItems,
+            draw
+        };
+    }
 }
