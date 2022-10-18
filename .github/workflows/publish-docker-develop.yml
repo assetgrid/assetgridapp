@@ -57,5 +57,5 @@ jobs:
           context: ./docker
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          platforms: linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6
+          platforms: linux/amd64, linux/arm64, linux/arm/v7
           labels: ${{ steps.meta.outputs.labels }}
