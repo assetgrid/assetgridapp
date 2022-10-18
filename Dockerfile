@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 
-# Install nginx
-RUN apk add --no-cache libseccomp
-
 # COPY dependencies
 COPY ./backend/bin/Release/net6.0 /usr/share/assetgrid/
 COPY ./frontend/dist.production /usr/share/assetgrid/wwwroot/dist/
