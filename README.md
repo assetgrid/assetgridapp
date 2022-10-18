@@ -38,18 +38,20 @@ volumes:
   assetgrid-data:
 ```
 
-MySQL/MariaDB is also supported as a database if you prefer that. The following example assumes that a database exist with the name “assetgrid” and a user with the name “assetgrid” and the password “secret”. You will need to create this database and user manually.
+MySQL/MariaDB is also supported as a database if you prefer that. Remember to change passwords.
 
 ```yaml
 version: "3.1"
 services:
   db:
     image: mariadb:latest
-    container_name: mariadb
-    volumes:
-      -  ./mariadb:/var/lib/mysql
+    container_name: Assetgrid-DB
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: assetgrid
+      MYSQL_USER: assetgrid
 
   assetgrid:
     image: assetgrid/assetgrid
