@@ -1,7 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.16
-
-# Install nginx
-RUN apk add --no-cache nginx
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 
 # COPY dependencies
 COPY ./backend/bin/Release/net6.0 /usr/share/assetgrid/
