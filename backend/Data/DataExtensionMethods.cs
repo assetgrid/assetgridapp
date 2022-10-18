@@ -135,7 +135,7 @@ namespace assetgrid_backend.Data
                         throw new Exception($"Operator '{query.Operator}' expects value of type 'string array' but received type {((JsonElement)query.Value).ValueKind}");
                     }
 
-                    var value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.GetString()).ToArray();
+                    var value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.GetString()?.ToUpper()).ToArray();
 
                     /*
                      * Then generate the expression

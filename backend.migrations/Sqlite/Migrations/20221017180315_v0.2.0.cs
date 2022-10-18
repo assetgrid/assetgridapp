@@ -37,8 +37,7 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
             ");
             migrationBuilder.Sql(@"
                 UPDATE TransactionLines
-                LEFT JOIN Transactions ON TransactionLines.TransactionId = Transactions.Id
-                SET TransactionLines.Category = Transactions.Category
+                SET Category = (SELECT Transactions.Category FROM Transactions WHERE TransactionLines.TransactionId = Transactions.Id)
             ");
 
             migrationBuilder.DropIndex(
