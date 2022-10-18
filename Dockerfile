@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.12
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.16
 
 # Install nginx
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx libseccomp2
 
 # COPY dependencies
 COPY ./backend/bin/Release/net6.0 /usr/share/assetgrid/
