@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.16
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 
 # Install nginx
 RUN apk add --no-cache libseccomp
