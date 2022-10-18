@@ -1,6 +1,6 @@
 Assetgrid is a personal finance platform. It is our aim to make a tool that is flexible and powerful and can accomodate many use-cases with a UI that doesn't get in your way. 
 
-Assetgrid will support budgets in an upcoming release, but Assetgrid is not built around budgets. Assetgrid is meant to be a tool to organize and extract information from personal finance data, whether you want to make a budget, keep track of unpaid bills, keep track of receipts, investments, extract random statistics about your spending habits or all that at once.
+Assetgrid will support budgets in an upcoming release, but Assetgrid is not built around budgets. Assetgrid is a tool to organize and extract information from personal finance data, whether you want to make a budget, keep track of unpaid bills, keep track of receipts, investments, extract random statistics about your spending habits or all that at once.
 
 Assetgrid is based on the following workflow:
 
