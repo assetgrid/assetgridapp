@@ -120,11 +120,7 @@ var app = builder.Build();
     using (var scope = app.Services.CreateScope())
     {
         var dataContext = scope.ServiceProvider.GetRequiredService<AssetgridDbContext>();
-        using (var transaction = dataContext.Database.BeginTransaction())
-        {
-            dataContext.Database.Migrate();
-            transaction.Commit();
-        }
+        dataContext.Database.Migrate();
     }
 }
 
