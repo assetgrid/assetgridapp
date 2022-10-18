@@ -7,18 +7,28 @@ import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
 import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
-import TransactionList from "../../transaction/TransactionList";
+import TransactionList from "../../transaction/table/TransactionList";
 import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
+import { useLocation } from "react-router";
+
+interface LocationState {
+    query: SearchGroup
+    searchString: string
+    searchMode: "simple" | "advanced"
+    orderBy: { column: string, descending: boolean }
+    page: number
+    selectedTransactions: Set<number>
+}
 
 export default function PageTransactions (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
-    const history = window.history.state.usr;
-    const [query, setQuery] = React.useState<SearchGroup>(typeof history?.query === "object" ? deserializeQueryForHistory(history.query) : emptyQuery);
-    const [searchString, setSearchString] = React.useState<string>(typeof (history?.searchString) === "string" ? history.searchString : "");
-    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (history?.searchMode) === "string" ? history.searchMode : "simple");
-    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof history?.orderBy === "object" ? history.orderBy : { column: "DateTime", descending: true });
-    const [page, setPage] = React.useState(typeof (history?.page) === "number" ? history.page : 1);
-    const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(typeof history?.selectedTransactions === "object" ? history.selectedTransactions : new Set());
+    const locationState = useLocation().state as Partial<LocationState> | undefined;
+    const [query, setQuery] = React.useState<SearchGroup>(typeof locationState?.query === "object" ? deserializeQueryForHistory(locationState.query) : emptyQuery);
+    const [searchString, setSearchString] = React.useState<string>(typeof (locationState?.searchString) === "string" ? locationState.searchString : "");
+    const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (locationState?.searchMode) === "string" ? locationState.searchMode : "simple");
+    const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof locationState?.orderBy === "object" ? locationState.orderBy : { column: "DateTime", descending: true });
+    const [page, setPage] = React.useState(typeof (locationState?.page) === "number" ? locationState.page : 1);
+    const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(typeof locationState?.selectedTransactions === "object" ? locationState.selectedTransactions : new Set());
 
     // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
     const isFirst = React.useRef(true);
@@ -28,6 +38,15 @@ export default function PageTransactions (): React.ReactElement {
         }
         isFirst.current = false;
     }, [searchString]);
+
+    React.useEffect(() => {
+        if (typeof (locationState?.query) === "object") {
+            setQuery(locationState.query);
+        }
+        if (locationState?.searchMode === "simple" || locationState?.searchMode === "advanced") {
+            setSearchMode(locationState.searchMode);
+        }
+    }, [locationState?.query, locationState?.searchMode]);
 
     // Keep history state updated
     const updateHistoryDebounced = React.useCallback(debounce(updateHistory, 300), []);
@@ -59,7 +78,7 @@ export default function PageTransactions (): React.ReactElement {
                         <a onClick={() => setSearchMode("advanced")}>Advanced search</a>
                     </>
                     : <>
-                        <TransactionFilterEditor query={query} setQuery={setQuery} />
+                        <TransactionFilterEditor disabled={false} query={query} setQuery={setQuery} />
                         <a onClick={() => setSearchMode("simple")}>Simple search</a>
                     </>}
             </Card>

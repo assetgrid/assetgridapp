@@ -20,6 +20,7 @@ type Column = FilterHelpers.ConditionModel["column"];
 interface ConditionProps {
     query: SearchQuery
     setQuery: (query: SearchQuery | null) => void
+    disabled: boolean
 }
 
 export default function Condition (props: ConditionProps): React.ReactElement {
@@ -43,15 +44,17 @@ export default function Condition (props: ConditionProps): React.ReactElement {
 
         {/* Operator */}
         <div className="column is-narrow">
-            <InputSelect isFullwidth={true} items={FilterHelpers.getPossibleOperators(column).map(op => ({
-                key: FilterHelpers.Operators.findIndex(o => o.operator === op.operator && o.negated === op.negated).toString(),
-                value: op.label
-            }))}
-            value={FilterHelpers.Operators.findIndex(op => op.operator === props.query.operator && op.negated === props.query.not).toString()}
-            onChange={value => operatorOrColumnChanged(
-                column,
-                FilterHelpers.Operators[Number(value)].operator,
-                FilterHelpers.Operators[Number(value)].negated)} />
+            <InputSelect isFullwidth={true}
+                disabled={props.disabled}
+                items={FilterHelpers.getPossibleOperators(column).map(op => ({
+                    key: FilterHelpers.Operators.findIndex(o => o.operator === op.operator && o.negated === op.negated).toString(),
+                    value: op.label
+                }))}
+                value={FilterHelpers.Operators.findIndex(op => op.operator === props.query.operator && op.negated === props.query.not).toString()}
+                onChange={value => operatorOrColumnChanged(
+                    column,
+                    FilterHelpers.Operators[Number(value)].operator,
+                    FilterHelpers.Operators[Number(value)].negated)} />
         </div>
 
         {/* Value */}
@@ -65,7 +68,8 @@ export default function Condition (props: ConditionProps): React.ReactElement {
                 value: props.query.value,
                 onChange: (value: any) => props.setQuery({ ...props.query, value }),
                 valueType: FilterHelpers.getValueType(column, props.query.operator)
-            } as FilterHelpers.ConditionModel} />
+            } as FilterHelpers.ConditionModel}
+            disabled={props.disabled}/>
         </div>
 
         <div className="column is-narrow">
@@ -118,26 +122,26 @@ export default function Condition (props: ConditionProps): React.ReactElement {
     }
 }
 
-function ConditionValueEditor (props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
+function ConditionValueEditor (props: { condition: FilterHelpers.ConditionModel, disabled: boolean }): React.ReactElement {
     switch (props.condition.column) {
         case "Id":
         case "Total":
-            return <ConditionValueEditorNumeric condition={props.condition} />;
+            return <ConditionValueEditorNumeric condition={props.condition} disabled={props.disabled} />;
         case "Category":
         case "Description":
-            return <ConditionValueEditorText condition={props.condition} />;
+            return <ConditionValueEditorText condition={props.condition} disabled={props.disabled} />;
         case "SourceAccountId":
         case "DestinationAccountId":
-            return <ConditionValueEditorAccount condition={{
+            return <ConditionValueEditorAccount disabled={props.disabled} condition={{
                 ...props.condition,
                 onChange: ((account: Account) => (props.condition.onChange as (id: number) => void)(account?.id ?? null)) as any
             }} />;
         case "DateTime":
-            return <ConditionValueEditorDateTime condition={props.condition} />;
+            return <ConditionValueEditorDateTime disabled={props.disabled} condition={props.condition} />;
     }
 }
 
-function ConditionValueEditorNumeric (props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
+function ConditionValueEditorNumeric (props: { condition: FilterHelpers.ConditionModel, disabled: boolean }): React.ReactElement {
     switch (props.condition.valueType) {
         case "number":
         case "decimal":
@@ -154,6 +158,7 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
                 case "number[]": {
                     const intArrayCondition = props.condition;
                     return <InputNumbers
+                        disabled={props.disabled}
                         allowDecimal={props.condition.column !== "Id"}
                         value={props.condition.value.map(number => new Decimal(number))}
                         onChange={value => intArrayCondition.onChange(value.map(number => number.toNumber()))} />;
@@ -161,6 +166,7 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
                 case "decimal[]": {
                     const decimalArrayCondition = props.condition;
                     return <InputNumbers
+                        disabled={props.disabled}
                         value={props.condition.value}
                         allowDecimal={true}
                         onChange={value => decimalArrayCondition.onChange(value)} />;
@@ -172,6 +178,7 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
                 case "number": {
                     const intCondition = props.condition;
                     return <InputNumber
+                        disabled={props.disabled}
                         allowNull={false}
                         value={new Decimal(props.condition.value)}
                         onChange={value => intCondition.onChange(props.condition.column === "Id" ? Math.round(value.toNumber()) : value.toNumber())} />;
@@ -179,6 +186,7 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
                 case "decimal": {
                     const decimalCondtition = props.condition;
                     return <InputNumber
+                        disabled={props.disabled}
                         allowNull={false}
                         value={props.condition.value}
                         onChange={value => decimalCondtition.onChange(new Decimal(value))} />;
@@ -187,12 +195,14 @@ function ConditionValueEditorNumeric (props: { condition: FilterHelpers.Conditio
     }
 }
 
-function ConditionValueEditorText (props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
+function ConditionValueEditorText (props: { condition: FilterHelpers.ConditionModel, disabled: boolean }): React.ReactElement {
     switch (props.condition.column) {
         case "Category":
             if (props.condition.operator === SearchOperator.Equals) {
                 const condition = props.condition;
-                return <InputCategory value={condition.value} onChange={value => condition.onChange(value)} disabled={false} />;
+                return <InputCategory value={condition.value}
+                    onChange={value => condition.onChange(value)}
+                    disabled={props.disabled} />;
             }
             break;
         case "Description":
@@ -205,16 +215,20 @@ function ConditionValueEditorText (props: { condition: FilterHelpers.ConditionMo
         case SearchOperator.Equals:
         case SearchOperator.Contains: {
             const conditionScalar = props.condition;
-            return <InputText value={conditionScalar.value} onChange={e => conditionScalar.onChange(e.target.value)} />;
+            return <InputText value={conditionScalar.value}
+                disabled={props.disabled}
+                onChange={e => conditionScalar.onChange(e.target.value)} />;
         }
         case SearchOperator.In: {
             const conditionArray = props.condition;
-            return <InputTextMultiple value={conditionArray.value} onChange={value => conditionArray.onChange(value)} />;
+            return <InputTextMultiple value={conditionArray.value}
+                disabled={props.disabled}
+                onChange={value => conditionArray.onChange(value)} />;
         }
     }
 }
 
-function ConditionValueEditorAccount (props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
+function ConditionValueEditorAccount (props: { condition: FilterHelpers.ConditionModel, disabled: boolean }): React.ReactElement {
     switch (props.condition.column) {
         case "SourceAccountId":
         case "DestinationAccountId":
@@ -230,13 +244,13 @@ function ConditionValueEditorAccount (props: { condition: FilterHelpers.Conditio
                 value={condition.value}
                 onChange={account => condition.onChange(account)}
                 nullSelectedText="No Account"
-                disabled={false}
+                disabled={props.disabled}
                 allowCreateNewAccount={false}
                 allowNull={true} />;
     }
 }
 
-function ConditionValueEditorDateTime (props: { condition: FilterHelpers.ConditionModel }): React.ReactElement {
+function ConditionValueEditorDateTime (props: { condition: FilterHelpers.ConditionModel, disabled: boolean }): React.ReactElement {
     switch (props.condition.column) {
         case "DateTime":
             break;
@@ -252,7 +266,7 @@ function ConditionValueEditorDateTime (props: { condition: FilterHelpers.Conditi
             return <InputDateTime
                 value={condition.value}
                 onChange={value => condition.onChange(value)}
-                disabled={false}
+                disabled={props.disabled}
                 fullwidth={false} />;
     }
 }

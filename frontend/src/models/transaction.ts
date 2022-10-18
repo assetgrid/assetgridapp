@@ -10,37 +10,35 @@ export interface Transaction {
     dateTime: DateTime
     identifiers: string[]
     lines: TransactionLine[]
-    category: string
+    isSplit: boolean
     description: string
 
     total: Decimal
 }
 
-export interface CreateTransaction {
+export interface ModifyTransaction {
     sourceId: number | null
     destinationId: number | null
     dateTime: DateTime
     description: string
     identifiers: string[]
-    category: string
     total: Decimal
     lines: TransactionLine[]
-}
-
-export interface UpdateTransaction {
-    identifiers?: string[]
-    sourceId?: number | null
-    destinationId?: number | null
-    dateTime?: DateTime
-    description?: string
-    category?: string
-    total?: Decimal
-    lines?: TransactionLine[]
+    isSplit: boolean
 }
 
 export interface TransactionLine {
     amount: Decimal
     description: string
+    category: string
+}
+
+export function serializeTransactionLine (line: TransactionLine): TransactionLine {
+    const { amount, ...rest } = line;
+    return {
+        ...rest,
+        amountString: amount.times(10000).toString()
+    } as any;
 }
 
 export type TransactionListResponse = {

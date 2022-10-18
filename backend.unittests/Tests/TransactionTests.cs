@@ -3,7 +3,7 @@ using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
+using assetgrid_backend.models.Search;
 
 namespace backend.unittests.Tests
 {
@@ -30,6 +31,7 @@ namespace backend.unittests.Tests
         public UserController UserController { get; set; }
         public UserAuthenticatedResponse User { get; set; }
         public UserService UserService { get; set; }
+        public AutomationService AutomationService { get; set; }
         public AccountService AccountService { get; set; }
 
         public ViewAccount AccountA;
@@ -47,6 +49,7 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -54,7 +57,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
 
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
@@ -76,20 +79,36 @@ namespace backend.unittests.Tests
             AccountB = AccountController.Create(accountModel).Result.OkValue<ViewAccount>();
         }
 
+        private ViewModifyTransaction TransactionToModifyTransaction (ViewTransaction model)
+        {
+            var modelProperties = model.GetType().GetProperties().ToDictionary(p => p.Name, p => p);
+            var result = new ViewModifyTransaction
+            {
+                SourceId = model.Source?.Id,
+                DestinationId = model.Destination?.Id
+            };
+            foreach (var property in result.GetType().GetProperties())
+            {
+                if (modelProperties.ContainsKey(property.Name))
+                {
+                    property.SetValue(result, modelProperties[property.Name].GetValue(model));
+                }
+            }
+            return result;
+        }
 
         [Fact]
         public async void CreateGetUpdateDelete()
         {
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
             var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
@@ -98,58 +117,48 @@ namespace backend.unittests.Tests
             Assert.Equal(transaction.Description, model.Description);
             Assert.Equal(transaction.Source!.Id, model.SourceId);
             Assert.Equal(transaction.Destination!.Id, model.DestinationId);
-            Assert.Equal(transaction.Category, model.Category);
+            Assert.Equal(transaction.Lines.First().Category, model.Lines.First().Category);
 
             transaction.DateTime = DateTime.Now.AddDays(-100);
-            var updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
-            {
-                DateTime = transaction.DateTime,
-            })).OkValue<ViewTransaction>();
+            var updated = (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
 
             transaction.Destination = null;
-            updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
-            {
-                DestinationId = -1
-            })).OkValue<ViewTransaction>();
+            updated = (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
             transaction.Description = "My description";
-            updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
-            {
-                Description = transaction.Description
-            })).OkValue<ViewTransaction>();
+            updated = (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
-            transaction.Category = "";
-            updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
-            {
-                Category = "",
-            })).OkValue<ViewTransaction>();
+            transaction.Lines.First().Category = "";
+            updated = (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>();
             Assert.Equivalent(transaction, updated);
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
             // Try to update with only read permission. Returns 403 Forbidden
             var userAccountA = Context.UserAccounts.Single(a => a.AccountId == AccountA.Id && a.UserId == User.Id);
             userAccountA.Permissions = UserAccountPermissions.Read;
-            updated.Source!.Permissions = ViewAccount.AccountPermissions.Read;
+            transaction.Source!.Permissions = ViewAccount.AccountPermissions.Read;
+            updated.Description = "Modified description";
             Context.SaveChanges();
-            Assert.IsType<ForbidResult>(await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
-            Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+            Assert.IsType<ForbidResult>(await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(updated)));
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
             // Try to update with write permissions. Succeeds
             userAccountA.Permissions = UserAccountPermissions.ModifyTransactions;
             Context.SaveChanges();
-            updated = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Updated" })).OkValue<ViewTransaction>();
+            updated = (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(updated))).OkValue<ViewTransaction>();
             Assert.Equivalent(updated, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
             // Try to update without any permissions. Fails with 404 NotFound
+            updated.Description = "Modified again";
             Context.Remove(userAccountA);
             Context.SaveChanges();
             Assert.IsType<NotFoundResult>(await TransactionController.Get(transaction.Id));
-            Assert.IsType<NotFoundResult>(await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Whatever" }));
+            Assert.IsType<NotFoundResult>(await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(updated)));
 
             // Attempt deletion
             Assert.IsType<NotFoundResult>(await TransactionController.Delete(transaction.Id));
@@ -173,16 +182,15 @@ namespace backend.unittests.Tests
             var userAccount = Context.UserAccounts.Single(a => a.UserId == User.Id && a.AccountId == AccountA.Id);
             userAccount.Permissions = permissions;
 
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category" )}
             };
 
             model.SourceId = AccountA.Id;
@@ -213,16 +221,15 @@ namespace backend.unittests.Tests
             }
             Context.SaveChanges();
 
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             model.SourceId = AccountA.Id;
@@ -236,16 +243,15 @@ namespace backend.unittests.Tests
         [Fact]
         public void CreateTransactionSameSourceDestination()
         {
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountA.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             var validationResultList = new List<ValidationResult>();
@@ -256,16 +262,15 @@ namespace backend.unittests.Tests
         [Fact]
         public void CreateTransactionNoSourceDestination()
         {
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -275,16 +280,15 @@ namespace backend.unittests.Tests
         [Fact]
         public void CreateTransactionNegativeTotal()
         {
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = -500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -302,16 +306,15 @@ namespace backend.unittests.Tests
                 IncludeInNetWorth = true,
                 Name = "Test account"
             };
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 Total = -500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = null,
                 DestinationId = null,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
             };
 
             var accountA = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
@@ -331,14 +334,20 @@ namespace backend.unittests.Tests
             Assert.NotNull(transactionC);
 
             // Update transaction to reference account A. Should fail since no write permission to this account
-            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
+            var transactionReferencesA = (await TransactionController.Get(transactionC.Id)).OkValue<ViewTransaction>();
+            transactionReferencesA.Source = accountA;
+            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionC.Id, TransactionToModifyTransaction(transactionReferencesA)));
+            Assert.Equivalent(transactionC, (await TransactionController.Get(transactionC.Id)).OkValue<ViewTransaction>());
 
             // Update transaction description. Should succeed
             transactionC.Description = "New test";
-            Assert.Equivalent(transactionC, (await TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { Description = transactionC.Description })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionC, (await TransactionController.Update(transactionC.Id, TransactionToModifyTransaction(transactionC))).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionC, (await TransactionController.Get(transactionC.Id)).OkValue<ViewTransaction>());
 
             // Update description on transaction between A and B should fail due to no write permission
-            Assert.IsType<NotFoundResult>(await TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
+            var transactionABModified = TransactionToModifyTransaction(transactionAB);
+            transactionABModified.Description = "Something";
+            Assert.IsType<NotFoundResult>(await TransactionController.Update(transactionAB.Id, transactionABModified));
 
             // Give read permission to account A
             var UserAccountA = new UserAccount { AccountId = accountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.Read };
@@ -346,8 +355,9 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             // Update still fails due to only read - no write permissions
-            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id }));
-            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" }));
+            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionC.Id, TransactionToModifyTransaction(transactionReferencesA)));
+            Assert.Equivalent(transactionC, (await TransactionController.Get(transactionC.Id)).OkValue<ViewTransaction>());
+            Assert.IsType<ForbidResult>(await TransactionController.Update(transactionAB.Id, transactionABModified));
 
             // Change to write permissions - now it succeeds
             UserAccountA.Permissions = UserAccountPermissions.All;
@@ -355,16 +365,18 @@ namespace backend.unittests.Tests
             UserAccountA.Favorite = true;
             Context.SaveChanges();
             transactionC.Source = accountA;
-            Assert.Equivalent(transactionC, (await TransactionController.Update(transactionC.Id, new ViewUpdateTransaction { SourceId = accountA.Id })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionReferencesA, (await TransactionController.Update(transactionC.Id, TransactionToModifyTransaction(transactionReferencesA))).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionReferencesA, (await TransactionController.Get(transactionReferencesA.Id)).OkValue<ViewTransaction>());
 
-            transactionAB.Description = "Something";
             // Transaction AB's source will be AccountB which otherUser does not have read access to. Therefore "Unknown account" will be returned.
             transactionAB.Source = ViewAccount.GetNoReadAccess(transactionAB.Source!.Id);
-            Assert.Equivalent(transactionAB, (await TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { Description = "Something" })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionAB, (await TransactionController.Update(transactionAB.Id, TransactionToModifyTransaction(transactionAB))).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionAB, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>());
 
             // Can also change destination of AB transaction since we now have write access
             transactionAB.Destination = accountC;
-            Assert.Equivalent(transactionAB, (await TransactionController.Update(transactionAB.Id, new ViewUpdateTransaction { DestinationId = accountC.Id })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionAB, (await TransactionController.Update(transactionAB.Id, TransactionToModifyTransaction(transactionAB))).OkValue<ViewTransaction>());
+            Assert.Equivalent(transactionAB, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>());
         }
 
         [Theory]
@@ -384,16 +396,15 @@ namespace backend.unittests.Tests
                 Name = "Test account"
             })).OkValue<ViewAccount>();
 
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 Total = 500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = unknownAccountType == "source" ? unknownAccount.Id : AccountA.Id,
                 DestinationId = unknownAccountType == "destination" ? unknownAccount.Id : AccountA.Id,
-                Category = "My category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
             // Cannot create transaction yet as no write permission to the unknown account
@@ -415,7 +426,7 @@ namespace backend.unittests.Tests
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 1";
-            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 1" })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>());
             Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
             // Remove permission. Succeeds, but the account is shown as "uknown"
@@ -433,39 +444,39 @@ namespace backend.unittests.Tests
 
             // Update description and verify that the update is correct
             transaction.Description = "Update 2";
-            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Description = "Update 2" })).OkValue<ViewTransaction>());
+            Assert.Equivalent(transaction, (await TransactionController.Update(transaction.Id, TransactionToModifyTransaction(transaction))).OkValue<ViewTransaction>());
             Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
         }
 
         [Fact]
         public async void CreateUpdateNegativeTransaction()
         {
-            var transaction = (await TransactionController.Create(new ViewCreateTransaction
+            var transaction = (await TransactionController.Create(new ViewModifyTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
-            var oppositeTransaction = (await TransactionController.Create(new ViewCreateTransaction
+            var oppositeTransaction = (await TransactionController.Create(new ViewModifyTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountB.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
 
@@ -473,18 +484,18 @@ namespace backend.unittests.Tests
             Assert.Equivalent(oppositeTransaction, (await TransactionController.Get(oppositeTransaction.Id)).OkValue<ViewTransaction>());
 
             // Create transaction with negative total
-            var negativeTransaction = (await TransactionController.Create(new ViewCreateTransaction
+            var negativeTransaction = (await TransactionController.Create(new ViewModifyTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = -100,
                 Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: -120, description: "Line 1"),
-                    new ViewTransactionLine(amount: 20, description: "Line 2"),
+                    new ViewTransactionLine(amount: -120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: 20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
             // Update id so the equivalence check passes
@@ -492,21 +503,22 @@ namespace backend.unittests.Tests
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
 
             // Update transaction with negative total
-            negativeTransaction = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction
+            negativeTransaction = (await TransactionController.Update(transaction.Id, new ViewModifyTransaction
             {
+                DateTime = new DateTime(2020, 01, 01),
+                Description = "Test transaction",
+                SourceId = AccountA.Id,
+                DestinationId = AccountB.Id,
                 Total = -100,
+                Identifiers = new List<string>(),
+                IsSplit = true,
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: -120, description: "Line 1"),
-                    new ViewTransactionLine(amount: 20, description: "Line 2"),
+                    new ViewTransactionLine(amount: -120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: 20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
             negativeTransaction.Id = oppositeTransaction.Id;
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
-
-            // Remove transaction lines and make total negative again
-            var updatedTransaction = (await TransactionController.Update(transaction.Id, new ViewUpdateTransaction { Lines = new List<ViewTransactionLine>(), Total = -100 })).OkValue<ViewTransaction>();
-            transaction.Lines = new List<ViewTransactionLine>();
-            Assert.Equivalent(transaction, updatedTransaction);
         }
 
         [Theory]
@@ -528,8 +540,7 @@ namespace backend.unittests.Tests
         [InlineData(ViewAccount.AccountPermissions.None, ViewAccount.AccountPermissions.None)]
         public async void DeleteTransaction(ViewAccount.AccountPermissions accountAPermissions, ViewAccount.AccountPermissions accountBPermissions)
         {
-            var model = new ViewCreateTransaction {
-                Category = "",
+            var model = new ViewModifyTransaction {
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
@@ -537,8 +548,8 @@ namespace backend.unittests.Tests
                 Total = 100,
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             };
 
@@ -600,15 +611,14 @@ namespace backend.unittests.Tests
             Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
             Context.SaveChanges();
 
-            var model = new ViewCreateTransaction {
-                Category = "",
+            var model = new ViewModifyTransaction {
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = accountC.Id,
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")}
             };
             var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
@@ -634,10 +644,10 @@ namespace backend.unittests.Tests
             var transaction0B = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
 
             // Delete all transactions (query accepts all transactions)
-            await TransactionController.DeleteMultiple(new ViewSearchGroup
+            await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
 
             // Can delete own transactions
@@ -658,10 +668,10 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             UserService.MockUser = await UserService.GetById(User.Id);
-            var deleteResult = await TransactionController.DeleteMultiple(new ViewSearchGroup
+            var deleteResult = await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
             Assert.IsType<OkResult>(deleteResult);
 
@@ -675,10 +685,10 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             UserService.MockUser = await UserService.GetById(User.Id);
-            await TransactionController.DeleteMultiple(new ViewSearchGroup
+            await TransactionController.DeleteMultiple(new SearchGroup
             {
-                Type = ViewSearchGroupType.And,
-                Children = new List<ViewSearchGroup>()
+                Type = SearchGroupType.And,
+                Children = new List<SearchGroup>()
             });
 
             Assert.IsType<NotFoundResult>(await TransactionController.Get(transactionC0.Id));
@@ -690,15 +700,14 @@ namespace backend.unittests.Tests
         public async void CreateTransactionWithUniqueIdentifier()
         {
             var otherUser = await UserService.CreateUser("other", "test");
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 Identifiers = new List<string> { "Identifier" }
             };
 
@@ -748,141 +757,6 @@ namespace backend.unittests.Tests
         }
 
         [Fact]
-        public async void UpdateAllTransactions()
-        {
-            var otherUser = await UserService.CreateUser("other", "test");
-            UserService.MockUser = otherUser;
-            var accountC = (await AccountController.Create(new ViewCreateAccount
-            {
-                Name = "C",
-                Description = "no access",
-                Identifiers = new List<string> { },
-                Favorite = false,
-                IncludeInNetWorth = false,
-            })).OkValue<ViewAccount>();
-            // Give the other user permission to create transactions on account A
-            Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
-            Context.SaveChanges();
-
-            var model = new ViewCreateTransaction {
-                Category = "",
-                DateTime = new DateTime(2020, 01, 01),
-                Description = "Test transaction",
-                SourceId = accountC.Id,
-                DestinationId = AccountA.Id,
-                Total = 100,
-                Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
-            };
-            var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = AccountA.Id;
-            model.DestinationId = accountC.Id;
-            var transactionAC = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = accountC.Id;
-            model.DestinationId = null;
-            var transactionC0 = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = null;
-            model.DestinationId = accountC.Id;
-            var transaction0C = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-
-            // Switch back to user A
-            UserService.MockUser = await UserService.GetById(User.Id);
-            model.SourceId = AccountA.Id;
-            model.DestinationId = AccountB.Id;
-            var transactionAB = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = AccountA.Id;
-            model.DestinationId = null;
-            var transactionA0 = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-            model.SourceId = null;
-            model.DestinationId = AccountB.Id;
-            var transaction0B = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
-
-            // Update all transactions (query accepts all transactions)
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            // Can update own transactions
-            Assert.Equal("Updated", (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Description);
-            // Can update shared transactions
-            Assert.Equal("Updated", (await TransactionController.Get(transactionCA.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transactionAC.Id)).OkValue<ViewTransaction>().Description);
-            // Cannot update other users transactions
-            UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>());
-            Assert.Equivalent(transaction0C, (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>());
-
-            // Cannot change source or destination to destination with no write permission
-            // Process fails silently but nothing is updated
-            UserService.MockUser = await UserService.GetById(User.Id);
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { DestinationId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { SourceId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.Equivalent(transactionA0.Source, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transaction0B.Source, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionAB.Source, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionA0.Destination, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transaction0B.Destination, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transactionAB.Destination, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Destination);
-
-            // Give user read permission to account C
-            var userAccount = new UserAccount { AccountId = accountC.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
-            Context.UserAccounts.Add(userAccount);
-            Context.SaveChanges();
-
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            // Stil cannot update other users transactions
-            UserService.MockUser = otherUser;
-            Assert.Equivalent(transactionC0, (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>());
-            Assert.Equivalent(transaction0C, (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>());
-
-            // Still fails (silently) when trying to update source and destination to account C
-            UserService.MockUser = await UserService.GetById(User.Id);
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { DestinationId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.IsType<OkResult>(await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions
-            {
-                model = new ViewUpdateTransaction { SourceId = accountC.Id },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            }));
-            Assert.Equivalent(transactionA0.Source, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transaction0B.Source, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionAB.Source, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Source);
-            Assert.Equivalent(transactionA0.Destination, (await TransactionController.Get(transactionA0.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transaction0B.Destination, (await TransactionController.Get(transaction0B.Id)).OkValue<ViewTransaction>().Destination);
-            Assert.Equivalent(transactionAB.Destination, (await TransactionController.Get(transactionAB.Id)).OkValue<ViewTransaction>().Destination);
-
-            // Change permission to write
-            userAccount.Permissions = UserAccountPermissions.ModifyTransactions;
-            Context.SaveChanges();
-
-            await TransactionController.UpdateMultiple(new ViewUpdateMultipleTransactions {
-                model = new ViewUpdateTransaction { Description = "Updated" },
-                query = new ViewSearchGroup { Type = ViewSearchGroupType.And, Children = new List<ViewSearchGroup>() }
-            });
-
-            Assert.Equal("Updated", (await TransactionController.Get(transactionC0.Id)).OkValue<ViewTransaction>().Description);
-            Assert.Equal("Updated", (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>().Description);
-        }
-
-        [Fact]
         public async void CreateMany()
         {
             var otherUser = await UserService.CreateUser("other", "test");
@@ -897,47 +771,43 @@ namespace backend.unittests.Tests
             })).OkValue<ViewAccount>();
 
             UserService.MockUser = await UserService.GetById(User.Id);
-            var result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
+            var result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
             {
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string>(),
                     Total = 200,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "inverse",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
                 },
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string>(),
                     Total = 300,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = accountC.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(300, "", "")},
                 },
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string>(),
                     Total = 400,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = accountC.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(400, "", "")},
                 }
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -954,8 +824,8 @@ namespace backend.unittests.Tests
 
             // Cannot create other transaction with same identifier
             Assert.Equivalent((await TransactionController.FindDuplicates(new List<string> { "identifier" })).OkValue<List<string>>(), new List<string> { "identifier" });
-            result = (await TransactionController.CreateMany(new List<ViewCreateTransaction> {
-                new ViewCreateTransaction {
+            result = (await TransactionController.CreateMany(new List<ViewModifyTransaction> {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
                     Lines = new List<ViewTransactionLine>(),
@@ -974,27 +844,25 @@ namespace backend.unittests.Tests
         public async void CreateManySameIdentifier()
         {
             // Will create one transaction and mark reject other as a duplicate
-            var result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
+            var result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
             {
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 200,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -1015,17 +883,16 @@ namespace backend.unittests.Tests
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
             Assert.Equivalent((await TransactionController.FindDuplicates(new List<string> { "identifier" })).OkValue<List<string>>(), new List<string>());
-            result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
+            result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
             {
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = accountC.Id,
                     DestinationId = null,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -1036,10 +903,10 @@ namespace backend.unittests.Tests
             {
                 From = 0,
                 To = 1,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.And,
-                    Children = new List<ViewSearchGroup>()
+                    Type = SearchGroupType.And,
+                    Children = new List<SearchGroup>()
                 }
             })).OkValue<ViewSearchResponse<ViewTransaction>>().Data.Single();
             await TransactionController.Delete(transaction.Id);
@@ -1049,17 +916,16 @@ namespace backend.unittests.Tests
             Context.UserAccounts.Add(new UserAccount { UserId = otherUser.Id, AccountId = AccountA.Id });
             Context.SaveChanges();
 
-            result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
+            result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
             {
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
                     Total = 100,
-                    Lines = new List<ViewTransactionLine>(),
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Failed);
@@ -1072,24 +938,24 @@ namespace backend.unittests.Tests
         {
             var lines = new List<ViewTransactionLine>
             {
-                new ViewTransactionLine(amount: 100, description: "Line"),
-                new ViewTransactionLine(amount: 150, description: "Line"),
-                new ViewTransactionLine(amount: -350, description:  "Line"),
-                new ViewTransactionLine(amount: -100, description:  "Line")
+                new ViewTransactionLine(amount: 100, description: "Line", ""),
+                new ViewTransactionLine(amount: 150, description: "Line", ""),
+                new ViewTransactionLine(amount: -350, description:  "Line", ""),
+                new ViewTransactionLine(amount: -100, description:  "Line", "")
             };
-            var result = (await TransactionController.CreateMany(new List<ViewCreateTransaction>
+            var result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
             {
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string>(),
                     Total = -100,
-                    Lines = new List<ViewTransactionLine>(),
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-100, "", "") },
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "A",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = ""
+                    IsSplit = true
                 },
-                new ViewCreateTransaction {
+                new ViewModifyTransaction {
                     Identifiers = new List<string>(),
                     Total = -200,
                     Lines = lines,
@@ -1097,7 +963,7 @@ namespace backend.unittests.Tests
                     Description = "B",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    Category = "",
+                    IsSplit = true
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -1107,10 +973,10 @@ namespace backend.unittests.Tests
             var transactions = (await TransactionController.Search(new ViewSearch {
                 From = 0,
                 To = 20,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.And,
-                    Children = new List<ViewSearchGroup>()
+                    Type = SearchGroupType.And,
+                    Children = new List<SearchGroup>()
                 }
             })).OkValue<ViewSearchResponse<ViewTransaction>>().Data;
 
@@ -1118,13 +984,13 @@ namespace backend.unittests.Tests
             Assert.Equal(100, transactionA.Total);
             Assert.Equal(AccountB.Id, transactionA.Source!.Id);
             Assert.Equal(AccountA.Id, transactionA.Destination!.Id);
-            Assert.Empty(transactionA.Lines);
+            Assert.Single(transactionA.Lines);
 
             var transactionB = transactions.Single(t => t.Description == "B");
             Assert.Equal(200, transactionB.Total);
             Assert.Equal(AccountB.Id, transactionB.Source!.Id);
             Assert.Equal(AccountA.Id, transactionB.Destination!.Id);
-            Assert.Equivalent(lines.Select(item => new ViewTransactionLine(-item.Amount, item.Description)), transactionB.Lines);
+            Assert.Equivalent(lines.Select(item => new ViewTransactionLine(-item.Amount, item.Description, "")), transactionB.Lines);
         }
 
         [Theory]
@@ -1132,16 +998,15 @@ namespace backend.unittests.Tests
         [InlineData("destination")]
         public async void UpdateTransactionWithOnlyAccessToSingleAccount(string account)
         {
-            var transaction = (await TransactionController.Create(new ViewCreateTransaction
+            var transaction = (await TransactionController.Create(new ViewModifyTransaction
             {
                 Identifiers = new List<string>(),
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "test",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = ""
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
             })).OkValue<ViewTransaction>();
 
             // Remove access to an account
@@ -1156,32 +1021,32 @@ namespace backend.unittests.Tests
             Context.SaveChanges();
 
             // Cannot create transactions between the two accounts any more
-            Assert.IsType<ForbidResult>(await TransactionController.Create(new ViewCreateTransaction
+            Assert.IsType<ForbidResult>(await TransactionController.Create(new ViewModifyTransaction
             {
                 Identifiers = new List<string>(),
                 Total = 100,
-                Lines = new List<ViewTransactionLine>(),
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "test",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = ""
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
             }));
 
             // Can update transaction
-            var result = TransactionController.Update(transaction.Id, new ViewUpdateTransaction
+            var result = TransactionController.Update(transaction.Id, new ViewModifyTransaction
             {
+                Identifiers = new List<string>(),
                 DateTime = new DateTime(2021, 01, 02),
                 Total = 200,
                 Lines = new List<ViewTransactionLine>
                 {
-                    new ViewTransactionLine(100, "Line A"),
-                    new ViewTransactionLine(100, "Line B"),
+                    new ViewTransactionLine(100, "Line A", "test category"),
+                    new ViewTransactionLine(100, "Line B", "test category"),
                 },
                 Description = "New description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "test category",
+                IsSplit = true
             });
             Assert.IsType<OkObjectResult>(await result);
 
@@ -1190,12 +1055,12 @@ namespace backend.unittests.Tests
             Assert.Equal(new DateTime(2021, 01, 02), updatedTransaction.DateTime);
             Assert.Equivalent(new List<ViewTransactionLine>
                 {
-                    new ViewTransactionLine(100, "Line A"),
-                    new ViewTransactionLine(100, "Line B"),
+                    new ViewTransactionLine(100, "Line A", "test category"),
+                    new ViewTransactionLine(100, "Line B", "test category"),
                 },
                 updatedTransaction.Lines);
             Assert.Equal("New description", updatedTransaction.Description);
-            Assert.Equal("test category", updatedTransaction.Category);
+            Assert.Equal("test category", updatedTransaction.Lines.First().Category);
         }
     }
 

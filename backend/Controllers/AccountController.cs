@@ -1,7 +1,7 @@
 ﻿using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using assetgrid_backend.Data.Search;
+using assetgrid_backend.models.Search;
 
 namespace assetgrid_backend.Controllers
 {
@@ -279,7 +281,7 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(int))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CountTransactions(int id, ViewSearchGroup? requestQuery)
+        public async Task<IActionResult> CountTransactions(int id, SearchGroup? requestQuery)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (! await _context.UserAccounts.AnyAsync(account => account.UserId == user.Id && account.AccountId == id))
@@ -541,7 +543,7 @@ namespace assetgrid_backend.Controllers
         [Route("/api/v1/[controller]/{id}/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ViewCategorySummary>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CategorySummary(int id, ViewSearchGroup? query)
+        public async Task<IActionResult> CategorySummary(int id, SearchGroup? query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (! await _context.UserAccounts.AnyAsync(u => u.UserId == user.Id && u.AccountId == id))
@@ -549,15 +551,21 @@ namespace assetgrid_backend.Controllers
                 return NotFound();
             }
 
-            return Ok(await _context.Transactions
-                .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
+            return Ok(await _context.TransactionLines
+                .Where(line => line.Transaction.SourceAccountId == id || line.Transaction.DestinationAccountId == id)
                 .ApplySearch(query)
-                .GroupBy(transaction => transaction.Category)
+                .GroupBy(line => line.Category)
                 .Select(group => new ViewCategorySummary
                 {
                     Category = group.Key,
-                    Revenue = group.Where(t => t.DestinationAccountId == id).Select(t => t.Total).Sum(),
-                    Expenses = group.Where(t => t.SourceAccountId == id).Select(t => t.Total).Sum()
+                    Revenue = group
+                        .Where(line => (line.Transaction.DestinationAccountId == id && line.Amount > 0) || (line.Transaction.SourceAccountId == id && line.Amount < 0))
+                        .Select(line => line.Amount)
+                        .Sum(),
+                    Expenses = group
+                        .Where(line => (line.Transaction.DestinationAccountId == id && line.Amount < 0) || (line.Transaction.SourceAccountId == id && line.Amount > 0))
+                        .Select(line => line.Amount)
+                        .Sum()
                 })
                 .ToListAsync());
         }

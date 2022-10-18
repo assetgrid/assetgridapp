@@ -2,7 +2,7 @@ using assetgrid_backend;
 using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +28,7 @@ namespace backend.unittests.Tests
         public TransactionController TransactionController { get; set; }
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
+        public AutomationService AutomationService { get; set; }
 
         public UserTests()
         {
@@ -41,9 +42,10 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
         }
 
         [Fact]
@@ -191,18 +193,17 @@ namespace backend.unittests.Tests
             var accountB1 = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Create transactions
-            var createTransaction = async (int? sourceId, int? destinationId) => (await TransactionController.Create(new ViewCreateTransaction
+            var createTransaction = async (int? sourceId, int? destinationId) => (await TransactionController.Create(new ViewModifyTransaction
             {
                 SourceId = sourceId,
                 DestinationId = destinationId,
-                Category = "",
                 DateTime = new DateTime(2020, 01, 01),
                 Description = "Test transaction",
                 Total = 100,
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
-                    new ViewTransactionLine(amount: 120, description: "Line 1"),
-                    new ViewTransactionLine(amount: -20, description: "Line 2"),
+                    new ViewTransactionLine(amount: 120, description: "Line 1", ""),
+                    new ViewTransactionLine(amount: -20, description: "Line 2", ""),
                 }
             })).OkValue<ViewTransaction>();
 

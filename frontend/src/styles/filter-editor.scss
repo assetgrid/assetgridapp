@@ -11,15 +11,37 @@
         display: flex;
         align-items: center;
 
-        .button {
+        & > .field {
+            margin-bottom: 0;
+        }
+
+        .button, .select > select {
             background-color: $primary;
             border: 2px solid white;
             color: white;
-            margin-right: $size-7;
 
             &:hover {
                 color: $primary;
                 background-color: white;
+            }
+            & option {
+                color: black;
+                background-color: white;
+            }
+        }
+        .select {
+            margin-right: $size-7;
+            &::after {
+                border-color: white;
+            }
+            &:hover::after {
+                border-color: $primary;
+            }
+        }
+        .button {
+            margin-right: $size-7;
+            &.icon {
+                height: 1.5rem;
             }
         }
         .button.btn-delete {

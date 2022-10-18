@@ -22,6 +22,7 @@ import Page404 from "../Page404";
 import PageError from "../PageError";
 import Hero from "../../common/Hero";
 import InputTextMultiple from "../../input/InputTextMultiple";
+import TransactionCategory from "../../transaction/table/TransactionCategory";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -61,8 +62,7 @@ export default function PageTransaction (): React.ReactElement {
                         isUpdating,
                         transaction => setEditModel(transaction),
                         editModel,
-                        () => setIsDeleting(true),
-                        forget(update)
+                        errors
                     )}
                 </div>
             </div>
@@ -102,8 +102,8 @@ export default function PageTransaction (): React.ReactElement {
         setErors({});
         const result = await api.Transaction.update(id, {
             ...editModel,
-            sourceId: editModel.source?.id ?? -1,
-            destinationId: editModel.destination?.id ?? -1
+            sourceId: editModel.source?.id ?? null,
+            destinationId: editModel.destination?.id ?? null
         });
 
         if (result.status === 200) {
@@ -214,7 +214,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                     <tr>
                         <td>Category</td>
                         <td>
-                            {transaction.category}
+                            <TransactionCategory categories={transaction.lines.map(line => line.category)} />
                         </td>
                     </tr>
                 </tbody>
@@ -261,10 +261,14 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                     </tr>
                     <tr>
                         <td>Total</td>
-                        {editModel.lines.length === 0
+                        {!editModel.isSplit
                             ? <td><InputNumber
                                 value={editModel.total}
-                                onChange={value => props.onChange({ ...editModel, total: value })}
+                                onChange={value => props.onChange({
+                                    ...editModel,
+                                    total: value,
+                                    lines: [{ ...editModel.lines[0], amount: value }]
+                                })}
                                 allowNull={false}
                                 disabled={props.isUpdating}
                                 errors={props.errors.DateTime} />
@@ -280,7 +284,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                                 allowNull={true}
                                 allowCreateNewAccount={true}
                                 disabled={props.isUpdating}
-                                errors={props.errors.SourceAccountId} />
+                                errors={props.errors.SourceId} />
                         </td>
                     </tr>
                     <tr>
@@ -292,17 +296,19 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                                 allowNull={true}
                                 allowCreateNewAccount={true}
                                 disabled={props.isUpdating}
-                                errors={props.errors.DestinationAccountId} />
+                                errors={props.errors.DestinationId} />
                         </td>
                     </tr>
                     <tr>
                         <td>Category</td>
                         <td>
-                            <InputCategory
-                                value={editModel.category}
-                                onChange={value => props.onChange({ ...editModel, category: value })}
-                                disabled={props.isUpdating}
-                                errors={props.errors.Category} />
+                            {editModel.isSplit
+                                ? <TransactionCategory categories={editModel.lines.map(line => line.category)} />
+                                : <InputCategory
+                                    value={editModel.lines[0].category}
+                                    onChange={value => props.onChange({ ...editModel, lines: [{ ...editModel.lines[0], category: value }] })}
+                                    disabled={props.isUpdating}
+                                    errors={props.errors["Lines[0].Category"]} /> }
                         </td>
                     </tr>
                 </tbody>
@@ -320,8 +326,7 @@ function transactionLines (
     isUpdating: boolean,
     onChange: (transaction: Transaction) => void,
     editModel: Transaction | null,
-    beginDelete: () => void,
-    saveChanges: () => void
+    errors: { [key: string]: string[] }
 ): React.ReactElement {
     const { user } = React.useContext(userContext);
 
@@ -335,7 +340,7 @@ function transactionLines (
         /*
          * Not currently editing
          */
-        if (transaction.lines.length === 0) {
+        if (!transaction.isSplit) {
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
                 <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
@@ -352,12 +357,14 @@ function transactionLines (
                         <tr>
                             <th>Description</th>
                             <th className="has-text-right">Amount</th>
+                            <th>Category</th>
                         </tr>
                     </thead>
                     <tbody>
                         {transaction.lines.map((line, i) => <tr key={i}>
-                            <td>{ line.description }</td>
+                            <td>{line.description}</td>
                             <td className="has-text-right">{formatNumberWithUser(line.amount, user)}</td>
+                            <td>{line.category}</td>
                         </tr>)}
                     </tbody>
                 </table>
@@ -367,13 +374,13 @@ function transactionLines (
         /*
          * Currently editing
          */
-        if (editModel.lines.length === 0) {
+        if (!editModel.isSplit) {
             return <Card title="Transaction lines" isNarrow={false}>
                 <p>This transaction does not have any lines.</p>
                 <p>Split the transaction to add lines.</p>
                 <div className="buttons mt-3">
                     <InputButton disabled={isUpdating}
-                        onClick={() => onChange({ ...editModel, lines: [{ description: "Transaction line", amount: editModel.total }] })}>
+                        onClick={splitTransaction}>
                         Split Transaction
                     </InputButton>
                 </div>
@@ -385,6 +392,7 @@ function transactionLines (
                         <tr>
                             <th>Description</th>
                             <th className="has-text-right">Amount</th>
+                            <th>Category</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -394,6 +402,7 @@ function transactionLines (
                                 <InputText value={line.description}
                                     onChange={e => updateLine({ ...line, description: e.target.value }, i)}
                                     disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Description`]}
                                 />
                             </td>
                             <td className="has-text-right">{
@@ -401,8 +410,17 @@ function transactionLines (
                                     onChange={value => updateLine({ ...line, amount: value }, i)}
                                     allowNull={false}
                                     disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Amount`]}
                                 />
                             }</td>
+                            <td>
+                                <InputCategory
+                                    value={line.category}
+                                    onChange={value => updateLine({ ...line, category: value }, i)}
+                                    disabled={isUpdating}
+                                    errors={errors[`Lines[${i}].Category`]}
+                                />
+                            </td>
                             <td style={{ verticalAlign: "middle" }}>
                                 <InputIconButton icon={regular.faTrashCan} onClick={() => deleteLine(i)} />
                             </td>
@@ -413,13 +431,26 @@ function transactionLines (
                     <InputButton disabled={isUpdating}
                         onClick={() => onChange({
                             ...editModel,
-                            lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0) }]
+                            lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0), category: "" }]
                         })}>
                         Add line
                     </InputButton>
                 </div>
             </Card>;
         }
+    }
+
+    function splitTransaction (): void {
+        if (editModel === null) return;
+
+        onChange({
+            ...editModel,
+            isSplit: true,
+            lines: [{
+                ...editModel.lines[0],
+                description: editModel.lines[0].description.trim() === "" ? "Transaction line" : editModel.description
+            }]
+        });
     }
 
     function updateLine (newLine: TransactionLine, index: number): void {
@@ -445,7 +476,8 @@ function transactionLines (
         onChange({
             ...editModel,
             total,
-            lines: newLines
+            lines: newLines.length > 0 ? newLines : editModel.lines,
+            isSplit: newLines.length > 0
         });
     }
 }

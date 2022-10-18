@@ -53,6 +53,7 @@ if (!Directory.Exists(dataDirectory)) {
 
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<IAutomationService, AutomationService>();
     builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(dataDirectory, "./jwt_secret.txt")));
 
     builder.Services.AddDbContext<AssetgridDbContext>(options =>
@@ -77,7 +78,9 @@ if (!Directory.Exists(dataDirectory)) {
         if (provider.ToLower() == Mysql.Name.ToLower())
         {
             var connectionString = legacyConnectionString ?? builder.Configuration.GetConnectionString(Mysql.Name);
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+            options.UseMySql(connectionString,
+                ServerVersion.AutoDetect(connectionString),
+                x => x.MigrationsAssembly(Mysql.Assembly));
 
             if (builder.Environment.IsDevelopment())
             {

@@ -1,19 +1,17 @@
-﻿namespace assetgrid_backend.ViewModels
-{
-    public class ViewSearch
-    {
-        public ViewSearchGroup? Query { get; set; }
-        public int From { get; set; }
-        public int To { get; set; }
-        public string? OrderByColumn { get; set; }
-        public bool? Descending { get; set; }
-    }
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-    public class ViewSearchQuery
+namespace assetgrid_backend.models.Search
+{
+    public class SearchQuery
     {
+        public int Version => 1;
         public string Column { get; set; } = null!;
         public object? Value { get; set; } = null!;
-        public ViewSearchOperator Operator { get; set; }
+        public SearchOperator Operator { get; set; }
         public bool Not { get; set; }
 
         public string OperatorString
@@ -22,15 +20,15 @@
             {
                 switch (Operator)
                 {
-                    case ViewSearchOperator.Equals:
+                    case SearchOperator.Equals:
                         return Not ? "!=" : "==";
-                    case ViewSearchOperator.Contains:
+                    case SearchOperator.Contains:
                         return Not ? "does not contain" : "contains";
-                    case ViewSearchOperator.In:
+                    case SearchOperator.In:
                         return Not ? "not in" : "in";
-                    case ViewSearchOperator.GreaterThan:
+                    case SearchOperator.GreaterThan:
                         return Not ? "<=" : ">";
-                    case ViewSearchOperator.GreaterThanOrEqual:
+                    case SearchOperator.GreaterThanOrEqual:
                         return Not ? "<" : ">=";
                     default:
                         throw new Exception("Invalid operator");
@@ -39,19 +37,20 @@
         }
     }
 
-    public class ViewSearchGroup
+    public class SearchGroup
     {
-        public ViewSearchGroupType Type { get; set; }
-        public List<ViewSearchGroup>? Children { get; set; }
-        public ViewSearchQuery? Query { get; set; }
+        public int Version => 1;
+        public SearchGroupType Type { get; set; }
+        public List<SearchGroup>? Children { get; set; }
+        public SearchQuery? Query { get; set; }
 
         public override string ToString()
         {
             switch (Type)
             {
-                case ViewSearchGroupType.And:
+                case SearchGroupType.And:
                     return $"AND group with {Children?.Count().ToString() ?? "missing"} children";
-                case ViewSearchGroupType.Or:
+                case SearchGroupType.Or:
                     return $"OR group with {Children?.Count().ToString() ?? "missing"} children";
                 default:
                     if (Query == null)
@@ -63,20 +62,14 @@
         }
     }
 
-    public class ViewSearchResponse<T>
-    {
-        public List<T> Data { get; set; } = null!;
-        public int TotalItems { get; set; }
-    }
-
-    public enum ViewSearchGroupType
+    public enum SearchGroupType
     {
         Or,
         And,
         Query,
     }
 
-    public enum ViewSearchOperator
+    public enum SearchOperator
     {
         Equals,
         Contains,

@@ -4,13 +4,14 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
-import { SearchGroup, SearchGroupType, SearchOperator, SearchRequest, SearchResponse } from "../models/search";
-import { Transaction as TransactionModel, CreateTransaction, TransactionListResponse, TransactionLine, UpdateTransaction } from "../models/transaction";
+import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
+import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
+import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -193,7 +194,8 @@ const User = (token: string) => ({
                     status: 200,
                     data: {
                         ...result.data,
-                        amountParseOptions: { ...result.data.amountParseOptions, regex: fixRegex(result.data.amountParseOptions.regex) },
+                        debitAmountParseOptions: { ...result.data.debitAmountParseOptions, regex: fixRegex(result.data.debitAmountParseOptions.regex) },
+                        creditAmountParseOptions: { ...result.data.creditAmountParseOptions, regex: fixRegex(result.data.creditAmountParseOptions.regex) },
                         categoryParseOptions: { ...result.data.categoryParseOptions, regex: fixRegex(result.data.categoryParseOptions.regex) },
                         dateParseOptions: { ...result.data.dateParseOptions, regex: fixRegex(result.data.dateParseOptions.regex) },
                         descriptionParseOptions: { ...result.data.descriptionParseOptions, regex: fixRegex(result.data.descriptionParseOptions.regex) },
@@ -224,7 +226,8 @@ const User = (token: string) => ({
                 sourceAccount: profile.sourceAccountId ?? null,
                 destinationAccount: profile.destinationAccountId ?? null,
 
-                amountParseOptions: { ...profile.amountParseOptions, regex: profile.amountParseOptions.regex?.source },
+                debitAmountParseOptions: { ...profile.debitAmountParseOptions, regex: profile.debitAmountParseOptions.regex?.source },
+                creditAmountParseOptions: { ...profile.creditAmountParseOptions, regex: profile.creditAmountParseOptions.regex?.source },
                 categoryParseOptions: { ...profile.categoryParseOptions, regex: profile.categoryParseOptions.regex?.source },
                 dateParseOptions: { ...profile.dateParseOptions, regex: profile.dateParseOptions.regex?.source },
                 descriptionParseOptions: { ...profile.descriptionParseOptions, regex: profile.descriptionParseOptions.regex?.source },
@@ -581,7 +584,7 @@ const Transaction = (token: string) => ({
      * @param transaction The transaction to be created
      * @returns The newly created transaction
      */
-    create: async function (transaction: CreateTransaction): Promise<Ok<TransactionModel> | BadRequest | Forbid> {
+    create: async function (transaction: ModifyTransaction): Promise<Ok<TransactionModel> | BadRequest | Forbid> {
         return await new Promise<Ok<TransactionModel> | BadRequest | Forbid>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.post<TransactionModel>(`${rootUrl}/api/v1/transaction`, {
@@ -611,9 +614,9 @@ const Transaction = (token: string) => ({
      * @param transactions The transactions to be created
      * @returns An object containing information about transactions successfully created, those with errors and those with duplicate identifiers
      */
-    createMany: async function (transactions: CreateTransaction[]): Promise<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }> {
-        return await new Promise<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>((resolve, reject) => {
-            axios.post<{ succeeded: CreateTransaction[], failed: CreateTransaction[], duplicate: CreateTransaction[] }>(`${rootUrl}/api/v1/transaction/createmany`,
+    createMany: async function (transactions: ModifyTransaction[]): Promise<{ succeeded: TransactionModel[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }> {
+        return await new Promise<{ succeeded: TransactionModel[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>((resolve, reject) => {
+            axios.post<{ succeeded: ModifyTransaction[], failed: ModifyTransaction[], duplicate: ModifyTransaction[] }>(`${rootUrl}/api/v1/transaction/createmany`,
                 transactions.map(transaction => ({
                     ...transaction,
                     total: undefined,
@@ -622,9 +625,9 @@ const Transaction = (token: string) => ({
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({
-                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as CreateTransaction),
-                failed: result.data.failed.map(t => fixTransaction(t) as any as CreateTransaction),
-                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as CreateTransaction)
+                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as TransactionModel),
+                failed: result.data.failed.map(t => fixTransaction(t) as any as ModifyTransaction),
+                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as ModifyTransaction)
             }))
                 .catch(e => {
                     console.log(e);
@@ -639,19 +642,17 @@ const Transaction = (token: string) => ({
      * @param transaction The changes to make
      * @returns The updated transaction
      */
-    update: async function (id: number, transaction: UpdateTransaction): Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest> {
+    update: async function (id: number, transaction: ModifyTransaction): Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest> {
         return await new Promise<Ok<TransactionModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
             const { total, ...model } = transaction;
             axios.put<TransactionModel>(`${rootUrl}/api/v1/transaction/${id}`, {
                 ...model,
-                totalString: (transaction.total != null) ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
-                lines: (transaction.lines != null)
-                    ? transaction.lines.map(line => ({
-                        ...line,
-                        amountString: line.amount.mul(new Decimal(10000)).round().toString(),
-                        amount: undefined
-                    }))
-                    : undefined
+                totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
+                lines: transaction.lines.map(line => ({
+                    ...line,
+                    amountString: line.amount.mul(new Decimal(10000)).round().toString(),
+                    amount: undefined
+                }))
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({ status: 200, data: fixTransaction(result.data) }))
@@ -670,37 +671,6 @@ const Transaction = (token: string) => ({
                             console.log(e);
                             reject(e);
                     }
-                });
-        });
-    },
-
-    /**
-     * Updates all transactions matching the specified query
-     * @param query A query describing which transactions to modify
-     * @param transaction The changes to make
-     */
-    updateMultiple: async function (query: SearchGroup, transaction: UpdateTransaction): Promise<Ok<null>> {
-        return await new Promise<Ok<null>>((resolve, reject) => {
-            const { total, ...model } = transaction;
-            axios.post<TransactionModel>(`${rootUrl}/api/v1/transaction/updateMultiple`, {
-                query: fixAccountQuery(query),
-                model: {
-                    ...model,
-                    totalString: (transaction.total != null) ? transaction.total.mul(new Decimal(10000)).round().toString() : undefined,
-                    lines: (transaction.lines != null)
-                        ? transaction.lines.map(line => ({
-                            ...line,
-                            amountString: line.amount.mul(new Decimal(10000)).round().toString(),
-                            amount: undefined
-                        }))
-                        : undefined
-                }
-            }, {
-                headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ status: 200, data: null }))
-                .catch(e => {
-                    console.log(e);
-                    reject(e);
                 });
         });
     },
@@ -728,7 +698,7 @@ const Transaction = (token: string) => ({
     deleteMultiple: async function (query: SearchGroup): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
             axios.delete<TransactionModel>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
-                data: fixAccountQuery(query),
+                data: serializeTransactionQuery(query),
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
@@ -759,7 +729,7 @@ const Transaction = (token: string) => ({
         return await new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
             const fixedQuery = query;
             if (query.query != null) {
-                query.query = fixAccountQuery(query.query);
+                query.query = serializeTransactionQuery(query.query);
             }
             axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, fixedQuery, {
                 headers: { authorization: "Bearer: " + token }
@@ -772,38 +742,139 @@ const Transaction = (token: string) => ({
     }
 });
 
-function fixAccountQuery (query: SearchGroup): SearchGroup {
-    switch (query.type) {
-        case SearchGroupType.And:
-        case SearchGroupType.Or:
-            return {
-                type: query.type,
-                children: query.children.map(child => fixAccountQuery(child))
-            };
-        case SearchGroupType.Query: {
-            const result: SearchGroup = {
-                type: query.type,
-                query: {
-                    ...query.query
-                }
-            };
-            if (query.query.column === "Total") {
-                if (query.query.operator === SearchOperator.In) {
-                    result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
-                } else {
-                    result.query.value = (result.query.value as Decimal).times(10000).toNumber();
-                }
-            }
-            return result;
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const Automation = (token: string) => ({
+    Transaction: {
+        /**
+         * Runs a transaction action a single time
+         * @param action The action to run
+         */
+        runSingle: async function (action: TransactionAutomation): Promise<void> {
+            return await new Promise<void>((resolve, reject) => {
+                axios.post(`${rootUrl}/api/v1/automation/transaction/runSingle`, serializeTransactionAutomation(action), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve(result.data))
+                    .catch(error => {
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Get all transactions automations that the current user has access to
+         */
+        list: async function (): Promise<Ok<TransactionAutomationSummary[]>> {
+            return await new Promise<Ok<TransactionAutomationSummary[]>>((resolve, reject) => {
+                axios.get(`${rootUrl}/api/v1/automation/transaction`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => {
+                    resolve({ status: 200, data: result.data });
+                }).catch(error => {
+                    console.log(error);
+                    reject(error);
+                });
+            });
+        },
+
+        /**
+         * Get an automation byu id
+         * @param id The id of the automation to get
+         */
+        get: async function (id: number): Promise<Ok<TransactionAutomation> | NotFound> {
+            return await new Promise<Ok<TransactionAutomation> | NotFound>((resolve, reject) => {
+                axios.get(`${rootUrl}/api/v1/automation/transaction/${id}`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 404) {
+                            resolve(NotFoundResult);
+                            return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Create a new transaction automation
+         * @param automation The automation to create
+         */
+        create: async function (automation: TransactionAutomation): Promise<Ok<TransactionAutomation> | BadRequest> {
+            return await new Promise<Ok<TransactionAutomation> | BadRequest>((resolve, reject) => {
+                axios.post(`${rootUrl}/api/v1/automation/transaction`, serializeTransactionAutomation(automation), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 400) {
+                            resolve(error.response.data as BadRequest);
+                            return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Modify an existing transaction
+         * @param id The id of the automation to modify
+         * @param automation The new automation
+         */
+        modify: async function (id: number, automation: TransactionAutomation): Promise<Ok<TransactionAutomation> | BadRequest | NotFound | Forbid> {
+            return await new Promise<Ok<TransactionAutomation> | BadRequest | NotFound | Forbid>((resolve, reject) => {
+                axios.put(`${rootUrl}/api/v1/automation/transaction/${id}`, serializeTransactionAutomation(automation), {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: result.data }))
+                    .catch((error: AxiosError) => {
+                        switch (error.response?.status) {
+                            case 400:
+                                resolve(error.response.data as BadRequest);
+                                return;
+                            case 404:
+                                resolve(NotFoundResult);
+                                return;
+                            case 403:
+                                resolve(ForbidResult);
+                                return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
+        },
+
+        /**
+         * Delete a transaction automation
+         * @param id The id of the automation to delete
+         */
+        delete: async function (id: number): Promise<Ok<undefined> | NotFound | Forbid> {
+            return await new Promise<Ok<undefined> | NotFound | Forbid>((resolve, reject) => {
+                axios.delete(`${rootUrl}/api/v1/automation/transaction/${id}`, {
+                    headers: { authorization: "Bearer: " + token }
+                }).then(result => resolve({ status: 200, data: undefined }))
+                    .catch((error: AxiosError) => {
+                        if (error.response?.status === 404) {
+                            resolve(NotFoundResult);
+                            return;
+                        } else if (error.response?.status === 403) {
+                            resolve(ForbidResult);
+                            return;
+                        }
+                        console.log(error);
+                        reject(error);
+                    });
+            });
         }
     }
-}
+});
 
 /**
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
  */
-function fixTransaction (transaction: TransactionModel | CreateTransaction): TransactionModel {
+function fixTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
     const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
     return {
         ...rest,
@@ -844,7 +915,8 @@ const ApiClient = (token: string) => ({
     User: User(token),
     Account: Account(token),
     Transaction: Transaction(token),
-    Taxonomy: Taxonomy(token)
+    Taxonomy: Taxonomy(token),
+    Automation: Automation(token)
 });
 export default ApiClient;
 

@@ -12,5 +12,8 @@ namespace assetgrid_backend.Models
 
         [MaxLength(250)]
         public string Description { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string Category { get; set; } = null!;
     }
 }

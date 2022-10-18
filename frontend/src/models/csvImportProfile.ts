@@ -7,14 +7,18 @@ export interface CsvImportProfile {
     csvNewlineCharacter: "auto" | "\n" | "\r\n" | "\r"
     csvParseHeader: boolean
     csvTextEncoding: string | null
+    csvSkipLines: number
 
     // Mapping options
     duplicateHandling: DuplicateHandlingOptions
     identifierColumn: string | null
     identifierParseOptions: ParseOptions
 
-    amountColumn: string | null
-    amountParseOptions: ParseOptions
+    debitAmountColumn: string | null
+    debitAmountParseOptions: ParseOptions
+    separateCreditDebitColumns: boolean
+    creditAmountColumn: string | null
+    creditAmountParseOptions: ParseOptions
     decimalSeparator: string
 
     descriptionColumn: string | null

@@ -3,7 +3,7 @@ using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -31,6 +31,7 @@ namespace backend.unittests.Tests
         public AccountService AccountService { get; set; }
         public UserAuthenticatedResponse User { get; set; }
         public TaxonomyController TaxonomyController { get; set; }
+        public AutomationService AutomationService { get; set; }
 
         public ViewAccount AccountA;
         public ViewAccount AccountB;
@@ -47,6 +48,7 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -54,7 +56,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
             TaxonomyController = new TaxonomyController(Context, UserService);
 
             var objectValidator = new Mock<IObjectModelValidator>();
@@ -82,16 +84,15 @@ namespace backend.unittests.Tests
         public async void CategoryAutocomplete()
         {
             var otherUser = await UserService.CreateUser("test2", "test");
-            var model = new ViewCreateTransaction
+            var model = new ViewModifyTransaction
             {
                 Total = -500,
                 DateTime = DateTime.Now,
                 Description = "Test description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                Category = "Account A category",
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "Account A category") }
             };
 
             // Create account and transaction with User A

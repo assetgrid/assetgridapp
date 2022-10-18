@@ -5,7 +5,8 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { forget, formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { CsvImportProfile } from "../../../models/csvImportProfile";
-import { CreateTransaction } from "../../../models/transaction";
+import { SearchGroupType, SearchOperator } from "../../../models/search";
+import { ModifyTransaction, Transaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
 import { userContext } from "../../App";
 import Card from "../../common/Card";
@@ -13,6 +14,7 @@ import Modal from "../../common/Modal";
 import Table from "../../common/Table";
 import InputAutoComplete from "../../input/InputAutoComplete";
 import InputButton from "../../input/InputButton";
+import TransactionList from "../table/TransactionList";
 import { CsvCreateTransaction } from "./importModels";
 
 interface Props {
@@ -27,9 +29,9 @@ interface Props {
  * React object class
  */
 export function Import (props: Props): React.ReactElement {
-    const [succeeded, setSucceeded] = React.useState<CreateTransaction[]>([]);
-    const [failed, setFailed] = React.useState<CreateTransaction[]>([]);
-    const [duplicate, setDuplicate] = React.useState<CreateTransaction[]>([]);
+    const [succeeded, setSucceeded] = React.useState<Transaction[]>([]);
+    const [failed, setFailed] = React.useState<ModifyTransaction[]>([]);
+    const [duplicate, setDuplicate] = React.useState<ModifyTransaction[]>([]);
     const [state, setState] = React.useState<"waiting" | "importing" | "imported">("waiting");
     const [progress, setProgress] = React.useState(0);
     const [page, setPage] = React.useState(1);
@@ -63,7 +65,15 @@ export function Import (props: Props): React.ReactElement {
                 </Card>
                 <Card title="Succeeded" isNarrow={false}>
                     <p className="mb-3">The following transactions were successfully created:</p>
-                    {transactionTable(succeeded)}
+                    <TransactionList draw={0} allowEditing={false} allowLinks={false} query={{
+                        type: SearchGroupType.Query,
+                        query: {
+                            column: "Id",
+                            not: false,
+                            operator: SearchOperator.In,
+                            value: succeeded.map(x => x.id)
+                        }
+                    }} />
                 </Card>
                 <Card title="Duplicate" isNarrow={false}>
                     <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
@@ -77,7 +87,7 @@ export function Import (props: Props): React.ReactElement {
             </>;
     }
 
-    function transactionTable (transactions: CreateTransaction[]): React.ReactElement {
+    function transactionTable (transactions: ModifyTransaction[]): React.ReactElement {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
                 <td>{transaction.identifiers[0] ?? "None"}</td>
@@ -110,35 +120,35 @@ export function Import (props: Props): React.ReactElement {
             !t.dateTime.isValid ||
             (t.source?.id === t.destination?.id)
         );
-        const invalidTransactions: CreateTransaction[] = props.transactions.filter((_, i) => errors[i]).map(transaction => ({
+        const invalidTransactions: ModifyTransaction[] = props.transactions.filter((_, i) => errors[i]).map(transaction => ({
             dateTime: transaction.dateTime.isValid ? transaction.dateTime : DateTime.fromJSDate(new Date(2000, 1, 1)),
             description: transaction.description,
             sourceId: transaction.source?.id ?? null,
             destinationId: transaction.destination?.id ?? null,
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
-            category: transaction.category,
             total: transaction.amount === "invalid" ? new Decimal(0) : transaction.amount,
-            lines: []
+            isSplit: false,
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
         let progress = invalidTransactions.length;
-        let succeeded: CreateTransaction[] = [];
-        let failed: CreateTransaction[] = invalidTransactions;
-        let duplicate: CreateTransaction[] = [];
+        let succeeded: Transaction[] = [];
+        let failed: ModifyTransaction[] = invalidTransactions;
+        let duplicate: ModifyTransaction[] = [];
 
         setProgress(progress);
         setSucceeded(succeeded);
         setFailed(failed);
         setDuplicate(duplicate);
 
-        const createModels: CreateTransaction[] = props.transactions.filter((_, i) => !errors[i]).map(transaction => ({
+        const createModels: ModifyTransaction[] = props.transactions.filter((_, i) => !errors[i]).map(transaction => ({
             dateTime: transaction.dateTime,
             description: transaction.description,
             sourceId: transaction.source?.id ?? null,
             destinationId: transaction.destination?.id ?? null,
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
-            category: transaction.category,
             total: transaction.amount as Decimal, // We know it's not invalid as we filter those out earlier
-            lines: []
+            isSplit: false,
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
         }));
 
         while (progress - invalidTransactions.length < createModels.length - 1) {
@@ -172,6 +182,7 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     const [nameError, setNameError] = React.useState<string | null>(null);
     const [isCreating, setIsSaving] = React.useState(false);
     const api = useApi();
+    const [hasSaved, setHasSaved] = React.useState(false);
 
     return <Modal
         active={props.active}
@@ -182,6 +193,11 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
             <button className="button" onClick={() => props.close()}>Cancel</button>
         </>}>
         <div style={{ minHeight: "20rem" }}>
+            {hasSaved && <article className="message is-link">
+                <div className="message-body">
+                    Your changes have been saved
+                </div>
+            </article>}
             <InputImportProfile
                 label="Profile name"
                 value={name}
@@ -194,9 +210,11 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     async function saveProfile (): Promise<void> {
         if (api === null) return;
 
+        setHasSaved(false);
         setIsSaving(true);
         await api.User.updateCsvImportProfile(name, props.profile);
         setIsSaving(false);
+        setHasSaved(true);
     }
 }
 

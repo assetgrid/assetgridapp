@@ -1,4 +1,6 @@
-﻿using assetgrid_backend.Models;
+﻿using assetgrid_backend.models.Automation;
+using assetgrid_backend.models.Search;
+using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
@@ -36,27 +38,53 @@ namespace assetgrid_backend.Models
                     .HasPrincipalKey(e => e.Id);
             });
 
-            builder.Entity<Transaction>(entity => {
+            builder.Entity<Transaction>(entity =>
+            {
                 entity.HasIndex(e => e.DateTime);
-                entity.HasIndex(e => e.Category).HasFilter("Category IS NOT NULL");
                 entity.HasMany(e => e.Identifiers)
                     .WithOne(e => e.Transaction)
                     .HasForeignKey(e => e.TransactionId)
                     .HasPrincipalKey(e => e.Id);
+            });
+            builder.Entity<TransactionLine>(entity =>
+            {
+                entity.HasIndex(e => e.Category).HasFilter("Category IS NOT NULL");
             });
 
             builder.Entity<TransactionUniqueIdentifier>(entity =>
             {
                 entity.HasIndex(e => e.Identifier);
             });
+            builder.Entity<TransactionAutomation>(entity =>
+            {
+                var queryValueConverter = new ValueConverter<SearchGroup, string>(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<SearchGroup>(v, (JsonSerializerOptions?)null) ?? new SearchGroup
+                    {
+                        Type = SearchGroupType.And,
+                        Children = new List<SearchGroup>()
+                    }
+                );
+                entity.Property(e => e.Query)
+                    .HasConversion(queryValueConverter)
+                    .HasColumnType("json");
+
+                var actionsValueConverter = new ValueConverter<List<TransactionAutomationAction>, string>(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<List<TransactionAutomationAction>>(v, (JsonSerializerOptions?)null) ?? new List<TransactionAutomationAction>()
+                );
+                entity.Property(e => e.Actions)
+                    .HasConversion(actionsValueConverter)
+                    .HasColumnType("json");
+            });
 
             builder.Entity<UserCsvImportProfile>(entity =>
             {
                 var valueConverter = new ValueConverter<CsvImportProfile, string>(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                    v => JsonSerializer.Deserialize<CsvImportProfile>(v, (JsonSerializerOptions?)null) ?? new CsvImportProfile()
+                    v => UserCsvImportProfile.ParseJson(v)
                 );
-                entity.Property("ImportProfile")
+                entity.Property(e => e.ImportProfile)
                     .HasConversion(valueConverter)
                     .HasColumnType("json");
             });
@@ -71,5 +99,7 @@ namespace assetgrid_backend.Models
         public DbSet<TransactionUniqueIdentifier> TransactionUniqueIdentifiers { get; set; } = null!;
         public DbSet<UserPreferences> UserPreferences { get; set; } = null!;
         public DbSet<UserCsvImportProfile> UserCsvImportProfiles { get; set; } = null!;
+        public DbSet<TransactionAutomation> TransactionAutomations { get; set; } = null!;
+        public DbSet<UserTransactionAutomation> UserTransactionAutomations { get; set; } = null!;
     }
 }

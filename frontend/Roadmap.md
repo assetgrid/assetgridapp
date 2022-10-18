@@ -68,3 +68,4 @@
 - [x] Add user profile page
 - [x] Make transaction creation warn about things like same source/destination. Missing source destination. Duplicates
 - [ ] Multiple identifiers per transaction
+- [ ] Show errors for transaction lines in the inline editor

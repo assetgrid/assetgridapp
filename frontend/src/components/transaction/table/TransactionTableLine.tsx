@@ -1,28 +1,26 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
-import { forget, formatDateTimeWithUser, formatNumberWithUser } from "../../lib/Utils";
-import { Account } from "../../models/account";
-import { Transaction, TransactionLine } from "../../models/transaction";
-import InputAccount from "../account/input/InputAccount";
-import InputCategory from "../input/InputCategory";
-import InputDateTime from "../input/InputDateTime";
-import InputText from "../input/InputText";
-import TransactionLink from "./TransactionLink";
+import { forget, formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
+import { Account } from "../../../models/account";
+import { Transaction, TransactionLine } from "../../../models/transaction";
+import InputAccount from "../../account/input/InputAccount";
+import InputCategory from "../../input/InputCategory";
+import InputDateTime from "../../input/InputDateTime";
+import InputText from "../../input/InputText";
+import TransactionLink from "./../TransactionLink";
 import * as regular from "@fortawesome/free-regular-svg-icons";
 import * as solid from "@fortawesome/free-solid-svg-icons";
-import { useApi } from "../../lib/ApiClient";
-import AccountLink from "../account/AccountLink";
-import InputButton from "../input/InputButton";
-import InputNumber from "../input/InputNumber";
-import Tooltip from "../common/Tooltip";
-import InputIconButton from "../input/InputIconButton";
-import { userContext } from "../App";
-import DeleteTransactionModal from "./input/DeleteTransactionModal";
-import InputCheckbox from "../input/InputCheckbox";
-import { Link } from "react-router-dom";
-import { routes } from "../../lib/routes";
-import { SearchGroupType, SearchOperator } from "../../models/search";
+import { useApi } from "../../../lib/ApiClient";
+import AccountLink from "../../account/AccountLink";
+import InputButton from "../../input/InputButton";
+import InputNumber from "../../input/InputNumber";
+import Tooltip from "../../common/Tooltip";
+import InputIconButton from "../../input/InputIconButton";
+import { userContext } from "../../App";
+import DeleteTransactionModal from "./../input/DeleteTransactionModal";
+import InputCheckbox from "../../input/InputCheckbox";
+import TransactionCategory from "./TransactionCategory";
 
 interface Props {
     transaction: Transaction
@@ -42,8 +40,8 @@ interface TransactionEditingModel {
     dateTime: DateTime
     source: Account | null
     destination: Account | null
-    category: string
-    lines: TransactionLine[] | null
+    lines: TransactionLine[]
+    isSplit: boolean
 };
 
 export default function TransactionTableLine (props: Props): React.ReactElement {
@@ -77,7 +75,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
         <div>
             {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
-            {props.transaction.lines.length > 0 && <Tooltip
+            {props.transaction.isSplit && <Tooltip
                 content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
             </Tooltip>}
@@ -101,10 +99,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
             {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={!(props.allowLinks ?? true)} />}
         </div>}
         <div>
-            <Link to={routes.transactions()}
-                state={{ searchMode: "advanced", query: { type: SearchGroupType.Query, query: { operator: SearchOperator.Equals, not: false, column: "Category", value: props.transaction.category } } }}>
-                {props.transaction.category}
-            </Link>
+            <TransactionCategory categories={props.transaction.lines.map(line => line.category)} />
         </div>
         {props.allowEditing === true && <div>
             {!props.disabled && <>
@@ -118,7 +113,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
                 deleted={() => props.updateItem(props.transaction.id, null)}
                 transaction={props.transaction} />}
         </div>}
-        {expandSplit && <div className="transaction-lines split">
+        {expandSplit && props.transaction.isSplit && <div className="transaction-lines split">
             {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
                 <div style={{ gridColumn: "colstart/innerstart" }}></div>
                 <div className="description">
@@ -126,6 +121,11 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
                 </div>
                 <div className="total">
                     {formatNumberWithUser(line.amount, user)}
+                </div>
+                <div></div>
+                <div></div>
+                <div className="category">
+                    {line.category}
                 </div>
                 <div style={{ gridColumn: "innerend/colend" }}></div>
             </div>)}
@@ -149,8 +149,8 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         description: props.transaction.description,
         source: props.transaction.source,
         destination: props.transaction.destination,
-        category: props.transaction.category,
-        lines: props.transaction.lines.length > 0 ? props.transaction.lines : null
+        lines: props.transaction.lines,
+        isSplit: props.transaction.isSplit
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
@@ -179,11 +179,15 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 onChange={(e) => setModel({ ...model, description: e.target.value })}
                 disabled={props.disabled}
                 errors={errors.Description} /></div>
-        {model.lines === null
+        {!model.isSplit
             ? <div>
                 <InputNumber allowNull={false}
                     value={model.total.times(amountMultiplier)}
-                    onChange={newTotal => setModel({ ...model, total: newTotal.times(amountMultiplier) })}
+                    onChange={newTotal => setModel({
+                        ...model,
+                        total: newTotal.times(amountMultiplier),
+                        lines: [{ ...model.lines[0], amount: newTotal.times(amountMultiplier) }]
+                    })}
                     errors={errors.Total} />
             </div>
             : < div className={"number-total " + totalClass}>
@@ -199,7 +203,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 allowNull={true}
                 onChange={account => setModel({ ...model, source: account })}
                 allowCreateNewAccount={true}
-                errors={errors.SourceAccountId} />
+                errors={errors.SourceId} />
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
@@ -208,14 +212,16 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 allowNull={true}
                 onChange={account => setModel({ ...model, destination: account })}
                 allowCreateNewAccount={true}
-                errors={errors.DestinationAccountId} />
+                errors={errors.DestinationId} />
         </div>}
         <div>
-            <InputCategory
-                value={model.category}
-                disabled={props.disabled}
-                onChange={category => setModel({ ...model, category })}
-                errors={errors.Category} />
+            {model.isSplit
+                ? <TransactionCategory categories={model.lines.map(line => line.category)} />
+                : <InputCategory
+                    value={model.lines[0].category}
+                    disabled={props.disabled}
+                    onChange={category => updateLine({ ...model.lines[0], category }, 0)}
+                    errors={errors["Lines[0].Category"]} />}
         </div>
         <div>
             {!props.disabled && api !== null && <>
@@ -223,31 +229,30 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 <InputIconButton icon={solid.faXmark} onClick={props.stopEditing} />
             </>}
         </div>
-        {model.lines !== null
+        {model.isSplit
             ? < div className="transaction-lines split">
                 {model.lines.map((line, i) => <TransactionLineEditor key={i}
+                    index={i}
                     line={line}
                     update={changes => updateLine(changes, i)}
                     delete={() => deleteLine(i)}
                     disabled={props.disabled}
                     inverse={amountMultiplier.toNumber() === -1}
-                    last={i === model.lines!.length} />)}
-                <div style={{ gridColumn: "span 3" }}></div>
+                    errors={errors}
+                    last={i === model.lines.length} />)}
+                <div style={{ gridColumn: "colstart / innerstart" }}></div>
                 <div className="btn-add-line">
                     <InputButton className="is-small"
                         onClick={() => setModel({
                             ...model,
-                            lines: [...model.lines!, { amount: new Decimal(0), description: "Transaction line" }]
+                            lines: [...model.lines, { amount: new Decimal(0), description: "Transaction line", category: "" }]
                         })}>Add line</InputButton>
                 </div>
-                <div style={{ gridColumn: "span 4" }}></div>
+                <div style={{ gridColumn: " innerend / colend" }}></div>
             </div>
             : < div className="transaction-lines non-split">
                 <InputButton className="is-small"
-                    onClick={() => setModel({
-                        ...model,
-                        lines: [{ amount: props.transaction.total, description: "Transaction line" }]
-                    })}>Split transaction</InputButton>
+                    onClick={splitTransaction}>Split transaction</InputButton>
             </div>}
     </div>;
 
@@ -260,11 +265,12 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         const result = await api.Transaction.update(props.transaction.id, {
             dateTime: model.dateTime,
             description: model.description,
-            sourceId: model.source?.id ?? -1,
-            destinationId: model.destination?.id ?? -1,
-            category: model.category,
+            sourceId: model.source?.id ?? null,
+            destinationId: model.destination?.id ?? null,
             total: model.total,
-            lines: model.lines ?? []
+            lines: model.lines,
+            isSplit: model.isSplit,
+            identifiers: props.transaction.identifiers
         });
 
         if (result.status === 200) {
@@ -274,6 +280,17 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             setErrors(result.errors);
         }
         props.setDisabled(false);
+    }
+
+    function splitTransaction (): void {
+        setModel({
+            ...model,
+            isSplit: true,
+            lines: [{
+                ...model.lines[0],
+                description: model.lines[0].description.trim() === "" ? "Transaction line" : model.description
+            }]
+        });
     }
 
     function updateLine (newLine: Partial<TransactionLine>, index: number): void {
@@ -299,7 +316,8 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         setModel({
             ...model,
             total,
-            lines: newLines.length > 0 ? newLines : null
+            lines: newLines.length > 0 ? newLines : model.lines,
+            isSplit: newLines.length > 0
         });
     }
 }
@@ -308,12 +326,14 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
  * Inline editor for a transaction line
  */
 interface LineEditorProps {
+    index: number
     line: TransactionLine
     update: (changes: Partial<TransactionLine>) => void
     delete: () => void
     disabled: boolean
     last: boolean
     inverse: boolean
+    errors: { [key: string]: string[] }
 }
 function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
     const multiplier = props.inverse ? new Decimal(-1) : new Decimal(1);
@@ -326,7 +346,8 @@ function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
             <InputText disabled={props.disabled}
                 isSmall={true}
                 value={props.line.description}
-                onChange={e => props.update({ description: e.target.value })} />
+                onChange={e => props.update({ description: e.target.value })}
+                errors={props.errors[`Lines[${props.index}].Description`]} />
         </div>
         <div className="total">
             <InputNumber
@@ -334,7 +355,18 @@ function TransactionLineEditor (props: LineEditorProps): React.ReactElement {
                 allowNull={false}
                 isSmall={true}
                 value={props.line.amount.times(multiplier)}
-                onChange={value => props.update({ amount: value.times(multiplier) })} />
+                onChange={value => props.update({ amount: value.times(multiplier) })}
+                errors={props.errors[`Lines[${props.index}].Total`]} />
+        </div>
+        <div></div>
+        <div></div>
+        <div className="category">
+            <InputCategory
+                isSmall={true}
+                value={props.line.category}
+                disabled={props.disabled}
+                onChange={category => props.update({ category })}
+                errors={props.errors[`Lines[${props.index}].Category`]} />
         </div>
         <div style={{ gridColumn: "innerend/colend" }}>
             <InputIconButton icon={regular.faTrashCan} onClick={props.delete} />

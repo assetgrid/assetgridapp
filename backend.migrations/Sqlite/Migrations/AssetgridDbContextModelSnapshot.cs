@@ -59,16 +59,73 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.ToTable("AccountUniqueIdentifiers");
                 });
 
-            modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
+            modelBuilder.Entity("assetgrid_backend.models.Automation.TransactionAutomation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Actions")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("Query")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<bool>("TriggerOnCreate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("TriggerOnModify")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TransactionAutomations");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TransactionAutomationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionAutomationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTransactionAutomations");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("TEXT");
@@ -81,6 +138,9 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Property<int?>("DestinationAccountId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsSplit")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("INTEGER");
 
@@ -88,9 +148,6 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Category")
-                        .HasFilter("Category IS NOT NULL");
 
                     b.HasIndex("DateTime");
 
@@ -110,6 +167,11 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Property<long>("Amount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -122,6 +184,9 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .HasFilter("Category IS NOT NULL");
 
                     b.HasIndex("TransactionId");
 
@@ -285,6 +350,25 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.Automation.TransactionAutomation", "TransactionAutomation")
+                        .WithMany()
+                        .HasForeignKey("TransactionAutomationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransactionAutomation");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>

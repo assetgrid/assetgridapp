@@ -1,13 +1,16 @@
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Principal;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.ComponentModel.DataAnnotations;
+using assetgrid_backend.Data.Search;
+using assetgrid_backend.models.Search;
 
 namespace assetgrid_backend.Controllers
 {
@@ -19,12 +22,14 @@ namespace assetgrid_backend.Controllers
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
+        private readonly IAutomationService _automation;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _automation = automationService;
         }
 
         [HttpGet()]
@@ -48,7 +53,7 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> Create(ViewCreateTransaction model)
+        public async Task<IActionResult> Create(ViewModifyTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -91,16 +96,17 @@ namespace assetgrid_backend.Controllers
                         SourceAccountId = model.SourceId,
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
+                        IsSplit = model.IsSplit,
                         Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
                         {
                             Identifier = x
                         }).ToList(),
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
-                        Category = string.IsNullOrWhiteSpace(model.Category) ? "" : model.Category,
                         TransactionLines = model.Lines.Select((line, i) => new TransactionLine
                         {
                             Amount = line.Amount,
                             Description = line.Description,
+                            Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
                             Order = i + 1,
                         }).ToList(),
                     };
@@ -123,16 +129,27 @@ namespace assetgrid_backend.Controllers
                         result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                     }
 
+                    // Get all automations enabled for this user that trigger on create
+                    var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
+                        .ToListAsync();
+                    foreach (var automation in automations)
+                    {
+                        _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                    }
+
                     _context.Transactions.Add(result);
                     transaction.Commit();
                     await _context.SaveChangesAsync();
+
                     return Ok(new ViewTransaction {
                         Id = result.Id,
                         Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
                         DateTime = result.DateTime,
                         Description = result.Description,
-                        Category = result.Category,
                         Total = result.Total,
+                        IsSplit = result.IsSplit,
                         Source = result.SourceAccount != null
                             ? userAccountSource == null ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
                                 id: result.SourceAccount.Id,
@@ -157,7 +174,7 @@ namespace assetgrid_backend.Controllers
                             ) : null,
                         Lines = result.TransactionLines
                             .OrderBy(line => line.Order)
-                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
                     });
                 }
@@ -165,14 +182,12 @@ namespace assetgrid_backend.Controllers
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
 
-        #region Update transactions
-
         [HttpPut()]
         [Route("/api/v1/[controller]/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransaction))]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(int id, ViewUpdateTransaction model)
+        public async Task<IActionResult> Update(int id, ViewModifyTransaction model)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -202,246 +217,125 @@ namespace assetgrid_backend.Controllers
                         return Forbid();
                     }
 
-                    var result = await UpdateTransaction(dbObject, user, model);
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
-                    return result;
-                }
-            }
-            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
-        }
-
-        [HttpPost()]
-        [Route("/api/v1/[controller]/[Action]")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> UpdateMultiple(ViewUpdateMultipleTransactions request)
-        {
-            var user = _user.GetCurrent(HttpContext)!;
-            if (ModelState.IsValid)
-            {
-                using (var transaction = _context.Database.BeginTransaction())
-                {
-                    _context.ChangeTracker.AutoDetectChangesEnabled = false;
-
-                    // Get a list of all accounts the user can write to
-                    var writeAccountIds = await _context.UserAccounts
-                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                        .Select(account => account.AccountId)
-                        .ToListAsync();
-
-                    var query = _context.Transactions
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.SourceAccount!.Identifiers)
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.DestinationAccount!.Identifiers)
-                        .Include(t => t.TransactionLines)
-                        .Include(t => t.Identifiers)
-                        .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(request.query);
-
-                    var transactions = await query.ToListAsync();
-                    foreach (var dbObject in transactions)
+                    var sourceUserAccount = dbObject.SourceAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
+                    if (dbObject.SourceAccountId != model.SourceId && model.SourceId != null)
                     {
-                        // We ignore any errors returned
-                        await UpdateTransaction(dbObject, user, request.model);
+                        // Make sure that the user has write permissions to the account they are creating the transaction on
+                        sourceUserAccount = await _context.UserAccounts
+                            .Include(x => x.Account)
+                            .Include(x => x.Account.Identifiers)
+                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
+
+                        if (sourceUserAccount == null)
+                        {
+                            return Forbid();
+                        }
+
+                        dbObject.SourceAccountId = model.SourceId;
+                        dbObject.SourceAccount = sourceUserAccount.Account;
                     }
-
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
-                }
-
-                _context.ChangeTracker.AutoDetectChangesEnabled = true;
-                return Ok();
-            }
-            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
-        }
-
-        private async Task<IActionResult> UpdateTransaction(Transaction dbObject, User user, ViewUpdateTransaction model)
-        {
-            // EF Core enty. Manually track changes to improve performance
-            // Update accounts
-            var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
-            if (model.SourceId != null && dbObject.SourceAccountId != model.SourceId)
-            {
-                if (model.SourceId == -1)
-                {
-                    dbObject.SourceAccountId = null;
-                    dbObject.SourceAccount = null;
-                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Reference(nameof(dbObject.SourceAccount)).IsModified = true;
-                }
-                else
-                {
-                    var newSourceUserAccount = await _context.UserAccounts
-                        .Include(x => x.Account)
-                        .Include(x => x.Account.Identifiers)
-                        .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
-                    if (newSourceUserAccount == null)
+                    var destinationUserAccount = dbObject.DestinationAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
+                    if (dbObject.DestinationAccountId != model.DestinationId && model.DestinationId != null)
                     {
-                        return Forbid();
+                        // Make sure that the user has write permissions to the account they are creating the transaction on
+                        destinationUserAccount = await _context.UserAccounts
+                            .Include(x => x.Account)
+                            .Include(x => x.Account.Identifiers)
+                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
+
+                        if (destinationUserAccount == null)
+                        {
+                            return Forbid();
+                        }
+
+                        dbObject.DestinationAccountId = model.DestinationId;
+                        dbObject.DestinationAccount = destinationUserAccount.Account;
                     }
-                    dbObject.SourceAccountId = newSourceUserAccount.Id;
-                    dbObject.SourceAccount = newSourceUserAccount.Account;
-                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Reference(nameof(dbObject.SourceAccount)).IsModified = true;
-                }
-            }
-            if (model.DestinationId != null && dbObject.DestinationAccountId != model.DestinationId)
-            {
-                if (model.DestinationId == -1)
-                {
-                    dbObject.DestinationAccountId = null;
-                    dbObject.DestinationAccount = null;
-                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Reference(nameof(dbObject.DestinationAccount)).IsModified = true;
-                }
-                else
-                {
-                    var newDestinationUserAccount = await _context.UserAccounts
-                        .Include(x => x.Account)
-                        .Include(x => x.Account.Identifiers)
-                        .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
-                    if (newDestinationUserAccount == null)
+                    dbObject.DestinationAccountId = model.DestinationId;
+                    dbObject.DateTime = model.DateTime;
+                    dbObject.Description = model.Description;
+                    dbObject.Identifiers = model.Identifiers.Select(identifier => new TransactionUniqueIdentifier
                     {
-                        return Forbid();
-                    }
-                    dbObject.DestinationAccountId = newDestinationUserAccount.Id;
-                    dbObject.DestinationAccount = newDestinationUserAccount.Account;
-                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Reference(nameof(dbObject.DestinationAccount)).IsModified = true;
-                }
-            }
-
-            // Update remaining properties
-            if (model.DateTime != null)
-            {
-                dbObject.DateTime = model.DateTime.Value;
-                _context.Entry(dbObject).Property(nameof(dbObject.DateTime)).IsModified = true;
-            }
-            if (model.Description != null)
-            {
-                dbObject.Description = model.Description;
-                _context.Entry(dbObject).Property(nameof(dbObject.Description)).IsModified = true;
-            }
-            if (model.Identifiers != null)
-            {
-                _context.RemoveRange(dbObject.Identifiers);
-                dbObject.Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
-                {
-                    TransactionId = dbObject.Id,
-                    Identifier = x.Trim()
-                }).ToList();
-                _context.Entry(dbObject).Collection(nameof(dbObject.Identifiers)).IsModified = true;
-            }
-            if (model.Category != null)
-            {
-                dbObject.Category = model.Category;
-                _context.Entry(dbObject).Property(nameof(dbObject.Category)).IsModified = true;
-            }
-            if (model.Total != null && dbObject.TransactionLines.Count == 0)
-            {
-                dbObject.Total = model.Total.Value;
-                if (dbObject.Total < 0)
-                {
-                    // All transactions must have positive totals
-                    dbObject.Total = -dbObject.Total;
-                    var source = dbObject.SourceAccountId;
-                    dbObject.SourceAccountId = dbObject.DestinationAccountId;
-                    dbObject.DestinationAccountId = source;
-                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
-                }
-                _context.Entry(dbObject).Property(nameof(dbObject.Total)).IsModified = true;
-            }
-            if (model.Lines != null)
-            {
-                if (model.Total != null)
-                {
-                    dbObject.Total = model.Total.Value;
-                }
-
-                _context.RemoveRange(dbObject.TransactionLines);
-                dbObject.TransactionLines = model.Lines.Select((line, index) =>
-                    new TransactionLine
+                        Identifier = identifier
+                    }).ToList();
+                    dbObject.IsSplit = model.IsSplit;
+                    dbObject.Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum();
+                    dbObject.TransactionLines = model.Lines.Select((line, index) => new TransactionLine
                     {
                         Amount = line.Amount,
                         Description = line.Description,
-                        Order = index,
+                        Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                        Order = index + 1,
                         Transaction = dbObject,
                         TransactionId = dbObject.Id,
-                    })
-                    .ToList();
-                _context.Entry(dbObject).Collection(nameof(dbObject.TransactionLines)).IsModified = true;
+                    }).ToList();
 
-                if (dbObject.Total < 0)
-                {
-                    // All transactions must have positive totals
-                    dbObject.Total = -dbObject.Total;
-                    var source = dbObject.SourceAccountId;
-                    dbObject.SourceAccountId = dbObject.DestinationAccountId;
-                    dbObject.DestinationAccountId = source;
-                    dbObject.TransactionLines.ForEach(line => line.Amount = -line.Amount);
-                    _context.Entry(dbObject).Property(nameof(dbObject.SourceAccountId)).IsModified = true;
-                    _context.Entry(dbObject).Property(nameof(dbObject.DestinationAccountId)).IsModified = true;
+                    if (dbObject.Total < 0)
+                    {
+                        dbObject.Total = -dbObject.Total;
+                        dbObject.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                        var source = dbObject.SourceAccount;
+                        dbObject.SourceAccountId = dbObject.DestinationAccountId;
+                        dbObject.SourceAccount = dbObject.DestinationAccount;
+                        dbObject.DestinationAccountId = source?.Id;
+                        dbObject.DestinationAccount = source;
+                        var temp = sourceUserAccount;
+                        sourceUserAccount = destinationUserAccount;
+                        destinationUserAccount = temp;
+                    }
+
+                    // Get all automations enabled for this user that trigger on create
+                    var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnModify)
+                        .ToListAsync();
+                    foreach (var automation in automations)
+                    {
+                        _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    return Ok(new ViewTransaction
+                    {
+                        Id = dbObject.Id,
+                        Identifiers = dbObject.Identifiers.Select(x => x.Identifier).ToList(),
+                        DateTime = dbObject.DateTime,
+                        Description = dbObject.Description,
+                        Total = dbObject.Total,
+                        IsSplit = dbObject.IsSplit,
+                        Source = dbObject.SourceAccount != null
+                            ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
+                                id: dbObject.SourceAccount.Id,
+                                name: dbObject.SourceAccount.Name,
+                                description: dbObject.SourceAccount.Description,
+                                identifiers: dbObject.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                favorite: sourceUserAccount!.Favorite,
+                                includeInNetWorth: sourceUserAccount!.IncludeInNetWorth,
+                                permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount!.Permissions),
+                                balance: 0
+                            ) : null,
+                        Destination = dbObject.DestinationAccount != null
+                             ? destinationUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.DestinationAccount.Id) : new ViewAccount(
+                                id: dbObject.DestinationAccount.Id,
+                                name: dbObject.DestinationAccount.Name,
+                                description: dbObject.DestinationAccount.Description,
+                                identifiers: dbObject.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                favorite: destinationUserAccount!.Favorite,
+                                includeInNetWorth: destinationUserAccount!.IncludeInNetWorth,
+                                permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount!.Permissions),
+                                balance: 0
+                            ) : null,
+                        Lines = dbObject.TransactionLines
+                            .OrderBy(line => line.Order)
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
+                            .ToList(),
+                    });
                 }
             }
-
-            if (dbObject.SourceAccountId == null && dbObject.DestinationAccountId == null)
-            {
-                ModelState.AddModelError(nameof(dbObject.SourceAccountId), "Either source or destination id must be set.");
-                ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Either source or destination id must be set.");
-                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
-            }
-            if (dbObject.SourceAccountId == dbObject.DestinationAccountId)
-            {
-                ModelState.AddModelError(nameof(dbObject.SourceAccountId), "Source and destination must be different.");
-                ModelState.AddModelError(nameof(dbObject.DestinationAccountId), "Source and destination must be different.");
-                return _apiBehaviorOptions.Value.InvalidModelStateResponseFactory(ControllerContext);
-            }
-
-            var sourceUserAccount = dbObject.SourceAccount?.Users?
-                .SingleOrDefault(x => x.UserId == user.Id);
-            var destinationUserAccount = dbObject.DestinationAccount?.Users?
-                .SingleOrDefault(x => x.UserId == user.Id);
-
-            return Ok(new ViewTransaction
-            {
-                Id = dbObject.Id,
-                Identifiers = dbObject.Identifiers.Select(x => x.Identifier).ToList(),
-                DateTime = dbObject.DateTime,
-                Description = dbObject.Description,
-                Category = dbObject.Category,
-                Total = dbObject.Total,
-                Source = dbObject.SourceAccount != null
-                    ? sourceUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.SourceAccount.Id) : new ViewAccount(
-                        id: dbObject.SourceAccount.Id,
-                        name: dbObject.SourceAccount.Name,
-                        description: dbObject.SourceAccount.Description,
-                        identifiers: dbObject.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
-                        favorite: sourceUserAccount.Favorite,
-                        includeInNetWorth: sourceUserAccount.IncludeInNetWorth,
-                        permissions: ViewAccount.PermissionsFromDbPermissions(sourceUserAccount.Permissions),
-                        balance: 0
-                    ) : null,
-                Destination = dbObject.DestinationAccount != null
-                    ? destinationUserAccount == null ? ViewAccount.GetNoReadAccess(dbObject.DestinationAccount.Id) : new ViewAccount(
-                        id: dbObject.DestinationAccount.Id,
-                        name: dbObject.DestinationAccount.Name,
-                        description: dbObject.DestinationAccount.Description,
-                        identifiers: dbObject.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
-                        favorite: destinationUserAccount.Favorite,
-                        includeInNetWorth: destinationUserAccount.IncludeInNetWorth,
-                        permissions: ViewAccount.PermissionsFromDbPermissions(destinationUserAccount.Permissions),
-                        balance: 0
-                    ) : null,
-                Lines = dbObject.TransactionLines
-                    .OrderBy(line => line.Order)
-                    .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description))
-                    .ToList(),
-            });
+            return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
-
-        #endregion
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/{id}")]
@@ -482,7 +376,7 @@ namespace assetgrid_backend.Controllers
 
         [HttpDelete()]
         [Route("/api/v1/[controller]/[Action]")]
-        public async Task<IActionResult> DeleteMultiple(ViewSearchGroup query)
+        public async Task<IActionResult> DeleteMultiple(SearchGroup query)
         {
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
@@ -553,21 +447,23 @@ namespace assetgrid_backend.Controllers
         [HttpPost()]
         [Route("/api/v1/[controller]/[action]")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ViewTransactionCreateManyResponse))]
-        public async Task<IActionResult> CreateMany(List<ViewCreateTransaction> transactions)
+        public async Task<IActionResult> CreateMany(List<ViewModifyTransaction> transactions)
         {
             var user = _user.GetCurrent(HttpContext)!;
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
 
             if (ModelState.IsValid)
             {
-                var failed = new List<ViewCreateTransaction>();
-                var duplicate = new List<ViewCreateTransaction>();
-                var success = new List<ViewCreateTransaction>();
+                var failed = new List<ViewModifyTransaction>();
+                var duplicate = new List<ViewModifyTransaction>();
+                var success = new List<Transaction>();
 
-                var writeAccountIds = await _context.UserAccounts
+                var writeAccounts = await _context.UserAccounts
                     .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                    .Select(account => account.AccountId)
-                    .ToListAsync();
+                    .Include(account => account.Account)
+                    .Include(account => account.Account.Identifiers)
+                    .ToDictionaryAsync(x => x.AccountId, x => x);
+                var writeAccountIds = writeAccounts.Keys;
 
                 var identifiers = transactions
                     .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
@@ -579,6 +475,12 @@ namespace assetgrid_backend.Controllers
                     .ToListAsync())
                     .ToHashSet();
 
+                // Get all automations that will be run on these transactions
+                var automations = await _context.UserTransactionAutomations
+                        .Include(x => x.TransactionAutomation)
+                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
+                        .ToListAsync();
+
                 foreach (var transaction in transactions)
                 {
                     if (transaction.Identifiers.Any(x => duplicateIdentifiers.Contains(x.Trim())))
@@ -589,8 +491,8 @@ namespace assetgrid_backend.Controllers
                     {
                         try
                         {
-                            if ((transaction.SourceId.HasValue && ! writeAccountIds.Contains(transaction.SourceId.Value)) ||
-                                (transaction.DestinationId.HasValue && !writeAccountIds.Contains(transaction.DestinationId.Value)))
+                            if ((transaction.SourceId.HasValue && !writeAccounts.ContainsKey(transaction.SourceId.Value)) ||
+                                (transaction.DestinationId.HasValue && !writeAccounts.ContainsKey(transaction.DestinationId.Value)))
                             {
                                 throw new Exception("Cannot write to this account");
                             }
@@ -603,16 +505,17 @@ namespace assetgrid_backend.Controllers
                                 SourceAccountId = transaction.SourceId,
                                 Description = transaction.Description,
                                 DestinationAccountId = transaction.DestinationId,
+                                IsSplit = transaction.IsSplit,
                                 Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier
                                 {
                                     Identifier = x.Trim()
                                 }).ToList(),
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                                Category = transaction.Category,
                                 TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
                                 {
                                     Amount = line.Amount,
                                     Description = line.Description,
+                                    Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
                                     Order = i + 1,
                                 }).ToList(),
                             };
@@ -627,8 +530,13 @@ namespace assetgrid_backend.Controllers
                                 result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                             }
 
+                            foreach (var automation in automations)
+                            {
+                                _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                            }
+
                             _context.Transactions.Add(result);
-                            success.Add(transaction);
+                            success.Add(result);
                         }
                         catch (Exception)
                         {
@@ -637,15 +545,51 @@ namespace assetgrid_backend.Controllers
                     }
                 }
                 await _context.SaveChangesAsync();
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
 
                 return Ok(new ViewTransactionCreateManyResponse
                 {
-                    Succeeded = success,
+                    Succeeded = success.Select(result => new ViewTransaction
+                    {
+                        Id = result.Id,
+                        Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
+                        DateTime = result.DateTime,
+                        Description = result.Description,
+                        Total = result.Total,
+                        IsSplit = result.IsSplit,
+                        Source = result.SourceAccount != null
+                                    ? !writeAccounts.ContainsKey(result.SourceAccount.Id) ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
+                                        id: result.SourceAccount.Id,
+                                        name: result.SourceAccount.Name,
+                                        description: result.SourceAccount.Description,
+                                        identifiers: result.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                        favorite: writeAccounts[result.SourceAccount.Id].Favorite,
+                                        includeInNetWorth: writeAccounts[result.SourceAccount.Id].IncludeInNetWorth,
+                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.SourceAccount.Id].Permissions),
+                                        balance: 0
+                                    ) : null,
+                        Destination = result.DestinationAccount != null
+                                     ? !writeAccounts.ContainsKey(result.DestinationAccount.Id) ? ViewAccount.GetNoReadAccess(result.DestinationAccount.Id) : new ViewAccount(
+                                        id: result.DestinationAccount.Id,
+                                        name: result.DestinationAccount.Name,
+                                        description: result.DestinationAccount.Description,
+                                        identifiers: result.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                        favorite: writeAccounts[result.DestinationAccount.Id].Favorite,
+                                        includeInNetWorth: writeAccounts[result.DestinationAccount.Id].IncludeInNetWorth,
+                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.DestinationAccount.Id].Permissions),
+                                        balance: 0
+                                    ) : null,
+                        Lines = result.TransactionLines
+                            .OrderBy(line => line.Order)
+                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
+                            .ToList(),
+                    }).ToList(),
                     Failed = failed,
                     Duplicate = duplicate,
                 });
             }
 
+            _context.ChangeTracker.AutoDetectChangesEnabled = true;
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
         }
     }

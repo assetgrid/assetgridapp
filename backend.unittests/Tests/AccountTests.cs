@@ -3,7 +3,7 @@ using assetgrid_backend.Controllers;
 using assetgrid_backend.Data;
 using assetgrid_backend.Helpers;
 using assetgrid_backend.Models;
-using assetgrid_backend.ViewModels;
+using assetgrid_backend.Models.ViewModels;
 using assetgrid_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +16,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Web;
 using Xunit;
+using assetgrid_backend.models.Search;
 
 namespace backend.unittests.Tests
 {
@@ -27,6 +28,7 @@ namespace backend.unittests.Tests
         public TransactionController TransactionController { get; set; }
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
+        public AutomationService AutomationService { get; set; }
         public AccountTests()
         {
             // Create DB context and connect
@@ -39,6 +41,7 @@ namespace backend.unittests.Tests
             // Create user and log in
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
+            AutomationService = new AutomationService(Context);
             var userController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             userController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = userController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -46,7 +49,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()));
+            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService);
         }
 
         public void Dispose()
@@ -204,14 +207,14 @@ namespace backend.unittests.Tests
                 To = 20,
                 OrderByColumn = "Description",
                 Descending = false,
-                Query = new ViewSearchGroup
+                Query = new SearchGroup
                 {
-                    Type = ViewSearchGroupType.Query,
-                    Query = new ViewSearchQuery
+                    Type = SearchGroupType.Query,
+                    Query = new SearchQuery
                     {
                         Column = "Id",
                         Not = false,
-                        Operator = ViewSearchOperator.Equals,
+                        Operator = SearchOperator.Equals,
                         Value = System.Text.Json.JsonSerializer.Deserialize<object>(accountA.Id.ToString()),
                     }
                 }
@@ -236,7 +239,7 @@ namespace backend.unittests.Tests
             Assert.Empty(result.Data);
 
             // Search for multiple accounts
-            query.Query.Query.Operator = ViewSearchOperator.In;
+            query.Query.Query.Operator = SearchOperator.In;
             query.Query.Query.Value = System.Text.Json.JsonSerializer.Deserialize<object>($"[{accountA.Id}, {accountB.Id}, {accountNoPermissions.Id}]");
             result = (await AccountController.Search(query)).OkValue<ViewSearchResponse<ViewAccount>>();
             Assert.Equal(2, result.TotalItems);
@@ -276,15 +279,15 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 15; i++)
             {
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var total = random.Next(-500, 500);
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
-                    Total = random.Next(-500, 500),
+                    Total = total,
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
-                    Lines = new List<ViewTransactionLine>()
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(total, "", "") }
                 })).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
@@ -368,13 +371,12 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 15; i++)
             {
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
                     Total = random.Next(-500, 500),
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 })).OkValue<ViewTransaction>();
@@ -409,13 +411,12 @@ namespace backend.unittests.Tests
             List<ViewTransaction> transactions = new List<ViewTransaction>();
             for (var i = 0; i < 365; i++)
             {
-                var createdTransaction = (await TransactionController.Create(new ViewCreateTransaction
+                var createdTransaction = (await TransactionController.Create(new ViewModifyTransaction
                 {
                     DestinationId = testAccount.Id,
                     Total = random.Next(-500, 500),
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
-                    Category = "",
                     Identifiers = new List<string>(),
                     Lines = new List<ViewTransactionLine>()
                 })).OkValue<ViewTransaction>();
@@ -475,13 +476,12 @@ namespace backend.unittests.Tests
             };
 
             var accountA = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 DestinationId = accountA.Id,
                 Total = 100,
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
-                Category = "",
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine>()
             };
@@ -549,34 +549,37 @@ namespace backend.unittests.Tests
                 Name = "Test account"
             })).OkValue<ViewAccount>();
 
-            var transactionModel = new ViewCreateTransaction
+            var transactionModel = new ViewModifyTransaction
             {
                 DestinationId = account.Id,
                 Total = 100,
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
-                Category = "",
-                Lines = new List<ViewTransactionLine>(),
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "") },
                 Identifiers = new List<string>(),
             };
 
-            transactionModel.Category = "A";
+            transactionModel.Lines.First().Category = "A";
             transactionModel.Total = 100;
+            transactionModel.Lines.First().Amount = 100;
             var catA1 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             transactionModel.Total = -150;
+            transactionModel.Lines.First().Amount = -150;
             var catA2 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
-            transactionModel.Category = "B";
+            transactionModel.Lines.First().Category = "B";
             transactionModel.Total = 200;
+            transactionModel.Lines.First().Amount = 200;
             var catB1 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             transactionModel.Total = -250;
+            transactionModel.Lines.First().Amount = -250;
             var catB2 = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
 
             var result = (await AccountController.CategorySummary(account.Id, null)).OkValue<List<ViewCategorySummary>>();
-            Assert.Equal(100, result.Single(x => x.Category == catA1.Category).Revenue);
-            Assert.Equal(150, result.Single(x => x.Category == catA1.Category).Expenses);
-            Assert.Equal(200, result.Single(x => x.Category == catB1.Category).Revenue);
-            Assert.Equal(250, result.Single(x => x.Category == catB1.Category).Expenses);
+            Assert.Equal(100, result.Single(x => x.Category == catA1.Lines.First().Category).Revenue);
+            Assert.Equal(150, result.Single(x => x.Category == catA1.Lines.First().Category).Expenses);
+            Assert.Equal(200, result.Single(x => x.Category == catB1.Lines.First().Category).Revenue);
+            Assert.Equal(250, result.Single(x => x.Category == catB1.Lines.First().Category).Expenses);
 
             Context.UserAccounts.Remove(Context.UserAccounts.Single(account => account.UserId == User.Id && account.AccountId == account.Id));
             Context.SaveChanges();

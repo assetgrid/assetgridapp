@@ -2,22 +2,23 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using assetgrid_backend.Data;
 using assetgrid_backend.Models;
 
 #nullable disable
 
-namespace assetgrid_backend.Migrations
+namespace assetgrid_backend.Migrations.MySql
 {
     [DbContext(typeof(AssetgridDbContext))]
-    partial class AssetgridDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221017180039_v0.2.0")]
+    partial class v020
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.9")
+                .HasAnnotation("ProductVersion", "6.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("assetgrid_backend.Models.Account", b =>
@@ -62,16 +63,73 @@ namespace assetgrid_backend.Migrations
                     b.ToTable("AccountUniqueIdentifiers");
                 });
 
-            modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
+            modelBuilder.Entity("assetgrid_backend.models.Automation.TransactionAutomation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Actions")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Query")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<bool>("TriggerOnCreate")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("TriggerOnModify")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TransactionAutomations");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TransactionAutomationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionAutomationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTransactionAutomations");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
@@ -84,6 +142,9 @@ namespace assetgrid_backend.Migrations
                     b.Property<int?>("DestinationAccountId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsSplit")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("SourceAccountId")
                         .HasColumnType("int");
 
@@ -91,9 +152,6 @@ namespace assetgrid_backend.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Category")
-                        .HasFilter("Category IS NOT NULL");
 
                     b.HasIndex("DateTime");
 
@@ -113,6 +171,11 @@ namespace assetgrid_backend.Migrations
                     b.Property<long>("Amount")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -125,6 +188,9 @@ namespace assetgrid_backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .HasFilter("Category IS NOT NULL");
 
                     b.HasIndex("TransactionId");
 
@@ -288,6 +354,25 @@ namespace assetgrid_backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.Automation.UserTransactionAutomation", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.Automation.TransactionAutomation", "TransactionAutomation")
+                        .WithMany()
+                        .HasForeignKey("TransactionAutomationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransactionAutomation");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>

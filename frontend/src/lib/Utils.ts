@@ -74,6 +74,17 @@ function range (start: number, end: number): number[] {
 }
 
 /**
+ * Creates a class string from an object specifying which classes should be included
+ * @param classes An object with the classname as the key and whether to include the class as a value
+ * @returns a CSS class string
+ */
+export function classList (classes: { [className: string]: boolean | undefined }): string {
+    return Object.keys(classes)
+        .filter(className => classes[className] === true)
+        .join(" ");
+}
+
+/**
  * Formats a date to a string based on the user preferences
  * @param date The date to format
  * @param user The user whose preferences to use

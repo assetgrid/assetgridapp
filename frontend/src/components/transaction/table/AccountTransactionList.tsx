@@ -1,16 +1,16 @@
 import * as React from "react";
-import { Transaction } from "../../models/transaction";
-import Table from "../common/Table";
-import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
+import { Transaction } from "../../../models/transaction";
+import Table from "../../common/Table";
+import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Decimal from "decimal.js";
-import { Api } from "../../lib/ApiClient";
-import { Period, PeriodFunctions } from "../../models/period";
+import { Api } from "../../../lib/ApiClient";
+import { Period, PeriodFunctions } from "../../../models/period";
 import TransactionTableLine from "./TransactionTableLine";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
-import { routes } from "../../lib/routes";
-import { serializeQueryForHistory } from "./filter/FilterHelpers";
-import MergeTransactionsModal from "./input/MergeTransactionsModal";
+import { routes } from "../../../lib/routes";
+import { serializeQueryForHistory } from "../filter/FilterHelpers";
+import MergeTransactionsModal from "../input/MergeTransactionsModal";
 
 interface Props {
     draw?: number

@@ -32,6 +32,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
         csvNewlineCharacter: "auto",
         csvParseHeader: true,
         csvTextEncoding: null,
+        csvSkipLines: 0,
 
         duplicateHandling: "automatic",
         identifierColumn: null,
@@ -44,8 +45,12 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
         destinationAccountId: null,
         destinationAccountType: "column",
         destinationAccountParseOptions: defaultParseOptions,
-        amountColumn: null,
-        amountParseOptions: defaultParseOptions,
+        debitAmountColumn: null,
+        debitAmountParseOptions: defaultParseOptions,
+        separateCreditDebitColumns: false,
+        creditAmountColumn: null,
+        creditAmountParseOptions: defaultParseOptions,
+
         decimalSeparator: ".",
         dateColumn: null,
         dateParseOptions: defaultParseOptions,
@@ -105,6 +110,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
                     transactions={transactions}
                     duplicateIdentifiers={duplicateIdentifiers}
                     data={data}
+                    addAccount={account => accounts !== "fetching" && setAccounts([...accounts, account])}
                     onChange={(transactions, options) => mappingsChanged(transactions, options)}
                     goToPrevious={() => setCurrentTab("parse-csv")}
                     goToNext={() => setCurrentTab("process")}

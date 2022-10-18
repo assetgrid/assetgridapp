@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace assetgrid_backend.Models
 {
@@ -18,9 +19,133 @@ namespace assetgrid_backend.Models
         [MaxLength(50)]
         public string ProfileName { get; set; } = null!;
         public CsvImportProfile ImportProfile { get; set; } = null!;
+
+        public static CsvImportProfile ParseJson (string json)
+        {
+            var version = JsonSerializer.Deserialize<CsvImportProfileVersion?>(json);
+
+            if (! version.HasValue)
+            {
+                return new CsvImportProfile();
+            }
+
+            switch (version.Value.Version)
+            {
+                case 2:
+                    return JsonSerializer.Deserialize<CsvImportProfile>(json)!;
+                default:
+                    return JsonSerializer.Deserialize<CsvImportProfileV1>(json)!.Upgrade();
+            }
+        }
+
+        private struct CsvImportProfileVersion
+        {
+            public int? Version { get; set; }
+        }
     }
 
     public class CsvImportProfile : IValidatableObject
+    {
+        public int Version => 2;
+
+        // CSV Options
+        [MaxLength(50)]
+        public string CsvDelimiter { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string CsvNewlineCharacter { get; set; } = null!;
+        [MaxLength(20)]
+        public string? CsvTextEncoding { get; set; }
+        public bool CsvParseHeader { get; set; }
+        public uint CsvSkipLines { get; set; }
+
+        // Mapping options
+        [MaxLength(50)]
+        public string DuplicateHandling { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? IdentifierColumn { get; set; } = null!;
+        public ParseOptions IdentifierParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? SourceAccountColumn { get; set; } = null!;
+
+        public int? SourceAccountId { get; set; } = null!;
+
+        [MaxLength(10)]
+        public string SourceAccountType { get; set; } = null!;
+        public ParseOptions SourceAccountParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? DestinationAccountColumn { get; set; } = null!;
+
+        public int? DestinationAccountId { get; set; } = null!;
+
+        [MaxLength(10)]
+        public string DestinationAccountType { get; set; } = null!;
+        public ParseOptions DestinationAccountParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string DebitAmountColumn { get; set; } = null!;
+        public ParseOptions DebitAmountParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? CreditAmountColumn { get; set; }
+        public ParseOptions CreditAmountParseOptions { get; set; } = null!;
+        public bool SeparateCreditDebitColumns { get; set; }
+
+        [MaxLength(50)]
+        public string DecimalSeparator { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string DateColumn { get; set; } = null!;
+        public ParseOptions DateParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string DateFormat { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? DescriptionColumn { get; set; } = null!;
+        public ParseOptions DescriptionParseOptions { get; set; } = null!;
+
+        [MaxLength(50)]
+        public string? CategoryColumn { get; set; } = null!;
+        public ParseOptions CategoryParseOptions { get; set; } = null!;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            switch (DuplicateHandling)
+            {
+                case "automatic":
+                case "none":
+                    break;
+                case "identifier":
+                    if (string.IsNullOrWhiteSpace(IdentifierColumn))
+                    {
+                        yield return new ValidationResult($"Identifier column must be set with duplicate handling 'identifier'.", new[] { nameof(IdentifierColumn) });
+                    }
+                    break;
+                default:
+                    yield return new ValidationResult($"Unknown duplicate handling '{DuplicateHandling}'", new[] { nameof(DuplicateHandling) });
+                    break;
+            }
+        }
+
+        public class ParseOptions
+        {
+            public bool TrimWhitespace { get; set; }
+
+            [MaxLength(250)]
+            public string? Regex { get; set; } = null!;
+
+            [MaxLength(250)]
+            public string Pattern { get; set; } = null!;
+        }
+    }
+
+    #region Previous versions
+
+    public class CsvImportProfileV1 : IValidatableObject
     {
         // CSV Options
         [MaxLength(50)]
@@ -41,7 +166,7 @@ namespace assetgrid_backend.Models
         public ParseOptions IdentifierParseOptions { get; set; } = null!;
 
         [MaxLength(50)]
-        public string SourceAccountColumn { get; set; } = null!;
+        public string? SourceAccountColumn { get; set; } = null!;
 
         public int? SourceAccountId { get; set; } = null!;
 
@@ -108,6 +233,54 @@ namespace assetgrid_backend.Models
 
             [MaxLength(250)]
             public string Pattern { get; set; } = null!;
+
+            public CsvImportProfile.ParseOptions Upgrade ()
+            {
+                return new CsvImportProfile.ParseOptions
+                {
+                    Pattern = Pattern,
+                    Regex = Regex,
+                    TrimWhitespace = TrimWhitespace
+                };
+            }
+        }
+
+        public CsvImportProfile Upgrade()
+        {
+            return new CsvImportProfile
+            {
+                CategoryColumn = CategoryColumn,
+                CategoryParseOptions = CategoryParseOptions.Upgrade(),
+                CreditAmountColumn = "",
+                CreditAmountParseOptions = AmountParseOptions.Upgrade(),
+                DebitAmountColumn = AmountColumn,
+                CsvDelimiter = CsvDelimiter,
+                CsvNewlineCharacter = CsvNewlineCharacter,
+                CsvParseHeader = CsvParseHeader,
+                CsvSkipLines = 0,
+                CsvTextEncoding = CsvTextEncoding,
+                DateColumn = DateColumn,
+                DateFormat = DateFormat,
+                DateParseOptions = DateParseOptions.Upgrade(),
+                DebitAmountParseOptions = AmountParseOptions.Upgrade(),
+                DecimalSeparator = DecimalSeparator,
+                DescriptionColumn = DescriptionColumn,
+                DescriptionParseOptions = DescriptionParseOptions.Upgrade(),
+                DestinationAccountColumn = DestinationAccountColumn,
+                DestinationAccountId = DestinationAccountId,
+                DestinationAccountParseOptions = DestinationAccountParseOptions.Upgrade(),
+                DestinationAccountType = DestinationAccountType,
+                DuplicateHandling = DuplicateHandling,
+                IdentifierColumn = IdentifierColumn,
+                IdentifierParseOptions = IdentifierParseOptions.Upgrade(),
+                SeparateCreditDebitColumns = false,
+                SourceAccountColumn = SourceAccountColumn,
+                SourceAccountId = SourceAccountId,
+                SourceAccountParseOptions = SourceAccountParseOptions.Upgrade(),
+                SourceAccountType = SourceAccountType
+            };
         }
     }
+
+    #endregion
 }

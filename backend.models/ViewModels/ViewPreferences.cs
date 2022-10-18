@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace assetgrid_backend.ViewModels
+namespace assetgrid_backend.Models.ViewModels
 {
     public class ViewPreferences
     {
