@@ -90,7 +90,7 @@ namespace assetgrid_backend.Models
         public ParseOptions DebitAmountParseOptions { get; set; } = null!;
 
         [MaxLength(50)]
-        public string CreditAmountColumn { get; set; } = null!;
+        public string? CreditAmountColumn { get; set; }
         public ParseOptions CreditAmountParseOptions { get; set; } = null!;
         public bool SeparateCreditDebitColumns { get; set; }
 
