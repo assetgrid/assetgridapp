@@ -95,3 +95,7 @@ To run the backend you must first copy /backend/appsettings.json to /backend/app
 
 CD into the frontend folder and run 'npm install'. You can then run the "watch frontend" task in VS code which will automatically compile and serve the frontend.
 In the /frontend/src/lib/apiClient.ts file you can change which URL the frontend expects the backend to be at.
+
+# Detailed logs
+
+To get more information from the logs, set the environment variable "Logging:Loglevel:Default": "Information"
