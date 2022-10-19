@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import { Account as AccountModel, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
+import { Account as AccountModel, CategorySummaryItem, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
@@ -452,14 +452,15 @@ const Account = (token: string) => ({
      * @param query A query to subset the transactions to include in the summary
      * @returns A dictionary with the category as the key and the revenue and expenses the value in a tuple in that order
      */
-    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<Ok<Array<{ category: string, revenue: Decimal, expenses: Decimal }>> | NotFound> {
-        return await new Promise<Ok<Array<{ category: string, revenue: Decimal, expenses: Decimal }>> | NotFound>((resolve, reject) => {
-            axios.post<Array<{ category: string, revenue: Decimal, expenses: Decimal }>>(`${rootUrl}/api/v1/account/${accountId}/categorysummary`, query, {
+    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<Ok<CategorySummaryItem[]> | NotFound> {
+        return await new Promise<Ok<CategorySummaryItem[]> | NotFound>((resolve, reject) => {
+            axios.post<CategorySummaryItem[]>(`${rootUrl}/api/v1/account/${accountId}/categorysummary`, query, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
                 status: 200,
                 data: result.data.map(obj => ({
                     category: obj.category,
+                    transfer: obj.transfer,
                     revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
                     expenses: new Decimal(obj.expenses).div(new Decimal(10000))
                 }))

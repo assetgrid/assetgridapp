@@ -551,13 +551,22 @@ namespace assetgrid_backend.Controllers
                 return NotFound();
             }
 
+            var netWorthAccountIds = _context.UserAccounts
+                .Where(x => x.UserId == user.Id && x.IncludeInNetWorth)
+                .Select(x => x.AccountId)
+                .ToList();
+
             return Ok(await _context.TransactionLines
                 .Where(line => line.Transaction.SourceAccountId == id || line.Transaction.DestinationAccountId == id)
                 .ApplySearch(query)
-                .GroupBy(line => line.Category)
-                .Select(group => new ViewCategorySummary
+                .GroupBy(line => new {
+                    line.Category,
+                    Transfer = line.Transaction.SourceAccountId != null && netWorthAccountIds.Contains(line.Transaction.SourceAccountId.Value) &&
+                                line.Transaction.DestinationAccountId != null && netWorthAccountIds.Contains(line.Transaction.DestinationAccountId.Value)
+                }).Select(group => new ViewCategorySummary
                 {
-                    Category = group.Key,
+                    Category = group.Key.Category,
+                    Transfer = group.Key.Transfer,
                     Revenue = group
                         .Where(line => (line.Transaction.DestinationAccountId == id && line.Amount > 0) || (line.Transaction.SourceAccountId == id && line.Amount < 0))
                         .Select(line => line.Amount)

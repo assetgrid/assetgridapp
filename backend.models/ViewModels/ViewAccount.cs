@@ -141,6 +141,11 @@ namespace assetgrid_backend.Models.ViewModels
     public class ViewCategorySummary
     {
         public string Category { get; set; } = null!;
+
+        /// <summary>
+        /// Whether this summary represents transfers between accounts included in net worth
+        /// </summary>
+        public bool Transfer { get; set; }
         public long Expenses { get; set; }
         public long Revenue { get; set; }
     }

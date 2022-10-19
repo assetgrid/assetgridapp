@@ -23,6 +23,14 @@ export interface MovementItem {
     revenue: Decimal
     expenses: Decimal
     dateTime: DateTime
+    transfer: boolean
+}
+
+export interface CategorySummaryItem {
+    revenue: Decimal
+    expenses: Decimal
+    transfer: boolean
+    category: string
 }
 
 export interface GetMovementResponse {
