@@ -34,7 +34,7 @@ export default function AccountList (props: Props): React.ReactElement {
                 <td>{account.description}</td>
                 <td>{account.identifiers.join(", ")}</td>
                 <td>
-                    <YesNoDisplay value={account.includeInNetWorth} />
+                    <YesNoDisplay value={account.favorite} />
                 </td>
             </tr>}
     />;
