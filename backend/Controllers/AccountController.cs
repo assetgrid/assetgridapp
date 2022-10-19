@@ -11,6 +11,8 @@ using System.Globalization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
+using System.Linq;
+using System.Security.Principal;
 
 namespace assetgrid_backend.Controllers
 {
@@ -306,6 +308,7 @@ namespace assetgrid_backend.Controllers
         {
             public int AccountId { get; set; }
             public DateTime TimePoint { get; set; }
+            public bool Transfer { get; set; }
             public string Type { get; set; }
             public long Total { get; set; }
         }
@@ -314,6 +317,7 @@ namespace assetgrid_backend.Controllers
         {
             public int AccountId { get; set; }
             public string Type { get; set; }
+            public bool Transfer { get; set; }
             public Transaction Transaction { get; set; }
         }
 
@@ -335,6 +339,11 @@ namespace assetgrid_backend.Controllers
                 return Forbid();
             }
 
+            var netWorthAccountIds = _context.UserAccounts
+                .Where(x => x.UserId == user.Id && x.IncludeInNetWorth)
+                .Select(x => x.AccountId)
+                .ToList();
+
             var initialBalance = request.From == null ? 0 : await _context.Transactions
                 .Where(transaction => transaction.DateTime < request.From)
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id)
@@ -348,35 +357,50 @@ namespace assetgrid_backend.Controllers
                 .Select(transaction => new MovementItem
                 {
                     AccountId = id,
+                    Transfer = transaction.SourceAccountId != null && netWorthAccountIds.Contains(transaction.SourceAccountId.Value) &&
+                        transaction.DestinationAccountId != null && netWorthAccountIds.Contains(transaction.DestinationAccountId.Value),
                     Type = transaction.DestinationAccountId == id ? "revenue" : "expense",
                     Transaction = transaction
                 });
 
             var result = await ApplyIntervalGrouping(request.From, request.Resolution, query).ToListAsync();
+            var timepoints = new Dictionary<DateTime, ViewAccountMovementItem>();
 
-            var revenue = result.Where(item => item.Type == "revenue").ToDictionary(item => item.TimePoint, item => item.Total);
-            var expenses = result.Where(item => item.Type == "expense").ToDictionary(item => item.TimePoint, item => item.Total);
-            foreach (var key in revenue.Keys)
+            foreach (var item in result)
             {
-                if (!expenses.ContainsKey(key)) expenses[key] = 0;
-            }
-            foreach (var key in expenses.Keys)
-            {
-                if (!revenue.ContainsKey(key)) revenue[key] = 0;
+                if (! timepoints.ContainsKey(item.TimePoint))
+                {
+                    timepoints.Add(item.TimePoint, new ViewAccountMovementItem
+                    {
+                        DateTime = item.TimePoint,
+                        Expenses = 0,
+                        TransferExpenses = 0,
+                        Revenue = 0,
+                        TransferRevenue = 0,
+                    });
+                }
+
+                switch (item.Type, item.Transfer)
+                {
+                    case ("revenue", false):
+                        timepoints[item.TimePoint].Revenue = item.Total;
+                        break;
+                    case ("revenue", true):
+                        timepoints[item.TimePoint].TransferRevenue = item.Total;
+                        break;
+                    case ("expense", false):
+                        timepoints[item.TimePoint].Expenses = item.Total;
+                        break;
+                    case ("expense", true):
+                        timepoints[item.TimePoint].TransferExpenses = item.Total;
+                        break;
+                }
             }
 
             return Ok(new ViewGetMovementResponse
             {
                 InitialBalance = initialBalance,
-                Items = expenses.Join(revenue,
-                        result => result.Key,
-                        result => result.Key,
-                        (a, b) => new ViewAccountMovementItem
-                        {
-                            DateTime = a.Key,
-                            Expenses = a.Value,
-                            Revenue = b.Value,
-                        })
+                Items = timepoints.Values
                     .OrderBy(item => item.DateTime).ToList()
             });
         }
@@ -409,6 +433,7 @@ namespace assetgrid_backend.Controllers
                 .Select(transaction => new MovementItem
                 {
                     AccountId = transaction.DestinationAccountId!.Value,
+                    Transfer = transaction.SourceAccountId != null && netWorthAccountIds.Contains(transaction.SourceAccountId.Value),
                     Type = "revenue",
                     Transaction = transaction
                 }));
@@ -420,52 +445,69 @@ namespace assetgrid_backend.Controllers
                 {
                     AccountId = transaction.SourceAccountId!.Value,
                     Type = "expense",
+                    Transfer = transaction.DestinationAccountId != null && netWorthAccountIds.Contains(transaction.DestinationAccountId.Value),
                     Transaction = transaction
                 }));
 
-            // Fetch both using a single query
-            var revenue = (await revenueQuery.ToListAsync()).ToLookup(item => item.AccountId);
-            var expenses = (await expensesQuery.ToListAsync()).ToLookup(item => item.AccountId);
-            var output = new Dictionary<int, ViewGetMovementResponse>();
-
-            foreach (var account in accounts)
+            // Fetch both
+            var result = (await revenueQuery.ToListAsync()).Concat(await expensesQuery.ToListAsync());
+            var output = new Dictionary<int, Dictionary<DateTime, ViewAccountMovementItem>>();
+            foreach (var accountId in netWorthAccountIds)
             {
-                var accountRevenue = revenue[account.Id].ToDictionary(item => item.TimePoint, item => item.Total);
-                var accountExpenses = expenses[account.Id].ToDictionary(item => item.TimePoint, item => item.Total);
-                foreach (var key in accountRevenue.Keys)
-                {
-                    if (!accountExpenses.ContainsKey(key)) accountExpenses[key] = 0;
-                }
-                foreach (var key in accountExpenses.Keys)
-                {
-                    if (!accountRevenue.ContainsKey(key)) accountRevenue[key] = 0;
-                }
+                output[accountId] = new Dictionary<DateTime, ViewAccountMovementItem>();
+            }
 
-                var initialBalance = request.From == null ? 0 : await _context.Transactions
-                    .Where(transaction => transaction.DateTime < request.From)
-                    .Where(transaction => transaction.SourceAccountId == account.Id || transaction.DestinationAccountId == account.Id)
-                    .Select(transaction => transaction.DestinationAccountId == account.Id ? transaction.Total : -transaction.Total)
-                    .SumAsync();
-
-                output[account.Id] = new ViewGetMovementResponse
+            foreach (var item in result)
+            {
+                foreach (var accountId in netWorthAccountIds)
                 {
-                    InitialBalance = initialBalance,
-                    Items = accountExpenses.Join(accountRevenue,
-                        result => result.Key,
-                        result => result.Key,
-                        (a, b) => new ViewAccountMovementItem
+                    if (!output[accountId].ContainsKey(item.TimePoint))
+                    {
+                        output[accountId].Add(item.TimePoint, new ViewAccountMovementItem
                         {
-                            DateTime = a.Key,
-                            Expenses = a.Value,
-                            Revenue = b.Value,
-                        })
-                        .OrderBy(item => item.DateTime).ToList()
-                };
+                            DateTime = item.TimePoint,
+                            Expenses = 0,
+                            Revenue = 0,
+                            TransferRevenue = 0,
+                            TransferExpenses = 0,
+                        });
+                    }
+                }
+
+                switch (item.Type, item.Transfer)
+                {
+                    case ("revenue", false):
+                        output[item.AccountId][item.TimePoint].Revenue = item.Total;
+                        break;
+                    case ("revenue", true):
+                        output[item.AccountId][item.TimePoint].TransferRevenue = item.Total;
+                        break;
+                    case ("expense", false):
+                        output[item.AccountId][item.TimePoint].Expenses = item.Total;
+                        break;
+                    case ("expense", true):
+                        output[item.AccountId][item.TimePoint].TransferExpenses = item.Total;
+                        break;
+                }
+            }
+
+            var initialBalances = new Dictionary<int, long>();
+            foreach (var accountId in netWorthAccountIds)
+            {
+                initialBalances[accountId] = request.From == null ? 0 : await _context.Transactions
+                    .Where(transaction => transaction.DateTime < request.From)
+                    .Where(transaction => transaction.SourceAccountId == accountId || transaction.DestinationAccountId == accountId)
+                    .Select(transaction => transaction.DestinationAccountId == accountId ? transaction.Total : -transaction.Total)
+                    .SumAsync();
             }
 
             return Ok(new ViewGetMovementAllResponse
             {
-                Items = output,
+                Items = output.ToDictionary(x => x.Key, x => new ViewGetMovementResponse
+                {
+                    InitialBalance = initialBalances[x.Key],
+                    Items = x.Value.Values.OrderBy(item => item.DateTime).ToList()
+                }),
                 Accounts = accounts
             });
         }
@@ -479,10 +521,12 @@ namespace assetgrid_backend.Controllers
                     {
                         account = obj.AccountId,
                         type = obj.Type,
+                        transfer = obj.Transfer,
                         timepoint = obj.Transaction.DateTime.Year.ToString() + "-" + obj.Transaction.DateTime.Month.ToString() + "-" + obj.Transaction.DateTime.Day.ToString()
                     }).Select(group => new AccountMovementGroup
                     {
                         Type = group.Key.type,
+                        Transfer = group.Key.transfer,
                         AccountId = group.Key.account,
                         TimePoint = DateTime.ParseExact(group.Key.timepoint, "yyyy-M-d", CultureInfo.InvariantCulture),
                         Total = group.Select(obj => obj.Transaction.Total).Sum(),
@@ -493,16 +537,19 @@ namespace assetgrid_backend.Controllers
                     {
                         obj.Transaction,
                         obj.Type,
+                        obj.Transfer,
                         obj.AccountId,
                         week = Math.Floor(EF.Functions.DateDiffDay(offset, obj.Transaction.DateTime) / 7.0)
                     }).GroupBy(obj => new
                     {
                         account = obj.AccountId,
                         type = obj.Type,
+                        transfer = obj.Transfer,
                         timepoint = obj.week,
                     }).Select(group => new AccountMovementGroup
                     {
                         Type = group.Key.type,
+                        Transfer = group.Key.transfer,
                         AccountId = group.Key.account,
                         TimePoint = offset.AddDays(group.Key.timepoint * 7),
                         Total = group.Select(obj => obj.Transaction.Total).Sum(),
@@ -512,10 +559,12 @@ namespace assetgrid_backend.Controllers
                     {
                         account = obj.AccountId,
                         type = obj.Type,
+                        transfer = obj.Transfer,
                         timepoint = obj.Transaction.DateTime.Year.ToString() + "-" + obj.Transaction.DateTime.Month.ToString()
                     }).Select(group => new AccountMovementGroup
                     {
                         Type = group.Key.type,
+                        Transfer = group.Key.transfer,
                         AccountId = group.Key.account,
                         TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01", "yyyy-M-dd", CultureInfo.InvariantCulture),
                         Total = group.Select(obj => obj.Transaction.Total).Sum(),
@@ -525,10 +574,12 @@ namespace assetgrid_backend.Controllers
                     {
                         account = obj.AccountId,
                         type = obj.Type,
+                        transfer = obj.Transfer,
                         timepoint = obj.Transaction.DateTime.Year.ToString()
                     }).Select(group => new AccountMovementGroup
                     {
                         Type = group.Key.type,
+                        Transfer = group.Key.transfer,
                         AccountId = group.Key.account,
                         TimePoint = DateTime.ParseExact(group.Key.timepoint + "-01-01", "yyyy-MM-dd", CultureInfo.InvariantCulture),
                         Total = group.Select(obj => obj.Transaction.Total).Sum(),

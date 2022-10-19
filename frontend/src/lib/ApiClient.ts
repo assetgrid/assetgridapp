@@ -496,12 +496,15 @@ const Account = (token: string) => ({
                 data: {
                     ...result.data,
                     initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
-                    items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string }>).map(({ revenueString, expensesString, ...item }) => ({
-                        ...item,
-                        dateTime: DateTime.fromISO(item.dateTime as any as string),
-                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
-                        revenue: new Decimal(revenueString).div(new Decimal(10000))
-                    }))
+                    items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
+                        .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
+                            ...item,
+                            dateTime: DateTime.fromISO(item.dateTime as any as string),
+                            revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                            transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
+                            expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                            transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
+                        }))
                 }
             })).catch((error: AxiosError) => {
                 if (error.response?.status === 404) {
@@ -534,12 +537,15 @@ const Account = (token: string) => ({
                     const accountId = Number(key);
                     const item = result.data.items[accountId];
                     item.initialBalance = new Decimal((item as any).initialBalanceString).div(new Decimal(10000));
-                    item.items = (item.items as Array<MovementItem & { revenueString: string, expensesString: string }>).map(({ revenueString, expensesString, ...item }) => ({
-                        ...item,
-                        dateTime: DateTime.fromISO(item.dateTime as any as string),
-                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
-                        revenue: new Decimal(revenueString).div(new Decimal(10000))
-                    }));
+                    item.items = (item.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
+                        .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
+                            ...item,
+                            dateTime: DateTime.fromISO(item.dateTime as any as string),
+                            revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                            transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
+                            expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                            transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
+                        }));
                 });
                 resolve({ status: 200, data: result.data });
             }).catch((error: AxiosError) => {
