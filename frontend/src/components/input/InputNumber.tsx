@@ -22,7 +22,7 @@ export default function InputNumber (props: Props): React.ReactElement {
     const isError = isInvalidValue || (props.errors !== undefined && props.errors.length > 0);
     const [value, setValue] = React.useState(props.value?.toString() ?? "");
     const [numericValue, setNumericValue] = React.useState(props.value);
- 
+
     React.useEffect(() => {
         if (props.value?.toString() !== numericValue?.toString()) {
             if (typeof props.value === "number" && !isNaN(props.value)) {
