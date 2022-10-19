@@ -5,4 +5,5 @@ export interface Preferences {
     thousandsSeparator: string
     dateFormat: string | null
     dateTimeFormat: string | null
+    version: string
 }
