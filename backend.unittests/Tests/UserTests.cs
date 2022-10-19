@@ -17,6 +17,7 @@ using Xunit;
 using assetgrid_backend.Models;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace backend.unittests.Tests
 {
@@ -45,7 +46,7 @@ namespace backend.unittests.Tests
             AutomationService = new AutomationService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
         }
 
         [Fact]

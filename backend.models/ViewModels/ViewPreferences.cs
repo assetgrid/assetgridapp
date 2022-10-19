@@ -20,6 +20,8 @@ namespace assetgrid_backend.Models.ViewModels
         [MaxLength(100, ErrorMessage = "Date and time format must be shorter than 100 characters.")]
         public string? DateTimeFormat { get; set; } = null!;
 
+        public string Version => Config.Version;
+
         [JsonConstructor]
         public ViewPreferences(string decimalSeparator, int decimalDigits, string thousandsSeparator, string? dateFormat, string? dateTimeFormat)
         {
