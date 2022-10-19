@@ -18,6 +18,10 @@ if (process.env.NODE_ENV === "production") {
     rootUrl = "";
 }
 
+DateTime.prototype.toJSON = function () {
+    return this.toISO({ includeOffset: false });
+};
+
 /**
  * Get the currently signed in user
  */
