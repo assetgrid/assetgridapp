@@ -298,6 +298,36 @@ namespace assetgrid_backend.Data
             }
         }
 
+        public static Expression BooleanExpression(SearchQuery query, Expression parameter)
+        {
+            Expression result;
+            switch (query.Operator)
+            {
+                case SearchOperator.Equals:
+                    /*
+                     * First parse the JSON value into the correct type
+                     */
+                    if (query.Value == null)
+                    {
+                        throw new Exception($"Operator '{query.Operator}' expects value of type 'boolean' but received type null");
+                    }
+                    var value = ((JsonElement)query.Value).GetBoolean();
+                    result = Expression.Equal(parameter, Expression.Constant(value, typeof(bool)));
+                    break;
+                default:
+                    throw new Exception($"Operator '{query.Operator}' is not valid for column '{query.Column}'");
+            }
+
+            if (query.Not)
+            {
+                return Expression.Not(result);
+            }
+            else
+            {
+                return result;
+            }
+        }
+
         #endregion
 
         #endregion

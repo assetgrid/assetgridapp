@@ -83,8 +83,10 @@ export default function NetWorthChart (props: Props): React.ReactElement {
     }
 
     const revenue: { [accountId: number]: number[] } = {};
+    const transferRevenue: { [accountId: number]: number[] } = {};
     const totalRevenue: number[] = [];
     const expenses: { [accountId: number]: number[] } = {};
+    const transferExpenses: { [accountId: number]: number[] } = {};
     const totalExpenses: number[] = [];
     const balances: { [accountId: number]: number[] } = {};
     const totalBalance: number[] = [];
@@ -94,24 +96,31 @@ export default function NetWorthChart (props: Props): React.ReactElement {
         const accountData = movements.items[accountId];
         let itemIndex = 0;
         revenue[accountId] = [];
+        transferRevenue[accountId] = [];
         expenses[accountId] = [];
+        transferExpenses[accountId] = [];
         balances[accountId] = [accountData.initialBalance.toNumber()];
 
         timepoints.forEach((timepoint, timepointIndex) => {
             if (accountData.items.length === itemIndex || accountData.items[itemIndex].dateTime.toISODate() !== timepoint.toISODate()) {
                 // The account has no more timepoints or the current timepoint on the account doesn't match
                 revenue[accountId][timepointIndex] = 0;
+                transferRevenue[accountId][timepointIndex] = 0;
                 expenses[accountId][timepointIndex] = 0;
+                transferExpenses[accountId][timepointIndex] = 0;
             } else {
                 revenue[accountId][timepointIndex] = accountData.items[itemIndex].revenue.toNumber();
+                transferRevenue[accountId][timepointIndex] = accountData.items[itemIndex].transferRevenue.toNumber();
                 expenses[accountId][timepointIndex] = accountData.items[itemIndex].expenses.toNumber();
+                transferExpenses[accountId][timepointIndex] = accountData.items[itemIndex].transferExpenses.toNumber();
                 itemIndex += 1;
             }
 
             if (timepointIndex > 0) {
                 balances[accountId][timepointIndex] = balances[accountId][timepointIndex - 1];
             }
-            balances[accountId][timepointIndex] += revenue[accountId][timepointIndex] - expenses[accountId][timepointIndex];
+            balances[accountId][timepointIndex] += revenue[accountId][timepointIndex] - expenses[accountId][timepointIndex] +
+                transferRevenue[accountId][timepointIndex] - transferExpenses[accountId][timepointIndex];
 
             totalRevenue[timepointIndex] = (totalRevenue[timepointIndex] ?? 0) + revenue[accountId][timepointIndex];
             totalExpenses[timepointIndex] = (totalExpenses[timepointIndex] ?? 0) + expenses[accountId][timepointIndex];

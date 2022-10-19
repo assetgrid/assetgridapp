@@ -21,6 +21,7 @@ using assetgrid_backend.models.Search;
 using assetgrid_backend.models.ViewModels.Automation;
 using System.Security.Principal;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 
 namespace backend.unittests.Tests
 {
@@ -64,7 +65,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
             AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
 
             var objectValidator = new Mock<IObjectModelValidator>();

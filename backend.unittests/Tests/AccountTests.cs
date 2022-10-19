@@ -17,6 +17,8 @@ using System.Text.Json;
 using System.Web;
 using Xunit;
 using assetgrid_backend.models.Search;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace backend.unittests.Tests
 {
@@ -49,7 +51,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService, Mock.Of<ILogger<TransactionController>>());
         }
 
         public void Dispose()
@@ -534,7 +536,7 @@ namespace backend.unittests.Tests
             })).OkValue<ViewGetMovementAllResponse>();
             Assert.Equal(2, result.Items.Count);
             Assert.Equal(100, result.Items.Single(x => x.Key == accountA.Id).Value.Items.First().Revenue);
-            Assert.Equal(500, result.Items.Single(x => x.Key == accountB.Id).Value.Items.First().Revenue);
+            Assert.Equal(200, result.Items.Single(x => x.Key == accountB.Id).Value.Items.First().Revenue);
         }
 
         [Fact]

@@ -48,7 +48,15 @@ export default function InputDateTime (props: Props): React.ReactElement {
                     <div className="input-datetime dropdown-content">
                         <Calendar
                             date={props.value.startOf("day").toJSDate()}
-                            onChange={date => props.onChange(DateTime.fromJSDate(date))}
+                            onChange={date => props.onChange(DateTime.fromObject({
+                                year: date.getFullYear(),
+                                month: date.getMonth() + 1,
+                                day: date.getDate(),
+                                hour: props.value.hour,
+                                minute: props.value.minute,
+                                second: props.value.second,
+                                millisecond: props.value.millisecond
+                            })) }
                         />
                         <div className="input-time">
                             <InputNumber

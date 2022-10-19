@@ -69,6 +69,7 @@ export default function Sidebar (props: Props): React.ReactElement {
                 <li><Link to={routes.preferences()}>Preferences</Link></li>
                 <li><Link to={routes.importCsv()}>Import</Link></li>
             </ul>
+            {user !== "fetching" && <p className="version">Assetgrid v{user.preferences.version}</p>}
         </aside>
     </div>;
 

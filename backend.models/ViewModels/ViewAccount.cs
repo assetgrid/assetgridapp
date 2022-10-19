@@ -120,9 +120,12 @@ namespace assetgrid_backend.Models.ViewModels
 
         public long Revenue { get; set; }
         public string RevenueString { get => Revenue.ToString(); set => Revenue = long.Parse(value); }
-
+        public long TransferRevenue { get; set; }
+        public string TransferRevenueString { get => TransferRevenue.ToString(); set => TransferRevenue = long.Parse(value); }
         public long Expenses { get; set; }
         public string ExpensesString { get => Expenses.ToString(); set => Expenses = long.Parse(value); }
+        public long TransferExpenses { get; set; }
+        public string TransferExpensesString { get => TransferExpenses.ToString(); set => TransferExpenses = long.Parse(value); }
     }
 
     public class ViewGetMovementResponse
@@ -141,6 +144,11 @@ namespace assetgrid_backend.Models.ViewModels
     public class ViewCategorySummary
     {
         public string Category { get; set; } = null!;
+
+        /// <summary>
+        /// Whether this summary represents transfers between accounts included in net worth
+        /// </summary>
+        public bool Transfer { get; set; }
         public long Expenses { get; set; }
         public long Revenue { get; set; }
     }

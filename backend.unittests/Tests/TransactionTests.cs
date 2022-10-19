@@ -20,6 +20,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 using assetgrid_backend.models.Search;
+using Microsoft.Extensions.Logging;
 
 namespace backend.unittests.Tests
 {
@@ -57,7 +58,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService);
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
 
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),

@@ -19,6 +19,12 @@
     pointer-events: none;
 }
 
+.version {
+    margin-top: 1.5rem;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.8em;
+}
+
 .pagination-container {
     display: flex;
     flex-wrap: wrap-reverse;

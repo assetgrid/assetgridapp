@@ -4,6 +4,7 @@ import AccountList from "../../account/AccountList";
 import { Link } from "react-router-dom";
 import { routes } from "../../../lib/routes";
 import Hero from "../../common/Hero";
+import { SearchGroupType, SearchOperator } from "../../../models/search";
 
 export default function PageAccountOverview (): React.ReactElement {
     return <>
@@ -14,8 +15,27 @@ export default function PageAccountOverview (): React.ReactElement {
                     Create account
                 </Link>
             </Card>
-            <Card title="Accounts" isNarrow={true}>
-                <AccountList />
+            <Card title="Your accounts (included in net worth)" isNarrow={true}>
+                <AccountList query={{
+                    type: SearchGroupType.Query,
+                    query: {
+                        column: "IncludeInNetWorth",
+                        value: true,
+                        operator: SearchOperator.Equals,
+                        not: false
+                    }
+                }} />
+            </Card>
+            <Card title={<>Offset accounts (<span style={{ textDecoration: "underline" }}>not</span>&nbsp;included in net worth)</>} isNarrow={true}>
+                <AccountList query={{
+                    type: SearchGroupType.Query,
+                    query: {
+                        column: "IncludeInNetWorth",
+                        value: false,
+                        operator: SearchOperator.Equals,
+                        not: false
+                    }
+                }} />
             </Card>
         </div>
     </>;

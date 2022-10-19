@@ -23,13 +23,15 @@ namespace assetgrid_backend.Controllers
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly IAutomationService _automation;
+        private readonly ILogger<TransactionController> _logger;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService)
+        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService, ILogger<TransactionController> logger)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
             _automation = automationService;
+            _logger = logger;
         }
 
         [HttpGet()]
@@ -538,8 +540,9 @@ namespace assetgrid_backend.Controllers
                             _context.Transactions.Add(result);
                             success.Add(result);
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            _logger.LogError(e, e.Message);
                             failed.Add(transaction);
                         }
                     }

@@ -21,8 +21,17 @@ export interface CreateAccount {
 
 export interface MovementItem {
     revenue: Decimal
+    transferRevenue: Decimal
     expenses: Decimal
+    transferExpenses: Decimal
     dateTime: DateTime
+}
+
+export interface CategorySummaryItem {
+    revenue: Decimal
+    expenses: Decimal
+    transfer: boolean
+    category: string
 }
 
 export interface GetMovementResponse {
