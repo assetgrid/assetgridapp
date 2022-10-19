@@ -227,7 +227,7 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
         const to = page * props.pageSize;
 
         if (props.type === "sync") {
-            if (props.items.length !== totalItems) {
+            if (props.items.length !== totalItems && props.page !== 1) {
                 props.goToPage(1);
             }
             setItems(props.items.slice(from, to));
@@ -238,7 +238,7 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
         } else {
             const result = await props.fetchItems(api, from, to, draw ?? 0);
             if (result.draw === (props.draw ?? 0)) {
-                if (result.totalItems !== totalItems) {
+                if (props.type !== "async-increment" && result.totalItems !== totalItems && props.page !== 1) {
                     props.goToPage(1);
                 }
                 setItems(result.items);

@@ -36,7 +36,8 @@ interface Props {
     period: Period
 }
 
-export default function AccountBalanceChart (props: Props): React.ReactElement {
+export default React.memo(AccountBalanceChart);
+function AccountBalanceChart (props: Props): React.ReactElement {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
