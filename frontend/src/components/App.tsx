@@ -25,6 +25,7 @@ import PageProfile from "./pages/PageProfile";
 import PageAutomation from "./pages/automation/PageAutomation";
 import PageAutomationTransactionCreate from "./pages/automation/transaction/PageAutomationTransactionCreate";
 import PageAutomationTransactionModify from "./pages/automation/transaction/PageAutomationTransactionModify";
+import { Settings as LuxonSettings } from "luxon";
 
 export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -35,6 +36,8 @@ interface UserContext {
     updateFavoriteAccounts: (newFavoriteAccounts: Account[]) => void
     setUser: (user: User | null) => void
 }
+
+LuxonSettings.defaultZone = "UTC";
 
 export default function AssetgridApp (): React.ReactElement {
     const [user, setUser] = React.useState<User | "fetching">("fetching");
