@@ -51,7 +51,6 @@ export default function AccountBalanceChart (props: Props): React.ReactElement {
     if (movements === "fetching") {
         return <>Please wait&hellip;</>;
     }
-    console.log(movements);
 
     let balances: number[] = [];
     let revenues: number[] = movements.items.map(point => point.revenue.toNumber());
