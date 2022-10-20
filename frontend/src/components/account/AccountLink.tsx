@@ -11,7 +11,7 @@ export interface Props {
     disabled?: boolean
 }
 
-export default function AccountLink(props: Props): React.ReactElement {
+export default function AccountLink (props: Props): React.ReactElement {
     const icon = props.account.includeInNetWorth
         ? <FontAwesomeIcon icon={faUser} />
         : <FontAwesomeIcon icon={faMoneyCheck} />;

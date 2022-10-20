@@ -66,6 +66,7 @@ export default function Sidebar (props: Props): React.ReactElement {
             </p>
             <ul className="menu-list">
                 <li><Link to={routes.automation()}>Automation</Link></li>
+                <li><Link to={routes.meta()}>Custom fields</Link></li>
                 <li><Link to={routes.preferences()}>Preferences</Link></li>
                 <li><Link to={routes.importCsv()}>Import</Link></li>
             </ul>

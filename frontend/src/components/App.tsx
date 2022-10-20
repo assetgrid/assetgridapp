@@ -25,6 +25,7 @@ import PageProfile from "./pages/PageProfile";
 import PageAutomation from "./pages/automation/PageAutomation";
 import PageAutomationTransactionCreate from "./pages/automation/transaction/PageAutomationTransactionCreate";
 import PageAutomationTransactionModify from "./pages/automation/transaction/PageAutomationTransactionModify";
+import PageMeta from "./pages/PageMeta";
 
 export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
@@ -73,6 +74,8 @@ export default function AssetgridApp (): React.ReactElement {
                                     <Route path={routes.automation()} element={<PageAutomation />} />
                                     <Route path={routes.automationTransactionCreate()} element={<PageAutomationTransactionCreate />} />
                                     <Route path={routes.automationTransactionEdit(":id")} element={<PageAutomationTransactionModify />} />
+
+                                    <Route path={routes.meta()} element={<PageMeta />} />
 
                                     <Route path={routes.preferences()} element={<PagePreferences />} />
                                     <Route path={routes.profile()} element={<PageProfile />} />

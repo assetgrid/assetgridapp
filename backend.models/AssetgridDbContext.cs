@@ -1,4 +1,5 @@
 ﻿using assetgrid_backend.models.Automation;
+using assetgrid_backend.models.MetaFields;
 using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
@@ -101,5 +102,21 @@ namespace assetgrid_backend.Models
         public DbSet<UserCsvImportProfile> UserCsvImportProfiles { get; set; } = null!;
         public DbSet<TransactionAutomation> TransactionAutomations { get; set; } = null!;
         public DbSet<UserTransactionAutomation> UserTransactionAutomations { get; set; } = null!;
+        public DbSet<MetaField> MetaFields { get; set; } = null!;
+        public DbSet<UserMetaField> UserMetaFields { get; set; } = null!;
+
+        #region Meta field value tables
+
+        #region Transaction
+        public DbSet<MetaTextLine<Transaction>> TransactionMetaTextLine { get; set; } = null!;
+        public DbSet<MetaTextLong<Transaction>> TransactionMetaTextLong { get; set; } = null!;
+        public DbSet<MetaTransaction<Transaction>> TransactionMetaTransaction { get; set; } = null!;
+        public DbSet<MetaAccount<Transaction>> TransactionMetaAccount { get; set; } = null!;
+        public DbSet<MetaAttachment<Transaction>> TransactionMetaAttachment { get; set; } = null!;
+        public DbSet<MetaBoolean<Transaction>> TransactionMetaBoolean { get; set; } = null!;
+        public DbSet<MetaNumber<Transaction>> TransactionMetaNumber { get; set; } = null!;
+        #endregion
+
+        #endregion
     }
 }

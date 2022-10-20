@@ -12,6 +12,7 @@ import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
 import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
+import { CreateMetaField, MetaField } from "../models/meta";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -881,6 +882,68 @@ const Automation = (token: string) => ({
     }
 });
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const Meta = (token: string) => ({
+    /**
+     * Get all meta fields that the current user has access to
+     */
+    list: async function (): Promise<Ok<MetaField[]>> {
+        return await new Promise<Ok<MetaField[]>>((resolve, reject) => {
+            axios.get(`${rootUrl}/api/v1/meta`, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve({ status: 200, data: result.data });
+            }).catch(error => {
+                console.log(error);
+                reject(error);
+            });
+        });
+    },
+
+    /**
+     * Create a new meta field
+     * @param model The meta field to create
+     */
+    create: async function (model: CreateMetaField): Promise<Ok<MetaField> | BadRequest> {
+        return await new Promise<Ok<MetaField> | BadRequest>((resolve, reject) => {
+            axios.post(`${rootUrl}/api/v1/meta`, model, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({ status: 200, data: result.data }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 400) {
+                        resolve(error.response.data as BadRequest);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Delete a meta field
+     * @param id The id of the meta field to delete
+     */
+    delete: async function (id: number): Promise<Ok<undefined> | NotFound | Forbid> {
+        return await new Promise<Ok<undefined> | NotFound | Forbid>((resolve, reject) => {
+            axios.delete(`${rootUrl}/api/v1/meta/${id}`, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({ status: 200, data: undefined }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    } else if (error.response?.status === 403) {
+                        resolve(ForbidResult);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    }
+});
+
 /**
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
@@ -927,7 +990,8 @@ const ApiClient = (token: string) => ({
     Account: Account(token),
     Transaction: Transaction(token),
     Taxonomy: Taxonomy(token),
-    Automation: Automation(token)
+    Automation: Automation(token),
+    Meta: Meta(token)
 });
 export default ApiClient;
 
