@@ -186,7 +186,7 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
 
     return <Modal
         active={props.active}
-        title={"Merge transactions"}
+        title={"Save import profile"}
         close={() => props.close()}
         footer={<>
             {<InputButton onClick={forget(saveProfile)} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
