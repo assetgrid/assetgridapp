@@ -228,8 +228,9 @@ namespace assetgrid_backend.Controllers
                 return NotFound();
             }
 
-            var query = _context.Transactions
+            var accountTransactions = _context.Transactions
                 .Where(transaction => transaction.SourceAccountId == id || transaction.DestinationAccountId == id);
+            var query = accountTransactions;
 
             if (request.Query != null)
             {
@@ -256,10 +257,12 @@ namespace assetgrid_backend.Controllers
                 .OrderBy(transaction => transaction.DateTime)
                 .ThenBy(transaction => transaction.Id)
                 .FirstOrDefault();
-            var total = firstTransaction == null ? 0 : await query
-                .Where(transaction => transaction.DateTime < firstTransaction.DateTime || (transaction.DateTime == firstTransaction.DateTime && transaction.Id < firstTransaction.Id))
-                .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
-                .SumAsync();
+            var total = firstTransaction == null
+                ? 0
+                : await accountTransactions
+                    .Where(transaction => transaction.DateTime < firstTransaction.DateTime || (transaction.DateTime == firstTransaction.DateTime && transaction.Id < firstTransaction.Id))
+                    .Select(transaction => transaction.Total * (transaction.DestinationAccountId == id ? 1 : -1))
+                    .SumAsync();
 
             return Ok(new ViewTransactionList
             {
