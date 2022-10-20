@@ -17,11 +17,14 @@ namespace assetgrid_backend.Data.Search
     {
         private static Dictionary<string, Type> columnTypes = new Dictionary<string, Type> {
             { "Id", typeof(int) },
-            { "SourceAccountId", typeof(int?) },
-            { "DestinationAccountId", typeof(int?) },
+            { "SourceAccount.Id", typeof(int?) },
+            { "SourceAccount.Name", typeof(string) },
+            { "DestinationAccount.Id", typeof(int?) },
+            { "DestinationAccount.Name", typeof(string) },
             { "Description", typeof(string) },
             { "DateTime", typeof(DateTime) },
             { "Total", typeof(long) },
+            { "Category", typeof(string) },
         };
 
         public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder)
@@ -53,15 +56,15 @@ namespace assetgrid_backend.Data.Search
                 var orderColumn = query.OrderByColumn;
                 var orderColumnType = columnTypes[orderColumn];
                 string command = (query.Descending ?? false) ? "OrderByDescending" : "OrderBy";
-                var property = Expression.Property(parameter, orderColumn);
-                if (query.OrderByColumn == "Category")
+                Expression property = query.OrderByColumn switch
                 {
-                    property = Expression.Property(property, "Name");
-                }
-                if (query.OrderByColumn == "SourceAccountId" || query.OrderByColumn == "DestinationAccountId")
-                {
-                    property = Expression.Property(Expression.Property(parameter, query.OrderByColumn.Substring(0, query.OrderByColumn.Length - 2)), "Id");
-                }
+                    "Category" => CategoryExpression(parameter),
+                    "SourceAccount.Id" => Expression.Property(parameter, "SourceAccountId"),
+                    "SourceAccount.Name" => Expression.Property(Expression.Property(parameter, "SourceAccount"), "Name"),
+                    "DestinationAccount.Id" => Expression.Property(parameter, "DestinationAccountId"),
+                    "DestinationAccount.Name" => Expression.Property(Expression.Property(parameter, "DestinationAccount"), "Name"),
+                    _ => Expression.Property(parameter, orderColumn)
+                };
                 var orderByExpression = Expression.Lambda(property, parameter);
                 var resultExpression = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Transaction), orderColumnType },
                                               items.Expression, Expression.Quote(orderByExpression));
@@ -143,6 +146,23 @@ namespace assetgrid_backend.Data.Search
                 childLambda);
 
             return expression;
+        }
+
+        public static Expression CategoryExpression(Expression parameter)
+        {
+            var method = typeof(Enumerable)
+                .GetMethods()
+                .Single(method => method.Name == "First" &&
+                    method.GetParameters().Length == 1)
+            .MakeGenericMethod(typeof(TransactionLine));
+
+            var firstLine = Expression.Call(
+                // Call method Any on the transaction's lines with the child lambda as the parameter
+                null,
+                method,
+                Expression.Property(parameter, "TransactionLines")
+            );
+            return Expression.Property(firstLine, "Category");
         }
 
         #endregion

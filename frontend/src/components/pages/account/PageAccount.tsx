@@ -150,20 +150,21 @@ export default function PageAccount (): React.ReactElement {
         }, "");
     }
 
-    async function goToPage (page: number | "increment" | "decrement"): Promise<void> {
+    async function goToPage (newPage: number | "increment" | "decrement"): Promise<void> {
         if (api === null) return;
+        if (newPage === page) return;
 
-        if (page === "increment") {
+        if (newPage === "increment") {
             const nextPeriod = PeriodFunctions.increment(period);
             const transactionCount = await countTransactions(api, nextPeriod);
             const lastPage = Math.max(1, Math.ceil(transactionCount / pageSize));
             setPeriod(nextPeriod);
             setPage(lastPage);
-        } else if (page === "decrement") {
+        } else if (newPage === "decrement") {
             setPeriod(PeriodFunctions.decrement(period));
             setPage(1);
         } else {
-            setPage(page);
+            setPage(newPage);
         }
         setDraw(draw => draw + 1);
     }

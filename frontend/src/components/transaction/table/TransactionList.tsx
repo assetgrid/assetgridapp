@@ -107,8 +107,8 @@ function TransactionList (props: Props): React.ReactElement {
             {renderColumnHeader("Timestamp", "DateTime", "numeric")}
             {renderColumnHeader("Description", "Description", "string")}
             {renderColumnHeader("Amount", "Total", "numeric", true)}
-            {renderColumnHeader("Source", "SourceAccountId", "numeric")}
-            {renderColumnHeader("Destination", "DestinationAccountId", "numeric")}
+            {renderColumnHeader("Source", "SourceAccount.Name", "string")}
+            {renderColumnHeader("Destination", "DestinationAccount.Name", "string")}
             {renderColumnHeader("Category", "Category", "string")}
             {props.allowEditing === true && <div>
                 Actions

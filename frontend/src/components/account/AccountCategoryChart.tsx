@@ -36,7 +36,9 @@ interface Props {
 type DataType = Array<{ category: string, transfer: boolean, revenue: number, expenses: number }>;
 interface ChartDataType { category: string, revenue: number, expenses: number, transferRevenue: number, transferExpenses: number };
 
-export default function AccountCategoryChart (props: Props): React.ReactElement {
+export default React.memo(AccountCategoryChart, (a, b) => a.id === b.id && a.period === b.period && a.type === b.type);
+
+function AccountCategoryChart (props: Props): React.ReactElement {
     const [data, setData] = React.useState<DataType | "fetching">("fetching");
     const api = useApi();
 

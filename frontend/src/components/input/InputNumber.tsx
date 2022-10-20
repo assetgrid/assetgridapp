@@ -18,7 +18,20 @@ type Props = {
 });
 
 export default function InputNumber (props: Props): React.ReactElement {
-    const isError = props.errors !== undefined && props.errors.length > 0;
+    const [isInvalidValue, setIsInvalidValue] = React.useState(false);
+    const isError = isInvalidValue || (props.errors !== undefined && props.errors.length > 0);
+    const [value, setValue] = React.useState(props.value?.toString() ?? "");
+    const [numericValue, setNumericValue] = React.useState(props.value);
+
+    React.useEffect(() => {
+        if (props.value?.toString() !== numericValue?.toString()) {
+            if (typeof props.value === "number" && !isNaN(props.value)) {
+                setValue(props.value);
+            } else if (typeof props.value === "object" && props.value?.isNaN() !== true) {
+                setValue(props.value?.toString() ?? "");
+            }
+        }
+    }, [props.value]);
 
     return <div className="field">
         {props.label !== undefined && <label className="label">{props.label}</label>}
@@ -28,21 +41,46 @@ export default function InputNumber (props: Props): React.ReactElement {
                     className={"input" + (isError ? " is-danger" : "") + (props.isSmall === true ? " is-small" : "")}
                     type="number"
                     placeholder={props.label}
-                    value={props.value?.toString() ?? ""}
+                    value={value}
                     disabled={props.disabled}
                     onChange={onChange}
+                    onBeforeInput={onBeforeInput}
                 />
-                {isError && <p className="help has-text-danger">
-                    {props.errors![0]}
+                {isError && typeof props.errors === "object" && <p className="help has-text-danger">
+                    {props.errors[0]}
                 </p>}
             </div>
         </div>
     </div>;
 
+    function onBeforeInput (event: React.FormEvent<HTMLInputElement>): boolean {
+        const change = (event as any).data;
+        if (!/^[-\d,.]*$/.test(change)) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
     function onChange (event: React.ChangeEvent<HTMLInputElement>): void {
         let value: Decimal | null = new Decimal(event.target.valueAsNumber);
-        if (value.isNaN()) value = props.allowNull ? null : new Decimal(0);
+        if (value.isNaN()) {
+            if (props.allowNull && event.target.value.trim() === "") {
+                value = null;
+                setValue("");
+                setIsInvalidValue(false);
+                setNumericValue(null);
+                props.onChange(value);
+            } else {
+                setValue(event.target.value);
+                setIsInvalidValue(true);
+            }
+            return;
+        }
 
-        props.onChange(value!);
+        setIsInvalidValue(false);
+        setValue(event.target.value);
+        setNumericValue(value);
+        props.onChange(value);
     }
 }
