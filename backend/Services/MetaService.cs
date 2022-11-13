@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.models.MetaFields;
+﻿using assetgrid_backend.Data;
+using assetgrid_backend.models.MetaFields;
 using assetgrid_backend.models.ViewModels;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
@@ -52,11 +53,19 @@ namespace assetgrid_backend.Services
                 .Include(x => x.Field.TransactionMetaBoolean!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaNumber!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaAccount!.Where(xx => xx.ObjectId == transactionId))
-                    .ThenInclude(x => x.Value)
                 .Include(x => x.Field.TransactionMetaTransaction!.Where(xx => xx.ObjectId == transactionId))
-                    .ThenInclude(x => x.Value)
                 .Where(x => x.UserId == userId)
                 .ToListAsync();
+
+            var accountIds = metaFields
+                .Where(x => x.Field.TransactionMetaAccount != null)
+                .SelectMany(x => x.Field.TransactionMetaAccount!.Select(xx => (int?)xx.ValueId))
+                .Where(x => x != null)
+                .ToList();
+            var accounts = await _context.UserAccounts
+                .Where(account => account.UserId == userId && accountIds.Contains(account.AccountId))
+                .SelectView()
+                .ToDictionaryAsync(x => x.Id, x => x);
 
             return metaFields.Select(x => new ViewMetaFieldValue
             {
@@ -70,7 +79,9 @@ namespace assetgrid_backend.Services
                     MetaFieldValueType.Attachment => x.Field.TransactionMetaAttachment?.SingleOrDefault()?.Path,
                     MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value.ToString(),
-                    MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.ValueId != null
+                        ? accounts[x.Field.TransactionMetaAccount.SingleOrDefault().ValueId]
+                        : null,
                     MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.Value,
                     _ => throw new Exception($"Unknown meta type {x.Field.ValueType}")
                 }
@@ -127,6 +138,39 @@ namespace assetgrid_backend.Services
                             else if (value != null)
                             {
                                 _context.TransactionMetaTextLine.Add(new MetaTextLine<Transaction>
+                                {
+                                    FieldId = fieldValue.MetaId,
+                                    ObjectId = transactionId,
+                                    Value = value
+                                });
+                            }
+                            break;
+                        }
+                    case MetaFieldValueType.TextLong:
+                        {
+                            var value = fieldValue.Value switch
+                            {
+                                JsonElement x => x.ValueKind == JsonValueKind.String ? x.GetString() : null,
+                                string x => x,
+                                null => null,
+                                _ => throw new Exception("Incorrect type of value")
+                            };
+
+                            var previousValue = _context.TransactionMetaTextLong.SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                if (value != null)
+                                {
+                                    previousValue.Value = value;
+                                }
+                                else
+                                {
+                                    _context.Remove(previousValue);
+                                }
+                            }
+                            else if (value != null)
+                            {
+                                _context.TransactionMetaTextLong.Add(new MetaTextLong<Transaction>
                                 {
                                     FieldId = fieldValue.MetaId,
                                     ObjectId = transactionId,
@@ -203,6 +247,52 @@ namespace assetgrid_backend.Services
                                     FieldId = fieldValue.MetaId,
                                     ObjectId = transactionId,
                                     Value = value.Value
+                                });
+                            }
+                            break;
+                        }
+                    case MetaFieldValueType.Account:
+                        {
+                            // The numeric field is transfered as a string to prevent floating point errors
+                            int? value = fieldValue.Value switch
+                            {
+                                JsonElement x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : null,
+                                int x => x,
+                                null => null,
+                                _ => throw new Exception("Incorrect type of value")
+                            };
+
+                            if (value.HasValue)
+                            {
+                                var canWrite = await _context.UserAccounts
+                                    .Where(account => account.UserId == userId && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                                    .AnyAsync(account => account.Id == value);
+                                if (! canWrite)
+                                {
+                                    throw new Exception("Cannot write to this account");
+                                }
+                            }
+
+                            var previousValue = _context.TransactionMetaAccount.SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                if (value != null)
+                                {
+                                    previousValue.ValueId = value.Value;
+                                }
+                                else
+                                {
+                                    _context.Remove(previousValue);
+                                }
+                            }
+                            else if (value != null)
+                            {
+                                _context.TransactionMetaAccount.Add(new MetaAccount<Transaction>
+                                {
+                                    FieldId = fieldValue.MetaId,
+                                    ObjectId = transactionId,
+                                    ValueId = value.Value,
+                                    Value = null!
                                 });
                             }
                             break;

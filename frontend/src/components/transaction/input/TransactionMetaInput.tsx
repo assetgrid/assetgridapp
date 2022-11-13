@@ -6,6 +6,8 @@ import Decimal from "decimal.js";
 import InputCheckbox from "../../input/InputCheckbox";
 import { Transaction } from "../../../models/transaction";
 import { Account } from "../../../models/account";
+import InputAccount from "../../account/input/InputAccount";
+import InputTextArea from "../../input/InputTextArea";
 
 interface Props {
     disabled: boolean
@@ -44,7 +46,8 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
                 errors={props.errors}
             />;
         case FieldValueType.TextLong:
-            return <InputTextOrNull value={props.field.value}
+            return <InputTextArea value={props.field.value}
+                allowNull={true}
                 noValueText="No value"
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
@@ -65,6 +68,16 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
                 onChange={e => props.onChange(e.target.checked)}
                 disabled={props.disabled}
                 errors={props.errors}
+            />;
+        case FieldValueType.Account:
+            return <InputAccount
+                value={props.field.value}
+                allowNull={true}
+                nullSelectedText={"No value"}
+                onChange={value => props.onChange(value)}
+                disabled={props.disabled}
+                errors={props.errors}
+                allowCreateNewAccount={true}
             />;
         default:
             throw new Error("Not implemented");

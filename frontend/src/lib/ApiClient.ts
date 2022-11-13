@@ -5,14 +5,14 @@ import { Account as AccountModel, CategorySummaryItem, CreateAccount, GetMovemen
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
-import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
+import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine, deserializeTransaction } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
 import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
 import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
-import { CreateMetaField, FieldValueType, MetaField, MetaFieldValue, SetMetaFieldValue } from "../models/meta";
+import { CreateMetaField, MetaField, serializeSetMetaFieldValue } from "../models/meta";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -608,12 +608,7 @@ const Transaction = (token: string) => ({
                     amount: undefined,
                     amountString: line.amount.mul(new Decimal(10000)).round().toString()
                 })),
-                metaData: model.metaData?.map(meta => ({
-                    ...meta,
-                    value: meta.type === FieldValueType.Number && meta.value !== null
-                        ? (meta.value as Decimal).mul(new Decimal(10000)).round().toString()
-                        : meta.value
-                }))
+                metaData: model.metaData?.map(serializeSetMetaFieldValue)
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
@@ -675,12 +670,7 @@ const Transaction = (token: string) => ({
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
                 })),
-                metaData: model.metaData?.map(meta => ({
-                    ...meta,
-                    value: meta.type === FieldValueType.Number && meta.value !== null
-                        ? (meta.value as Decimal).mul(new Decimal(10000)).round().toString()
-                        : meta.value
-                }))
+                metaData: model.metaData?.map(serializeSetMetaFieldValue)
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({ status: 200, data: deserializeTransaction(result.data) }))
@@ -959,31 +949,6 @@ const Meta = (token: string) => ({
         });
     }
 });
-
-/**
- * Converts fields from RAW json into complex javascript types
- * like decimal fields or date fields that are sent as string
- */
-function deserializeTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
-    const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
-    return {
-        ...rest,
-        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-        total: new Decimal(totalString).div(new Decimal(10000)),
-        lines: (transaction.lines as Array<TransactionLine & { amountString: string }>).map(({ amountString, ...line }) => ({
-            ...line,
-            description: line.description ?? "",
-            amount: new Decimal(amountString).div(new Decimal(10000))
-        })),
-        metaData: (transaction.metaData?.map(deserializeTransactionMetaData) ?? null) as any
-    };
-}
-function deserializeTransactionMetaData<T extends MetaFieldValue | SetMetaFieldValue> (field: T): T {
-    if ("type" in field && field.type === FieldValueType.Number && field.value !== null) {
-        field.value = new Decimal(field.value as string).div(new Decimal(10000));
-    }
-    return field;
-}
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const Taxonomy = (token: string) => ({
