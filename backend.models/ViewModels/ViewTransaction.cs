@@ -1,4 +1,5 @@
 ﻿using assetgrid_backend.models.Search;
+using assetgrid_backend.models.ViewModels;
 using assetgrid_backend.Models;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,6 +18,7 @@ namespace assetgrid_backend.Models.ViewModels
         public bool IsSplit { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
+        public List<ViewSetMetaField>? MetaData { get; set; } = null!;
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {
@@ -77,6 +79,7 @@ namespace assetgrid_backend.Models.ViewModels
         public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
         public List<ViewTransactionLine> Lines { get; set; } = null!;
 
+        public List<ViewMetaFieldValue>? MetaData { get; set; }
         public ViewTransaction()
         {
 

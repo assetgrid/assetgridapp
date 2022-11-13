@@ -4,6 +4,8 @@ using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
 using System.Text.Json;
 
 namespace assetgrid_backend.Models

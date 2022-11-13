@@ -1,10 +1,13 @@
+import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import * as React from "react";
 import { useApi } from "../../lib/ApiClient";
 import { forget } from "../../lib/Utils";
 import { FieldValueType, CreateMetaField, MetaField } from "../../models/meta";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
+import Modal from "../common/Modal";
 import InputButton from "../input/InputButton";
+import InputIconButton from "../input/InputIconButton";
 import InputSelect from "../input/InputSelect";
 import InputText from "../input/InputText";
 
@@ -48,6 +51,8 @@ const fieldTypes = [
 
 export default function PageMeta (): React.ReactElement {
     const [fields, setFields] = React.useState<MetaField[] | "fetching">("fetching");
+    const [deletingField, setDeletingField] = React.useState<MetaField | null>(null);
+    const [isDeletingField, setIsDeletingField] = React.useState(false);
     const api = useApi();
 
     React.useEffect(forget(updateFields), [api]);
@@ -72,12 +77,30 @@ export default function PageMeta (): React.ReactElement {
                             <td>{field.name}</td>
                             <td>{field.description}</td>
                             <td>{fieldTypes.find(x => x.type === field.valueType)!.value}</td>
-                            <td></td>
+                            <td>
+                                <InputIconButton icon={faTrashCan} onClick={() => setDeletingField(field)} />
+                            </td>
                         </tr>)}
                     </tbody>
                 </table>}
             </Card>
             <CreateFieldCard onCreated={forget(updateFields)} />
+
+            {/* Deletion modal */}
+            {deletingField !== null && <Modal
+                active={true}
+                title={"Delete custom field"}
+                close={() => setDeletingField(null)}
+                footer={<>
+                    {<InputButton onClick={forget(deleteField)} disabled={isDeletingField || api === null || fields === "fetching"}
+                        className="is-danger">
+                        Delete field
+                    </InputButton>}
+                    <button className="button" onClick={() => setDeletingField(null)}>Cancel</button>
+                </>}>
+                <p>Are you sure you want to delete the custom field &ldquo;{deletingField.name}&rdquo;? The value of this field will be removed from all transactions.</p>
+                <p>This action is irreversible!</p>
+            </Modal>}
         </div>
     </>;
 
@@ -87,6 +110,16 @@ export default function PageMeta (): React.ReactElement {
         setFields("fetching");
         const result = await api.Meta.list();
         setFields(result.data);
+    }
+
+    async function deleteField (): Promise<void> {
+        if (api === null) return;
+        if (deletingField === null) return;
+
+        setIsDeletingField(true);
+        await api.Meta.delete(deletingField.id);
+        await updateFields();
+        setDeletingField(null);
     }
 }
 

@@ -1,5 +1,6 @@
 backend/coverage.xml
 backend/jwt_secret.txt
+backend.benchmarks
 TestResults
 .vs
 *.sln

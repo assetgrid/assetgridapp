@@ -7,6 +7,13 @@ export interface MetaField {
     permissions: FieldPermissions
 }
 
+export interface MetaFieldValue {
+    metaId: number
+    metaName: string
+    type: FieldValueType
+    value: string | null
+}
+
 export interface CreateMetaField {
     name: string
     description: string

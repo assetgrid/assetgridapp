@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "./account";
+import { MetaFieldValue } from "./meta";
 import { SearchResponse } from "./search";
 
 export interface Transaction {
@@ -14,6 +15,7 @@ export interface Transaction {
     description: string
 
     total: Decimal
+    metaData: MetaFieldValue[]
 }
 
 export interface ModifyTransaction {

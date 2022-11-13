@@ -61,6 +61,7 @@ namespace assetgrid_backend.Controllers
 
             var user = await _context.Users
                 .Include(user => user.Preferences)
+                .AsSingleQuery()
                 .Where(user => user.Id == signedInUser.Id)
                 .Select(user => new
                 {

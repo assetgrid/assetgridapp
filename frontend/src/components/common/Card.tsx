@@ -17,7 +17,8 @@ interface Props {
 export default function Card (props: Props): React.ReactElement {
     return <div className={"card m-3" + (props.isNarrow ? " container" : "") + (props.className !== undefined ? " " + props.className : "")}
         style={props.style}>
-        <header className="card-header" onClick={() => props.setCollapsed!(collapsed => !collapsed)} style={props.collapsed !== undefined ? { cursor: "pointer" } : {}}>
+        <header className="card-header" onClick={() => props.setCollapsed?.(collapsed => !collapsed)}
+            style={props.collapsed !== undefined ? { cursor: "pointer" } : {}}>
             <p className="card-header-title">
                 {props.setCollapsed !== undefined && <InputIconButton
                     icon={props.collapsed === true ? faChevronDown : faChevronUp} />}

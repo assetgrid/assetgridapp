@@ -23,6 +23,7 @@ import PageError from "../PageError";
 import Hero from "../../common/Hero";
 import InputTextMultiple from "../../input/InputTextMultiple";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
+import InputTextOrNull from "../../input/InputTextOrNull";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -47,7 +48,7 @@ export default function PageTransaction (): React.ReactElement {
         <Hero title={<>Transaction #{id}</>} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
         <div className="p-3">
             <div className="columns">
-                <div className="column p-0 is-narrow is-flex">
+                <div className="column p-0 is-half is-flex">
                     <TransactionDetailsCard
                         transaction={transaction}
                         isUpdating={isUpdating}
@@ -57,15 +58,20 @@ export default function PageTransaction (): React.ReactElement {
                         onSaveChanges={forget(update)}
                         errors={errors} />
                 </div>
-                <div className="column p-0 is-narrow is-flex">
-                    {transactionLines(transaction,
-                        isUpdating,
-                        transaction => setEditModel(transaction),
-                        editModel,
-                        errors
-                    )}
+                <div className="column p-0 is-half is-flex">
+                    <TransactionMetaCard
+                        editModel={editModel}
+                        errors={errors}
+                        isUpdating={isUpdating}
+                        onChange={transaction => setEditModel(transaction)}
+                        transaction={transaction} />
                 </div>
             </div>
+            <TransactionLinesCard transaction={transaction}
+                isUpdating={isUpdating}
+                onChange={transaction => setEditModel(transaction)}
+                editModel={editModel}
+                errors={errors} />
         </div>
 
         {/* Deletion modal */}
@@ -131,7 +137,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
     const editModel = props.editModel;
 
     if (transaction === "fetching") {
-        return <Card title="Transaction details" isNarrow={false}>
+        return <Card title="Transaction details" isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -176,7 +182,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
             <span style={{ flexGrow: 1 }}>Transaction details</span>
             <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             <InputIconButton icon={regular.faTrashCan} onClick={() => props.onDelete()} />
-        </>} isNarrow={false}>
+        </>} isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -221,7 +227,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
             </table>
         </Card>;
     } else {
-        return <Card title="Transaction details" isNarrow={false}>
+        return <Card title="Transaction details" isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
@@ -321,14 +327,17 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
     }
 }
 
-function transactionLines (
-    transaction: Transaction | "fetching",
-    isUpdating: boolean,
-    onChange: (transaction: Transaction) => void,
-    editModel: Transaction | null,
+interface TransactionLinesCardProps {
+    transaction: Transaction | "fetching"
+    isUpdating: boolean
+    onChange: (transaction: Transaction) => void
+    editModel: Transaction | null
     errors: { [key: string]: string[] }
-): React.ReactElement {
+}
+function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactElement {
     const { user } = React.useContext(userContext);
+    const transaction = props.transaction;
+    const editModel = props.editModel;
 
     if (transaction === "fetching") {
         return <Card title="Transaction lines" isNarrow={false}>
@@ -343,14 +352,14 @@ function transactionLines (
         if (!transaction.isSplit) {
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
-                <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
+                <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             </>} isNarrow={false}>
                 This transaction does not have any lines.
             </Card>;
         } else {
             return <Card title={<>
                 <span style={{ flexGrow: 1 }}>Transaction lines</span>
-                <InputIconButton icon={solid.faPen} onClick={() => onChange(transaction)} />
+                <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             </>} isNarrow={false}>
                 <table className="table is-fullwidth">
                     <thead>
@@ -379,7 +388,7 @@ function transactionLines (
                 <p>This transaction does not have any lines.</p>
                 <p>Split the transaction to add lines.</p>
                 <div className="buttons mt-3">
-                    <InputButton disabled={isUpdating}
+                    <InputButton disabled={props.isUpdating}
                         onClick={splitTransaction}>
                         Split Transaction
                     </InputButton>
@@ -401,24 +410,24 @@ function transactionLines (
                             <td>
                                 <InputText value={line.description}
                                     onChange={e => updateLine({ ...line, description: e.target.value }, i)}
-                                    disabled={isUpdating}
-                                    errors={errors[`Lines[${i}].Description`]}
+                                    disabled={props.isUpdating}
+                                    errors={props.errors[`Lines[${i}].Description`]}
                                 />
                             </td>
                             <td className="has-text-right">{
                                 <InputNumber value={line.amount}
                                     onChange={value => updateLine({ ...line, amount: value }, i)}
                                     allowNull={false}
-                                    disabled={isUpdating}
-                                    errors={errors[`Lines[${i}].Amount`]}
+                                    disabled={props.isUpdating}
+                                    errors={props.errors[`Lines[${i}].Amount`]}
                                 />
                             }</td>
                             <td>
                                 <InputCategory
                                     value={line.category}
                                     onChange={value => updateLine({ ...line, category: value }, i)}
-                                    disabled={isUpdating}
-                                    errors={errors[`Lines[${i}].Category`]}
+                                    disabled={props.isUpdating}
+                                    errors={props.errors[`Lines[${i}].Category`]}
                                 />
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
@@ -428,8 +437,8 @@ function transactionLines (
                     </tbody>
                 </table>
                 <div className="buttons">
-                    <InputButton disabled={isUpdating}
-                        onClick={() => onChange({
+                    <InputButton disabled={props.isUpdating}
+                        onClick={() => props.onChange({
                             ...editModel,
                             lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0), category: "" }]
                         })}>
@@ -443,7 +452,7 @@ function transactionLines (
     function splitTransaction (): void {
         if (editModel === null) return;
 
-        onChange({
+        props.onChange({
             ...editModel,
             isSplit: true,
             lines: [{
@@ -461,7 +470,7 @@ function transactionLines (
             newLine,
             ...editModel.lines.slice(index + 1)
         ];
-        onChange({
+        props.onChange({
             ...editModel,
             total: lines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)),
             lines
@@ -473,11 +482,86 @@ function transactionLines (
 
         const newLines = [...editModel.lines.slice(0, index), ...editModel.lines.slice(index + 1)];
         const total = newLines.length > 0 ? newLines.reduce((sum, line) => sum.add(line.amount), new Decimal(0)) : editModel.lines[index].amount;
-        onChange({
+        props.onChange({
             ...editModel,
             total,
             lines: newLines.length > 0 ? newLines : editModel.lines,
             isSplit: newLines.length > 0
+        });
+    }
+}
+
+interface TransactionMetaProps {
+    transaction: Transaction | "fetching"
+    editModel: Transaction | null
+    onChange: (transaction: Transaction) => void
+    isUpdating: boolean
+    errors: { [key: string]: string[] }
+}
+function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
+    if (props.transaction === "fetching") {
+        return <Card title="Custom fields" isNarrow={true}>
+            Please wait&hellip;
+        </Card>;
+    }
+    const transaction = props.transaction;
+
+    if (props.editModel === null) {
+        return <Card title={<>
+            <span style={{ flexGrow: 1 }}>Custom fields</span>
+            <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
+        </>} isNarrow={true}>
+            <table className="table is-fullwidth">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {transaction.metaData.map((field, i) => <tr key={i}>
+                        <td>{field.metaName}</td>
+                        <td>{field.value}</td>
+                    </tr>)}
+                </tbody>
+            </table>
+        </Card>;
+    } else {
+        return <Card title="Custom fields" isNarrow={true}>
+            <table className="table is-fullwidth">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {props.editModel.metaData.map((field, i) => <tr key={i}>
+                        <td>{field.metaName}</td>
+                        <td>
+                            <InputTextOrNull value={field.value}
+                                noValueText="No value"
+                                onChange={value => updateField(value, i)}
+                                disabled={props.isUpdating}
+                                errors={props.errors[`MetaData[${i}].Value`]}
+                            />
+                        </td>
+                    </tr>)}
+                </tbody>
+            </table>
+        </Card>;
+    }
+
+    function updateField (newValue: string | null, index: number): void {
+        if (props.editModel === null) return;
+
+        props.onChange({
+            ...props.editModel,
+            metaData: [
+                ...props.editModel.metaData.slice(0, index),
+                { ...props.editModel.metaData[index], value: newValue },
+                ...props.editModel.metaData.slice(index + 1)
+            ]
         });
     }
 }

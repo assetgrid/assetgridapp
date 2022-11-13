@@ -20,17 +20,26 @@ namespace assetgrid_backend.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly AssetgridDbContext _context;
+        private readonly IMetaService _meta;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly IAutomationService _automation;
         private readonly ILogger<TransactionController> _logger;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService, ILogger<TransactionController> logger)
+        public TransactionController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IOptions<ApiBehaviorOptions>
+            apiBehaviorOptions,
+            IAutomationService automationService,
+            IMetaService metaService,
+            ILogger<TransactionController> logger)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
             _automation = automationService;
+            _meta = metaService;
             _logger = logger;
         }
 
@@ -48,6 +57,8 @@ namespace assetgrid_backend.Controllers
                 .SingleOrDefaultAsync(transaction => transaction.Id == id);
 
             if (result == null) return NotFound();
+
+            result.MetaData = await _meta.GetTransactionMetaValues(id, user.Id);
 
             return Ok(result);
         }
@@ -286,6 +297,12 @@ namespace assetgrid_backend.Controllers
                         destinationUserAccount = temp;
                     }
 
+                    // Set metadata
+                    if (model.MetaData != null)
+                    {
+                        await _meta.SetTransactionMetaValues(id, user.Id, model.MetaData);
+                    }
+
                     // Get all automations enabled for this user that trigger on create
                     var automations = await _context.UserTransactionAutomations
                         .Include(x => x.TransactionAutomation)
@@ -298,6 +315,8 @@ namespace assetgrid_backend.Controllers
 
                     await _context.SaveChangesAsync();
                     transaction.Commit();
+
+                    var metaData = await _meta.GetTransactionMetaValues(id, user.Id);
 
                     return Ok(new ViewTransaction
                     {
@@ -333,6 +352,7 @@ namespace assetgrid_backend.Controllers
                             .OrderBy(line => line.Order)
                             .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
+                        MetaData = metaData
                     });
                 }
             }

@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace assetgrid_backend.models.MetaFields
 {
@@ -19,6 +18,16 @@ namespace assetgrid_backend.models.MetaFields
         public string Description { get; set; } = null!;
         public MetaFieldType Type { get; set; }
         public MetaFieldValueType ValueType { get; set; }
+
+        public virtual List<UserMetaField>? Users { get; set; }
+
+        public virtual List<MetaTextLine<Transaction>>? TransactionMetaTextLine { get; set; }
+        public virtual List<MetaTextLong<Transaction>>? TransactionMetaTextLong { get; set; }
+        public virtual List<MetaAttachment<Transaction>>? TransactionMetaAttachment { get; set; }
+        public virtual List<MetaBoolean<Transaction>>? TransactionMetaBoolean { get; set; }
+        public virtual List<MetaNumber<Transaction>>? TransactionMetaNumber { get; set; }
+        public virtual List<MetaAccount<Transaction>>? TransactionMetaAccount { get; set; }
+        public virtual List<MetaTransaction<Transaction>>? TransactionMetaTransaction { get; set; }
     }
 
     public class UserMetaField
