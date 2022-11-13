@@ -8,6 +8,7 @@ import { Transaction } from "../../../models/transaction";
 import { Account } from "../../../models/account";
 import InputAccount from "../../account/input/InputAccount";
 import InputTextArea from "../../input/InputTextArea";
+import InputTransaction from "./InputTransaction";
 
 interface Props {
     disabled: boolean
@@ -78,6 +79,15 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
                 disabled={props.disabled}
                 errors={props.errors}
                 allowCreateNewAccount={true}
+            />;
+        case FieldValueType.Transaction:
+            return <InputTransaction
+                value={props.field.value}
+                allowNull={true}
+                nullSelectedText={"No value"}
+                onChange={value => props.onChange(value)}
+                disabled={props.disabled}
+                errors={props.errors}
             />;
         default:
             throw new Error("Not implemented");

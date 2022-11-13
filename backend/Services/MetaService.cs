@@ -67,6 +67,17 @@ namespace assetgrid_backend.Services
                 .SelectView()
                 .ToDictionaryAsync(x => x.Id, x => x);
 
+            var transactionIds = metaFields
+                .Where(x => x.Field.TransactionMetaTransaction != null)
+                .SelectMany(x => x.Field.TransactionMetaTransaction!.Select(xx => (int?)xx.ValueId))
+                .Where(x => x != null)
+                .ToList();
+            var transactions = await _context.Transactions
+                .Where(transaction => _context.UserAccounts.Any(account => account.UserId == userId &&
+                    (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
+                .SelectView(userId)
+                .ToDictionaryAsync(x => x.Id, x => x);
+
             return metaFields.Select(x => new ViewMetaFieldValue
             {
                 MetaId = x.FieldId,
@@ -80,13 +91,14 @@ namespace assetgrid_backend.Services
                     MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value.ToString(),
                     MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.ValueId != null
-                        ? accounts[x.Field.TransactionMetaAccount.SingleOrDefault().ValueId]
+                        ? accounts[x.Field.TransactionMetaAccount.SingleOrDefault()!.ValueId]
                         : null,
-                    MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.Value,
-                    _ => throw new Exception($"Unknown meta type {x.Field.ValueType}")
+                    MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.ValueId != null
+                        ? transactions[x.Field.TransactionMetaTransaction.SingleOrDefault()!.ValueId]
+                        : null,
                 }
             }).ToList();
-            #warning Return view accounts and view transactions rather than what is returned now
+            #warning Implement attachments as well
         }
 
         public async Task SetTransactionMetaValues(int transactionId, int userId, List<ViewSetMetaField> values)
@@ -288,6 +300,54 @@ namespace assetgrid_backend.Services
                             else if (value != null)
                             {
                                 _context.TransactionMetaAccount.Add(new MetaAccount<Transaction>
+                                {
+                                    FieldId = fieldValue.MetaId,
+                                    ObjectId = transactionId,
+                                    ValueId = value.Value,
+                                    Value = null!
+                                });
+                            }
+                            break;
+                        }
+                    case MetaFieldValueType.Transaction:
+                        {
+                            // The numeric field is transfered as a string to prevent floating point errors
+                            int? value = fieldValue.Value switch
+                            {
+                                JsonElement x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : null,
+                                int x => x,
+                                null => null,
+                                _ => throw new Exception("Incorrect type of value")
+                            };
+
+                            if (value.HasValue)
+                            {
+                                var writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
+                                var canWrite = await _context.Transactions
+                                    .Where(transaction => transaction.SourceAccount.Users.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)) ||
+                                        transaction.DestinationAccount.Users.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)))
+                                    .AnyAsync(account => account.Id == value);
+                                if (!canWrite)
+                                {
+                                    throw new Exception("Cannot reference this account due to insufficient permissions");
+                                }
+                            }
+
+                            var previousValue = _context.TransactionMetaTransaction.SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                if (value != null)
+                                {
+                                    previousValue.ValueId = value.Value;
+                                }
+                                else
+                                {
+                                    _context.Remove(previousValue);
+                                }
+                            }
+                            else if (value != null)
+                            {
+                                _context.TransactionMetaTransaction.Add(new MetaTransaction<Transaction>
                                 {
                                     FieldId = fieldValue.MetaId,
                                     ObjectId = transactionId,

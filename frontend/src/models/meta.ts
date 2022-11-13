@@ -38,6 +38,9 @@ export function serializeSetMetaFieldValue (field: SetMetaFieldValue): SetMetaFi
             case FieldValueType.Account:
                 field.value = (field.value as Account).id as any;
                 break;
+            case FieldValueType.Transaction:
+                field.value = (field.value as Transaction).id as any;
+                break;
         }
     }
     return field;

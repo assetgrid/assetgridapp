@@ -5,6 +5,7 @@ import YesNoDisplay from "../../input/YesNoDisplay";
 import { userContext } from "../../App";
 import { formatNumberWithUser } from "../../../lib/Utils";
 import AccountLink from "../../account/AccountLink";
+import TransactionLink from "../TransactionLink";
 
 interface Props {
     field: MetaFieldType
@@ -34,6 +35,10 @@ export default function TransactionMetaValue (props: Props): React.ReactElement 
             return props.field.value === null
                 ? <span>No value</span>
                 : <AccountLink account={props.field.value} />;
+        case FieldValueType.Transaction:
+            return props.field.value === null
+                ? <span>No value</span>
+                : <TransactionLink transaction={props.field.value} />;
         default:
             throw new Error("Not implemented");
     }
