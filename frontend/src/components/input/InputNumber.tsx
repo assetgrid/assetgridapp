@@ -1,3 +1,5 @@
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Decimal from "decimal.js";
 import * as React from "react";
 
@@ -13,6 +15,7 @@ type Props = {
 
 } | {
     allowNull: true
+    noValueText: string
     value: Decimal | null
     onChange: (value: Decimal | null) => void
 });
@@ -22,6 +25,7 @@ export default function InputNumber (props: Props): React.ReactElement {
     const isError = isInvalidValue || (props.errors !== undefined && props.errors.length > 0);
     const [value, setValue] = React.useState(props.value?.toString() ?? "");
     const [numericValue, setNumericValue] = React.useState(props.value);
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
         if (props.value?.toString() !== numericValue?.toString()) {
@@ -29,9 +33,65 @@ export default function InputNumber (props: Props): React.ReactElement {
                 setValue(props.value);
             } else if (typeof props.value === "object" && props.value?.isNaN() !== true) {
                 setValue(props.value?.toString() ?? "");
+            } else if (props.value === null) {
+                setNumericValue(null);
             }
         }
     }, [props.value]);
+
+    React.useEffect(() => {
+        if ((inputRef.current != null) && numericValue === null) {
+            inputRef.current.focus();
+            setValue("");
+        }
+    }, [props.value]);
+
+    if (props.allowNull && props.value === null) {
+        const disabled = props.disabled === true;
+        return <div className="field">
+            {props.label !== undefined && <label className="label">{props.label}</label>}
+            <div className="field has-addons">
+                <div className="control is-expanded">
+                    <span style={disabled ? { color: "#999" } : { cursor: "pointer" }}
+                        className="input"
+                        onClick={() => {
+                            if (!disabled) {
+                                props.onChange(new Decimal(0));
+                            }
+                        }}>
+                        {props.noValueText}
+                    </span>
+                </div>
+            </div>
+        </div>;
+    }
+    if (props.allowNull && props.value !== null) {
+        return <div className="field">
+            {props.label !== undefined && <label className="label">{props.label}</label>}
+            <div className="field has-addons">
+                <div className="control is-expanded">
+                    <input
+                        className={"input" + (isError ? " is-danger" : "") + (props.isSmall === true ? " is-small" : "")}
+                        ref={inputRef}
+                        type="number"
+                        placeholder={props.label}
+                        value={value}
+                        disabled={props.disabled}
+                        onChange={onChange}
+                        onBeforeInput={onBeforeInput}
+                    />
+                    {isError && props.errors !== undefined && <p className="help has-text-danger">
+                        {props.errors[0]}
+                    </p>}
+                </div>
+                <div className="control">
+                    <button className="button" disabled={props.disabled} onClick={() => props.onChange(null)}>
+                        <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                </div>
+            </div>
+        </div>;
+    }
 
     return <div className="field">
         {props.label !== undefined && <label className="label">{props.label}</label>}
@@ -63,18 +123,10 @@ export default function InputNumber (props: Props): React.ReactElement {
     }
 
     function onChange (event: React.ChangeEvent<HTMLInputElement>): void {
-        let value: Decimal | null = new Decimal(event.target.valueAsNumber);
+        const value: Decimal | null = new Decimal(event.target.valueAsNumber);
         if (value.isNaN()) {
-            if (props.allowNull && event.target.value.trim() === "") {
-                value = null;
-                setValue("");
-                setIsInvalidValue(false);
-                setNumericValue(null);
-                props.onChange(value);
-            } else {
-                setValue(event.target.value);
-                setIsInvalidValue(true);
-            }
+            setValue(event.target.value);
+            setIsInvalidValue(true);
             return;
         }
 

@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "./account";
-import { MetaFieldValue } from "./meta";
+import { MetaFieldValue, SetMetaFieldValue } from "./meta";
 import { SearchResponse } from "./search";
 
 export interface Transaction {
@@ -28,11 +28,6 @@ export interface ModifyTransaction {
     lines: TransactionLine[]
     isSplit: boolean
     metaData: SetMetaFieldValue[] | null
-}
-
-export interface SetMetaFieldValue {
-    metaId: number
-    value: string | null
 }
 
 export interface TransactionLine {

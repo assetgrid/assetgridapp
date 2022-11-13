@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
+import { Account } from "../../../models/account";
 import { MetaField } from "../../../models/meta";
 import { ModifyTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
@@ -18,6 +19,7 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
+import TransactionMetaInput, { MetaFieldType } from "../../transaction/input/TransactionMetaInput";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionLink from "../../transaction/TransactionLink";
 
@@ -185,8 +187,9 @@ export default function PageCreateTransaction (): React.ReactElement {
                         {model.metaData.map((field, i) => <tr key={i}>
                             <td>{metaFields.get(field.metaId)?.name}</td>
                             <td>
-                                <InputTextOrNull value={field.value}
-                                    noValueText="No value"
+                                <TransactionMetaInput
+                                    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                                    field={{ value: field.value, type: metaFields.get(field.metaId)!.valueType } as MetaFieldType}
                                     onChange={value => updateMetaField(value, i)}
                                     disabled={isCreating}
                                     errors={modelErrors[`MetaData[${i}].Value`]}
@@ -274,6 +277,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                     ...defaultModel,
                     metaData: [...metaFields.values()].map(x => ({
                         metaId: x.id,
+                        type: x.type,
                         value: null
                     }))
                 });
@@ -299,12 +303,13 @@ export default function PageCreateTransaction (): React.ReactElement {
             ...model,
             metaData: result.data.map(x => ({
                 metaId: x.id,
+                type: x.valueType,
                 value: null
             }))
         });
     }
 
-    function updateMetaField (newValue: string | null, index: number): void {
+    function updateMetaField (newValue: string | Decimal | boolean | Account | Transaction | null, index: number): void {
         if (model.metaData === null) return;
 
         setModel({

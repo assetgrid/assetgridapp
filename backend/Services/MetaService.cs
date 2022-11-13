@@ -5,6 +5,7 @@ using assetgrid_backend.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Objects;
 using System.Linq;
@@ -68,7 +69,7 @@ namespace assetgrid_backend.Services
                     MetaFieldValueType.TextLong => x.Field.TransactionMetaTextLong?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Attachment => x.Field.TransactionMetaAttachment?.SingleOrDefault()?.Path,
                     MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
-                    MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value.ToString(),
                     MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.Value,
                     _ => throw new Exception($"Unknown meta type {x.Field.ValueType}")
@@ -130,6 +131,78 @@ namespace assetgrid_backend.Services
                                     FieldId = fieldValue.MetaId,
                                     ObjectId = transactionId,
                                     Value = value
+                                });
+                            }
+                            break;
+                        }
+                    case MetaFieldValueType.Boolean:
+                        {
+                            bool? value = fieldValue.Value switch
+                            {
+                                JsonElement x => x.ValueKind == JsonValueKind.True || x.ValueKind == JsonValueKind.False ? x.GetBoolean() : null,
+                                bool x => x,
+                                null => null,
+                                _ => throw new Exception("Incorrect type of value")
+                            };
+
+                            var previousValue = _context.TransactionMetaBoolean.SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                if (value != null && value.Value == true)
+                                {
+                                    previousValue.Value = value.Value;
+                                }
+                                else
+                                {
+                                    _context.Remove(previousValue);
+                                }
+                            }
+                            else if (value != null && value.Value == true)
+                            {
+                                _context.TransactionMetaBoolean.Add(new MetaBoolean<Transaction>
+                                {
+                                    FieldId = fieldValue.MetaId,
+                                    ObjectId = transactionId,
+                                    Value = value.Value
+                                });
+                            }
+                            break;
+                        }
+                    case MetaFieldValueType.Number:
+                        {
+                            // The numeric field is transfered as a string to prevent floating point errors
+                            string? stringValue = fieldValue.Value switch
+                            {
+                                JsonElement x => x.ValueKind == JsonValueKind.String ? x.GetString() : null,
+                                string x => x,
+                                null => null,
+                                _ => throw new Exception("Incorrect type of value")
+                            };
+                            long? value = null;
+                            if (long.TryParse(stringValue, out long newValue))
+                            {
+                                value = newValue;
+                            }
+
+                            var previousValue = _context.TransactionMetaNumber.SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                if (value != null)
+                                {
+                                    previousValue.Value = value.Value;
+                                }
+                                else
+                                {
+                                    _context.Remove(previousValue);
+                                }
+                            }
+                            else if (value != null)
+                            {
+                                _context.TransactionMetaNumber.Add(new MetaNumber<Transaction>
+                                {
+                                    FieldId = fieldValue.MetaId,
+                                    ObjectId = transactionId,
+                                    Value = value.Value
                                 });
                             }
                             break;

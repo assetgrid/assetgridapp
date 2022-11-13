@@ -12,7 +12,7 @@ import * as React from "react";
 import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
 import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
-import { CreateMetaField, MetaField } from "../models/meta";
+import { CreateMetaField, FieldValueType, MetaField, MetaFieldValue, SetMetaFieldValue } from "../models/meta";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -578,7 +578,7 @@ const Transaction = (token: string) => ({
                 headers: { authorization: "Bearer: " + token }
             })
                 .then(result => {
-                    resolve({ status: 200, data: fixTransaction(result.data) });
+                    resolve({ status: 200, data: deserializeTransaction(result.data) });
                 })
                 .catch((e: AxiosError) => {
                     if (e.response?.status === 404) {
@@ -603,11 +603,21 @@ const Transaction = (token: string) => ({
                 ...model,
                 totalString: total.mul(new Decimal(10000)).round().toString(),
                 dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-                lines: transaction.lines.map(line => ({ ...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString() }))
+                lines: transaction.lines.map(line => ({
+                    ...line,
+                    amount: undefined,
+                    amountString: line.amount.mul(new Decimal(10000)).round().toString()
+                })),
+                metaData: model.metaData?.map(meta => ({
+                    ...meta,
+                    value: meta.type === FieldValueType.Number && meta.value !== null
+                        ? (meta.value as Decimal).mul(new Decimal(10000)).round().toString()
+                        : meta.value
+                }))
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
-                resolve({ status: 200, data: fixTransaction(result.data) });
+                resolve({ status: 200, data: deserializeTransaction(result.data) });
             }).catch((e: AxiosError) => {
                 if (e.response?.status === 400) {
                     resolve(e.response.data as BadRequest);
@@ -637,9 +647,9 @@ const Transaction = (token: string) => ({
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({
-                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as TransactionModel),
-                failed: result.data.failed.map(t => fixTransaction(t) as any as ModifyTransaction),
-                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as ModifyTransaction)
+                succeeded: result.data.succeeded.map(t => deserializeTransaction(t) as any as TransactionModel),
+                failed: result.data.failed.map(t => deserializeTransaction(t) as any as ModifyTransaction),
+                duplicate: result.data.duplicate.map(t => deserializeTransaction(t) as any as ModifyTransaction)
             }))
                 .catch(e => {
                     console.log(e);
@@ -664,10 +674,16 @@ const Transaction = (token: string) => ({
                     ...line,
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
+                })),
+                metaData: model.metaData?.map(meta => ({
+                    ...meta,
+                    value: meta.type === FieldValueType.Number && meta.value !== null
+                        ? (meta.value as Decimal).mul(new Decimal(10000)).round().toString()
+                        : meta.value
                 }))
             }, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ status: 200, data: fixTransaction(result.data) }))
+            }).then(result => resolve({ status: 200, data: deserializeTransaction(result.data) }))
                 .catch((e: AxiosError) => {
                     switch (e.response?.status) {
                         case 404:
@@ -745,7 +761,7 @@ const Transaction = (token: string) => ({
             }
             axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, fixedQuery, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
+            }).then(result => resolve({ ...result.data, data: result.data.data.map(t => deserializeTransaction(t)) }))
                 .catch(error => {
                     console.log(error);
                     reject(error);
@@ -948,7 +964,7 @@ const Meta = (token: string) => ({
  * Converts fields from RAW json into complex javascript types
  * like decimal fields or date fields that are sent as string
  */
-function fixTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
+function deserializeTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
     const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
     return {
         ...rest,
@@ -958,8 +974,15 @@ function fixTransaction (transaction: TransactionModel | ModifyTransaction): Tra
             ...line,
             description: line.description ?? "",
             amount: new Decimal(amountString).div(new Decimal(10000))
-        }))
+        })),
+        metaData: (transaction.metaData?.map(deserializeTransactionMetaData) ?? null) as any
     };
+}
+function deserializeTransactionMetaData<T extends MetaFieldValue | SetMetaFieldValue> (field: T): T {
+    if ("type" in field && field.type === FieldValueType.Number && field.value !== null) {
+        field.value = new Decimal(field.value as string).div(new Decimal(10000));
+    }
+    return field;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

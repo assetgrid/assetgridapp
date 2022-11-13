@@ -23,7 +23,9 @@ import PageError from "../PageError";
 import Hero from "../../common/Hero";
 import InputTextMultiple from "../../input/InputTextMultiple";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
-import InputTextOrNull from "../../input/InputTextOrNull";
+import TransactionMetaInput, { MetaFieldType } from "../../transaction/input/TransactionMetaInput";
+import { Account } from "../../../models/account";
+import TransactionMetaValue from "../../transaction/input/TransactionMetaValue";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -521,7 +523,8 @@ function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
                 <tbody>
                     {transaction.metaData.map((field, i) => <tr key={i}>
                         <td>{field.metaName}</td>
-                        <td>{field.value}</td>
+                        { /* eslint-disable-next-line @typescript-eslint/consistent-type-assertions */ }
+                        <td><TransactionMetaValue field={{ type: field.type, value: field.value } as MetaFieldType}/></td>
                     </tr>)}
                 </tbody>
             </table>
@@ -539,8 +542,9 @@ function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
                     {props.editModel.metaData.map((field, i) => <tr key={i}>
                         <td>{field.metaName}</td>
                         <td>
-                            <InputTextOrNull value={field.value}
-                                noValueText="No value"
+                            <TransactionMetaInput
+                                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                                field={{ value: field.value, type: field.type } as MetaFieldType}
                                 onChange={value => updateField(value, i)}
                                 disabled={props.isUpdating}
                                 errors={props.errors[`MetaData[${i}].Value`]}
@@ -552,7 +556,7 @@ function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
         </Card>;
     }
 
-    function updateField (newValue: string | null, index: number): void {
+    function updateField (newValue: string | Decimal | boolean | Account | Transaction | null, index: number): void {
         if (props.editModel === null) return;
 
         props.onChange({

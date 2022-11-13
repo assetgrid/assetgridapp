@@ -1,3 +1,7 @@
+import Decimal from "decimal.js";
+import { Account } from "./account";
+import { Transaction } from "./transaction";
+
 export interface MetaField {
     id: number
     name: string
@@ -11,7 +15,13 @@ export interface MetaFieldValue {
     metaId: number
     metaName: string
     type: FieldValueType
-    value: string | null
+    value: string | Decimal | boolean | Account | Transaction | null
+}
+
+export interface SetMetaFieldValue {
+    metaId: number
+    type: FieldValueType
+    value: string | Decimal | boolean | Account | Transaction | null
 }
 
 export interface CreateMetaField {

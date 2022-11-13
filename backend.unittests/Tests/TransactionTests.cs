@@ -97,7 +97,8 @@ namespace backend.unittests.Tests
                 MetaData = model.MetaData?.Select(x => new ViewSetMetaField
                 {
                     MetaId = x.MetaId,
-                    Value = x.Value
+                    Value = x.Value,
+                    Type = x.Type
                 }).ToList(),
                 Total = model.Total,
                 TotalString = model.TotalString,
