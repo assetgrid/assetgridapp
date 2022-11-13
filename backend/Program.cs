@@ -62,7 +62,7 @@ if (!Directory.Exists(dataDirectory)) {
         // Support legacy configuration from before multi DB support
         var legacyConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-        var provider = string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("Provider", Sqlite.Name) : Mysql.Name;
+        var provider = (string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("Provider", Sqlite.Name) : null) ?? Mysql.Name;
         if (provider.ToLower() == Sqlite.Name.ToLower())
         {
             options.UseSqlite(
@@ -111,11 +111,8 @@ var app = builder.Build();
 
     app.UseMiddleware<JwtMiddleware>();
 
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapControllers();
-        endpoints.MapFallbackToFile("/dist/index.production.html");
-    });
+    app.MapControllers();
+    app.MapFallbackToFile("/dist/index.production.html");
 
     // migrate any database changes on startup (includes initial db creation)
     using (var scope = app.Services.CreateScope())

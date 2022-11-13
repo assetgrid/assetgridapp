@@ -6,19 +6,19 @@ namespace assetgrid_backend.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public required virtual User User { get; set; }
         public int DecimalDigits { get; set; }
 
         [MaxLength(10)]
-        public string DecimalSeparator { get; set; } = null!;
+        public required string DecimalSeparator { get; set; }
 
         [MaxLength(10)]
-        public string ThousandsSeparator { get; set; } = null!;
+        public required string ThousandsSeparator { get; set; }
 
         [MaxLength(30)]
-        public string? DateFormat { get; set; } = null;
+        public required string? DateFormat { get; set; }
 
         [MaxLength(100)]
-        public string? DateTimeFormat { get; set; } = null;
+        public required string? DateTimeFormat { get; set; }
     }
 }

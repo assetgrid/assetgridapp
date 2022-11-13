@@ -22,9 +22,9 @@ namespace assetgrid_backend.models.Automation
     {
         public int Id { get; set; }
         public int TransactionAutomationId { get; set; }
-        public virtual TransactionAutomation TransactionAutomation { get; set; } = null!;
+        public required virtual TransactionAutomation TransactionAutomation { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public required virtual User User { get; set; }
         public bool Enabled { get; set; }
 
         public AutomationPermissions Permissions { get; set; }
@@ -41,14 +41,14 @@ namespace assetgrid_backend.models.Automation
         public int Id { get; set; }
 
         [MaxLength(50)]
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; }
 
         [MaxLength(250)]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public bool TriggerOnCreate { get; set; }
         public bool TriggerOnModify { get; set; }
-        public SearchGroup Query { get; set; } = null!;
-        public List<TransactionAutomationAction> Actions { get; set; } = null!;
+        public required SearchGroup Query { get; set; }
+        public required List<TransactionAutomationAction> Actions { get; set; }
     }
 
     [JsonConverter(typeof(TransactionAutomationActionConverter))]
@@ -99,7 +99,7 @@ namespace assetgrid_backend.models.Automation
     {
         public override string Key => "set-description";
         public override int Version => 1;
-        public string Value { get; set; } = null!;
+        public required string Value { get; set; }
         public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
         {
             foreach (var transaction in transactions.ToList())
@@ -156,7 +156,7 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-account";
         public override int Version => 1;
         public int? Value { get; set; }
-        public string Account { get; set; } = null!;
+        public required string Account { get; set; }
 
         private async Task<UserAccount?> ValueAccount (AssetgridDbContext context, User user)
         {
@@ -226,7 +226,7 @@ namespace assetgrid_backend.models.Automation
     {
         public override string Key => "set-category";
         public override int Version => 1;
-        public string Value { get; set; } = null!;
+        public required string Value { get; set; }
         public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
         {
             foreach (var transaction in transactions.ToList())
@@ -246,7 +246,7 @@ namespace assetgrid_backend.models.Automation
     {
         public override string Key => "set-lines";
         public override int Version => 1;
-        public List<ViewTransactionLine> Value { get; set; } = null!;
+        public required List<ViewTransactionLine> Value { get; set; }
         public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
         {
             foreach (var transaction in transactions.ToList())
@@ -272,6 +272,7 @@ namespace assetgrid_backend.models.Automation
                     Amount = line.Amount,
                     Category = line.Category,
                     Description = line.Description,
+                    Transaction = transaction,
                 }).ToList();
                 var total = lines.Select(line => line.Amount).Sum();
                 var swapSourceDestination = false;

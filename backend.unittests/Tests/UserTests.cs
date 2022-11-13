@@ -30,6 +30,7 @@ namespace backend.unittests.Tests
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
         public AutomationService AutomationService { get; set; }
+        public MetaService MetaService { get; set; }
 
         public UserTests()
         {
@@ -44,9 +45,10 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             AutomationService = new AutomationService(Context);
+            MetaService = new MetaService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
         }
 
         [Fact]
@@ -185,8 +187,20 @@ namespace backend.unittests.Tests
             var accountABWrite = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Share the AB accounts with user B and give correct permission
-            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABAll.Id, Permissions = UserAccountPermissions.All });
-            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABWrite.Id, Permissions = UserAccountPermissions.ModifyTransactions });
+            Context.UserAccounts.Add(new UserAccount {
+                UserId = userB.Id,
+                User = userB,
+                AccountId = accountABAll.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountABAll.Id),
+                Permissions = UserAccountPermissions.All
+            });
+            Context.UserAccounts.Add(new UserAccount {
+                UserId = userB.Id,
+                User = userB,
+                AccountId = accountABWrite.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountABWrite.Id),
+                Permissions = UserAccountPermissions.ModifyTransactions
+            });
 
             // Create some accounts as user B
             UserService.MockUser = await UserService.GetById(userB!.Id);
@@ -205,7 +219,8 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: -20, description: "Line 2", ""),
-                }
+                },
+                MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>(),
             })).OkValue<ViewTransaction>();
 
             // These transactions will not be deleted, when the user is deleted

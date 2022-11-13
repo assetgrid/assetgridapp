@@ -270,7 +270,8 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             total: model.total,
             lines: model.lines,
             isSplit: model.isSplit,
-            identifiers: props.transaction.identifiers
+            identifiers: props.transaction.identifiers,
+            metaData: null
         });
 
         if (result.status === 200) {

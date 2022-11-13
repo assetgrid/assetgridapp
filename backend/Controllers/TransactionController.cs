@@ -110,19 +110,20 @@ namespace assetgrid_backend.Controllers
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
                         IsSplit = model.IsSplit,
-                        Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
-                        {
-                            Identifier = x
-                        }).ToList(),
+                        Identifiers = null!,
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
-                        TransactionLines = model.Lines.Select((line, i) => new TransactionLine
-                        {
-                            Amount = line.Amount,
-                            Description = line.Description,
-                            Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
-                            Order = i + 1,
-                        }).ToList(),
+                        TransactionLines = null!,
                     };
+                    result.Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
+                    result.TransactionLines = model.Lines.Select((line, i) => new TransactionLine
+                    {
+                        Amount = line.Amount,
+                        Description = line.Description,
+                        Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                        Order = i + 1,
+                        Transaction = result,
+                        TransactionId = result.Id
+                    }).ToList();
 
                     // Always store transactions in a format where the total is positive
                     if (result.Total < 0)
@@ -141,6 +142,14 @@ namespace assetgrid_backend.Controllers
 
                         result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                     }
+                    _context.Transactions.Add(result);
+                    await _context.SaveChangesAsync();
+
+                    // Set metadata
+                    if (model.MetaData != null)
+                    {
+                        await _meta.SetTransactionMetaValues(result.Id, user.Id, model.MetaData);
+                    }
 
                     // Get all automations enabled for this user that trigger on create
                     var automations = await _context.UserTransactionAutomations
@@ -152,9 +161,10 @@ namespace assetgrid_backend.Controllers
                         _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                     }
 
-                    _context.Transactions.Add(result);
-                    transaction.Commit();
                     await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    var metaData = await _meta.GetTransactionMetaValues(result.Id, user.Id);
 
                     return Ok(new ViewTransaction {
                         Id = result.Id,
@@ -189,6 +199,7 @@ namespace assetgrid_backend.Controllers
                             .OrderBy(line => line.Order)
                             .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
+                        MetaData = metaData
                     });
                 }
             }
@@ -267,10 +278,7 @@ namespace assetgrid_backend.Controllers
                     dbObject.DestinationAccountId = model.DestinationId;
                     dbObject.DateTime = model.DateTime;
                     dbObject.Description = model.Description;
-                    dbObject.Identifiers = model.Identifiers.Select(identifier => new TransactionUniqueIdentifier
-                    {
-                        Identifier = identifier
-                    }).ToList();
+                    dbObject.Identifiers = model.Identifiers.Select(identifier => new TransactionUniqueIdentifier(dbObject, identifier)).ToList();
                     dbObject.IsSplit = model.IsSplit;
                     dbObject.Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum();
                     dbObject.TransactionLines = model.Lines.Select((line, index) => new TransactionLine
@@ -528,19 +536,20 @@ namespace assetgrid_backend.Controllers
                                 Description = transaction.Description,
                                 DestinationAccountId = transaction.DestinationId,
                                 IsSplit = transaction.IsSplit,
-                                Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier
-                                {
-                                    Identifier = x.Trim()
-                                }).ToList(),
+                                Identifiers = null!,
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                                TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
-                                {
-                                    Amount = line.Amount,
-                                    Description = line.Description,
-                                    Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
-                                    Order = i + 1,
-                                }).ToList(),
+                                TransactionLines = null!,
                             };
+                            result.Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
+                            result.TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
+                            {
+                                Amount = line.Amount,
+                                Description = line.Description,
+                                Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                                Order = i + 1,
+                                Transaction = result,
+                                TransactionId = result.Id
+                            }).ToList();
 
                             // Always store transactions in a format where the total is positive
                             if (result.Total < 0)

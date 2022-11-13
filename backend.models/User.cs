@@ -7,13 +7,13 @@ namespace assetgrid_backend.Models
         public int Id { get; set; }
 
         [MaxLength(100)]
-        public string Email { get; set; } = null!;
+        public required string Email { get; set; }
         [MaxLength(100)]
-        public string NormalizedEmail { get; set; } = null!;
+        public required string NormalizedEmail { get; set; }
         [MaxLength(255)]
-        public string HashedPassword { get; set; } = null!;
-        public virtual UserPreferences Preferences { get; set; } = null!;
-        public virtual List<UserAccount> Accounts { get; set; } = null!;
-        public virtual List<UserCsvImportProfile> CsvImportProfiles { get; set; } = null!;
+        public required string HashedPassword { get; set; }
+        public virtual UserPreferences? Preferences { get; set; }
+        public required virtual List<UserAccount> Accounts { get; set; }
+        public required virtual List<UserCsvImportProfile> CsvImportProfiles { get; set; }
     }
 }

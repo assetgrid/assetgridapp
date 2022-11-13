@@ -1,9 +1,7 @@
-﻿using assetgrid_backend.Data;
-using assetgrid_backend.Models;
+﻿using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,11 +14,10 @@ namespace assetgrid_backend.Services
         Task<UserAuthenticatedResponse?> Authenticate(string email, string password);
         Task<User> CreateUser(string email, string password);
         UserPreferences GetPreferences(User user);
-        Task<UserPreferences> GetPreferences(int userId);
         Task<User> GetById(int id);
         User? GetCurrent(HttpContext context);
         Task<bool> ValidatePassword(User user, string password);
-        void SetPassword(User user, string password);
+        void SetPassword (User user, string password);
     }
 
     public class UserService : IUserService
@@ -60,7 +57,7 @@ namespace assetgrid_backend.Services
             }
 
             // authentication successful so generate jwt token
-            var token = generateJwtToken(user.user);
+            var token = _generateJwtToken(user.user);
 
             return new UserAuthenticatedResponse(
                 user.user.Id,
@@ -95,10 +92,15 @@ namespace assetgrid_backend.Services
             }
         }
 
-        public void SetPassword(User user, string value)
+        private string _getHashedPassword(string userEmail, string value)
         {
             var hasher = new PasswordHasher<string>();
-            user.HashedPassword = hasher.HashPassword(user.Email.ToLower(), value);
+            return hasher.HashPassword(userEmail.ToLower(), value);
+        }
+
+        public void SetPassword(User user, string password)
+        {
+            user.HashedPassword = _getHashedPassword(user.Email, password);
         }
 
         public async Task<User> CreateUser(string email, string password)
@@ -107,8 +109,10 @@ namespace assetgrid_backend.Services
             {
                 Email = email,
                 NormalizedEmail = email.ToLower(),
+                HashedPassword = _getHashedPassword(email, password),
+                Accounts = new List<UserAccount>(),
+                CsvImportProfiles = new List<UserCsvImportProfile>(),
             };
-            SetPassword(user, password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -117,19 +121,15 @@ namespace assetgrid_backend.Services
 
         public UserPreferences GetPreferences(User user)
         {
-            return preferencesOrDefault(user.Preferences);
+            return _preferencesOrDefault(user, user.Preferences);
         }
 
-        public async Task<UserPreferences> GetPreferences(int userId)
-        {
-            var preferences = await _context.UserPreferences.SingleOrDefaultAsync(preferences => preferences.UserId == userId);
-            return preferencesOrDefault(preferences);
-        }
-
-        private UserPreferences preferencesOrDefault(UserPreferences? preferences)
+        private UserPreferences _preferencesOrDefault(User user, UserPreferences? preferences)
         {
             return preferences ?? new UserPreferences
             {
+                User = user,
+                UserId = user.Id,
                 ThousandsSeparator = ",",
                 DecimalSeparator = ".",
                 DecimalDigits = 2,
@@ -155,7 +155,7 @@ namespace assetgrid_backend.Services
             }
         }
 
-        private string generateJwtToken(User user)
+        private string _generateJwtToken(User user)
         {
             // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();

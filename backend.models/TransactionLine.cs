@@ -7,13 +7,13 @@ namespace assetgrid_backend.Models
         public int Id { get; set; }
         public int TransactionId { get; set; }
         public int Order { get; set; }
-        public virtual Transaction Transaction { get; set; } = null!;
+        public required virtual Transaction Transaction { get; set; }
         public long Amount { get; set; }
 
         [MaxLength(250)]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
 
         [MaxLength(50)]
-        public string Category { get; set; } = null!;
+        public required string Category { get; set; }
     }
 }

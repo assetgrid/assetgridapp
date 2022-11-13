@@ -13,7 +13,7 @@ namespace assetgrid_backend.Models.ViewModels
 
     public class ViewSearchResponse<T>
     {
-        public List<T> Data { get; set; } = null!;
+        public required List<T> Data { get; set; }
         public int TotalItems { get; set; }
     }
 }

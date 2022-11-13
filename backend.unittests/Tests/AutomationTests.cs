@@ -22,6 +22,7 @@ using assetgrid_backend.models.ViewModels.Automation;
 using System.Security.Principal;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using assetgrid_backend.models.ViewModels;
 
 namespace backend.unittests.Tests
 {
@@ -37,6 +38,7 @@ namespace backend.unittests.Tests
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
         public AutomationService AutomationService { get; set; }
+        public MetaService MetaService { get; set; }
 
         public ViewAccount AccountA;
         public ViewAccount AccountB;
@@ -56,6 +58,7 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             AutomationService = new AutomationService(Context);
+            MetaService = new MetaService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             UserController.CreateInitial(new AuthenticateModel { Email = "userA", Password = "test" }).Wait();
             var userAResonse = UserController.Authenticate(new AuthenticateModel { Email = "userA", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -65,7 +68,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
             AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
 
             var objectValidator = new Mock<IObjectModelValidator>();
@@ -92,7 +95,9 @@ namespace backend.unittests.Tests
             AccountRead = AccountController.Create(accountModel).Result.OkValue<ViewAccount>();
             Context.UserAccounts.Add(new UserAccount {
                 AccountId = AccountRead.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountRead.Id),
                 UserId = UserA.Id,
+                User = UserA,
                 Favorite = false,
                 IncludeInNetWorth = false,
                 Permissions = UserAccountPermissions.Read });
@@ -112,6 +117,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
+                MetaData = new List<ViewSetMetaField>(),
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
             };
 
@@ -127,6 +133,8 @@ namespace backend.unittests.Tests
             UserService.MockUser = UserA;
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -164,7 +172,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
@@ -189,6 +198,8 @@ namespace backend.unittests.Tests
             UserService.MockUser = UserA;
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -230,12 +241,15 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -269,12 +283,15 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>(),
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -317,12 +334,15 @@ namespace backend.unittests.Tests
                 Identifiers = new List<string>(),
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(500, "", "My category"),
-                    new ViewTransactionLine(500, "", "My category")}
+                    new ViewTransactionLine(500, "", "My category")},
+                MetaData = new List<ViewSetMetaField>(),
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -358,12 +378,15 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var transactionAB = (await TransactionController.Create(transactionModel)).OkValue<ViewTransaction>();
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test automation",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -410,7 +433,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var newAccount = nullValue ? null : (await AccountController.Create(new ViewCreateAccount
@@ -434,6 +458,8 @@ namespace backend.unittests.Tests
 
             await AutomationController.RunSingle(new ViewTransactionAutomation
             {
+                Name = "Test automation",
+                Description = "Test description",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -482,7 +508,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var newAccount = (await AccountController.Create(new ViewCreateAccount
@@ -512,6 +539,8 @@ namespace backend.unittests.Tests
 
             var automation = new ViewTransactionAutomation
             {
+                Name = "Test name",
+                Description = "Test description",
                 Query = new SearchGroup
                 {
                     Type = SearchGroupType.And,
@@ -665,7 +694,9 @@ namespace backend.unittests.Tests
                 Enabled = true,
                 Permissions = UserTransactionAutomation.AutomationPermissions.Read,
                 TransactionAutomationId = modifiedAutomation.Id,
-                UserId = UserB.Id
+                TransactionAutomation = Context.TransactionAutomations.Single(x => x.Id == modifiedAutomation.Id),
+                UserId = UserB.Id,
+                User = UserB
             };
             Context.Add(userAutomation);
             await Context.SaveChangesAsync();
@@ -729,12 +760,16 @@ namespace backend.unittests.Tests
                     Identifiers = new List<string>(),
                     IsSplit = false,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "Transaction line", "") },
-                    Total = 200
+                    Total = 200,
+                    MetaData = new List<ViewSetMetaField>()
                 };
 
                 if (multiple)
                 {
-                    return TransactionController.CreateMany(new List<ViewModifyTransaction> { model }).Result.OkValue<ViewTransactionCreateManyResponse>().Succeeded.Single();
+                    // Multi creation does not support metadata, but it must be set to prevent Assert.Equivalent from failing
+                    var result = TransactionController.CreateMany(new List<ViewModifyTransaction> { model }).Result.OkValue<ViewTransactionCreateManyResponse>().Succeeded.Single();
+                    result.MetaData = new List<ViewMetaFieldValue>();
+                    return result;
                 }
                 else
                 {
@@ -769,8 +804,18 @@ namespace backend.unittests.Tests
                 },
                 Permissions = UserTransactionAutomation.AutomationPermissions.Modify
             })).OkValue<ViewTransactionAutomation>();
-            Context.UserAccounts.Add(new UserAccount { AccountId = AccountA.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
-            Context.UserAccounts.Add(new UserAccount { AccountId = AccountB.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount {
+                AccountId = AccountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountA.Id),
+                UserId = UserB.Id,
+                User = UserB,
+                Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount {
+                AccountId = AccountB.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountB.Id),
+                UserId = UserB.Id,
+                User = UserB,
+                Permissions = UserAccountPermissions.All });
             await Context.SaveChangesAsync();
 
             // Create transaction with User A - should be modified
@@ -790,6 +835,7 @@ namespace backend.unittests.Tests
                 Identifiers = transaction.Identifiers,
                 Lines = transaction.Lines,
                 IsSplit = transaction.IsSplit,
+                MetaData = new List<ViewSetMetaField>()
             })).OkValue<ViewTransaction>());
             // Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
 
@@ -810,7 +856,9 @@ namespace backend.unittests.Tests
                 Enabled = true,
                 Permissions = UserTransactionAutomation.AutomationPermissions.Read,
                 TransactionAutomationId = automationModel.Id,
-                UserId = UserB.Id
+                TransactionAutomation = Context.TransactionAutomations.Single(x => x.Id == automationModel.Id),
+                UserId = UserB.Id,
+                User = UserB
             };
             Context.Add(userAutomation);
             await Context.SaveChangesAsync();
@@ -849,7 +897,8 @@ namespace backend.unittests.Tests
                 Identifiers = new List<string>(),
                 IsSplit = false,
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "Transaction line", "") },
-                Total = 200
+                Total = 200,
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var automationModel = (await AutomationController.Create(new ViewTransactionAutomation
@@ -879,8 +928,18 @@ namespace backend.unittests.Tests
                 },
                 Permissions = UserTransactionAutomation.AutomationPermissions.Modify
             })).OkValue<ViewTransactionAutomation>();
-            Context.UserAccounts.Add(new UserAccount { AccountId = AccountA.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
-            Context.UserAccounts.Add(new UserAccount { AccountId = AccountB.Id, UserId = UserB.Id, Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount {
+                AccountId = AccountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountA.Id),
+                UserId = UserB.Id,
+                User = UserB,
+                Permissions = UserAccountPermissions.All });
+            Context.UserAccounts.Add(new UserAccount {
+                AccountId = AccountB.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountB.Id),
+                UserId = UserB.Id,
+                User = UserB,
+                Permissions = UserAccountPermissions.All });
             await Context.SaveChangesAsync();
 
             // Create a test transaction. Should not trigger automation
@@ -933,7 +992,9 @@ namespace backend.unittests.Tests
                 Enabled = true,
                 Permissions = UserTransactionAutomation.AutomationPermissions.Read,
                 TransactionAutomationId = automationModel.Id,
-                UserId = UserB.Id
+                TransactionAutomation = Context.TransactionAutomations.Single(x => x.Id == automationModel.Id),
+                UserId = UserB.Id,
+                User = UserB,
             };
             Context.Add(userAutomation);
             await Context.SaveChangesAsync();

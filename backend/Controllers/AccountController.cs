@@ -56,21 +56,21 @@ namespace assetgrid_backend.Controllers
                     {
                         Name = model.Name,
                         Description = model.Description,
-                        Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
-                        {
-                            Identifier = x
-                        }).ToList()
+                        Identifiers = null!
                     };
+                    result.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier(result, x)).ToList();
                     _context.Accounts.Add(result);
                     await _context.SaveChangesAsync();
 
                     var userAccount = new UserAccount
                     {
                         AccountId = result.Id,
+                        Account = result,
                         Favorite = model.Favorite,
                         IncludeInNetWorth = model.IncludeInNetWorth,
                         Permissions = UserAccountPermissions.All,
                         UserId = user.Id,
+                        User = user,
                     };
                     _context.UserAccounts.Add(userAccount);
                     await _context.SaveChangesAsync();
@@ -138,10 +138,7 @@ namespace assetgrid_backend.Controllers
             }
 
             _context.AccountUniqueIdentifiers.RemoveRange(_context.AccountUniqueIdentifiers.Where(x => x.AccountId == id));
-            result.Account.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
-            {
-                Identifier = x
-            }).ToList();
+            result.Account.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier(result.Account, x)).ToList();
             result.Account.Description = model.Description;
             result.Account.Name = model.Name;
             result.Favorite = model.Favorite;

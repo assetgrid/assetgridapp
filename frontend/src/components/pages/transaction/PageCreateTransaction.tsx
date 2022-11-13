@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
+import { MetaField } from "../../../models/meta";
 import { ModifyTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
@@ -29,17 +30,21 @@ export default function PageCreateTransaction (): React.ReactElement {
         identifiers: [],
         lines: [{ amount: new Decimal(0), description: "", category: "" }],
         total: new Decimal(0),
-        isSplit: false
+        isSplit: false,
+        metaData: null
     };
 
     const [model, setModel] = React.useState<ModifyTransaction>(defaultModel);
+    const [metaFields, setMetaFields] = React.useState<Map<number, MetaField> | "fetching">("fetching");
     const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
-    const [creating, setCreating] = React.useState(false);
+    const [isCreating, setCreating] = React.useState(false);
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
     const actionOnComplete: "back" | "chose" = window.history.state.usr?.actionOnComplete ?? "chose";
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
     const api = useApi();
+
+    React.useEffect(forget(loadMetaFields), [api]);
 
     return <>
         <Hero title="Create new transaction" />
@@ -55,18 +60,18 @@ export default function PageCreateTransaction (): React.ReactElement {
                     value={model.dateTime}
                     onChange={value => setModel({ ...model, dateTime: value })}
                     fullwidth={false}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.DateTime} />
                 <InputTextOrNull label="Unique identifier"
                     value={model.identifiers[0] ?? ""}
                     noValueText="Ignore duplicates"
                     onChange={value => setModel({ ...model, identifiers: value === null ? [] : [value] })}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.Identifiers}/>
                 <InputNumber label={"Total"}
                     allowNull={false}
                     value={model.total}
-                    disabled={model.isSplit || creating}
+                    disabled={model.isSplit || isCreating}
                     onChange={value => setModel({
                         ...model,
                         total: new Decimal(value),
@@ -76,13 +81,13 @@ export default function PageCreateTransaction (): React.ReactElement {
                 <InputText label="Description"
                     value={model.description}
                     onChange={e => setModel({ ...model, description: e.target.value })}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.Description}/>
                 <div className="columns">
                     <div className="column is-6">
                         <InputAccount label="Source"
                             value={model.sourceId}
-                            disabled={creating}
+                            disabled={isCreating}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             onChange={account => setModel({ ...model, sourceId: account?.id ?? null })}
@@ -91,7 +96,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                     <div className="column is-6">
                         <InputAccount label="Destination"
                             value={model.destinationId}
-                            disabled={creating}
+                            disabled={isCreating}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             onChange={account => setModel({ ...model, destinationId: account?.id ?? null })}
@@ -105,7 +110,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                     </div>
                     : <InputCategory label="Category"
                         value={model.lines[0].category}
-                        disabled={creating}
+                        disabled={isCreating}
                         onChange={value => setModel({
                             ...model,
                             lines: [{ ...model.lines[0], category: value }]
@@ -128,7 +133,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         amount: new Decimal(value)
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Amount`]} />
                             </div>
                             <div className="column">
@@ -138,7 +143,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         description: e.target.value
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Description`]}/>
                             </div>
                             <div className="column">
@@ -148,7 +153,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                                         ...model.lines[i],
                                         category: value
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Category`]} />
                             </div>
                             {model.lines.length !== 0 &&
@@ -167,11 +172,42 @@ export default function PageCreateTransaction (): React.ReactElement {
                     </>}
             </Card>
 
+            <Card title="Custom fields" isNarrow={true}>
+                {model.metaData === null && <p>Loading custom fields&hellip;</p>}
+                {model.metaData !== null && metaFields !== "fetching" && <table className="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.metaData.map((field, i) => <tr key={i}>
+                            <td>{metaFields.get(field.metaId)?.name}</td>
+                            <td>
+                                <InputTextOrNull value={field.value}
+                                    noValueText="No value"
+                                    onChange={value => updateMetaField(value, i)}
+                                    disabled={isCreating}
+                                    errors={modelErrors[`MetaData[${i}].Value`]}
+                                />
+                            </td>
+                        </tr>)}
+                    </tbody>
+                </table>}
+            </Card>
+
             <Card title="Actions" isNarrow={true}>
                 <div className="buttons">
                     {actionOnComplete === "chose" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("stay"))}>Create and stay</InputButton>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("view"))}>Create and view transaction</InputButton>
+                        <InputButton className="is-primary" disabled={api === null || isCreating || metaFields === "fetching"}
+                            onClick={forget(async () => await create("stay"))}>
+                            Create and stay
+                        </InputButton>
+                        <InputButton className="is-primary" disabled={api === null || isCreating || metaFields === "fetching"}
+                            onClick={forget(async () => await create("view"))}>
+                            Create and view transaction
+                        </InputButton>
                     </>}
                     {actionOnComplete === "back" && <>
                         <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("back"))}>Create transaction</InputButton>
@@ -227,14 +263,20 @@ export default function PageCreateTransaction (): React.ReactElement {
     }
 
     async function create (action: "stay" | "view" | "back"): Promise<void> {
-        if (api === null) return;
+        if (api === null || metaFields === "fetching") return;
 
         setCreating(true);
         setCreatedTransaction(null);
         const result = await api.Transaction.create(model);
         if (result.status === 200) {
             if (action === "stay") {
-                setModel(defaultModel);
+                setModel({
+                    ...defaultModel,
+                    metaData: [...metaFields.values()].map(x => ({
+                        metaId: x.id,
+                        value: null
+                    }))
+                });
                 setCreating(false);
                 setCreatedTransaction(result.data);
             } else if (action === "back") {
@@ -246,5 +288,32 @@ export default function PageCreateTransaction (): React.ReactElement {
             setCreating(false);
             setModelErrors(result.errors);
         }
+    }
+
+    async function loadMetaFields (): Promise<void> {
+        if (api === null) return;
+
+        const result = await api.Meta.list();
+        setMetaFields(new Map(result.data.map(x => [x.id, x])));
+        setModel({
+            ...model,
+            metaData: result.data.map(x => ({
+                metaId: x.id,
+                value: null
+            }))
+        });
+    }
+
+    function updateMetaField (newValue: string | null, index: number): void {
+        if (model.metaData === null) return;
+
+        setModel({
+            ...model,
+            metaData: [
+                ...model.metaData.slice(0, index),
+                { ...model.metaData[index], value: newValue },
+                ...model.metaData.slice(index + 1)
+            ]
+        });
     }
 }

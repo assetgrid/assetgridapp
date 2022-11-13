@@ -31,6 +31,7 @@ namespace backend.unittests.Tests
         public UserService UserService { get; set; }
         public AccountService AccountService { get; set; }
         public AutomationService AutomationService { get; set; }
+        public MetaService MetaService { get; set; }
         public AccountTests()
         {
             // Create DB context and connect
@@ -44,6 +45,7 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             AutomationService = new AutomationService(Context);
+            MetaService = new MetaService(Context);
             var userController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             userController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = userController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -51,7 +53,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
         }
 
         public void Dispose()
@@ -289,8 +291,11 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Identifiers = new List<string>(),
-                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(total, "", "") }
+                    Lines = new List<ViewTransactionLine> { new ViewTransactionLine(total, "", "") },
+                    MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
                 })).OkValue<ViewTransaction>();
+                // Transaction lists does not include metadata
+                createdTransaction.MetaData = null;
                 transactions.Add(createdTransaction);
             }
 
@@ -380,7 +385,8 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Identifiers = new List<string>(),
-                    Lines = new List<ViewTransactionLine>()
+                    Lines = new List<ViewTransactionLine>(),
+                    MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
                 })).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
@@ -420,7 +426,8 @@ namespace backend.unittests.Tests
                     Description = "Test transaction",
                     DateTime = new DateTime(2020, 01, 01).AddDays(i),
                     Identifiers = new List<string>(),
-                    Lines = new List<ViewTransactionLine>()
+                    Lines = new List<ViewTransactionLine>(),
+                    MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
                 })).OkValue<ViewTransaction>();
                 transactions.Add(createdTransaction);
             }
@@ -485,7 +492,8 @@ namespace backend.unittests.Tests
                 Description = "Test transaction",
                 DateTime = new DateTime(2020, 01, 01),
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine>()
+                Lines = new List<ViewTransactionLine>(),
+                MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
             };
             await TransactionController.Create(transactionModel);
 
@@ -559,6 +567,7 @@ namespace backend.unittests.Tests
                 DateTime = new DateTime(2020, 01, 01),
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "") },
                 Identifiers = new List<string>(),
+                MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
             };
 
             transactionModel.Lines.First().Category = "A";

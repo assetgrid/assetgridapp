@@ -71,7 +71,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
             isSplit: selectedTransaction.isSplit,
             lines: selectedTransaction.lines,
             sourceId: selectedTransaction.source?.id ?? null,
-            total: selectedTransaction.total
+            total: selectedTransaction.total,
+            metaData: null
         });
         await api.Transaction.deleteMultiple({
             type: SearchGroupType.And,

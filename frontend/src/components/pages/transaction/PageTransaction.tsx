@@ -47,7 +47,7 @@ export default function PageTransaction (): React.ReactElement {
     return <>
         <Hero title={<>Transaction #{id}</>} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
         <div className="p-3">
-            <div className="columns">
+            <div className="columns m-0">
                 <div className="column p-0 is-half is-flex">
                     <TransactionDetailsCard
                         transaction={transaction}

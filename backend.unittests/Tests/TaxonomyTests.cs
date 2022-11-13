@@ -33,6 +33,7 @@ namespace backend.unittests.Tests
         public UserAuthenticatedResponse User { get; set; }
         public TaxonomyController TaxonomyController { get; set; }
         public AutomationService AutomationService { get; set; }
+        public MetaService MetaService { get; set; }
 
         public ViewAccount AccountA;
         public ViewAccount AccountB;
@@ -50,6 +51,7 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             AutomationService = new AutomationService(Context);
+            MetaService = new MetaService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -57,7 +59,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
             TaxonomyController = new TaxonomyController(Context, UserService);
 
             var objectValidator = new Mock<IObjectModelValidator>();
@@ -93,7 +95,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "Account A category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "Account A category") },
+                MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>()
             };
 
             // Create account and transaction with User A

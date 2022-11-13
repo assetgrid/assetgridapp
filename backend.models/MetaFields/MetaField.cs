@@ -13,9 +13,9 @@ namespace assetgrid_backend.models.MetaFields
     {
         public int Id { get; set; }
         [MaxLength(50)]
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; }
         [MaxLength(250)]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public MetaFieldType Type { get; set; }
         public MetaFieldValueType ValueType { get; set; }
 
@@ -34,9 +34,9 @@ namespace assetgrid_backend.models.MetaFields
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public required virtual User User { get; set; }
         public int FieldId { get; set; }
-        public virtual MetaField Field { get; set; } = null!;
+        public required virtual MetaField Field { get; set; }
         public FieldPermissions Permissions { get; set; }
 
         public enum FieldPermissions

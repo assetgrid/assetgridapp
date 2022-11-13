@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using Xunit;
 using assetgrid_backend.models.Search;
 using Microsoft.Extensions.Logging;
+using assetgrid_backend.models.ViewModels;
+using SQLitePCL;
 
 namespace backend.unittests.Tests
 {
@@ -33,6 +35,7 @@ namespace backend.unittests.Tests
         public UserAuthenticatedResponse User { get; set; }
         public UserService UserService { get; set; }
         public AutomationService AutomationService { get; set; }
+        public MetaService MetaService { get; set; }
         public AccountService AccountService { get; set; }
 
         public ViewAccount AccountA;
@@ -51,6 +54,7 @@ namespace backend.unittests.Tests
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
             AutomationService = new AutomationService(Context);
+            MetaService = new MetaService(Context);
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
             UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
             User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
@@ -58,7 +62,7 @@ namespace backend.unittests.Tests
 
             // Setup account controller
             AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
 
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
@@ -85,16 +89,21 @@ namespace backend.unittests.Tests
             var modelProperties = model.GetType().GetProperties().ToDictionary(p => p.Name, p => p);
             var result = new ViewModifyTransaction
             {
+                DateTime = model.DateTime,
+                Description = model.Description,
+                Identifiers = model.Identifiers,
+                Lines = model.Lines,
+                IsSplit = model.IsSplit,
+                MetaData = model.MetaData?.Select(x => new ViewSetMetaField
+                {
+                    MetaId = x.MetaId,
+                    Value = x.Value
+                }).ToList(),
+                Total = model.Total,
+                TotalString = model.TotalString,
                 SourceId = model.Source?.Id,
                 DestinationId = model.Destination?.Id
             };
-            foreach (var property in result.GetType().GetProperties())
-            {
-                if (modelProperties.ContainsKey(property.Name))
-                {
-                    property.SetValue(result, modelProperties[property.Name].GetValue(model));
-                }
-            }
             return result;
         }
 
@@ -109,7 +118,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
             };
             var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             Assert.NotNull(transaction);
@@ -191,7 +200,8 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category" )}
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category" )},
+                MetaData = new List<ViewSetMetaField>(),
             };
 
             model.SourceId = AccountA.Id;
@@ -230,7 +240,8 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             model.SourceId = AccountA.Id;
@@ -252,7 +263,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountA.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             var validationResultList = new List<ValidationResult>();
@@ -271,7 +283,8 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -289,7 +302,8 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
             var validationResultList = new List<ValidationResult>();
             bool result = Validator.TryValidateObject(model, new ValidationContext(model), validationResultList);
@@ -315,7 +329,7 @@ namespace backend.unittests.Tests
                 SourceId = null,
                 DestinationId = null,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(-500, "", "My category") },
             };
 
             var accountA = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
@@ -351,7 +365,13 @@ namespace backend.unittests.Tests
             Assert.IsType<NotFoundResult>(await TransactionController.Update(transactionAB.Id, transactionABModified));
 
             // Give read permission to account A
-            var UserAccountA = new UserAccount { AccountId = accountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.Read };
+            var UserAccountA = new UserAccount {
+                AccountId = accountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountA.Id),
+                UserId = otherUser.Id,
+                User = Context.Users.Single(x => x.Id == otherUser.Id),
+                Permissions = UserAccountPermissions.Read,
+            };
             Context.UserAccounts.Add(UserAccountA);
             Context.SaveChanges();
 
@@ -405,7 +425,8 @@ namespace backend.unittests.Tests
                 SourceId = unknownAccountType == "source" ? unknownAccount.Id : AccountA.Id,
                 DestinationId = unknownAccountType == "destination" ? unknownAccount.Id : AccountA.Id,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") }
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(500, "", "My category") },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             // Cannot create transaction yet as no write permission to the unknown account
@@ -413,7 +434,13 @@ namespace backend.unittests.Tests
             Assert.IsType<ForbidResult>(await TransactionController.Create(transactionModel));
 
             // Give read permission. Still fails
-            var userAccount = new UserAccount { AccountId = unknownAccount.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
+            var userAccount = new UserAccount {
+                AccountId = unknownAccount.Id,
+                Account = Context.Accounts.Single(x => x.Id == unknownAccount.Id),
+                UserId = User.Id,
+                User = Context.Users.Single(x => x.Id == User.Id),
+                Permissions = UserAccountPermissions.Read
+            };
             Context.UserAccounts.Add(userAccount);
             Context.SaveChanges();
             Assert.IsType<ForbidResult>(await TransactionController.Create(transactionModel));
@@ -464,7 +491,7 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: -20, description: "Line 2", ""),
-                }
+                },
             })).OkValue<ViewTransaction>();
             var oppositeTransaction = (await TransactionController.Create(new ViewModifyTransaction
             {
@@ -478,7 +505,7 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: -20, description: "Line 2", ""),
-                }
+                },
             })).OkValue<ViewTransaction>();
 
             Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
@@ -497,7 +524,7 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: -120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: 20, description: "Line 2", ""),
-                }
+                },
             })).OkValue<ViewTransaction>();
             // Update id so the equivalence check passes
             negativeTransaction.Id = oppositeTransaction.Id;
@@ -516,7 +543,7 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: -120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: 20, description: "Line 2", ""),
-                }
+                },
             })).OkValue<ViewTransaction>();
             negativeTransaction.Id = oppositeTransaction.Id;
             Assert.Equivalent(negativeTransaction, oppositeTransaction);
@@ -551,7 +578,7 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: -20, description: "Line 2", ""),
-                }
+                },
             };
 
             var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
@@ -609,7 +636,13 @@ namespace backend.unittests.Tests
                 IncludeInNetWorth = false,
             })).OkValue<ViewAccount>();
             // Give the other user permission to create transactions on account A
-            Context.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.ModifyTransactions });
+            Context.Add(new UserAccount {
+                AccountId = AccountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountA.Id),
+                UserId = otherUser.Id,
+                User = Context.Users.Single(x => x.Id == otherUser.Id),
+                Permissions = UserAccountPermissions.ModifyTransactions
+            });
             Context.SaveChanges();
 
             var model = new ViewModifyTransaction {
@@ -619,7 +652,8 @@ namespace backend.unittests.Tests
                 DestinationId = AccountA.Id,
                 Total = 100,
                 Identifiers = new List<string>(),
-                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")}
+                Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                MetaData = new List<ViewSetMetaField>()
             };
             var transactionCA = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
             model.SourceId = AccountA.Id;
@@ -664,7 +698,13 @@ namespace backend.unittests.Tests
             Assert.Equivalent(transaction0C, (await TransactionController.Get(transaction0C.Id)).OkValue<ViewTransaction>());
 
             // Give user read permission to account C
-            var userAccount = new UserAccount { AccountId = accountC.Id, UserId = User.Id, Permissions = UserAccountPermissions.Read };
+            var userAccount = new UserAccount {
+                AccountId = accountC.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountC.Id),
+                UserId = User.Id,
+                User = Context.Users.Single(x => x.Id == User.Id),
+                Permissions = UserAccountPermissions.Read
+            };
             Context.UserAccounts.Add(userAccount);
             Context.SaveChanges();
 
@@ -709,7 +749,8 @@ namespace backend.unittests.Tests
                 DestinationId = AccountB.Id,
                 Total = 100,
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
-                Identifiers = new List<string> { "Identifier" }
+                Identifiers = new List<string> { "Identifier" },
+                MetaData = new List<ViewSetMetaField>()
             };
 
             // First creation succeeds
@@ -748,7 +789,13 @@ namespace backend.unittests.Tests
             Assert.IsType<OkResult>(deleteResult);
 
             // Share account A with otherUser
-            Context.UserAccounts.Add(new UserAccount { AccountId = AccountA.Id, UserId = otherUser.Id, Permissions = UserAccountPermissions.Read });
+            Context.UserAccounts.Add(new UserAccount {
+                AccountId = AccountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountA.Id),
+                UserId = otherUser.Id,
+                User = Context.Users.Single(x => x.Id == otherUser.Id),
+                Permissions = UserAccountPermissions.Read
+            });
             Context.SaveChanges();
 
             // Now creation fails, as otherUser can see the first users transaction with the same identifier
@@ -782,6 +829,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
                 new ViewModifyTransaction {
                     Identifiers = new List<string>(),
@@ -791,6 +839,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
                 new ViewModifyTransaction {
                     Identifiers = new List<string>(),
@@ -800,6 +849,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = accountC.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(300, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
                 new ViewModifyTransaction {
                     Identifiers = new List<string>(),
@@ -809,6 +859,7 @@ namespace backend.unittests.Tests
                     SourceId = accountC.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(400, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 }
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -833,7 +884,8 @@ namespace backend.unittests.Tests
                     DateTime = new DateTime(2020, 01, 01),
                     Description = "test",
                     SourceId = AccountA.Id,
-                    DestinationId = AccountB.Id
+                    DestinationId = AccountB.Id,
+                    MetaData = new List<ViewSetMetaField>(),
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Duplicate);
@@ -855,6 +907,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
                 new ViewModifyTransaction {
                     Identifiers = new List<string> { "identifier" },
@@ -864,6 +917,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(200, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -894,6 +948,7 @@ namespace backend.unittests.Tests
                     SourceId = accountC.Id,
                     DestinationId = null,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Succeeded);
@@ -914,7 +969,12 @@ namespace backend.unittests.Tests
             Assert.Equivalent((await TransactionController.FindDuplicates(new List<string> { "identifier" })).OkValue<List<string>>(), new List<string>());
 
             // Share an account with other user. Now creating should fail
-            Context.UserAccounts.Add(new UserAccount { UserId = otherUser.Id, AccountId = AccountA.Id });
+            Context.UserAccounts.Add(new UserAccount {
+                UserId = otherUser.Id,
+                User = otherUser,
+                AccountId = AccountA.Id,
+                Account = Context.Accounts.Single(x => x.Id == AccountA.Id),
+            });
             Context.SaveChanges();
 
             result = (await TransactionController.CreateMany(new List<ViewModifyTransaction>
@@ -927,6 +987,7 @@ namespace backend.unittests.Tests
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
                     Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                    MetaData = new List<ViewSetMetaField>(),
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
             Assert.Single(result.Failed);
@@ -954,7 +1015,8 @@ namespace backend.unittests.Tests
                     Description = "A",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    IsSplit = true
+                    IsSplit = true,
+                    MetaData = new List<ViewSetMetaField>(),
                 },
                 new ViewModifyTransaction {
                     Identifiers = new List<string>(),
@@ -964,7 +1026,8 @@ namespace backend.unittests.Tests
                     Description = "B",
                     SourceId = AccountA.Id,
                     DestinationId = AccountB.Id,
-                    IsSplit = true
+                    IsSplit = true,
+                    MetaData = new List<ViewSetMetaField>(),
                 },
             })).OkValue<ViewTransactionCreateManyResponse>();
 
@@ -1008,6 +1071,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                MetaData = new List<ViewSetMetaField>(),
             })).OkValue<ViewTransaction>();
 
             // Remove access to an account
@@ -1031,6 +1095,7 @@ namespace backend.unittests.Tests
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
                 Lines = new List<ViewTransactionLine> { new ViewTransactionLine(100, "", "")},
+                MetaData = new List<ViewSetMetaField>(),
             }));
 
             // Can update transaction
@@ -1047,7 +1112,8 @@ namespace backend.unittests.Tests
                 Description = "New description",
                 SourceId = AccountA.Id,
                 DestinationId = AccountB.Id,
-                IsSplit = true
+                IsSplit = true,
+                MetaData = new List<ViewSetMetaField>(),
             });
             Assert.IsType<OkObjectResult>(await result);
 

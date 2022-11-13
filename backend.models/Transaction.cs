@@ -13,11 +13,11 @@ namespace assetgrid_backend.Models
         public DateTime DateTime { get; set; }
 
         [MaxLength(250)]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public long Total { get; set; }
         public bool IsSplit { get; set; }
-        public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
-        public virtual List<TransactionUniqueIdentifier> Identifiers { get; set; } = null!;
+        public required virtual List<TransactionLine> TransactionLines { get; set; }
+        public required virtual List<TransactionUniqueIdentifier> Identifiers { get; set; }
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {

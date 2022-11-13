@@ -12,7 +12,7 @@
             Value = value;
         }
 
-        public string Value { get; set; } = null!;
+        public string Value { get; set; }
 
         public static JwtSecret Get(string? savePath = null)
         {

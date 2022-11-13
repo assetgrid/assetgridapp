@@ -27,6 +27,12 @@ export interface ModifyTransaction {
     total: Decimal
     lines: TransactionLine[]
     isSplit: boolean
+    metaData: SetMetaFieldValue[] | null
+}
+
+export interface SetMetaFieldValue {
+    metaId: number
+    value: string | null
 }
 
 export interface TransactionLine {

@@ -13,12 +13,12 @@ namespace assetgrid_backend.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public required virtual User User { get; set; }
         public int Version { get; set; }
 
         [MaxLength(50)]
-        public string ProfileName { get; set; } = null!;
-        public CsvImportProfile ImportProfile { get; set; } = null!;
+        public required string ProfileName { get; set; }
+        public required CsvImportProfile ImportProfile { get; set; }
 
         public static CsvImportProfile ParseJson (string json)
         {
@@ -26,7 +26,7 @@ namespace assetgrid_backend.Models
 
             if (! version.HasValue)
             {
-                return new CsvImportProfile();
+                throw new InvalidOperationException("Could not determine version of import profile");
             }
 
             switch (version.Value.Version)
@@ -50,10 +50,10 @@ namespace assetgrid_backend.Models
 
         // CSV Options
         [MaxLength(50)]
-        public string CsvDelimiter { get; set; } = null!;
-
+        public required string CsvDelimiter { get; set; }
+        
         [MaxLength(50)]
-        public string CsvNewlineCharacter { get; set; } = null!;
+        public required string CsvNewlineCharacter { get; set; }
         [MaxLength(20)]
         public string? CsvTextEncoding { get; set; }
         public bool CsvParseHeader { get; set; }
@@ -61,56 +61,56 @@ namespace assetgrid_backend.Models
 
         // Mapping options
         [MaxLength(50)]
-        public string DuplicateHandling { get; set; } = null!;
+        public required string DuplicateHandling { get; set; }
 
         [MaxLength(50)]
-        public string? IdentifierColumn { get; set; } = null!;
-        public ParseOptions IdentifierParseOptions { get; set; } = null!;
+        public string? IdentifierColumn { get; set; }
+        public required ParseOptions IdentifierParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? SourceAccountColumn { get; set; } = null!;
+        public string? SourceAccountColumn { get; set; }
 
-        public int? SourceAccountId { get; set; } = null!;
+        public int? SourceAccountId { get; set; }
 
         [MaxLength(10)]
-        public string SourceAccountType { get; set; } = null!;
-        public ParseOptions SourceAccountParseOptions { get; set; } = null!;
+        public required string SourceAccountType { get; set; }
+        public required ParseOptions SourceAccountParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? DestinationAccountColumn { get; set; } = null!;
+        public string? DestinationAccountColumn { get; set; }
 
-        public int? DestinationAccountId { get; set; } = null!;
+        public int? DestinationAccountId { get; set; }
 
         [MaxLength(10)]
-        public string DestinationAccountType { get; set; } = null!;
-        public ParseOptions DestinationAccountParseOptions { get; set; } = null!;
+        public required string DestinationAccountType { get; set; }
+        public required ParseOptions DestinationAccountParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string DebitAmountColumn { get; set; } = null!;
-        public ParseOptions DebitAmountParseOptions { get; set; } = null!;
+        public required string DebitAmountColumn { get; set; }
+        public required ParseOptions DebitAmountParseOptions { get; set; }
 
         [MaxLength(50)]
         public string? CreditAmountColumn { get; set; }
-        public ParseOptions CreditAmountParseOptions { get; set; } = null!;
+        public required ParseOptions CreditAmountParseOptions { get; set; }
         public bool SeparateCreditDebitColumns { get; set; }
 
         [MaxLength(50)]
-        public string DecimalSeparator { get; set; } = null!;
+        public required string DecimalSeparator { get; set; }
 
         [MaxLength(50)]
-        public string DateColumn { get; set; } = null!;
-        public ParseOptions DateParseOptions { get; set; } = null!;
+        public required string DateColumn { get; set; }
+        public required ParseOptions DateParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string DateFormat { get; set; } = null!;
+        public required string DateFormat { get; set; }
 
         [MaxLength(50)]
-        public string? DescriptionColumn { get; set; } = null!;
-        public ParseOptions DescriptionParseOptions { get; set; } = null!;
+        public string? DescriptionColumn { get; set; }
+        public required ParseOptions DescriptionParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? CategoryColumn { get; set; } = null!;
-        public ParseOptions CategoryParseOptions { get; set; } = null!;
+        public string? CategoryColumn { get; set; }
+        public required ParseOptions CategoryParseOptions { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -136,10 +136,10 @@ namespace assetgrid_backend.Models
             public bool TrimWhitespace { get; set; }
 
             [MaxLength(250)]
-            public string? Regex { get; set; } = null!;
+            public required string? Regex { get; set; }
 
             [MaxLength(250)]
-            public string Pattern { get; set; } = null!;
+            public required string Pattern { get; set; }
         }
     }
 
@@ -149,61 +149,61 @@ namespace assetgrid_backend.Models
     {
         // CSV Options
         [MaxLength(50)]
-        public string CsvDelimiter { get; set; } = null!;
+        public required string CsvDelimiter { get; set; }
 
         [MaxLength(50)]
-        public string CsvNewlineCharacter { get; set; } = null!;
+        public required string CsvNewlineCharacter { get; set; }
         [MaxLength(20)]
         public string? CsvTextEncoding { get; set; }
         public bool CsvParseHeader { get; set; }
 
         // Mapping options
         [MaxLength(50)]
-        public string DuplicateHandling { get; set; } = null!;
+        public required string DuplicateHandling { get; set; }
 
         [MaxLength(50)]
-        public string? IdentifierColumn { get; set; } = null!;
-        public ParseOptions IdentifierParseOptions { get; set; } = null!;
+        public string? IdentifierColumn { get; set; }
+        public required ParseOptions IdentifierParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? SourceAccountColumn { get; set; } = null!;
+        public string? SourceAccountColumn { get; set; }
 
-        public int? SourceAccountId { get; set; } = null!;
+        public int? SourceAccountId { get; set; }
 
         [MaxLength(10)]
-        public string SourceAccountType { get; set; } = null!;
-        public ParseOptions SourceAccountParseOptions { get; set; } = null!;
+        public required string SourceAccountType { get; set; }
+        public required ParseOptions SourceAccountParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? DestinationAccountColumn { get; set; } = null!;
+        public string? DestinationAccountColumn { get; set; }
 
-        public int? DestinationAccountId { get; set; } = null!;
+        public int? DestinationAccountId { get; set; }
 
         [MaxLength(10)]
-        public string DestinationAccountType { get; set; } = null!;
-        public ParseOptions DestinationAccountParseOptions { get; set; } = null!;
+        public required string DestinationAccountType { get; set; }
+        public required ParseOptions DestinationAccountParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string AmountColumn { get; set; } = null!;
-        public ParseOptions AmountParseOptions { get; set; } = null!;
+        public required string AmountColumn { get; set; }
+        public required ParseOptions AmountParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string DecimalSeparator { get; set; } = null!;
+        public required string DecimalSeparator { get; set; }
 
         [MaxLength(50)]
-        public string DateColumn { get; set; } = null!;
-        public ParseOptions DateParseOptions { get; set; } = null!;
+        public required string DateColumn { get; set; }
+        public required ParseOptions DateParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string DateFormat { get; set; } = null!;
+        public required string DateFormat { get; set; }
 
         [MaxLength(50)]
-        public string? DescriptionColumn { get; set; } = null!;
-        public ParseOptions DescriptionParseOptions { get; set; } = null!;
+        public string? DescriptionColumn { get; set; }
+        public required ParseOptions DescriptionParseOptions { get; set; }
 
         [MaxLength(50)]
-        public string? CategoryColumn { get; set; } = null!;
-        public ParseOptions CategoryParseOptions { get; set; } = null!;
+        public string? CategoryColumn { get; set; }
+        public required ParseOptions CategoryParseOptions { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -229,10 +229,10 @@ namespace assetgrid_backend.Models
             public bool TrimWhitespace { get; set; }
 
             [MaxLength(250)]
-            public string? Regex { get; set; } = null!;
+            public string? Regex { get; set; }
 
             [MaxLength(250)]
-            public string Pattern { get; set; } = null!;
+            public required string Pattern { get; set; }
 
             public CsvImportProfile.ParseOptions Upgrade ()
             {

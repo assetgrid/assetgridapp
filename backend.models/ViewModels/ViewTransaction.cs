@@ -12,13 +12,13 @@ namespace assetgrid_backend.Models.ViewModels
         public DateTime DateTime { get; set; }
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
-        public string Description { get; set; } = null!;
-        public List<string> Identifiers { get; set; } = null!;
+        public required string Description { get; set; }
+        public required List<string> Identifiers { get; set; }
         public long? Total { get; set; }
         public bool IsSplit { get; set; }
         public string? TotalString { get => Total?.ToString(); set => Total = value != null ? long.Parse(value) : null; }
-        public List<ViewTransactionLine> Lines { get; set; } = null!;
-        public List<ViewSetMetaField>? MetaData { get; set; } = null!;
+        public required List<ViewTransactionLine> Lines { get; set; }
+        public List<ViewSetMetaField>? MetaData { get; set; }
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {
@@ -71,13 +71,13 @@ namespace assetgrid_backend.Models.ViewModels
         public ViewAccount? Source { get; set; }
         public ViewAccount? Destination { get; set; }
         public DateTime DateTime { get; set; }
-        public string Description { get; set; } = null!;
-        public List<string> Identifiers { get; set; } = null!;
+        public required string Description { get; set; }
+        public required List<string> Identifiers { get; set; }
         public long Total { get; set; }
         public bool IsSplit { get; set; }
 
         public string TotalString { get => Total.ToString(); set => Total = long.Parse(value); }
-        public List<ViewTransactionLine> Lines { get; set; } = null!;
+        public required List<ViewTransactionLine> Lines { get; set; }
 
         public List<ViewMetaFieldValue>? MetaData { get; set; }
         public ViewTransaction()
@@ -88,9 +88,9 @@ namespace assetgrid_backend.Models.ViewModels
 
     public class ViewTransactionCreateManyResponse
     {
-        public List<ViewTransaction> Succeeded { get; set; } = null!;
-        public List<ViewModifyTransaction> Failed { get; set; } = null!;
-        public List<ViewModifyTransaction> Duplicate { get; set; } = null!;
+        public required List<ViewTransaction> Succeeded { get; set; }
+        public required List<ViewModifyTransaction> Failed { get; set; }
+        public required List<ViewModifyTransaction> Duplicate { get; set; }
     }
 
     public class ViewTransactionLine
@@ -99,10 +99,10 @@ namespace assetgrid_backend.Models.ViewModels
         public string AmountString { get => Amount.ToString(); set => Amount = long.Parse(value); }
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
-        public string Description { get; set; } = null!;
+        public string Description { get; set; }
 
         [MaxLength(50, ErrorMessage = "Category must be shorter than 50 characters.")]
-        public string Category { get; set; } = null!;
+        public string Category { get; set; }
 
         public ViewTransactionLine(long amount, string description, string category)
         {

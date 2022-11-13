@@ -9,8 +9,8 @@ namespace assetgrid_backend.models.Search
     public class SearchQuery
     {
         public int Version => 1;
-        public string Column { get; set; } = null!;
-        public object? Value { get; set; } = null!;
+        public required string Column { get; set; }
+        public object? Value { get; set; }
         public SearchOperator Operator { get; set; }
         public bool Not { get; set; }
 

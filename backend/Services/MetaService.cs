@@ -51,43 +51,30 @@ namespace assetgrid_backend.Services
                 .Include(x => x.Field.TransactionMetaBoolean!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaNumber!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaAccount!.Where(xx => xx.ObjectId == transactionId))
+                    .ThenInclude(x => x.Value)
                 .Include(x => x.Field.TransactionMetaTransaction!.Where(xx => xx.ObjectId == transactionId))
+                    .ThenInclude(x => x.Value)
                 .Where(x => x.UserId == userId)
-                .Select(x => new MetaValue
-                {
-                    FieldId = x.Id,
-                    FieldName = x.Field.Name,
-                    FieldType = x.Field.ValueType,
-                    TextShortValue = x.Field.TransactionMetaTextLine!.SingleOrDefault()!.Value,
-                    TextLongValue = x.Field.TransactionMetaTextLong!.SingleOrDefault()!.Value,
-                    AttachmentValue = x.Field.TransactionMetaAttachment!.SingleOrDefault()!.Path,
-                    BooleanValue = x.Field.TransactionMetaBoolean!.SingleOrDefault()!.Value,
-                    NumberValue = x.Field.TransactionMetaNumber!.SingleOrDefault()!.Value,
-                    AccountValue = (ViewAccount?)null,
-                    TransactionValue = (ViewTransaction?)null
-                })
                 .ToListAsync();
-
-            #warning Implement it for transactions and accounts
-            // Must be implemented separately as the query cannot be translated otherwise
 
             return metaFields.Select(x => new ViewMetaFieldValue
             {
                 MetaId = x.FieldId,
-                MetaName = x.FieldName,
-                Type = x.FieldType,
-                Value = x.FieldType switch
+                MetaName = x.Field.Name,
+                Type = x.Field.ValueType,
+                Value = x.Field.ValueType switch
                 {
-                    MetaFieldValueType.TextLine => x.TextShortValue,
-                    MetaFieldValueType.TextLong => x.TextLongValue,
-                    MetaFieldValueType.Attachment => x.AttachmentValue,
-                    MetaFieldValueType.Boolean => x.BooleanValue,
-                    MetaFieldValueType.Number => x.NumberValue,
-                    MetaFieldValueType.Account => x.AccountValue,
-                    MetaFieldValueType.Transaction => x.TransactionValue,
-                    _ => throw new Exception($"Unknown meta type {x.FieldType}")
+                    MetaFieldValueType.TextLine => x.Field.TransactionMetaTextLine?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.TextLong => x.Field.TransactionMetaTextLong?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Attachment => x.Field.TransactionMetaAttachment?.SingleOrDefault()?.Path,
+                    MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.Value,
+                    MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.Value,
+                    _ => throw new Exception($"Unknown meta type {x.Field.ValueType}")
                 }
             }).ToList();
+            #warning Return view accounts and view transactions rather than what is returned now
         }
 
         public async Task SetTransactionMetaValues(int transactionId, int userId, List<ViewSetMetaField> values)
@@ -106,7 +93,7 @@ namespace assetgrid_backend.Services
 
             foreach (var fieldValue in values)
             {
-                if (! metaFields.TryGetValue(fieldValue.MetaId, out ViewMetaFieldValue? field))
+                if (!metaFields.TryGetValue(fieldValue.MetaId, out ViewMetaFieldValue? field))
                 {
                     // Cannot set a field that doesn't exist
                     continue;

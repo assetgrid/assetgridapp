@@ -4,9 +4,9 @@
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; } = null!;
+        public required virtual User User { get; set; }
         public int AccountId { get; set; }
-        public virtual Account Account { get; set; } = null!;
+        public required virtual Account Account { get; set; }
         public UserAccountPermissions Permissions { get; set; }
         public bool Favorite { get; set; }
         public bool IncludeInNetWorth { get; set; }

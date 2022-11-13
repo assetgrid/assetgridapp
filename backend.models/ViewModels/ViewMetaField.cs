@@ -12,8 +12,8 @@ namespace assetgrid_backend.models.ViewModels
     public class ViewMetaField
     {
         public int Id { get; set; }
-        public string Name { get; set; } = null!;
-        public string Description { get; set; } = null!;
+        public string Name { get; set; }
+        public string Description { get; set; }
         public MetaFieldType Type { get; set; }
         public MetaFieldValueType ValueType { get; set; }
         public FieldPermissions Permissions { get; set; }
@@ -38,9 +38,9 @@ namespace assetgrid_backend.models.ViewModels
     public class ViewCreateMetaField
     {
         [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; }
         [MaxLength(50, ErrorMessage = "Description must be shorter than 250 characters.")]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public MetaFieldType Type { get; set; }
         public MetaFieldValueType ValueType { get; set; }
     }
@@ -48,8 +48,8 @@ namespace assetgrid_backend.models.ViewModels
     public class ViewMetaFieldValue
     {
         public int MetaId { get; set; }
-        public string MetaName { get; set; } = null!;
+        public required string MetaName { get; set; }
         public MetaFieldValueType Type { get; set; }
-        public object? Value { get; set; } = null!;
+        public required object? Value { get; set; }
     }
 }

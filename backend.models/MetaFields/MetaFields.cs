@@ -23,29 +23,29 @@ namespace assetgrid_backend.models.MetaFields
     public class MetaTextLine<T> : MetaFieldValue<T>
     {
         [MaxLength(255)]
-        public string Value { get; set; } = null!;
+        public required string Value { get; set; }
     }
 
     public class MetaTextLong<T> : MetaFieldValue<T>
     {
-        public string Value { get; set; } = null!;
+        public required string Value { get; set; }
     }
 
     public class MetaTransaction<T> : MetaFieldValue<T>
     {
         public int ValueId { get; set; }
-        public virtual Transaction Value { get; set; } = null!;
+        public required virtual Transaction Value { get; set; }
     }
 
     public class MetaAccount<T> : MetaFieldValue<T>
     {
         public int ValueId { get; set; }
-        public virtual Account Value { get; set; } = null!;
+        public required virtual Account Value { get; set; }
     }
 
     public class MetaAttachment<T> : MetaFieldValue<T>
     {
-        public string Path { get; set; } = null!;
+        public required string Path { get; set; }
         public int FileSize { get; set; }
     }
 
