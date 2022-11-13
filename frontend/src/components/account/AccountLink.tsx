@@ -1,4 +1,5 @@
-import { faMoneyCheck, faUser } from "@fortawesome/free-solid-svg-icons";
+import { faShare } from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router-dom";
@@ -14,7 +15,7 @@ export interface Props {
 export default function AccountLink (props: Props): React.ReactElement {
     const icon = props.account.includeInNetWorth
         ? <FontAwesomeIcon icon={faUser} />
-        : <FontAwesomeIcon icon={faMoneyCheck} />;
+        : <FontAwesomeIcon icon={faShare} />;
 
     if (props.disabled === true) {
         return <span className="transaction-link">
