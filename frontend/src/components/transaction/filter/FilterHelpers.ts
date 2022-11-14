@@ -15,45 +15,57 @@ const stringOperators = [...stringScalarOperators, ...arrayOperators] as const;
 export const Operators = [{
     operator: SearchOperator.Equals,
     negated: false,
-    label: t("search.equals")
+    label: "search.equals"
 }, {
     operator: SearchOperator.Equals,
     negated: true,
-    label: t("search.does_not_equal")
+    label: "search.does_not_equal"
 }, {
     operator: SearchOperator.Contains,
     negated: false,
-    label: t("search.contains")
+    label: "search.contains"
 }, {
     operator: SearchOperator.Contains,
     negated: true,
-    label: t("search.does_not_contain")
+    label: "search.does_not_contain"
 }, {
     operator: SearchOperator.GreaterThan,
     negated: false,
-    label: t("search.greater_than")
+    label: "search.greater_than"
 }, {
     operator: SearchOperator.GreaterThanOrEqual,
     negated: false,
-    label: t("search.greater_than_or_equal")
+    label: "search.greater_than_or_equal"
 }, {
     operator: SearchOperator.GreaterThanOrEqual,
     negated: true,
-    label: t("search.less_than")
+    label: "search.less_than"
 }, {
     operator: SearchOperator.GreaterThan,
     negated: true,
-    label: t("search.less_than_or_equal")
+    label: "search.less_than_or_equal"
 }, {
     operator: SearchOperator.In,
     negated: false,
-    label: t("search.in_list_of_values")
+    label: "search.in_list_of_values"
 }, {
     operator: SearchOperator.In,
     negated: true,
-    label: t("search.not_in_list_of_values")
+    label: "search.not_in_list_of_values"
 }
 ] as const;
+
+// Translation is handled when the label value is used in a component. This is just to ensure a translation exists
+t("search.equals");
+t("search.does_not_equal");
+t("search.contains");
+t("search.does_not_contain");
+t("search.greater_than");
+t("search.greater_than_or_equal");
+t("search.less_than");
+t("search.less_than_or_equal");
+t("search.in_list_of_values");
+t("search.not_in_list_of_values");
 
 export type ConditionModel = {
     column: "Id"

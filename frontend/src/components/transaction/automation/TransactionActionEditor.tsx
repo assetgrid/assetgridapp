@@ -1,6 +1,5 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import Decimal from "decimal.js";
-import { t } from "i18next";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -20,16 +19,6 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputSelect from "../../input/InputSelect";
 import InputText from "../../input/InputText";
-
-const actions: Array<{ key: TransactionAction["key"], value: string }> = [
-    { key: "set-timestamp", value: t("transaction.set_timestamp") },
-    { key: "set-description", value: t("transaction.set_description") },
-    { key: "set-amount", value: t("transaction.set_total") },
-    { key: "set-lines", value: t("transaction.set_lines") },
-    { key: "set-account", value: t("transaction.set_account") },
-    { key: "set-category", value: t("transaction.set_category") },
-    { key: "delete", value: t("common.delete") }
-];
 
 interface Props<T> {
     action: T
@@ -87,6 +76,17 @@ export default function TransactionActionEditor (props: Props<TransactionAction>
 }
 
 function DefaultEditorLayout (props: { children?: React.ReactNode, description: string } & Props<TransactionAction>): React.ReactElement {
+    const { t } = useTranslation();
+    const actions: Array<{ key: TransactionAction["key"], value: string }> = [
+        { key: "set-timestamp", value: t("transaction.set_timestamp") },
+        { key: "set-description", value: t("transaction.set_description") },
+        { key: "set-amount", value: t("transaction.set_total") },
+        { key: "set-lines", value: t("transaction.set_lines") },
+        { key: "set-account", value: t("transaction.set_account") },
+        { key: "set-category", value: t("transaction.set_category") },
+        { key: "delete", value: t("common.delete") }
+    ];
+
     return <div className="filter-group">
         <div className="filter-group--header">
             <InputSelect

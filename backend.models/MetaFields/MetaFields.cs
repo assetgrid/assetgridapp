@@ -45,7 +45,9 @@ namespace assetgrid_backend.models.MetaFields
 
     public class MetaAttachment<T> : MetaFieldValue<T>
     {
+        [MaxLength(50)]
         public required string Name { get; set; }
+        [MaxLength(250)]
         public required string Path { get; set; }
         public required int FileSize { get; set; }
     }
