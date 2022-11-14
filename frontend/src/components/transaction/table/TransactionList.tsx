@@ -113,7 +113,7 @@ function TransactionList (props: Props): React.ReactElement {
             {renderColumnHeader(t("transaction.destination"), "DestinationAccount.Name", "string")}
             {renderColumnHeader(t("common.category"), "Category", "string")}
             {props.allowEditing === true && <div>
-                Actions
+                {t("common.actions")}
             </div>}
         </div>;
 

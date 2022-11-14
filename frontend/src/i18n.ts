@@ -9,7 +9,7 @@ async function init (): Promise<void> {
         .use(initReactI18next) // passes i18n down to react-i18next
         .init({
             fallbackLng: "en",
-            lng: "en",
+            lng: "da",
             debug: true,
             interpolation: {
                 escapeValue: false // react already safe from xss

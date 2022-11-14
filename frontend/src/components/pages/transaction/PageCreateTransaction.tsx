@@ -180,7 +180,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                     </>}
             </Card>
 
-            <Card title="Custom fields" isNarrow={true}>
+            <Card title={t("metadata.custom_fields")!} isNarrow={true}>
                 {model.metaData === null && <p>{t("transaction.loading_custom_fields")!}</p>}
                 {model.metaData !== null && metaFields !== "fetching" && <table className="table is-fullwidth">
                     <thead>
@@ -206,7 +206,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                 </table>}
             </Card>
 
-            <Card title="Actions" isNarrow={true}>
+            <Card title={t("common.actions")!} isNarrow={true}>
                 <div className="buttons">
                     {actionOnComplete === "chose" && <>
                         <InputButton className="is-primary" disabled={api === null || isCreating || metaFields === "fetching"}

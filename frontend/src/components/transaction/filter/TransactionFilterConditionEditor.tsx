@@ -50,7 +50,7 @@ export default function Condition (props: ConditionProps): React.ReactElement {
                 disabled={props.disabled}
                 items={FilterHelpers.getPossibleOperators(column).map(op => ({
                     key: FilterHelpers.Operators.findIndex(o => o.operator === op.operator && o.negated === op.negated).toString(),
-                    value: t(op.label)
+                    value: t(op.label) /* i18next-extract-disable-line */
                 }))}
                 value={FilterHelpers.Operators.findIndex(op => op.operator === props.query.operator && op.negated === props.query.not).toString()}
                 onChange={value => operatorOrColumnChanged(

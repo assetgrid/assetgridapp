@@ -484,7 +484,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 setAccounts={props.setAccounts}
                 transactions={props.transactions ?? []} />}
 
-        {(props.transactions != null) && <Card title="Import preview" isNarrow={false}>
+        {(props.transactions != null) && <Card title={t("import.import_preview")!} isNarrow={false}>
             {tableFilterMessage !== undefined && <Message title="Filter is active" type="link">
                 {t("import.some_transactions_hidden")} {tableFilterMessage}{" "}
                 <a className="has-text-link" onClick={() => {
