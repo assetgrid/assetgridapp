@@ -11,6 +11,7 @@ import { useNavigate } from "react-router";
 import { routes } from "../../../lib/routes";
 import { serializeQueryForHistory } from "../filter/FilterHelpers";
 import MergeTransactionsModal from "../input/MergeTransactionsModal";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     draw?: number
@@ -36,6 +37,7 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
     const firstRender = React.useRef(true);
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return <>
         <Table<TableLine>
@@ -125,17 +127,17 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                     editSelection={() => beginEditMultiple("selection")}
                     editSelectionDisabled={props.selectedTransactions.size === 0}
                     editAll={() => beginEditMultiple("all")}
-                    editAllText="Modify all transactions for this account"
+                    editAllText={t("account.modify_all_transactions_for_account")}
                     mergeSelection={() => setIsMergingTransactions(true)}
                 />
             </div>
-            <div>Date</div>
-            <div>Description</div>
-            <div className="has-text-right">Amount</div>
-            <div className="has-text-right">Balance</div>
-            <div>Destination</div>
-            <div>Category</div>
-            <div>Actions</div>
+            <div>{t("common.timestamp")}</div>
+            <div>{t("common.description")}</div>
+            <div className="has-text-right">{t("transaction.amount")}</div>
+            <div className="has-text-right">{t("account.balance")}</div>
+            <div>{t("transaction.destination")}</div>
+            <div>{t("common.category")}</div>
+            <div>{t("common.actions")}</div>
         </div>;
 
         return <>

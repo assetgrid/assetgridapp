@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
@@ -18,14 +19,15 @@ export default function ModifyAccountModal (props: Props): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const { t } = useTranslation();
 
     return <Modal
         active={true}
-        title={"Modify account"}
+        title={t("account.modify_account")}
         close={() => props.close()}
         footer={<>
-            <InputButton className="is-success" onClick={forget(update)} disabled={isUpdating || api === null}>Save changes</InputButton>
-            <InputButton onClick={() => props.close()}>Cancel</InputButton>
+            <InputButton className="is-success" onClick={forget(update)} disabled={isUpdating || api === null}>{t("common.save_changes")}</InputButton>
+            <InputButton onClick={() => props.close()}>{t("common.cancel")}</InputButton>
         </>}>
         <InputModifyAccount
             value={model}

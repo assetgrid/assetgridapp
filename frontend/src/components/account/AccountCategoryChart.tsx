@@ -15,6 +15,8 @@ import {
     BarElement
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
+import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 ChartJS.register(
     LinearScale,
@@ -41,6 +43,7 @@ export default React.memo(AccountCategoryChart, (a, b) => a.id === b.id && a.per
 function AccountCategoryChart (props: Props): React.ReactElement {
     const [data, setData] = React.useState<DataType | "fetching">("fetching");
     const api = useApi();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (api !== null) {
@@ -49,7 +52,7 @@ function AccountCategoryChart (props: Props): React.ReactElement {
     }, [api, props.id, props.period]);
 
     if (data === "fetching") {
-        return <>Please wait&hellip;</>;
+        return <>{t("common.please_wait")}</>;
     }
 
     const mergedData: Map<string, ChartDataType> = new Map();
@@ -84,28 +87,28 @@ function AccountCategoryChart (props: Props): React.ReactElement {
                 <Chart type={"line"} height="400px" data={{
                     labels: sortedData.map(point => point.category),
                     datasets: [{
-                        label: "Revenue",
+                        label: t("account.revenue")!,
                         data: sortedData.map(point => point.revenue),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#4db09b"
                     },
                     {
-                        label: "Expenses",
+                        label: t("account.expenses")!,
                         data: sortedData.map(point => point.expenses > 0 ? -point.expenses : point.expenses),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#ff6b6b"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: sortedData.map(point => point.transferRevenue),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#487eb0"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: sortedData.map(point => point.transferExpenses > 0 ? -point.transferExpenses : point.transferExpenses),
                         type: "bar",
                         borderColor: "transparent",
@@ -180,7 +183,7 @@ async function updateData (api: Api, id: number, period: Period, setData: React.
     const result = await api.Account.getCategorySummary(id, query);
     if (result.status === 200) {
         setData(result.data.map(obj => ({
-            category: obj.category !== "" ? obj.category : "No category",
+            category: obj.category !== "" ? obj.category : t("common.no_category"),
             transfer: obj.transfer,
             expenses: obj.expenses.toNumber(),
             revenue: obj.revenue.toNumber()

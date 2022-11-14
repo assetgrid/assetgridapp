@@ -1,5 +1,6 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { AndSearchGroup, OrSearchGroup, SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import InputButton from "../../input/InputButton";
 import InputIconButton from "../../input/InputIconButton";
@@ -44,16 +45,17 @@ function Group (props: Props<SearchGroup, SearchGroup | null> & { isParent: bool
 }
 
 function AndOrGroup (props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | null> & { isParent: boolean }): React.ReactElement {
+    const { t } = useTranslation();
     return <div className="filter-group">
         <div className="filter-group--header">
             <InputButton className="is-small"
                 disabled={props.disabled}
                 onClick={() => props.setQuery({ ...props.query, type: props.query.type === SearchGroupType.And ? SearchGroupType.Or : SearchGroupType.And })}>
-                {props.query.type === SearchGroupType.And ? <>AND</> : <>OR</>}
+                {props.query.type === SearchGroupType.And ? <>{t("search.AND")}</> : <>{t("search.OR")}</>}
             </InputButton>
             {props.query.type === SearchGroupType.And
-                ? <div><span>All</span> of the following conditions must be met</div>
-                : <div><span>One</span> of the following conditions must be met</div>}
+                ? <Trans i18nKey="search.all_conditions_mest"><span>All</span> of the following conditions must be met</Trans>
+                : <Trans i18nKey="search.one_condition_met"><span>One</span> of the following conditions must be met</Trans>}
             {!props.isParent && <InputIconButton
                 className="btn-delete"
                 disabled={props.disabled}
@@ -64,16 +66,16 @@ function AndOrGroup (props: Props<AndSearchGroup | OrSearchGroup, SearchGroup | 
         <div className="filter-group--children">
             {props.query.children.map((child, i) => <React.Fragment key={i}>
                 {i > 0 && (props.query.type === SearchGroupType.And
-                    ? <div className="filter-and-or">AND</div>
-                    : <div className="filter-and-or">OR</div>)}
+                    ? <div className="filter-and-or">{t("search.AND")}</div>
+                    : <div className="filter-and-or">{t("search.OR")}</div>)}
                 <Group disabled={props.disabled} query={child} setQuery={query => setChildQuery(query, i)} isParent={false} />
             </React.Fragment>)}
             <div className="buttons">
                 <InputButton disabled={props.disabled} onClick={() => addCondition()}>
-                    Add condition
+                    {t("search.add_condition")}
                 </InputButton>
                 <InputButton disabled={props.disabled} onClick={() => addGroup()}>
-                    Add group
+                    {t("search.add_group")}
                 </InputButton>
             </div>
         </div>

@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../lib/ApiClient";
 import { formatDateTimeWithPreferences, formatDateWithPreferences, formatNumberWithPreferences } from "../../lib/Utils";
 import { Preferences } from "../../models/preferences";
@@ -18,6 +19,7 @@ export default function PagePreferences (): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         // Whenever global preferences change, update this component to match
@@ -28,7 +30,7 @@ export default function PagePreferences (): React.ReactElement {
     const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), []);
 
     return <>
-        <Hero title="Preferences" subtitle="Modify preferences" />
+        <Hero title={t("common.preferences")} subtitle={t("common.modify_preferences")} />
         <div className="t-3">
             {renderContent()}
         </div>
@@ -38,17 +40,17 @@ export default function PagePreferences (): React.ReactElement {
         if (model === "fetching") {
             // This will only be shown until the global preferences are loaded.
             // Then the model will be set and will never be "fetching again"
-            return <Card title="Number and date formatting" isNarrow={true}>
-                Please wait&hellip;
+            return <Card title={t("preferences.number_and_date_formatting")!} isNarrow={true}>
+                {t("common.please_wait")}
             </Card>;
         }
 
-        return <Card title="Number and date formatting" isNarrow={true}>
+        return <Card title={t("preferences.number_and_date_formatting")!} isNarrow={true}>
             <div className="columns mb-0">
                 <div className="column">
                     <InputText value={model.decimalSeparator}
                         disabled={isUpdating}
-                        label="Decimal Separator"
+                        label={t("preferences.decimal_separator")!}
                         errors={errors.DecimalSeparator}
                         onChange={(event => setModel({
                             ...model,
@@ -58,7 +60,7 @@ export default function PagePreferences (): React.ReactElement {
                 <div className="column">
                     <InputText value={model.thousandsSeparator}
                         disabled={isUpdating}
-                        label="Thousands Separator"
+                        label={t("preferences.thousands_separator")!}
                         errors={errors.ThousandsSeparator}
                         onChange={(event => setModel({
                             ...model,
@@ -69,7 +71,7 @@ export default function PagePreferences (): React.ReactElement {
                     <InputNumber value={new Decimal(model.decimalDigits)}
                         disabled={isUpdating}
                         errors={errors.DecimalDigits}
-                        label="Digits after decimal point"
+                        label={t("preferences.digits_after_decimal_point")!}
                         allowNull={false}
                         onChange={(value => setModel({
                             ...model,
@@ -78,44 +80,46 @@ export default function PagePreferences (): React.ReactElement {
                 </div>
             </div>
 
-            <p className="pb-3 pt-1">Example: {
-                formatNumberWithPreferences(new Decimal("123456789.123456789"), model)}
+            <p className="pb-3 pt-1">
+                {t("common.example", { example: formatNumberWithPreferences(new Decimal("123456789.123456789"), model) })}
             </p>
 
             <div className="columns pt-3">
                 <div className="column">
                     <InputTextOrNull value={model.dateFormat}
                         disabled={isUpdating}
-                        noValueText="System default"
+                        noValueText={t("preferences.system_default")!}
                         errors={errors.DateFormat}
-                        label="Date format"
+                        label={t("preferences.date_format")!}
                         onChange={(value => setModel({
                             ...model,
                             dateFormat: value
                         }))} />
-                    <p>Example: {formatDateWithPreferences(exampleDateTime, model)}</p>
+                    <p>{t("common.example", { example: formatDateWithPreferences(exampleDateTime, model) })}</p>
                 </div>
                 <div className="column">
                     <InputTextOrNull value={model.dateTimeFormat}
                         disabled={isUpdating}
-                        label="Date and time format"
+                        label={t("preferences.date_and_time_format")!}
                         errors={errors.DateTimeFormat}
-                        noValueText="System default"
+                        noValueText={t("preferences.system_default")!}
                         onChange={(value => setModel({
                             ...model,
                             dateTimeFormat: value
                         }))} />
-                    <p>Example: {formatDateTimeWithPreferences(exampleDateTime, model)}</p>
+                    <p>{t("common.example", { example: formatDateTimeWithPreferences(exampleDateTime, model) })}</p>
                 </div>
             </div>
-            <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank" rel="noreferrer">More information on date formats</a>
+            <a href="https://moment.github.io/luxon/#/formatting?id=table-of-tokens" target="_blank" rel="noreferrer">
+                {t("preferences.more_information_on_date_formats")}
+            </a>
 
             <div className="buttons mt-5">
                 <InputButton
                     disabled={isUpdating || api === null}
                     className="is-primary"
                     onClick={saveChanges}>
-                    Save changes
+                    {t("common.save_changes")}
                 </InputButton>
             </div>
         </Card>;

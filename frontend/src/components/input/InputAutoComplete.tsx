@@ -4,6 +4,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
 import { classList, debounce } from "../../lib/Utils";
 import DropdownContent from "../common/DropdownContent";
+import { useTranslation } from "react-i18next";
 
 type Props = {
     label?: string
@@ -31,6 +32,7 @@ export default function InputAutoComplete (props: Props): React.ReactElement {
     const api = useApi();
     const isError = props.errors !== undefined && props.errors.length > 0;
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (props.value === "" || props.value === null) {
@@ -84,7 +86,7 @@ export default function InputAutoComplete (props: Props): React.ReactElement {
             <DropdownContent active={open} fullWidth={true}>
                 <div className={"dropdown-menu"} role="menu" tabIndex={0} ref={dropdownRef}>
                     <div className="dropdown-content">
-                        {autocompleteSuggestions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {autocompleteSuggestions == null && <div className="dropdown-item">{t("common.loading_suggestions")}</div>}
                         {autocompleteSuggestions?.map(suggestion => <a
                             className={"dropdown-item"}
                             key={suggestion}

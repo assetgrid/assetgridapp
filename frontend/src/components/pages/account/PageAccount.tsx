@@ -21,6 +21,7 @@ import PageError from "../PageError";
 import AccountDetailsCard from "../../account/AccountDetailsCard";
 import Hero from "../../common/Hero";
 import { Link } from "react-router-dom";
+import { t } from "i18next";
 
 const pageSize = 20;
 
@@ -84,15 +85,15 @@ export default function PageAccount (): React.ReactElement {
     if (account === "fetching") {
         return layout(period,
             <Hero title={<>#{id} &hellip;</>} subtitle={<>&hellip;</>} />,
-            <Card title="Account details" isNarrow={false} style={{ flexGrow: 1 }}>
-                <>Please wait&hellip;</>
+            <Card title={t("account.account_details")!} isNarrow={false} style={{ flexGrow: 1 }}>
+                <>{t("common.please_wait")}</>
             </Card>,
-            <>Please wait&hellip;</>,
-            <>Please wait&hellip;</>,
-            <>Please wait&hellip;</>,
+            <>{t("common.please_wait")}</>,
+            <>{t("common.please_wait")}</>,
+            <>{t("common.please_wait")}</>,
             <>
-                <InputButton className="is-primary">Create deposit</InputButton>
-                <InputButton className="is-primary">Create withdrawal</InputButton>
+                <InputButton className="is-primary">{t("account.create_deposit")}</InputButton>
+                <InputButton className="is-primary">{t("account.create_withdrawal")}</InputButton>
             </>
         );
     }
@@ -134,8 +135,16 @@ export default function PageAccount (): React.ReactElement {
             setSelectedTransactions={setSelectedTransactions}
         />,
         <>
-            <Link className="button is-primary" to={routes.transactionCreate()} state={{ allowBack: true, actionOnComplete: "back", destinationId: id }}>Create deposit</Link>
-            <Link className="button is-primary" to={routes.transactionCreate()} state={{ allowBack: true, actionOnComplete: "back", sourceId: id }}>Create withdrawal</Link>
+            <Link className="button is-primary"
+                to={routes.transactionCreate()}
+                state={{ allowBack: true, actionOnComplete: "back", destinationId: id }}>
+                {t("account.create_deposit")}
+            </Link>
+            <Link className="button is-primary"
+                to={routes.transactionCreate()}
+                state={{ allowBack: true, actionOnComplete: "back", sourceId: id }}>
+                {t("account.create_withdrawal")}
+            </Link>
         </>
     );
 
@@ -251,22 +260,22 @@ function layout (
                     {accountDetails}
                 </div>
                 <div className="column p-0 is-flex">
-                    <Card title="Categories" style={{ flexGrow: 1 }} isNarrow={false}>
+                    <Card title={t("common.categories")!} style={{ flexGrow: 1 }} isNarrow={false}>
                         {categoryChart}
                     </Card>
                 </div>
                 <div className="column p-0 is-12-tablet is-reset-desktop">
-                    <Card title="Balance" style={{ flexGrow: 1 }} isNarrow={false}>
+                    <Card title={t("account.balance")!} style={{ flexGrow: 1 }} isNarrow={false}>
                         {balanceChart}
                     </Card>
                 </div>
             </div>
-            <Card title={"Actions"} isNarrow={false}>
+            <Card title={t("common.actions")!} isNarrow={false}>
                 <div className="buttons">
                     {actions}
                 </div>
             </Card>
-            <Card title={"Transactions (" + PeriodFunctions.print(period) + ")"} isNarrow={false}>
+            <Card title={t("transaction.transactions_for_period", { period: PeriodFunctions.print(period) })!} isNarrow={false}>
                 {transactions}
             </Card>
         </div>

@@ -10,6 +10,7 @@ import TransactionFilterEditor from "../../transaction/filter/TransactionFilterE
 import TransactionList from "../../transaction/table/TransactionList";
 import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 import { useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 
 interface LocationState {
     query: SearchGroup
@@ -29,6 +30,7 @@ export default function PageTransactions (): React.ReactElement {
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof locationState?.orderBy === "object" ? locationState.orderBy : { column: "DateTime", descending: true });
     const [page, setPage] = React.useState(typeof (locationState?.page) === "number" ? locationState.page : 1);
     const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(typeof locationState?.selectedTransactions === "object" ? locationState.selectedTransactions : new Set());
+    const { t } = useTranslation();
 
     // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
     const isFirst = React.useRef(true);
@@ -66,29 +68,29 @@ export default function PageTransactions (): React.ReactElement {
     }, [query]);
 
     return <>
-        <Hero title="Transactions" subtitle="Browse transactions" />
+        <Hero title={t("transaction.transactions")} subtitle={t("transaction.browse_transactions")} />
         <div className="p-3">
-            <Card title="Search" isNarrow={false}>
+            <Card title={t("search.search")!} isNarrow={false}>
                 {searchMode === "simple"
                     ? <>
                         <InputText
-                            label="Search for transactions"
+                            label={t("search.search_for_transactions")!}
                             value={searchString}
                             onChange={e => setSearchString(e.target.value)} />
-                        <a onClick={() => setSearchMode("advanced")}>Advanced search</a>
+                        <a onClick={() => setSearchMode("advanced")}>{t("search.advanced_search")}</a>
                     </>
                     : <>
                         <TransactionFilterEditor disabled={false} query={query} setQuery={setQuery} />
-                        <a onClick={() => setSearchMode("simple")}>Simple search</a>
+                        <a onClick={() => setSearchMode("simple")}>{t("search.simple_search")}</a>
                     </>}
             </Card>
-            <Card title="Actions" isNarrow={false}>
+            <Card title={t("common.actions")!} isNarrow={false}>
                 <Link to={routes.transactionCreate()} state={{ allowBack: true }}
                     className="button is-primary">
-                    Create Transaction
+                    {t("transaction.create_new")}
                 </Link>
             </Card>
-            <Card title="Transactions" isNarrow={false}>
+            <Card title={t("transaction.transactions")!} isNarrow={false}>
                 <TransactionList
                     query={tableQuery}
                     draw={draw}

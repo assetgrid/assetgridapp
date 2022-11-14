@@ -1,5 +1,6 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../lib/ApiClient";
 import { forget } from "../../lib/Utils";
 import { FieldValueType, CreateMetaField, MetaField } from "../../models/meta";
@@ -11,45 +12,46 @@ import InputIconButton from "../input/InputIconButton";
 import InputSelect from "../input/InputSelect";
 import InputText from "../input/InputText";
 
-const fieldTypes = [
-    {
-        key: "text-single",
-        value: "Text (single line)",
-        type: FieldValueType.TextLine
-    },
-    {
-        key: "text-multiple",
-        value: "Text (multiple line)",
-        type: FieldValueType.TextLong
-    },
-    {
-        key: "file",
-        value: "File attachment",
-        type: FieldValueType.Attachment
-    },
-    {
-        key: "boolean",
-        value: "Yes or no value",
-        type: FieldValueType.Boolean
-    },
-    {
-        key: "number",
-        value: "Number",
-        type: FieldValueType.Number
-    },
-    {
-        key: "transaction",
-        value: "Transaction (link to)",
-        type: FieldValueType.Transaction
-    },
-    {
-        key: "account",
-        value: "Account (link to)",
-        type: FieldValueType.Account
-    }
-] as const;
-
 export default function PageMeta (): React.ReactElement {
+    const { t } = useTranslation();
+    const fieldTypes = [
+        {
+            key: "text-single",
+            value: t("metadata.select_valuetype.text_single_line"),
+            type: FieldValueType.TextLine
+        },
+        {
+            key: "text-multiple",
+            value: t("metadata.select_valuetype.text_multiline"),
+            type: FieldValueType.TextLong
+        },
+        {
+            key: "file",
+            value: t("metadata.select_valuetype.attachment"),
+            type: FieldValueType.Attachment
+        },
+        {
+            key: "boolean",
+            value: t("metadata.select_valuetype.yes_no"),
+            type: FieldValueType.Boolean
+        },
+        {
+            key: "number",
+            value: t("metadata.select_valuetype.number"),
+            type: FieldValueType.Number
+        },
+        {
+            key: "transaction",
+            value: t("metadata.select_valuetype.transaction_link"),
+            type: FieldValueType.Transaction
+        },
+        {
+            key: "account",
+            value: t("metadata.select_valuetype.account_link"),
+            type: FieldValueType.Account
+        }
+    ] as const;
+
     const [fields, setFields] = React.useState<MetaField[] | "fetching">("fetching");
     const [deletingField, setDeletingField] = React.useState<MetaField | null>(null);
     const [isDeletingField, setIsDeletingField] = React.useState(false);
@@ -58,18 +60,18 @@ export default function PageMeta (): React.ReactElement {
     React.useEffect(forget(updateFields), [api]);
 
     return <>
-        <Hero title="Custom fields" subtitle="Create an modify custom fields" />
+        <Hero title={t("metadata.custom_fields")} subtitle={t("metadata.create_or_modify_custom_fields")} />
         <div className="p-3">
-            <Card title="Transaction fields" isNarrow={true}>
-                {fields === "fetching" && <>Please wait while loading custom fields&hellip;</>}
-                {fields.length === 0 && <>You have not created any custom fields.</>}
+            <Card title={t("metadata.transaction_fields")!} isNarrow={true}>
+                {fields === "fetching" && <>{t("metadata.please_wait_loading")}</>}
+                {fields.length === 0 && <>{t("metadata.no_custom_fields_exist")}</>}
                 {fields !== "fetching" && fields.length > 0 && <table className="table">
                     <thead>
                         <tr>
-                            <th>Field name</th>
-                            <th>Field Description</th>
-                            <th>Type</th>
-                            <th>Actions</th>
+                            <th>{t("metadata.field_name")}</th>
+                            <th>{t("metadata.field_description")}</th>
+                            <th>{t("metadata.field_type")}</th>
+                            <th>{t("common.actions")}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,22 +86,22 @@ export default function PageMeta (): React.ReactElement {
                     </tbody>
                 </table>}
             </Card>
-            <CreateFieldCard onCreated={forget(updateFields)} />
+            <CreateFieldCard onCreated={forget(updateFields)} fieldTypes={fieldTypes as any} />
 
             {/* Deletion modal */}
             {deletingField !== null && <Modal
                 active={true}
-                title={"Delete custom field"}
+                title={t("metadata.delete_custom_field")!}
                 close={() => setDeletingField(null)}
                 footer={<>
                     {<InputButton onClick={forget(deleteField)} disabled={isDeletingField || api === null || fields === "fetching"}
                         className="is-danger">
-                        Delete field
+                        {t("metadata.delete_field")}
                     </InputButton>}
-                    <button className="button" onClick={() => setDeletingField(null)}>Cancel</button>
+                    <button className="button" onClick={() => setDeletingField(null)}>{t("common.cancel")}</button>
                 </>}>
-                <p>Are you sure you want to delete the custom field &ldquo;{deletingField.name}&rdquo;? The value of this field will be removed from all transactions.</p>
-                <p>This action is irreversible!</p>
+                <p>{t("metadata.confirm_delete_field", { fieldname: deletingField.name })}</p>
+                <p>{t("common.action_is_irreversible")}</p>
             </Modal>}
         </div>
     </>;
@@ -125,6 +127,7 @@ export default function PageMeta (): React.ReactElement {
 
 interface CreateFieldProps {
     onCreated: () => void
+    fieldTypes: Array<{ key: string, value: string, type: FieldValueType }>
 }
 
 function CreateFieldCard (props: CreateFieldProps): React.ReactElement {
@@ -137,31 +140,32 @@ function CreateFieldCard (props: CreateFieldProps): React.ReactElement {
     const [isCreating, setIsCreating] = React.useState(false);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const { t } = useTranslation();
 
-    return <Card title="Add custom field" isNarrow={true}>
+    return <Card title={t("metadata.add_custom_field")!} isNarrow={true}>
         <InputText
             onChange={e => setModel({ ...model, name: e.target.value })}
             value={model.name}
-            label="Field name"
+            label={t("metadata.field_name")!}
             disabled={isCreating}
             errors={errors.Name} />
         <InputText
             onChange={e => setModel({ ...model, description: e.target.value })}
             value={model.description}
-            label="Field description"
+            label={t("metadata.field_description")!}
             disabled={isCreating}
             errors={errors.Description} />
         <InputSelect
-            onChange={value => setModel({ ...model, valueType: fieldTypes.find(x => x.key === value)!.type })}
-            value={fieldTypes.find(x => x.type === model.valueType)!.key}
-            label="Field description"
+            onChange={value => setModel({ ...model, valueType: props.fieldTypes.find(x => x.key === value)!.type })}
+            value={props.fieldTypes.find(x => x.type === model.valueType)!.key}
+            label={t("metadata.field_type")!}
             isFullwidth={false}
-            items={fieldTypes as unknown as Array<{ key: string, value: string }>}
+            items={props.fieldTypes as unknown as Array<{ key: string, value: string }>}
             disabled={isCreating} />
         <InputButton className="is-primary"
             disabled={isCreating || api === null}
             onClick={forget(createField)}>
-            Create field
+            {t("metadata.create_field")!}
         </InputButton>
     </Card>;
 

@@ -9,9 +9,13 @@ import "./assets/favicon.png";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+import "./i18n";
+
 ReactDOM.render(
-    <BrowserRouter>
-        <App/>
-    </BrowserRouter>,
+    <React.Suspense fallback="loading">
+        <BrowserRouter>
+            <App/>
+        </BrowserRouter>
+    </React.Suspense>,
     document.getElementById("app")
 );

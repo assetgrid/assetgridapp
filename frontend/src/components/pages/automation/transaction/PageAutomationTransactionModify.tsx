@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router";
 import { Link } from "react-router-dom";
 import { useApi } from "../../../../lib/ApiClient";
@@ -33,6 +34,7 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
     const id = idString === undefined ? NaN : Number.parseInt(idString);
     const [changesSaved, setChangesSaved] = React.useState(false);
     const [showRunSingleModal, setShowRunSingleModal] = React.useState(false);
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (!isNaN(id) && api !== null) forget(getModel)();
@@ -51,51 +53,51 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
     }, [model?.query]);
 
     return <>
-        <Hero title={<>Modify automation &ldquo;{model?.name ?? <>&hellip;</>}&rdquo;</>} subtitle={model?.description ?? <>&hellip;</>} />
+        <Hero title={t("automation.modify", { name: model?.name })} subtitle={model?.description ?? <>&hellip;</>} />
         <div className="p-3">
-            <Card title="General options" isNarrow={false}>
+            <Card title={t("common.general_options")!} isNarrow={false}>
                 <InputText value={model?.name ?? "…"}
                     disabled={model === null || isSaving}
-                    label="Name"
+                    label={t("common.name")!}
                     onChange={e => model !== null && setModel({ ...model, name: e.target.value })}
                     errors={errors.Name} />
                 <InputText value={model?.description ?? "…"}
                     disabled={model === null || isSaving}
-                    label="Description"
+                    label={t("common.description")!}
                     onChange={e => model !== null && setModel({ ...model, description: e.target.value })}
                     errors={errors.Description} />
                 <InputCheckbox value={model?.enabled ?? true}
                     disabled={model === null || isSaving}
-                    label="Enabled"
+                    label={t("common.enabled")!}
                     onChange={e => model !== null && setModel({ ...model, enabled: e.target.checked })}
                     errors={errors.Enabled}/>
             </Card>
 
-            <Card title="Triggers" isNarrow={false}>
+            <Card title={t("automation.triggers")!} isNarrow={false}>
                 <InputCheckbox value={model?.triggerOnCreate ?? true}
                     disabled={model === null || isSaving}
-                    label="Transaction created (including during import)"
+                    label={t("automation.trigger_transaction_created")!}
                     onChange={e => model !== null && setModel({ ...model, triggerOnCreate: e.target.checked })}
                     errors={errors.TriggerOnCreate} />
                 <InputCheckbox value={model?.triggerOnModify ?? true}
                     disabled={model === null || isSaving}
-                    label="Transaction modified"
+                    label={t("automation.trigger_transaction_modified")!}
                     onChange={e => model !== null && setModel({ ...model, triggerOnModify: e.target.checked })}
                     errors={errors.TriggerOnModify}/>
             </Card>
 
-            <Card title="Conditions" isNarrow={false}>
+            <Card title={t("automation.conditions")!} isNarrow={false}>
                 <TransactionFilterEditor query={model?.query ?? emptyQuery}
                     disabled={model === null || isSaving}
                     setQuery={value => model !== null && setModel({ ...model, query: value })} />
             </Card>
 
-            <Card title="Preview" isNarrow={false} collapsed={collapsePreview} setCollapsed={setCollapsePreview}>
-                <p>The following existing transactions match the specified filter:</p>
+            <Card title={t("automation.preview")!} isNarrow={false} collapsed={collapsePreview} setCollapsed={setCollapsePreview}>
+                <p>{t("automations.matching_filter")}</p>
                 {model !== null && <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={model.query} />}
             </Card>
 
-            <Card title="Actions" isNarrow={false}>
+            <Card title={t("automation.actions")!} isNarrow={false}>
                 {(model?.actions ?? []).map((action, index) => <TransactionActionEditor
                     key={index}
                     action={action}
@@ -110,23 +112,25 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
                     delete={(model?.actions.length ?? 0) > 1 ? () => model !== null && setModel({ ...model, actions: model.actions.filter((_, i) => i !== index) }) : undefined}
                     disabled={model === null || isSaving} />
                 )}
-                <InputButton onClick={() => model !== null && setModel({ ...model, actions: [...model.actions, { key: "set-description", value: "" }] })}>Add action</InputButton>
+                <InputButton onClick={() => model !== null && setModel({ ...model, actions: [...model.actions, { key: "set-description", value: "" }] })}>
+                    {t("automation.add_action")!}
+                </InputButton>
             </Card>
 
-            <Card title="Save changes" isNarrow={false}>
+            <Card title={t("common.save_changes")!} isNarrow={false}>
                 {changesSaved && <article className="message is-link">
                     <div className="message-body">
-                        Your changes have been saved
+                        {t("common.changes_have_been_saved")}
                     </div>
                 </article>}
                 <div className="buttons">
                     <InputButton disabled={api === null || model === null || isSaving} className="is-primary" onClick={forget(saveChanges)}>
-                        Save changes
+                        {t("common.save_changes")}
                     </InputButton>
                     <InputButton disabled={api === null || model === null || isSaving} onClick={() => setShowRunSingleModal(true)}>
-                        Run on existing transactions
+                        {t("automation.transaction.run_on_existing")!}
                     </InputButton>
-                    <Link className="button" to={routes.automation()}>Cancel</Link>
+                    <Link className="button" to={routes.automation()}>{t("common.cancel")}</Link>
                 </div>
             </Card>
         </div>
@@ -139,7 +143,7 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
                 <InputButton disabled={isSaving} className="is-primary" onClick={() => forget(runSingle)()}>Run</InputButton>
                 <InputButton disabled={isSaving} onClick={() => setShowRunSingleModal(false)}>Cancel</InputButton>
             </>}>
-            Do you want to run this automation on pre-existing transactions? Make sure to check the preview to know which transactions will be affected.
+            {t("automation.transaction.confirm_existing")!}
         </Modal>
     </>;
 

@@ -12,6 +12,7 @@ import { routes } from "../../../lib/routes";
 import { serializeQueryForHistory } from "./../filter/FilterHelpers";
 import MergeTransactionsModal from "./../input/MergeTransactionsModal";
 import DropdownContent from "../../common/DropdownContent";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     draw?: number
@@ -45,6 +46,7 @@ function TransactionList (props: Props): React.ReactElement {
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const [page, setPage] = (props.page != null) ? props.page : React.useState(1);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const firstRender = React.useRef(true);
 
@@ -100,16 +102,16 @@ function TransactionList (props: Props): React.ReactElement {
                     editSelection={() => beginEditMultiple("selection")}
                     editSelectionDisabled={selectedTransactions.size === 0}
                     editAll={() => beginEditMultiple("all")}
-                    editAllText="Modify all transactions matching current search"
+                    editAllText={t("transaction.modify_all_matching_current_search")}
                     mergeSelection={() => setIsMergingTransactions(true)}
                 />}
             </div>
-            {renderColumnHeader("Timestamp", "DateTime", "numeric")}
-            {renderColumnHeader("Description", "Description", "string")}
-            {renderColumnHeader("Amount", "Total", "numeric", true)}
-            {renderColumnHeader("Source", "SourceAccount.Name", "string")}
-            {renderColumnHeader("Destination", "DestinationAccount.Name", "string")}
-            {renderColumnHeader("Category", "Category", "string")}
+            {renderColumnHeader(t("common.timestamp"), "DateTime", "numeric")}
+            {renderColumnHeader(t("common.description"), "Description", "string")}
+            {renderColumnHeader(t("common.amount"), "Total", "numeric", true)}
+            {renderColumnHeader(t("transaction.source"), "SourceAccount.Name", "string")}
+            {renderColumnHeader(t("transaction.destination"), "DestinationAccount.Name", "string")}
+            {renderColumnHeader(t("common.category"), "Category", "string")}
             {props.allowEditing === true && <div>
                 Actions
             </div>}
@@ -252,6 +254,7 @@ interface DropdownButtonProps {
 export function TransactionSelectDropdownButton (props: DropdownButtonProps): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     return <div onBlur={onBlur}
         className={"buttons has-addons btn-multiselect dropdown is-trigger" + (open ? " is-active" : "")}>
@@ -269,12 +272,12 @@ export function TransactionSelectDropdownButton (props: DropdownButtonProps): Re
                     <a className="dropdown-item"
                         onClick={() => !props.editSelectionDisabled && props.editSelection()}
                         style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
-                        Modify selection
+                        {t("common.modify_selection")}
                     </a>
                     <a className="dropdown-item"
                         onClick={() => !props.editSelectionDisabled && props.mergeSelection()}
                         style={props.editSelectionDisabled ? { color: "#999", cursor: "default" } : undefined}>
-                        Merge selected transactions
+                        {t("transaction.merge_selected")}
                     </a>
                     <a className="dropdown-item" onClick={props.editAll}>
                         {props.editAllText}

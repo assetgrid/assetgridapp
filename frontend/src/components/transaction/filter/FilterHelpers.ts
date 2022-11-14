@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { t } from "i18next";
 import { DateTime } from "luxon";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
@@ -14,43 +15,43 @@ const stringOperators = [...stringScalarOperators, ...arrayOperators] as const;
 export const Operators = [{
     operator: SearchOperator.Equals,
     negated: false,
-    label: "Equals"
+    label: t("search.equals")
 }, {
     operator: SearchOperator.Equals,
     negated: true,
-    label: "Does not equal"
+    label: t("search.does_not_equal")
 }, {
     operator: SearchOperator.Contains,
     negated: false,
-    label: "Contains"
+    label: t("search.contains")
 }, {
     operator: SearchOperator.Contains,
     negated: true,
-    label: "Does not contain"
+    label: t("search.does_not_contain")
 }, {
     operator: SearchOperator.GreaterThan,
     negated: false,
-    label: "Greater than"
+    label: t("search.greater_than")
 }, {
     operator: SearchOperator.GreaterThanOrEqual,
     negated: false,
-    label: "Greater than or equal"
+    label: t("search.greater_than_or_equal")
 }, {
     operator: SearchOperator.GreaterThanOrEqual,
     negated: true,
-    label: "Less than"
+    label: t("search.less_than")
 }, {
     operator: SearchOperator.GreaterThan,
     negated: true,
-    label: "Less than or equal"
+    label: t("search.less_than_or_equal")
 }, {
     operator: SearchOperator.In,
     negated: false,
-    label: "In list of values"
+    label: t("search.in_list_of_values")
 }, {
     operator: SearchOperator.In,
     negated: true,
-    label: "Not in list of values"
+    label: t("search.not_in_list_of_values")
 }
 ] as const;
 

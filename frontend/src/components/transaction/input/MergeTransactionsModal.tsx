@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
@@ -18,6 +19,7 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
     const api = useApi();
     const [selectedTransactionId, setSelectedTransactionId] = React.useState<number | null>(null);
     const [draw, setDraw] = React.useState(0);
+    const { t } = useTranslation();
 
     const query: SearchGroup = React.useMemo(() => ({
         type: SearchGroupType.Query,
@@ -37,14 +39,18 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
 
     return <Modal
         active={props.active}
-        title={"Merge transactions"}
+        title={t("transaction.merge_transactions")}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={forget(mergeTransactions)} disabled={isMerging || api === null || selectedTransactionId === null} className="is-primary">Merge transactions</InputButton>}
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            {<InputButton onClick={forget(mergeTransactions)}
+                disabled={isMerging || api === null || selectedTransactionId === null}
+                className="is-primary">
+                {t("transaction.merge_transactions")}
+            </InputButton>}
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
-        <p>Do you want to merge the following transactions. Merging will add the identifiers from all transactions to a single one and delete the others.</p>
-        <p>Chose which transaction you want to keep:</p>
+        <p>{t("transaction.merge_confirm_and_information")}</p>
+        <p>{t("transaction.merge_chose_which_to_keep")}</p>
         <TransactionList
             allowLinks={false}
             allowEditing={false}

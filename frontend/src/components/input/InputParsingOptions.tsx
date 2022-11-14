@@ -1,3 +1,4 @@
+import { t } from "i18next";
 import * as React from "react";
 import { ParseOptions, parseWithOptions } from "../../models/csvImportProfile";
 import Modal from "../common/Modal";
@@ -30,20 +31,20 @@ export default function InputParseOptions (props: InputParseOptionsProps): React
 
     return <div className="columns">
         <div className="column">
-            <InputCheckbox label="Trim whitespace"
+            <InputCheckbox label={t("common.trim_whitespace")!}
                 onChange={e => setTrimWhitespace(e.target.checked)}
                 value={trimWhitespace} />
 
-            <InputCheckbox label="Enable RegEx"
+            <InputCheckbox label={t("regex.enable_regex")!}
                 onChange={e => setRegexEnabled(e.target.checked)}
                 value={regexEnabled} />
 
             {regexEnabled && <>
-                <InputText label="RegEx"
+                <InputText label={t("regex.regex")!}
                     value={regexString}
-                    errors={regexStringValid ? undefined : ["Invalid regex"]}
+                    errors={regexStringValid ? undefined : [t("regex.invalid_regex")]}
                     onChange={e => setRegex(e.target.value)} />
-                <InputText label="Pattern"
+                <InputText label={t("regex.pattern")!}
                     value={pattern}
                     onChange={e => setPattern(e.target.value)} />
             </>}
@@ -54,8 +55,8 @@ export default function InputParseOptions (props: InputParseOptionsProps): React
                     page={page}
                     goToPage={setPage}
                     headings={<tr>
-                        <th>Raw Value</th>
-                        <th>Parsed Value</th>
+                        <th>{t("parse.raw_value")}</th>
+                        <th>{t("parse.parsed_value")}</th>
                     </tr>}
                     items={props.previewData}
                     paginationSize={7}
@@ -63,7 +64,11 @@ export default function InputParseOptions (props: InputParseOptionsProps): React
                     renderType="table"
                     renderItem={(item, index) => <tr key={index}>
                         <td>{item}</td>
-                        <td>{regexStringValid ? parseWithOptions(item, getParseOptions()) : <span className="has-text-danger">Invalid options</span>}</td>
+                        <td>
+                            {regexStringValid
+                                ? parseWithOptions(item, getParseOptions())
+                                : <span className="has-text-danger">{t("parse.invalid_options")}</span>}
+                        </td>
                     </tr>}
                 />}
         </div>
@@ -118,8 +123,8 @@ export class InputParseOptionsModal extends React.Component<InputParseOptionsMod
             title={"Parse options"}
             close={() => this.props.close()}
             footer={<>
-                <button className="button is-success" onClick={() => this.saveChanges()} disabled={!this.state.valid}>Apply Changes</button>
-                <button className="button" onClick={() => this.props.close()}>Cancel</button>
+                <button className="button is-success" onClick={() => this.saveChanges()} disabled={!this.state.valid}>{t("common.apply_changes")}</button>
+                <button className="button" onClick={() => this.props.close()}>{t("common.cancel")}</button>
             </>}>
             <InputParseOptions
                 value={this.props.value}

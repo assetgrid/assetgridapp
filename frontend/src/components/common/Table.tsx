@@ -2,6 +2,7 @@ import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDoubleLeft, faAngleDoubleRight, faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { Api, useApi } from "../../lib/ApiClient";
+import { useTranslation } from "react-i18next";
 
 export type Props<T> = {
     pageSize: number
@@ -59,6 +60,7 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
 
     const [totalItems, setTotalItems] = React.useState<number>(0);
     const api = useApi();
+    const { t } = useTranslation();
 
     const paginatedItems = items
         .map((item, index) => ({ item, index: index + (props.page - 1) * props.pageSize }));
@@ -109,21 +111,27 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
             // Reverse pagination
             return <div className="pagination-container">
                 <p className="pagination-position">
-                    Displaying items {Math.min(props.pageSize * (page - 1) + 1, totalItems)}&nbsp;
-                    to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
-                    of {totalItems}
+                    {t("pagination.displaying_from_to", {
+                        from: Math.min(props.pageSize * (page - 1) + 1, totalItems),
+                        to: Math.min(props.pageSize * (page), totalItems),
+                        total: totalItems
+                    })}
                 </p>
 
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
                             {page === lastPage && props.type === "async-increment"
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.goToPage("decrement"); }}>
+                                ? <a className="pagination-link"
+                                    aria-label={t("pagination.previous_page")!}
+                                    onClick={() => { props.goToPage("decrement"); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Previous page" onClick={() => goToPage(page + 1)}>
+                                : <a className="pagination-link"
+                                    aria-label={t("pagination.previous_page")!}
+                                    onClick={() => goToPage(page + 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleLeft} />
                                     </span>
@@ -131,7 +139,8 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
                         </li>
                         {lastPage !== 1 && <li>
                             <a className={`pagination-link ${page === lastPage ? " is-current" : ""}`}
-                                aria-label={`Goto page ${lastPage}`} onClick={() => goToPage(lastPage)}>{lastPage}</a>
+                                aria-label={t("pagination.go_to_page", { page: lastPage })!}
+                                onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => paginationTo - page - 1)
@@ -140,20 +149,22 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => goToPage(p)} aria-label={`Goto page ${p}`}>{p}</a></li>
+                                        onClick={() => goToPage(p)} aria-label={t("pagination.go_to_page", { page: p })!}>{p}</a></li>
                             )}
                         <li>
                             <a className={`pagination-link ${page === 1 ? " is-current" : ""}`}
-                                aria-label="Goto page 1" onClick={() => goToPage(1)}>1</a>
+                                aria-label={t("pagination.go_to_page", { page: 1 })!} onClick={() => goToPage(1)}>1</a>
                         </li>
                         <li>
                             {page === 1 && props.type === "async-increment"
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.goToPage("increment"); }}>
+                                ? <a className="pagination-link" aria-label={t("pagination.next_page")!}
+                                    onClick={() => { props.goToPage("increment"); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Next page" onClick={() => goToPage(page - 1)}>
+                                : <a className="pagination-link" aria-label={t("pagination.next_page")!}
+                                    onClick={() => goToPage(page - 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleRight} />
                                     </span>
@@ -166,21 +177,27 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
             // Ordinary pagination
             return <div className="pagination-container">
                 <p className="pagination-position">
-                    Displaying items {Math.min(props.pageSize * (page - 1) + 1, totalItems)}&nbsp;
-                    to {Math.min(props.pageSize * (page), totalItems)}&nbsp;
-                    of {totalItems}
+                    {t("pagination.displaying_from_to", {
+                        from: Math.min(props.pageSize * (page - 1) + 1, totalItems),
+                        to: Math.min(props.pageSize * (page), totalItems),
+                        total: totalItems
+                    })}
                 </p>
 
                 <nav className="pagination is-centered" role="navigation" aria-label="pagination" style={{ marginBottom: 0 }}>
                     <ul className="pagination-list">
                         <li>
                             {page === 1 && props.type === "async-increment"
-                                ? <a className="pagination-link" aria-label="Previous page" onClick={() => { props.goToPage("decrement"); }}>
+                                ? <a className="pagination-link"
+                                    aria-label={t("pagination.previous_page")!}
+                                    onClick={() => { props.goToPage("decrement"); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleLeft} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Previous page" onClick={() => goToPage(page - 1)}>
+                                : <a className="pagination-link"
+                                    aria-label={t("pagination.previous_page")!}
+                                    onClick={() => goToPage(page - 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleLeft} />
                                     </span>
@@ -188,7 +205,7 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
                         </li>
                         <li>
                             <a className={"pagination-link" + (page === 1 ? " is-current" : "")}
-                                aria-label="Goto page 1" onClick={() => goToPage(1)}>1</a>
+                                aria-label={t("pagination.go_to_page", { page: 1 })!} onClick={() => goToPage(1)}>1</a>
                         </li>
                         {paginationTo > paginationFrom && Array.from(Array(paginationTo - paginationFrom).keys())
                             .map(page => page + paginationFrom)
@@ -197,20 +214,24 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
                                     (p === paginationTo - 1 && p < lastPage - 1)
                                     ? <li key={p}><span className="pagination-ellipsis">&hellip;</span></li>
                                     : <li key={p}><a className={"pagination-link" + (page === p ? " is-current" : "")}
-                                        onClick={() => goToPage(p)} aria-label={`Goto page ${p}`}>{p}</a></li>
+                                        onClick={() => goToPage(p)} aria-label={t("pagination.go_to_page", { page: p })!}>{p}</a></li>
                             )}
                         {lastPage !== 1 && <li>
                             <a className={"pagination-link" + (page === lastPage ? " is-current" : "")}
-                                aria-label={`Goto page ${lastPage}`} onClick={() => goToPage(lastPage)}>{lastPage}</a>
+                                aria-label={t("pagination.go_to_page", { page: lastPage })!} onClick={() => goToPage(lastPage)}>{lastPage}</a>
                         </li>}
                         <li>
                             {page === lastPage && props.type === "async-increment"
-                                ? <a className="pagination-link" aria-label="Next page" onClick={() => { props.goToPage("increment"); }}>
+                                ? <a className="pagination-link"
+                                    aria-label={t("pagination.next_page")!}
+                                    onClick={() => { props.goToPage("increment"); }}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleDoubleRight} />
                                     </span>
                                 </a>
-                                : <a className="pagination-link" aria-label="Next page" onClick={() => goToPage(page + 1)}>
+                                : <a className="pagination-link"
+                                    aria-label={t("pagination.next_page")!}
+                                    onClick={() => goToPage(page + 1)}>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={faAngleRight} />
                                     </span>

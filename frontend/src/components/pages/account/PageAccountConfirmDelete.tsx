@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router";
 
 import { Link } from "react-router-dom";
@@ -25,6 +26,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
     const navigate = useNavigate();
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
     const api = useApi();
+    const { t } = useTranslation();
 
     // Update account when id is changed
     React.useEffect(() => {
@@ -46,7 +48,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
     }, [api, id]);
 
     if (account === "fetching") {
-        return <>Please wait</>;
+        return <>{t("common.please_wait")}</>;
     }
     if (account === null) {
         return <Page404 />;
@@ -106,19 +108,19 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
     };
 
     return <>
-        <Hero title="Delete account" subtitle={<>#{account.id} {account.name}</>} isDanger={true} />
+        <Hero title={t("common.delete_account")} subtitle={<>#{account.id} {account.name}</>} isDanger={true} />
         <div className="p-3">
-            <Card title="Delete account" isNarrow={false}>
-                <p>Are you sure you want to delete this account? This action is irreversible!</p>
-                <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
+            <Card title={t("common.delete_account")!} isNarrow={false}>
+                <p>{t("delete.account.are_you_sure")}</p>
+                <p>{t("delete.account.transactions_will_be_deleted")}</p>
                 <div className="buttons mt-3">
-                    <InputButton onClick={forget(deleteAccount)} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
+                    <InputButton onClick={forget(deleteAccount)} disabled={isDeleting || api === null} className="is-danger">{t("common.delete_account")}</InputButton>
                     {allowBack
                         ? <button className="button" onClick={() => navigate(-1)}>Cancel</button>
-                        : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>Cancel</Link>}
+                        : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>{t("common.cancel")}</Link>}
                 </div>
             </Card>
-            <Card title="The following transactions will be deleted" isNarrow={false}>
+            <Card title={t("delete.account.the_following_transactions_will_be_deleted")!} isNarrow={false}>
                 <TransactionList allowEditing={false} allowLinks={false} query={query} />
             </Card>
         </div>

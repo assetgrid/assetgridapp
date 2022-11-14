@@ -6,6 +6,7 @@ import { faStar, faUser } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../assets/logo.svg";
 import { userContext } from "../App";
 import { useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     show: boolean
@@ -16,6 +17,7 @@ export default function Sidebar (props: Props): React.ReactElement {
     const { user, setUser } = React.useContext(userContext);
     const ref = React.useRef<HTMLDivElement>(null);
     const location = useLocation();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (props.show) {
@@ -35,23 +37,23 @@ export default function Sidebar (props: Props): React.ReactElement {
                 <FontAwesomeIcon icon={faUser} /> {user === "fetching" ? <>&hellip;</> : user.email}
             </p>
             <ul className="menu-list">
-                <li><Link to={routes.profile()}>Profile</Link></li>
-                <li><a onClick={signOut}>Sign out</a></li>
+                <li><Link to={routes.profile()}>{t("sidebar.profile")}</Link></li>
+                <li><a onClick={signOut}>{t("common.sign_out")}</a></li>
             </ul>
             <p className="menu-label">
-                General
+                {t("sidebar.general")}
             </p>
             <ul className="menu-list">
-                <li><Link to={routes.dashboard()}>Dashboard</Link></li>
-                <li><Link to={routes.transactions()}>Transactions</Link></li>
+                <li><Link to={routes.dashboard()}>{t("sidebar.dashboard")}</Link></li>
+                <li><Link to={routes.transactions()}>{t("sidebar.transactions")}</Link></li>
             </ul>
             <p className="menu-label">
-                Accounts
+                {t("sidebar.accounts")}
             </p>
             <ul className="menu-list">
-                <li><Link to={routes.accounts()}>Manage Accounts</Link></li>
+                <li><Link to={routes.accounts()}>{t("sidebar.manage_accounts")}</Link></li>
                 {user === "fetching"
-                    ? <li><p>Please wait&hellip;</p></li>
+                    ? <li><p>{t("common.please_wait")}</p></li>
                     : user.favoriteAccounts.map(account =>
                         <li key={account.id}><Link to={routes.account(account.id.toString())}>
                             <span className="icon">
@@ -62,13 +64,13 @@ export default function Sidebar (props: Props): React.ReactElement {
                     )}
             </ul>
             <p className="menu-label">
-                Manage
+                {t("sidebar.manage")}
             </p>
             <ul className="menu-list">
-                <li><Link to={routes.automation()}>Automation</Link></li>
-                <li><Link to={routes.meta()}>Custom fields</Link></li>
-                <li><Link to={routes.preferences()}>Preferences</Link></li>
-                <li><Link to={routes.importCsv()}>Import</Link></li>
+                <li><Link to={routes.automation()}>{t("sidebar.automation")}</Link></li>
+                <li><Link to={routes.meta()}>{t("sidebar.custom_fields")}</Link></li>
+                <li><Link to={routes.preferences()}>{t("sidebar.preferences")}</Link></li>
+                <li><Link to={routes.importCsv()}>{t("sidebar.import")}</Link></li>
             </ul>
             {user !== "fetching" && <p className="version">Assetgrid v{user.preferences.version}</p>}
         </aside>

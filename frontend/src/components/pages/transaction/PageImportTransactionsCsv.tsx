@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
@@ -27,6 +28,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
     const [currentTab, setCurrentTab] = React.useState<"parse-csv" | "map-columns" | "process">("parse-csv");
     const [duplicateIdentifiers, setDuplicateIdentifiers] = React.useState<Set<string> | "fetching">(new Set());
     const [csvFile, setCsvFile] = React.useState<File | null>(null);
+    const { t } = useTranslation();
     const [profile, setProfile] = React.useState<CsvImportProfile>({
         csvDelimiter: "auto",
         csvNewlineCharacter: "auto",
@@ -76,12 +78,13 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
     }, [api]);
 
     return <>
-        <Hero title="Import" subtitle={"From CSV file" + (csvFile !== null ? " (" + csvFile.name + ")" : "")} />
+        <Hero title={t("common.import")}
+            subtitle={csvFile === null ? t("import.from_csv_file") : t("import.from_csv_file_with_filename", { filename: csvFile.name })} />
         <div className="tabs has-background-white px-5">
             <ul>
-                <li className={currentTab === "parse-csv" ? "is-active" : ""}><a>Upload CSV</a></li>
-                <li className={currentTab === "map-columns" ? "is-active" : ""}><a>Map columns</a></li>
-                <li className={currentTab === "process" ? "is-active" : ""}><a>Import</a></li>
+                <li className={currentTab === "parse-csv" ? "is-active" : ""}><a>{t("import.upload_csv")}</a></li>
+                <li className={currentTab === "map-columns" ? "is-active" : ""}><a>{t("import.map_columns")}</a></li>
+                <li className={currentTab === "process" ? "is-active" : ""}><a>{t("common.import")}</a></li>
             </ul>
         </div>
         <div className="p-3">

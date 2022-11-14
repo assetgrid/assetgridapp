@@ -2,13 +2,16 @@ import * as React from "react";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
 import Image404 from "../../assets/404.svg";
+import { useTranslation } from "react-i18next";
 
 export default function Page404 (): React.ReactElement {
+    const { t } = useTranslation();
+
     return <>
-        <Hero title="Page not found" subtitle="The page you requested could not be found" isDanger={true} />
+        <Hero title={t("common.page_not_found_long")} subtitle={t("common.requested_page_not_found")} isDanger={true} />
         <div className="p-3">
-            <Card title="Not found" isNarrow={true}>
-                <p>You have requested a page that does not exist. It may have been moved or deleted, or you may have mistyped the address.</p>
+            <Card title={t("common.not_found")!} isNarrow={true}>
+                <p>{t("common.page_not_found_long")}</p>
 
                 <div style={{ textAlign: "center" }}>
                     <img src={Image404} style={{ maxWidth: "400px", display: "inline-block" }} />

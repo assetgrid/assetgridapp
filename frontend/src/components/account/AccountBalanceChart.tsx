@@ -17,6 +17,7 @@ import {
     BarController
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
+import { useTranslation } from "react-i18next";
 
 ChartJS.register(
     LinearScale,
@@ -42,6 +43,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
     const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
     const api = useApi();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (api !== null) {
@@ -50,7 +52,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
     }, [api, props.period, resolution]);
 
     if (movements === "fetching") {
-        return <>Please wait&hellip;</>;
+        return <>{t("common.please_wait")}</>;
     }
 
     let balances: number[] = [];
@@ -89,7 +91,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                 <Chart type={"line"} height="400px" data={{
                     labels,
                     datasets: [{
-                        label: "Balance",
+                        label: t("account.balance")!,
                         data: balances,
                         type: "line",
                         stepped: true,
@@ -97,7 +99,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         backgroundColor: "transparent"
                     },
                     {
-                        label: "Revenue",
+                        label: t("account.revenue")!,
                         data: revenues,
                         type: "bar",
                         borderColor: "transparent",
@@ -105,7 +107,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "revenue"
                     },
                     {
-                        label: "Expenses",
+                        label: t("account.expenses")!,
                         data: expenses,
                         type: "bar",
                         borderColor: "transparent",
@@ -113,7 +115,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "expenses"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: transferRevenues,
                         type: "bar",
                         borderColor: "transparent",
@@ -121,7 +123,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "revenue"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: transferExpenses,
                         type: "bar",
                         borderColor: "transparent",
@@ -174,12 +176,16 @@ function AccountBalanceChart (props: Props): React.ReactElement {
             </div>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
-            <p>Aggregate by:</p>&nbsp;
+            <p>{t("chart.aggregate_by")}</p>&nbsp;
             {["day", "week", "month", "year"].map(option =>
                 <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer" }}
                     className={option === resolution ? "tag is-primary" : "tag is-dark"}
                     onClick={() => setResolution(option as any)}>
-                    {["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(option as any)]}
+                    {[
+                        t("common.day"),
+                        t("common.week"),
+                        t("common.month"),
+                        t("common.year")][["day", "week", "month", "year"].indexOf(option as any)]}
                 </span>)}
         </div>
     </>;

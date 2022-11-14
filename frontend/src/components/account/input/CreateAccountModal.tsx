@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
@@ -19,14 +20,15 @@ export default function CreateAccountModal (props: Props): React.ReactElement {
     const { user, updateFavoriteAccounts } = React.useContext(userContext);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const { t } = useTranslation();
 
     return <Modal
         active={true}
-        title={"Create account"}
+        title={t("common.create_account")}
         close={() => props.close()}
         footer={<>
-            <button className="button is-success" onClick={forget(create)} disabled={isCreating || api === null}>Create account</button>
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            <button className="button is-success" onClick={forget(create)} disabled={isCreating || api === null}>{t("common.create_account")}</button>
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
         <InputModifyAccount
             errors={errors}

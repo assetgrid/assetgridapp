@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../../lib/ApiClient";
 import { forget } from "../../../../lib/Utils";
 import { Account } from "../../../../models/account";
@@ -22,6 +23,7 @@ export default function AccountSelector (props: Props): React.ReactElement {
     const [page, setPage] = React.useState(1);
     const [draw, setDraw] = React.useState(1);
     const api = useApi();
+    const { t } = useTranslation();
 
     const identifiers = props.transactions
         .flatMap(x => [x.sourceText, x.destinationText])
@@ -32,17 +34,17 @@ export default function AccountSelector (props: Props): React.ReactElement {
     React.useEffect(() => setDraw(draw => draw + 1), [props.accounts, props.transactions]);
 
     if (identifiers.length === 0) {
-        return <Card title="Accounts" isNarrow={true}>
-            <p>No accounts where found in your CSV file. Check that you have selected the correct columns.</p>
+        return <Card title={t("common.accounts")!} isNarrow={true}>
+            <p>{t("import.no_accounts_found_in_csv")!}</p>
         </Card>;
     }
 
-    return <Card title="Accounts" isNarrow={true}>
-        The following account identifiers where found in the CSV file.
+    return <Card title={t("common.accounts")!} isNarrow={true}>
+        {t("import.the_following_account_identifiers_found_in_csv")!}
         <Table pageSize={10}
             renderItem={(identifier, i) => <tr key={identifier}>
                 <td>
-                    <Tooltip content="Show transactions with this account">
+                    <Tooltip content={t("import.show_transactions_for_account")}>
                         <a onClick={() => filterTableForIdentifier(identifier)}>
                             {identifier}
                         </a>
@@ -51,7 +53,7 @@ export default function AccountSelector (props: Props): React.ReactElement {
                 <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier)) ?? null}
                     disabled={api === null || isUpdating}
                     allowNull={true}
-                    nullSelectedText={"No account"}
+                    nullSelectedText={t("common.no_account")!}
                     onChange={forget(async value => await accountSelected(identifier, value))}
                     allowCreateNewAccount={true} /></td>
             </tr>}
@@ -61,13 +63,13 @@ export default function AccountSelector (props: Props): React.ReactElement {
             type="sync"
             renderType="table"
             headings={<tr>
-                <th>Identifier</th>
-                <th>Account</th>
+                <th>{t("account.identifier")!}</th>
+                <th>{t("common.account")!}</th>
             </tr>} items={identifiers} />
     </Card>;
 
     function filterTableForIdentifier (identifier: string): void {
-        props.setTableFilter("Showing transactions with accounts with identifier '" + identifier + "'.",
+        props.setTableFilter(t("import.showing_transactions_with_identifier", { identifier }),
             x => x.sourceText === identifier || x.destinationText === identifier);
     }
 

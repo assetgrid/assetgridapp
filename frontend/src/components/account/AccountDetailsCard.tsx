@@ -15,6 +15,7 @@ import YesNoDisplay from "../input/YesNoDisplay";
 import * as solid from "@fortawesome/free-solid-svg-icons";
 import * as regular from "@fortawesome/free-regular-svg-icons";
 import InputTextMultiple from "../input/InputTextMultiple";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     account: Account
@@ -31,12 +32,13 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const navigate = useNavigate();
     const api = useApi();
+    const { t } = useTranslation();
 
     if (editingModel === null) {
         return <Card
             style={{ flexGrow: 1 }}
             title={<>
-                <span style={{ flexGrow: 1 }}>Account details</span>
+                <span style={{ flexGrow: 1 }}>{t("account.account_details")}</span>
                 {props.updatingFavorite
                     ? <span className="icon">
                         <FontAwesomeIcon icon={solid.faSpinner} pulse />
@@ -54,29 +56,29 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
             <table className="table">
                 <tbody>
                     <tr>
-                        <td>Balance</td>
+                        <td>{t("account.balance")}</td>
                         <td>{formatNumberWithUser(props.account.balance!, user)}</td>
                     </tr>
                     <tr>
-                        <td>Name</td>
+                        <td>{t("account.name")}</td>
                         <td>{props.account.name}</td>
                     </tr>
                     <tr>
-                        <td>Description</td>
+                        <td>{t("account.description")}</td>
                         <td style={{ maxWidth: "300px" }}>{props.account.description}</td>
                     </tr>
                     <tr>
-                        <td>Identifiers</td>
+                        <td>{t("account.identifiers")}</td>
                         <td>{props.account.identifiers.join(", ")}</td>
                     </tr>
                     <tr>
-                        <td>Favorite</td>
+                        <td>{t("account.favorite")}</td>
                         <td>
                             <YesNoDisplay value={props.account.favorite} />
                         </td>
                     </tr>
                     <tr>
-                        <td>Include in net worth</td>
+                        <td>{t("account.include_in_net_worth")}</td>
                         <td>
                             <YesNoDisplay value={props.account.includeInNetWorth} />
                         </td>
@@ -85,15 +87,15 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
             </table>
         </Card>;
     } else {
-        return <Card title="Account details" isNarrow={false}>
+        return <Card title={t("account.account_details")!} isNarrow={false}>
             <table className="table">
                 <tbody>
                     <tr>
-                        <td>Balance</td>
+                        <td>{t("account.balance")}</td>
                         <td>{formatNumberWithUser(props.account.balance!, user)}</td>
                     </tr>
                     <tr>
-                        <td>Name</td>
+                        <td>{t("account.name")}</td>
                         <td>
                             <InputText
                                 value={editingModel.name}
@@ -103,7 +105,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Description</td>
+                        <td>{t("account.description")}</td>
                         <td>
                             <InputText
                                 value={editingModel.description}
@@ -113,7 +115,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Identifiers</td>
+                        <td>{t("account.identifiers")}</td>
                         <td>
                             <InputTextMultiple
                                 value={editingModel.identifiers}
@@ -123,7 +125,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Favorite</td>
+                        <td>{t("account.favorite")}</td>
                         <td>
                             <InputCheckbox
                                 value={editingModel.favorite}
@@ -133,7 +135,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                         </td>
                     </tr>
                     <tr>
-                        <td>Include in net worth</td>
+                        <td>{t("account.include_in_net_worth")}</td>
                         <td>
                             <InputCheckbox
                                 value={editingModel.includeInNetWorth}
@@ -145,8 +147,8 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                 </tbody>
             </table>
             <div className="buttons">
-                <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={forget(saveChanges)}>Save changes</InputButton>
-                <InputButton onClick={() => setEditingModel(null)}>Cancel</InputButton>
+                <InputButton disabled={isUpdating || api === null} className="is-primary" onClick={forget(saveChanges)}>{t("common.save_changes")}</InputButton>
+                <InputButton onClick={() => setEditingModel(null)}>{t("common.cancel")}</InputButton>
             </div>
         </Card>;
     }

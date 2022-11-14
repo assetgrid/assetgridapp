@@ -73,6 +73,43 @@
             "options": {
                 "cwd": "./frontend"
             }
-        }
+        },
+        {
+            "label": "build frontend",
+            "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack",
+            "windows": {
+                "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack.cmd"
+            },
+            "args": [
+                "--progress",
+            ],
+            "options": {
+                "cwd": "./frontend"
+            },
+            "problemMatcher": "$tsc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build frontend (production)",
+            "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack",
+            "windows": {
+                "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack.cmd"
+            },
+            "args": [
+                "--progress",
+                "--config",
+                "./webpack.production.config.js"
+            ],
+            "options": {
+                "cwd": "./frontend"
+            },
+            "problemMatcher": "$tsc",
+            "group": {
+                "kind": "build",
+            }
+        },
     ]
 }

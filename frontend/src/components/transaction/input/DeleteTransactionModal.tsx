@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { Transaction } from "../../../models/transaction";
@@ -14,16 +15,18 @@ interface Props {
 export default function DeleteTransactionModal (props: Props): React.ReactElement {
     const [isDeleting, setisDeleting] = React.useState(false);
     const api = useApi();
+    const { t } = useTranslation();
 
     return <Modal
         active={true}
-        title={"Delete transaction"}
+        title={t("common.delete_transaction")}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={forget(deleteTransaction)} disabled={isDeleting || api === null} className="is-danger">Delete transaction</InputButton>}
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            {<InputButton onClick={forget(deleteTransaction)} disabled={isDeleting || api === null} className="is-danger">{t("common.delete_transaction")}</InputButton>}
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
-        <p>Are you sure you want to delete transaction &ldquo;#{props.transaction.id} {props.transaction.description}&rdquo;? This action is irreversible!</p>
+        <p>{t("transaction.confirm_delete_transaction", { transaction: `#${props.transaction.id} ${props.transaction.description}` })}</p>
+        <p>{t("common.action_is_irreversible")}</p>
     </Modal>;
 
     async function deleteTransaction (): Promise<void> {

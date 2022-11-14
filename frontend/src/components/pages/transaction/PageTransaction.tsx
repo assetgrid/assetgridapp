@@ -26,6 +26,8 @@ import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionMetaInput, { MetaFieldType } from "../../transaction/input/TransactionMetaInput";
 import { Account } from "../../../models/account";
 import TransactionMetaValue from "../../transaction/input/TransactionMetaValue";
+import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -36,6 +38,7 @@ export default function PageTransaction (): React.ReactElement {
     const [errors, setErors] = React.useState<{ [key: string]: string[] }>({});
     const navigate = useNavigate();
     const api = useApi();
+    const { t } = useTranslation();
 
     React.useEffect(forget(fetchTransaction), [id, api]);
 
@@ -47,7 +50,7 @@ export default function PageTransaction (): React.ReactElement {
     }
 
     return <>
-        <Hero title={<>Transaction #{id}</>} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
+        <Hero title={t("transaction.transaction_with_id", { id })} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
         <div className="p-3">
             <div className="columns m-0">
                 <div className="column p-0 is-half is-flex">
@@ -137,41 +140,42 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
     const { user } = React.useContext(userContext);
     const transaction = props.transaction;
     const editModel = props.editModel;
+    const { t } = useTranslation();
 
     if (transaction === "fetching") {
-        return <Card title="Transaction details" isNarrow={true}>
+        return <Card title={t("transaction.transaction_details")!} isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
-                        <td>Id</td>
+                        <td>{t("common.id")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Unique Identifier</td>
+                        <td>{t("common.unique_identifier")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Description</td>
+                        <td>{t("common.description")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Timestamp</td>
+                        <td>{t("common.timestamp")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Total</td>
+                        <td>{t("account.total")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Source</td>
+                        <td>{t("transaction.source")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Destination</td>
+                        <td>{t("transaction.destination")}</td>
                         <td>&hellip;</td>
                     </tr>
                     <tr>
-                        <td>Category</td>
+                        <td>{t("common.category")}</td>
                         <td>&hellip;</td>
                     </tr>
                 </tbody>
@@ -181,46 +185,46 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
 
     if (editModel === null) {
         return <Card title={<>
-            <span style={{ flexGrow: 1 }}>Transaction details</span>
+            <span style={{ flexGrow: 1 }}>{t("transaction.transaction_details")}</span>
             <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             <InputIconButton icon={regular.faTrashCan} onClick={() => props.onDelete()} />
         </>} isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
-                        <td>Id</td>
+                        <td>{t("common.id")}</td>
                         <td>{transaction.id}</td>
                     </tr>
                     <tr>
-                        <td>Unique Identifiers</td>
+                        <td>{t("common.unique_identifiers")}</td>
                         <td>{transaction.identifiers.length === 0 ? "None" : transaction.identifiers.join(", ")}</td>
                     </tr>
                     <tr>
-                        <td>Description</td>
+                        <td>{t("common.description")}</td>
                         <td style={{ maxWidth: "300px" }}>{transaction.description}</td>
                     </tr>
                     <tr>
-                        <td>Timestamp</td>
+                        <td>{t("common.timestamp")}</td>
                         <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                     </tr>
                     <tr>
-                        <td>Total</td>
+                        <td>{t("account.total")}</td>
                         <td>{formatNumberWithUser(transaction.total, user)}</td>
                     </tr>
                     <tr>
-                        <td>Source</td>
+                        <td>{t("transaction.source")}</td>
                         <td>
                             {transaction.source === null ? "None" : <AccountLink account={transaction.source} />}
                         </td>
                     </tr>
                     <tr>
-                        <td>Destination</td>
+                        <td>{t("transaction.destination")}</td>
                         <td>
                             {transaction.destination === null ? "None" : <AccountLink account={transaction.destination} />}
                         </td>
                     </tr>
                     <tr>
-                        <td>Category</td>
+                        <td>{t("common.category")}</td>
                         <td>
                             <TransactionCategory categories={transaction.lines.map(line => line.category)} />
                         </td>
@@ -229,15 +233,15 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
             </table>
         </Card>;
     } else {
-        return <Card title="Transaction details" isNarrow={true}>
+        return <Card title={t("transaction.transaction_details")!} isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
                     <tr>
-                        <td>Id</td>
+                        <td>{t("transaction.transaction_id")}</td>
                         <td>{transaction.id}</td>
                     </tr>
                     <tr>
-                        <td>Unique identifier</td>
+                        <td>{t("common.unique_identifier")}</td>
                         <td>
                             <InputTextMultiple
                                 value={editModel.identifiers}
@@ -247,7 +251,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         </td>
                     </tr>
                     <tr>
-                        <td>Description</td>
+                        <td>{t("common.description")}</td>
                         <td>
                             <InputText
                                 value={editModel.description}
@@ -257,7 +261,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         </td>
                     </tr>
                     <tr>
-                        <td>Timestamp</td>
+                        <td>{t("common.timestamp")}</td>
                         <td>
                             <InputDateTime
                                 value={editModel.dateTime}
@@ -268,7 +272,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         </td>
                     </tr>
                     <tr>
-                        <td>Total</td>
+                        <td>{t("account.total")}</td>
                         {!editModel.isSplit
                             ? <td><InputNumber
                                 value={editModel.total}
@@ -284,7 +288,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                             : <td>{formatNumberWithUser(editModel.total, user)}</td>}
                     </tr>
                     <tr>
-                        <td>Source</td>
+                        <td>{t("transaction.source")}</td>
                         <td>
                             <InputAccount
                                 value={editModel.source}
@@ -296,7 +300,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         </td>
                     </tr>
                     <tr>
-                        <td>Destination</td>
+                        <td>{t("transaction.destination")}</td>
                         <td>
                             <InputAccount
                                 value={editModel.destination}
@@ -308,7 +312,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         </td>
                     </tr>
                     <tr>
-                        <td>Category</td>
+                        <td>{t("transaction.category")}</td>
                         <td>
                             {editModel.isSplit
                                 ? <TransactionCategory categories={editModel.lines.map(line => line.category)} />
@@ -322,8 +326,8 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                 </tbody>
             </table>
             <div className="buttons">
-                <InputButton disabled={props.isUpdating} className="is-primary" onClick={props.onSaveChanges}>Save changes</InputButton>
-                <InputButton onClick={() => props.onChange(null)}>Cancel</InputButton>
+                <InputButton disabled={props.isUpdating} className="is-primary" onClick={props.onSaveChanges}>{t("common.save_changes")}</InputButton>
+                <InputButton onClick={() => props.onChange(null)}>{t("common.cancel")}</InputButton>
             </div>
         </Card>;
     }
@@ -342,8 +346,8 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
     const editModel = props.editModel;
 
     if (transaction === "fetching") {
-        return <Card title="Transaction lines" isNarrow={false}>
-            Please wait&hellip;
+        return <Card title={t("transaction.transaction_lines")!} isNarrow={false}>
+            {t("common.please_wait")}
         </Card>;
     }
 
@@ -353,22 +357,22 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
          */
         if (!transaction.isSplit) {
             return <Card title={<>
-                <span style={{ flexGrow: 1 }}>Transaction lines</span>
+                <span style={{ flexGrow: 1 }}>{t("transaction.transaction_lines")}</span>
                 <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             </>} isNarrow={false}>
-                This transaction does not have any lines.
+                {t("transaction.transaction_has_no_lines")}
             </Card>;
         } else {
             return <Card title={<>
-                <span style={{ flexGrow: 1 }}>Transaction lines</span>
+                <span style={{ flexGrow: 1 }}>{t("transaction.transaction_lines")}</span>
                 <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
             </>} isNarrow={false}>
                 <table className="table is-fullwidth">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th className="has-text-right">Amount</th>
-                            <th>Category</th>
+                            <th>{t("common.description")}</th>
+                            <th className="has-text-right">{t("transaction.amount")}</th>
+                            <th>{t("transaction.source")}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -387,12 +391,12 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
          */
         if (!editModel.isSplit) {
             return <Card title="Transaction lines" isNarrow={false}>
-                <p>This transaction does not have any lines.</p>
-                <p>Split the transaction to add lines.</p>
+                <p>{t("transaction.transaction_has_no_lines")}</p>
+                <p>{t("transaction.split_to_add_lines")}</p>
                 <div className="buttons mt-3">
                     <InputButton disabled={props.isUpdating}
                         onClick={splitTransaction}>
-                        Split Transaction
+                        {t("transaction.action_split_transaction")}
                     </InputButton>
                 </div>
             </Card>;
@@ -401,9 +405,9 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
                 <table className="table is-fullwidth">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th className="has-text-right">Amount</th>
-                            <th>Category</th>
+                            <th>{t("common.description")}</th>
+                            <th className="has-text-right">{t("transaction.amount")}</th>
+                            <th>{t("common.category")}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -444,7 +448,7 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
                             ...editModel,
                             lines: [...editModel.lines, { description: "Transaction line", amount: new Decimal(0), category: "" }]
                         })}>
-                        Add line
+                        {t("transaction.add_line")}
                     </InputButton>
                 </div>
             </Card>;
@@ -459,7 +463,7 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
             isSplit: true,
             lines: [{
                 ...editModel.lines[0],
-                description: editModel.lines[0].description.trim() === "" ? "Transaction line" : editModel.description
+                description: editModel.lines[0].description.trim() === "" ? t("transaction.transaction_line") : editModel.description
             }]
         });
     }
@@ -502,22 +506,22 @@ interface TransactionMetaProps {
 }
 function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
     if (props.transaction === "fetching") {
-        return <Card title="Custom fields" isNarrow={true}>
-            Please wait&hellip;
+        return <Card title={t("transaction.custom_fields")!} isNarrow={true}>
+            {t("common.please_wait")}
         </Card>;
     }
     const transaction = props.transaction;
 
     if (props.editModel === null) {
         return <Card title={<>
-            <span style={{ flexGrow: 1 }}>Custom fields</span>
+            <span style={{ flexGrow: 1 }}>{t("transaction.custom_fields")}</span>
             <InputIconButton icon={solid.faPen} onClick={() => props.onChange(transaction)} />
         </>} isNarrow={true}>
             <table className="table is-fullwidth">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Value</th>
+                        <th>{t("common.name")}</th>
+                        <th>{t("common.value")}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -530,12 +534,12 @@ function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
             </table>
         </Card>;
     } else {
-        return <Card title="Custom fields" isNarrow={true}>
+        return <Card title={t("transaction.custom_fields")!} isNarrow={true}>
             <table className="table is-fullwidth">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Value</th>
+                        <th>{t("common.name")}</th>
+                        <th>{t("common.value")}</th>
                     </tr>
                 </thead>
                 <tbody>

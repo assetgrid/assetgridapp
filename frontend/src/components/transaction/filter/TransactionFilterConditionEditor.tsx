@@ -2,6 +2,7 @@ import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Account } from "../../../models/account";
 import { SearchOperator, SearchQuery } from "../../../models/search";
 import InputAccount from "../../account/input/InputAccount";
@@ -25,18 +26,19 @@ interface ConditionProps {
 
 export default function Condition (props: ConditionProps): React.ReactElement {
     const column = props.query.column as Column;
+    const { t } = useTranslation();
 
     return <div className="filter-condition columns mb-0 mt-0">
         {/* Column */}
         <div className="column">
             <InputSelect isFullwidth={true} items={[
-                { key: "Id", value: "Transaction Id" },
-                { key: "SourceAccountId", value: "Source Account" },
-                { key: "DestinationAccountId", value: "Destination Account" },
-                { key: "DateTime", value: "Datetime" },
-                { key: "Category", value: "Category" },
-                { key: "Description", value: "Description" },
-                { key: "Total", value: "Total" }
+                { key: "Id", value: t("transaction.transaction_id") },
+                { key: "SourceAccountId", value: t("transaction.source_account") },
+                { key: "DestinationAccountId", value: t("transaction.destination_account") },
+                { key: "DateTime", value: t("common.timestamp") },
+                { key: "Category", value: t("common.category") },
+                { key: "Description", value: t("common.description") },
+                { key: "Total", value: t("account.total") }
             ]}
             value={props.query.column}
             onChange={value => operatorOrColumnChanged(value as typeof column, props.query.operator, props.query.not)} />
@@ -238,12 +240,13 @@ function ConditionValueEditorAccount (props: { condition: FilterHelpers.Conditio
     }
 
     const condition = props.condition;
+    const { t } = useTranslation();
     switch (props.condition.operator) {
         case SearchOperator.Equals:
             return <InputAccount
                 value={condition.value}
                 onChange={account => condition.onChange(account)}
-                nullSelectedText="No Account"
+                nullSelectedText={t("common.no_account")!}
                 disabled={props.disabled}
                 allowCreateNewAccount={false}
                 allowNull={true} />;

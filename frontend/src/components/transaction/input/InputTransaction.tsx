@@ -7,6 +7,7 @@ import { debounce, formatDateTimeWithUser } from "../../../lib/Utils";
 import DropdownContent from "../../common/DropdownContent";
 import { Transaction } from "../../../models/transaction";
 import { userContext } from "../../App";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     label?: string
@@ -24,12 +25,13 @@ export default function InputTransaction (props: Props): React.ReactElement {
     const [transaction, setTransaction] = React.useState<Transaction | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const { user } = React.useContext(userContext);
+    const { t } = useTranslation();
 
     if (props.value === null) {
         if (props.nullSelectedText !== undefined) {
             text = props.nullSelectedText;
         } else {
-            text = "Select Transaction";
+            text = t("transaction.select_transaction");
         }
     } else if (transaction == null) {
         if (typeof props.value === "number") {
@@ -91,13 +93,13 @@ export default function InputTransaction (props: Props): React.ReactElement {
                             className="dropdown-item"
                             style={{ border: "0" }}
                             type="text"
-                            placeholder="Search for transaction"
+                            placeholder={t("search.search_for_transaction")!}
                             value={searchQuery}
                             disabled={props.disabled || api === null}
                             onChange={e => setSearchQuery(e.target.value) }
                         />
                         <hr className="dropdown-divider" />
-                        {dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {dropdownOptions == null && <div className="dropdown-item">{t("common.loading_suggestions")}</div>}
                         {dropdownOptions?.map(option => <a
                             className={"dropdown-item" + (selectedTransactionId === option.id ? " is-active" : "")}
                             key={option.id}

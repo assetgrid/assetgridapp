@@ -1,6 +1,7 @@
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
     label?: string
@@ -20,6 +21,7 @@ type Props = {
 export default function InputTextArea (props: Props): React.ReactElement {
     const isError = props.errors !== undefined && props.errors.length > 0;
     const inputRef = React.useRef<HTMLTextAreaElement>(null);
+    const { t } = useTranslation();
     React.useEffect(() => {
         if ((inputRef.current != null) && props.value === "") {
             inputRef.current.focus();
@@ -46,7 +48,7 @@ export default function InputTextArea (props: Props): React.ReactElement {
                     </div>
                 </div>
                 <a onClick={() => props.disabled !== true && props.onChange(null)}>
-                    <FontAwesomeIcon icon={faXmark} /> clear value
+                    <FontAwesomeIcon icon={faXmark} /> {t("common.clear_value")}
                 </a>
             </div>;
         } else {

@@ -8,6 +8,7 @@ import { debounce } from "../../../lib/Utils";
 import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
 import DropdownContent from "../../common/DropdownContent";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     label?: string
@@ -26,12 +27,13 @@ export default function InputAccount (props: Props): React.ReactElement {
     const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const [creatingAccount, setCreatingAccount] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     if (props.value === null) {
         if (props.nullSelectedText !== undefined) {
             text = props.nullSelectedText;
         } else {
-            text = "Select Account";
+            text = t("common.select_account");
         }
     } else if (account == null) {
         if (typeof props.value === "number") {
@@ -93,13 +95,13 @@ export default function InputAccount (props: Props): React.ReactElement {
                             className="dropdown-item"
                             style={{ border: "0" }}
                             type="text"
-                            placeholder="Search for account"
+                            placeholder={t("common.search_account")!}
                             value={searchQuery}
                             disabled={props.disabled || api === null}
                             onChange={e => setSearchQuery(e.target.value) }
                         />
                         <hr className="dropdown-divider" />
-                        {dropdownOptions == null && <div className="dropdown-item">Loading suggestions…</div>}
+                        {dropdownOptions == null && <div className="dropdown-item">{t("common.loading_suggestions")}</div>}
                         {dropdownOptions?.map(option => <a
                             className={"dropdown-item" + (selectedAccountId === option.id ? " is-active" : "")}
                             key={option.id}
@@ -112,7 +114,7 @@ export default function InputAccount (props: Props): React.ReactElement {
                                 <InputButton
                                     disabled={props.disabled || api === null}
                                     className="is-small is-fullwidth"
-                                    onClick={() => setCreatingAccount(true)}>New Account</InputButton>
+                                    onClick={() => setCreatingAccount(true)}>{t("common.create_account")}</InputButton>
                             </div>
                         </>}
                     </div>

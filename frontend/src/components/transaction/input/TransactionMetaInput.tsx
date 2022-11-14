@@ -9,6 +9,7 @@ import { Account } from "../../../models/account";
 import InputAccount from "../../account/input/InputAccount";
 import InputTextArea from "../../input/InputTextArea";
 import InputTransaction from "./InputTransaction";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     disabled: boolean
@@ -38,10 +39,12 @@ export type MetaFieldType = {
 };
 
 export default function TransactionMetaInput (props: Props): React.ReactElement {
+    const { t } = useTranslation();
+
     switch (props.field.type) {
         case FieldValueType.TextLine:
             return <InputTextOrNull value={props.field.value}
-                noValueText="No value"
+                noValueText={t("common.no_value")}
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
                 errors={props.errors}
@@ -49,7 +52,7 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
         case FieldValueType.TextLong:
             return <InputTextArea value={props.field.value}
                 allowNull={true}
-                noValueText="No value"
+                noValueText={t("common.no_value")}
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
                 errors={props.errors}
@@ -57,7 +60,7 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
         case FieldValueType.Number:
             return <InputNumber
                 value={props.field.value}
-                noValueText="No value"
+                noValueText={t("common.no_value")}
                 allowNull={true}
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
@@ -74,7 +77,7 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
             return <InputAccount
                 value={props.field.value}
                 allowNull={true}
-                nullSelectedText={"No value"}
+                nullSelectedText={t("common.no_value")!}
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
                 errors={props.errors}
@@ -84,7 +87,7 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
             return <InputTransaction
                 value={props.field.value}
                 allowNull={true}
-                nullSelectedText={"No value"}
+                nullSelectedText={t("common.no_value")!}
                 onChange={value => props.onChange(value)}
                 disabled={props.disabled}
                 errors={props.errors}

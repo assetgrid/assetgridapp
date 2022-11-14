@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router";
 import { Link } from "react-router-dom";
 import { useApi } from "../../../../lib/ApiClient";
@@ -38,6 +39,7 @@ export default function PageAutomationTransactionCreate (): React.ReactElement {
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const [showRunSingleModal, setShowRunSingleModal] = React.useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const redrawTableDebounced = React.useCallback(debounce(() => { setDraw(draw => draw + 1); }, 300), []);
     React.useEffect(() => {
@@ -45,51 +47,51 @@ export default function PageAutomationTransactionCreate (): React.ReactElement {
     }, [model.query]);
 
     return <>
-        <Hero title="Automation" subtitle="Create new transaction automation" />
+        <Hero title={t("automation.automation")} subtitle={t("automation.transaction.create_new")} />
         <div className="p-3">
-            <Card title="General options" isNarrow={false}>
+            <Card title={t("common.general_options")!} isNarrow={false}>
                 <InputText value={model.name}
                     disabled={isCreating}
-                    label="Name"
+                    label={t("common.name")!}
                     onChange={e => setModel({ ...model, name: e.target.value })}
                     errors={errors.Name} />
                 <InputText value={model.description}
                     disabled={isCreating}
-                    label="Description"
+                    label={t("common.description")!}
                     onChange={e => setModel({ ...model, description: e.target.value })}
                     errors={errors.Description} />
                 <InputCheckbox value={model.enabled}
                     disabled={isCreating}
-                    label="Enabled"
+                    label={t("common.enabled")!}
                     onChange={e => setModel({ ...model, enabled: e.target.checked })}
                     errors={errors.Enabled}/>
             </Card>
 
-            <Card title="Triggers" isNarrow={false}>
+            <Card title={t("automation.triggers")!} isNarrow={false}>
                 <InputCheckbox value={model.triggerOnCreate}
                     disabled={isCreating}
-                    label="Transaction created (including during import)"
+                    label={t("automation.trigger_transaction_created")!}
                     onChange={e => setModel({ ...model, triggerOnCreate: e.target.checked })}
                     errors={errors.TriggerOnCreate} />
                 <InputCheckbox value={model.triggerOnModify}
                     disabled={isCreating}
-                    label="Transaction modified"
+                    label={t("automation.trigger_transaction_modified")!}
                     onChange={e => setModel({ ...model, triggerOnModify: e.target.checked })}
                     errors={errors.TriggerOnModify}/>
             </Card>
 
-            <Card title="Conditions" isNarrow={false}>
+            <Card title={t("automation.conditions")!} isNarrow={false}>
                 <TransactionFilterEditor query={model.query}
                     disabled={isCreating}
                     setQuery={value => setModel({ ...model, query: value })} />
             </Card>
 
-            <Card title="Preview" isNarrow={false} collapsed={collapsePreview} setCollapsed={setCollapsePreview}>
-                <p>The following existing transactions match the specified filter:</p>
+            <Card title={t("automation.preview")!} isNarrow={false} collapsed={collapsePreview} setCollapsed={setCollapsePreview}>
+                <p>{t("automations.matching_filter")}</p>
                 <TransactionList draw={draw} allowEditing={false} allowLinks={false} query={model.query} />
             </Card>
 
-            <Card title="Actions" isNarrow={false}>
+            <Card title={t("automation.actions")!} isNarrow={false}>
                 {model.actions.map((action, index) => <TransactionActionEditor
                     key={index}
                     action={action}
@@ -104,31 +106,33 @@ export default function PageAutomationTransactionCreate (): React.ReactElement {
                     delete={model.actions.length > 1 ? () => setModel({ ...model, actions: model.actions.filter((_, i) => i !== index) }) : undefined}
                     disabled={isCreating} />
                 )}
-                <InputButton onClick={() => setModel({ ...model, actions: [...model.actions, { key: "set-description", value: "" }] })}>Add action</InputButton>
+                <InputButton onClick={() => setModel({ ...model, actions: [...model.actions, { key: "set-description", value: "" }] })}>
+                    {t("automation.add_action")!}
+                </InputButton>
             </Card>
 
-            <Card title="Create transaction automation" isNarrow={false}>
+            <Card title={t("automation.transaction.create")!} isNarrow={false}>
                 <div className="buttons">
                     <InputButton disabled={api === null || isCreating} className="is-primary" onClick={forget(createAutomation)}>
-                        Create automation
+                        {t("automation.create")!}
                     </InputButton>
                     <InputButton disabled={api === null || isCreating} onClick={() => setShowRunSingleModal(true)}>
-                        Run on existing transactions
+                        {t("automation.transaction.run_on_existing")!}
                     </InputButton>
-                    <Link className="button" to={routes.automation()}>Cancel</Link>
+                    <Link className="button" to={routes.automation()}>{t("common.cancel")!}</Link>
                 </div>
             </Card>
         </div>
 
         <Modal
             active={showRunSingleModal}
-            title="Run automation once"
+            title={t("automation.run_once")!}
             close={() => setShowRunSingleModal(false)}
             footer={<>
-                <InputButton disabled={isCreating} className="is-primary" onClick={() => forget(runSingle)()}>Run</InputButton>
-                <InputButton disabled={isCreating} onClick={() => setShowRunSingleModal(false)}>Cancel</InputButton>
+                <InputButton disabled={isCreating} className="is-primary" onClick={() => forget(runSingle)()}>{t("automation.run")!}</InputButton>
+                <InputButton disabled={isCreating} onClick={() => setShowRunSingleModal(false)}>{t("common.cancel")!}</InputButton>
             </>}>
-            Do you want to run this automation on pre-existing transactions? Make sure to check the preview to know which transactions will be affected.
+            {t("automation.transaction.confirm_existing")!}
         </Modal>
     </>;
 

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Api } from "../../lib/ApiClient";
 import { Account } from "../../models/account";
 import { SearchGroup } from "../../models/search";
@@ -13,13 +14,14 @@ interface Props {
 
 export default function AccountList (props: Props): React.ReactElement {
     const [page, setPage] = React.useState(1);
+    const { t } = useTranslation();
 
     return <Table
         headings={<tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Identifiers</th>
-            <th>Favorite</th>
+            <th>{t("account.name")}</th>
+            <th>{t("account.description")}</th>
+            <th>{t("account.identifiers")}</th>
+            <th>{t("account.favorite")}</th>
         </tr>}
         page={page}
         goToPage={setPage}

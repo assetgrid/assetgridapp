@@ -357,11 +357,13 @@ namespace assetgrid_backend.Services
                             }
                             break;
                         }
-#warning Implement remaining types
+                    case MetaFieldValueType.Attachment:
+                        // Don't do anything about attachments as they are uploaded with a separate API
+                        break;
+                    default:
+                        throw new Exception("Unknown meta field value type");
                 }
             }
-
-#warning Consider throwing instead of failing silently
         }
     }
 }

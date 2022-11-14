@@ -1,4 +1,6 @@
+import { t } from "i18next";
 import * as React from "react";
+import { Trans } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
@@ -34,45 +36,55 @@ export default function PageCreateAccount (): React.ReactElement {
     const allowBack = window.history.state.usr?.allowBack === true;
 
     return <>
-        <Hero title="Create new account" />
+        <Hero title={t("account.create_new")} />
         <div className="p-3">
-            <Card title="Account details" isNarrow={true}>
+            <Card title={t("account.account_details")!} isNarrow={true}>
                 {(createdAccount != null) && <article className="message is-link">
                     <div className="message-body">
-                    Account has been created: <AccountLink account={createdAccount} />
+                        <Trans i18nKey="account.has_been_created_link">
+                            Account has been created: <AccountLink account={createdAccount} />
+                        </Trans>
                     </div>
                 </article>}
 
-                <InputText label="Name"
+                <InputText label={t("account.name")!}
                     value={value.name}
                     onChange={e => setValue({ ...value, name: e.target.value })}
                     errors={errors.Name}
                     disabled={isCreating} />
-                <InputText label="Description"
+                <InputText label={t("account.description")!}
                     value={value.description}
                     onChange={e => setValue({ ...value, description: e.target.value })}
                     errors={errors.Description}
                     disabled={isCreating} />
-                <InputTextMultiple label="Identifiers"
+                <InputTextMultiple label={t("account.identifiers")!}
                     value={value.identifiers}
                     onChange={e => setValue({ ...value, identifiers: e })}
                     errors={errors.Identifiers}
                     disabled={isCreating} />
-                <InputCheckbox label="Favorite"
+                <InputCheckbox label={t("account.favorite")!}
                     value={value.favorite}
                     onChange={e => setValue({ ...value, favorite: e.target.checked })}
                     errors={errors.Favorite}
                     disabled={isCreating} />
-                <InputCheckbox label="Include in net worth"
+                <InputCheckbox label={t("account.include_in_net_worth")!}
                     value={value.includeInNetWorth}
                     onChange={e => setValue({ ...value, includeInNetWorth: e.target.checked })}
                     errors={errors.IncludeInNetWorth}
                     disabled={isCreating} />
 
                 <div className="buttons">
-                    <InputButton className="is-primary" onClick={forget(async () => await create(true))} disabled={isCreating || api === null}>Create and stay</InputButton>
-                    <InputButton className="is-primary" onClick={forget(async () => await create(false))} disabled={isCreating || api === null}>Create and view account</InputButton>
-                    {allowBack && <InputButton onClick={() => navigate(-1)}>Cancel</InputButton>}
+                    <InputButton className="is-primary"
+                        onClick={forget(async () => await create(true))}
+                        disabled={isCreating || api === null}>
+                        {t("common.create_and_stay")}
+                    </InputButton>
+                    <InputButton className="is-primary"
+                        onClick={forget(async () => await create(false))}
+                        disabled={isCreating || api === null}>
+                        {t("account.create_and_view")}
+                    </InputButton>
+                    {allowBack && <InputButton onClick={() => navigate(-1)}>{t("common.cancel")}</InputButton>}
                 </div>
             </Card>
         </div>

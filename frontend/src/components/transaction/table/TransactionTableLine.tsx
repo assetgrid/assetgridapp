@@ -21,6 +21,7 @@ import { userContext } from "../../App";
 import DeleteTransactionModal from "./../input/DeleteTransactionModal";
 import InputCheckbox from "../../input/InputCheckbox";
 import TransactionCategory from "./TransactionCategory";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     transaction: Transaction
@@ -70,13 +71,14 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     const [expandSplit, setExpandSplit] = React.useState(false);
     const { user } = React.useContext(userContext);
+    const { t } = useTranslation();
 
     return <div key={props.transaction.id} className="table-row">
         <div>
             {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
             <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
             {props.transaction.isSplit && <Tooltip
-                content={expandSplit ? "This is a split transaction. Click to collapse." : "This is a split transaction. Click to expand."}>
+                content={expandSplit ? t("transaction.transaction_is_split_click_to_collapse") : t("transaction.transaction_is_split_click_to_expand")}>
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
             </Tooltip>}
         </div>
@@ -156,6 +158,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const { user } = React.useContext(userContext);
     const api = useApi();
+    const { t } = useTranslation();
 
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
@@ -245,14 +248,14 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                     <InputButton className="is-small"
                         onClick={() => setModel({
                             ...model,
-                            lines: [...model.lines, { amount: new Decimal(0), description: "Transaction line", category: "" }]
+                            lines: [...model.lines, { amount: new Decimal(0), description: t("transaction.transaction_line"), category: "" }]
                         })}>Add line</InputButton>
                 </div>
                 <div style={{ gridColumn: " innerend / colend" }}></div>
             </div>
             : < div className="transaction-lines non-split">
                 <InputButton className="is-small"
-                    onClick={splitTransaction}>Split transaction</InputButton>
+                    onClick={splitTransaction}>{t("transaction.action_split_transaction")}</InputButton>
             </div>}
     </div>;
 
@@ -289,7 +292,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             isSplit: true,
             lines: [{
                 ...model.lines[0],
-                description: model.lines[0].description.trim() === "" ? "Transaction line" : model.description
+                description: model.lines[0].description.trim() === "" ? t("transaction.transaction_line") : model.description
             }]
         });
     }

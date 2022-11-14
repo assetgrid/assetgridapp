@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import * as Api from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
@@ -14,6 +15,7 @@ export default function PageLogin (): React.ReactElement {
     const [state, setState] = React.useState<"signing-in" | "waiting" | "error">("waiting");
     const { setUser } = React.useContext(userContext);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         Api.anyUsers().then(result => {
@@ -24,23 +26,23 @@ export default function PageLogin (): React.ReactElement {
     }, []);
 
     return <section className="page-login">
-        <Card title="Sign in to Assetgrid" isNarrow={true}>
+        <Card title={t("login.sign_in_to_assetgrid")!} isNarrow={true}>
             <InputText
                 value={email}
-                label="Email"
+                label={t("user.email")!}
                 disabled={state === "signing-in"}
                 onChange={e => setEmail(e.target.value)} errors={state === "error"} />
             <InputText
                 value={password}
                 password={true}
-                label="Password"
+                label={t("user.password")!}
                 disabled={state === "signing-in"}
-                onChange={e => setPassword(e.target.value)} errors={state === "error" ? ["Invalid username or password"] : undefined} />
+                onChange={e => setPassword(e.target.value)} errors={state === "error" ? [t("user.invalid_username_or_password")] : undefined} />
             <InputButton
                 className="is-primary"
                 disabled={state === "signing-in"}
-                onClick={forget(signIn)}>
-                Sign in
+                onClick={forget(signIn)!}>
+                {t("user.sign_in")}
             </InputButton>
         </Card>
     </section>;

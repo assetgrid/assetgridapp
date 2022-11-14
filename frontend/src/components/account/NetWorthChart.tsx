@@ -22,6 +22,7 @@ import { Chart } from "react-chartjs-2";
 import { userContext } from "../App";
 import Card from "../common/Card";
 import AccountLink from "./AccountLink";
+import { useTranslation } from "react-i18next";
 
 ChartJS.register(
     LinearScale,
@@ -49,6 +50,7 @@ export default function NetWorthChart (props: Props): React.ReactElement {
 
     const colors = ["#7eb0d5", "#fd7f6f", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"];
     const api = useApi();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (api !== null) {
@@ -59,13 +61,13 @@ export default function NetWorthChart (props: Props): React.ReactElement {
     if (movements === "fetching") {
         return <div className="columns m-0 is-multiline">
             {props.showTable && <div className="column p-0 is-flex is-narrow-tablet">
-                <Card isNarrow={true} title="Net worth">
-                    Please wait&hellip;
+                <Card isNarrow={true} title={t("common.net_worth")!}>
+                    {t("common.please_wait")}
                 </Card>
             </div>}
             <div className="column p-0 is-flex is-12-tablet is-reset-desktop">
-                <Card title="Development in net worth" isNarrow={false} style={{ flexGrow: 1 }}>
-                    Please wait&hellip;
+                <Card title={t("chart.development_in_net_worth")!} isNarrow={false} style={{ flexGrow: 1 }}>
+                    {t("common.please_wait")}
                 </Card>
             </div>
         </div>;
@@ -140,7 +142,7 @@ export default function NetWorthChart (props: Props): React.ReactElement {
             />
         </div>}
         <div className="column p-0 is-flex is-12-tablet is-reset-desktop">
-            <Card title="Development in net worth" isNarrow={false} style={{ flexGrow: 1 }}>
+            <Card title={t("chart.development_in_net_worth")!} isNarrow={false} style={{ flexGrow: 1 }}>
                 <div style={{ height: "400px", position: "relative" }}>
                     <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}>
                         <Chart type={"line"} height="400px" data={{
@@ -155,7 +157,7 @@ export default function NetWorthChart (props: Props): React.ReactElement {
                                     backgroundColor: "transparent"
                                 }])
                                 : [{
-                                    label: "Net worth",
+                                    label: t("common.net_worth")!,
                                     data: totalBalance,
                                     type: "line",
                                     stepped: true,
@@ -163,14 +165,14 @@ export default function NetWorthChart (props: Props): React.ReactElement {
                                     backgroundColor: "transparent"
                                 },
                                 {
-                                    label: "Revenue",
+                                    label: t("account.revenue")!,
                                     data: totalRevenue,
                                     type: "bar",
                                     borderColor: "transparent",
                                     backgroundColor: "#4db09b"
                                 },
                                 {
-                                    label: "Expenses",
+                                    label: t("account.expenses")!,
                                     data: totalExpenses,
                                     type: "bar",
                                     borderColor: "transparent",
@@ -199,14 +201,18 @@ export default function NetWorthChart (props: Props): React.ReactElement {
                     </div>
                 </div>
                 <div className="tags" style={{ alignItems: "baseline" }}>
-                    <p>Aggregate by (click to change):</p>&nbsp;
+                    <p>{t("chart.aggregate_by")}</p>&nbsp;
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
                         onClick={() => {
                             const options = ["day", "week", "month", "year"];
                             setResolution(options[options.indexOf(resolution) < options.length - 1 ? options.indexOf(resolution) + 1 : 0] as "month" | "day" | "year");
-                        }}>{["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(resolution)]}</span>
+                        }}>{[
+                            t("common.day"),
+                            t("common.week"),
+                            t("common.month"),
+                            t("common.year")][["day", "week", "month", "year"].indexOf(resolution)]}</span>
                     <span style={{ cursor: "pointer" }} className="tag is-dark"
-                        onClick={() => setPerAccount(value => !value)}>{perAccount ? "Per account" : "All accounts"}</span>
+                        onClick={() => setPerAccount(value => !value)}>{perAccount ? t("chart.aggregate.per_account") : t("chart.aggregate.all_accounts")}</span>
                 </div>
             </Card>
         </div>
@@ -245,14 +251,15 @@ interface NetWorthTableProps {
 }
 function NetWorthTable (props: NetWorthTableProps): React.ReactElement {
     const { user } = React.useContext(userContext);
+    const { t } = useTranslation();
 
-    return <Card isNarrow={true} title="Net worth">
+    return <Card isNarrow={true} title={t("chart.net_worth")!}>
         <table className="table">
             <thead>
                 <tr>
-                    <th>Account</th>
-                    <th>Balance</th>
-                    <th>Change since <br /> {formatDateWithUser(props.period.start, user)}</th>
+                    <th>{t("common.account")}</th>
+                    <th>{t("account.balance")}</th>
+                    <th>{t("chart.change_since")}<br />{formatDateWithUser(props.period.start, user)}</th>
                 </tr>
             </thead>
             <tbody>
@@ -264,7 +271,7 @@ function NetWorthTable (props: NetWorthTableProps): React.ReactElement {
             </tbody>
             <tfoot>
                 <tr>
-                    <th>Net worth</th>
+                    <th>{t("common.net_worth")}</th>
                     <th>{formatNumberWithUser(new Decimal(props.accountBalances.reduce((sum, item) => item.balance + sum, 0)), user)}</th>
                     <th>{formatNumberWithUser(new Decimal(props.accountBalances.reduce((sum, item) => item.revenue - item.expenses + sum, 0)), user)}</th>
                 </tr>

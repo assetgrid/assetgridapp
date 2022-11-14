@@ -5,6 +5,7 @@ import * as solid from "@fortawesome/free-solid-svg-icons";
 import { Calendar, DateRange } from "react-date-range";
 import { DateTime } from "luxon";
 import DropdownContent from "./DropdownContent";
+import { useTranslation } from "react-i18next";
 
 interface Props {
     period: Period
@@ -14,6 +15,7 @@ interface Props {
 export default function PeriodSelector (props: Props): React.ReactElement {
     const [open, setOpen] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     return <div className="field has-addons period-selector" style={{ position: "relative" }} onBlur={onBlur}>
         <p className="control">
@@ -51,17 +53,17 @@ export default function PeriodSelector (props: Props): React.ReactElement {
         return <div className="period-dropdown" ref={dropdownRef} tabIndex={0}>
             <ul className="period-sidebar">
                 <li onClick={() => props.onChange({ type: "custom", start: DateTime.now().startOf("day"), end: DateTime.now().endOf("day") })}>
-                    Today
+                    {t("common.today")}
                 </li>
                 <li
                     className={props.period.type === "month" ? "active" : ""}
                     onClick={() => props.onChange({ type: "month", start: props.period.start.startOf("month") })}>
-                    Month
+                    {t("common.month")}
                 </li>
                 <li
                     className={props.period.type === "year" ? "active" : ""}
                     onClick={() => props.onChange({ type: "year", start: props.period.start.startOf("year") })}>
-                    Year
+                    {t("common.year")}
                 </li>
                 <li className={props.period.type === "custom" ? "active" : ""}
                     onClick={() => props.onChange({
@@ -69,12 +71,14 @@ export default function PeriodSelector (props: Props): React.ReactElement {
                         start: props.period.start,
                         end: props.period.type === "custom" ? props.period.end : props.period.start.plus({ days: 7 })
                     })}>
-                    Custom Period
+                    {t("period.custom_period")}
                 </li>
             </ul>
             {["month", "year"].includes(props.period.type) && <div className="details">
                 <p>
-                    Dispay one {props.period.type} starting on <i>{props.period.start.toLocaleString(DateTime.DATE_MED)}</i>.
+                    {props.period.type === "month"
+                        ? <>{t("period.display_month_starting_on")} <i>{props.period.start.toLocaleString(DateTime.DATE_MED)}</i>.</>
+                        : <>{t("period.display_year_starting_on")} <i>{props.period.start.toLocaleString(DateTime.DATE_MED)}</i>.</>}
                 </p>
                 <div className="calendar-wrapper">
                     {open && <Calendar
@@ -88,7 +92,7 @@ export default function PeriodSelector (props: Props): React.ReactElement {
             </div>}
             {props.period.type === "custom" && <div className="details">
                 <p>
-                    Select the period to display.
+                    {t("period.select_period_to_display")}
                 </p>
                 <div className="calendar-wrapper">
                     {open && <DateRange
