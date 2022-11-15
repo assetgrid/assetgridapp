@@ -162,3 +162,18 @@ pre.multiline-text {
     padding: 0.8rem;
     font-family: inherit;
 }
+
+/*
+ * File input
+ */
+.file.has-addons {
+    & > label > :last-child > .button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: 0;
+    }
+    & > label > :not(:last-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}

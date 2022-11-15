@@ -80,7 +80,7 @@ namespace assetgrid_backend.Controllers
                     if (otherTransactionsWithSameIdentifiers)
                     {
                         ModelState.AddModelError(nameof(model.Identifiers), "Another transaction with this identifier exists");
-                        return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+                        return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory?.Invoke(ControllerContext) ?? BadRequest();
                     }
                 }
 
@@ -304,6 +304,7 @@ namespace assetgrid_backend.Controllers
                         sourceUserAccount = destinationUserAccount;
                         destinationUserAccount = temp;
                     }
+                    await _context.SaveChangesAsync();
 
                     // Set metadata
                     if (model.MetaData != null)

@@ -19,41 +19,16 @@ using Xunit;
 using assetgrid_backend.models.Search;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.EntityFrameworkCore.InMemory.Internal;
+using Microsoft.Extensions.Configuration;
 
 namespace backend.unittests.Tests
 {
-    public class AccountTests : IDisposable
+    public class AccountTests : TestBase, IDisposable
     {
-        public AssetgridDbContext Context { get; set; }
-        public AccountController AccountController { get; set; }
-        public UserAuthenticatedResponse User { get; set; }
-        public TransactionController TransactionController { get; set; }
-        public UserService UserService { get; set; }
-        public AccountService AccountService { get; set; }
-        public AutomationService AutomationService { get; set; }
-        public MetaService MetaService { get; set; }
-        public AccountTests()
+        public AccountTests() : base()
         {
-            // Create DB context and connect
-            var connection = new MySqlConnector.MySqlConnection("DataSource=:memory:");
-            var options = new DbContextOptionsBuilder<AssetgridDbContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-            Context = new AssetgridDbContext(options.Options);
 
-            // Create user and log in
-            UserService = new UserService(JwtSecret.Get(), Context);
-            AccountService = new AccountService(Context);
-            AutomationService = new AutomationService(Context);
-            MetaService = new MetaService(Context);
-            var userController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            userController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
-            User = userController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(User.Id).Result;
-
-            // Setup account controller
-            AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
         }
 
         public void Dispose()
@@ -85,7 +60,7 @@ namespace backend.unittests.Tests
 
             // Verify that the user has the correct permission
             Assert.NotNull(Context.UserAccounts
-                .SingleOrDefault(account => account.UserId == User.Id &&
+                .SingleOrDefault(account => account.UserId == UserA.Id &&
                     account.AccountId == createResult.Id &&
                     account.Permissions == UserAccountPermissions.All &&
                     account.Favorite == model.Favorite &&
@@ -135,7 +110,7 @@ namespace backend.unittests.Tests
 
             // Create account
             var testAccount = (await AccountController.Create(model)).OkValue<ViewAccount>();
-            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == User.Id && account.AccountId == testAccount.Id);
+            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == UserA.Id && account.AccountId == testAccount.Id);
             Assert.NotNull(userAccount);
 
             if (permissions == null)
@@ -201,7 +176,7 @@ namespace backend.unittests.Tests
             var accountB = (await AccountController.Create(model)).OkValue<ViewAccount>();
             model.Name = "No permission";
             var accountNoPermissions = (await AccountController.Create(model)).OkValue<ViewAccount>();
-            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == User.Id && account.AccountId == accountNoPermissions.Id)!;
+            var userAccount = Context.UserAccounts.SingleOrDefault(account => account.UserId == UserA.Id && account.AccountId == accountNoPermissions.Id)!;
             Context.Remove(userAccount);
             Context.SaveChanges();
 
@@ -326,7 +301,7 @@ namespace backend.unittests.Tests
             UserAccount userAccount;
             foreach (var readPermission in new[] { UserAccountPermissions.Read, UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All })
             {
-                userAccount = Context.UserAccounts.Single(u => u.UserId == User.Id && u.AccountId == testAccount.Id);
+                userAccount = Context.UserAccounts.Single(u => u.UserId == UserA.Id && u.AccountId == testAccount.Id);
                 userAccount.Permissions = readPermission;
                 Context.SaveChanges();
                 transactions.ForEach(t =>
@@ -346,7 +321,7 @@ namespace backend.unittests.Tests
                 Assert.Equal(transactions.Take(5).Sum(t => t.Source?.Id == testAccount.Id ? -t.Total : t.Total), accountTransactions.Total);
             }
 
-            userAccount = Context.UserAccounts.Single(u => u.UserId == User.Id && u.AccountId == testAccount.Id);
+            userAccount = Context.UserAccounts.Single(u => u.UserId == UserA.Id && u.AccountId == testAccount.Id);
             Context.Remove(userAccount);
             Context.SaveChanges();
 
@@ -465,7 +440,7 @@ namespace backend.unittests.Tests
                 Assert.Equal(item.Revenue, relevantTransactions.Where(t => t.Destination?.Id == testAccount.Id).Sum(t => t.Total));
             }
 
-            var userAccount = Context.UserAccounts.Where(a => a.UserId == User.Id && a.AccountId == testAccount.Id).Single();
+            var userAccount = Context.UserAccounts.Where(a => a.UserId == UserA.Id && a.AccountId == testAccount.Id).Single();
             Context.UserAccounts.Remove(userAccount);
             Context.SaveChanges();
 
@@ -527,7 +502,7 @@ namespace backend.unittests.Tests
             Assert.Single(result.Items);
             Assert.Equal(400, result.Items.Single(x => x.Key == accountC.Id).Value.Items.First().Revenue);
 
-            UserService.MockUser = await UserService.GetById(User.Id);
+            UserService.MockUser = await UserService.GetById(UserA.Id);
             result = (await AccountController.GetMovementAll(new ViewGetMovementRequest
             {
                 Resolution = AccountMovementResolution.Yearly
@@ -592,7 +567,7 @@ namespace backend.unittests.Tests
             Assert.Equal(200, result.Single(x => x.Category == catB1.Lines.First().Category).Revenue);
             Assert.Equal(250, result.Single(x => x.Category == catB1.Lines.First().Category).Expenses);
 
-            Context.UserAccounts.Remove(Context.UserAccounts.Single(account => account.UserId == User.Id && account.AccountId == account.Id));
+            Context.UserAccounts.Remove(Context.UserAccounts.Single(account => account.UserId == UserA.Id && account.AccountId == account.Id));
             Context.SaveChanges();
             Assert.IsType<NotFoundResult>(await AccountController.CategorySummary(account.Id, null));
         }

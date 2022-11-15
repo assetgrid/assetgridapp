@@ -5,9 +5,11 @@ using assetgrid_backend.models.ViewModels;
 using assetgrid_backend.models.ViewModels.Automation;
 using assetgrid_backend.Models;
 using assetgrid_backend.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.IO;
 
 namespace assetgrid_backend.Controllers
 {
@@ -19,11 +21,20 @@ namespace assetgrid_backend.Controllers
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
-        public MetaController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        private readonly AttachmentService _attachment;
+        private readonly string _jwtSecret;
+        public MetaController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions,
+            AttachmentService attachment,
+            JwtSecret secret)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _attachment = attachment;
+            _jwtSecret = secret.Value;
         }
 
         /// <summary>
@@ -141,6 +152,114 @@ namespace assetgrid_backend.Controllers
                 }
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+        }
+
+        /// <summary>
+        /// Delete a meta field
+        /// </summary>
+        /// <param name="model">The meta field to delete</param>
+        [HttpPost("/api/v1/Meta/{fieldId}/{type}/Attachment/{objectId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MetaAttachment<Transaction>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> UploadAttachment(int fieldId, string type, int objectId, IFormFile file)
+        {
+            var user = _user.GetCurrent(HttpContext)!;
+
+            if (type.ToLower() != "transaction")
+            {
+                return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+            }
+
+            var field = await _context.UserMetaFields
+                .Include(x => x.Field)
+                .ThenInclude(x => x.TransactionMetaAttachment!.Where(xx => xx.ObjectId == objectId))
+                .ThenInclude(x => x.Value)
+                .Where(x => x.UserId == user.Id && x.FieldId == fieldId)
+                .SingleOrDefaultAsync();
+
+            if (field == null)
+            {
+                return NotFound();
+            }
+
+            Attachment attachment;
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                var oldAttachment = field.Field.TransactionMetaAttachment?.SingleOrDefault();
+                if (oldAttachment != null)
+                {
+                    _attachment.DeleteAttachment(oldAttachment.Value);
+                    _context.Remove(oldAttachment);
+                }
+                attachment = await _attachment.CreateAttachment(file);
+
+                var previousValue = _context.TransactionMetaAttachment.SingleOrDefault(x => x.ObjectId == objectId && x.FieldId == fieldId);
+                if (previousValue != null)
+                {
+                    previousValue.Value = attachment;
+                }
+                else
+                {
+                    _context.TransactionMetaAttachment.Add(new MetaAttachment<Transaction>
+                    {
+                        FieldId = fieldId,
+                        ObjectId = objectId,
+                        Value = attachment
+                    });
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+
+            return Ok(new
+            {
+                Id = attachment.Id,
+                Name = attachment.FileName,
+                FileSize = attachment.FileSize
+            });
+        }
+
+        [HttpPost("/api/v1/Meta/{type}/Attachment")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MetaAttachment<Transaction>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAttachment (string type, [FromForm] ViewGetAttachmentRequest model)
+        {
+            User user;
+            try
+            {
+                user = await JwtMiddleware.ValidateToken(_jwtSecret, model.JwtToken, _user);
+            }
+            catch
+            {
+                return Unauthorized();
+            }
+
+            if (type.ToLower() != "transaction")
+            {
+                return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+            }
+
+            var attachment = _context.TransactionMetaAttachment
+                .Include(x => x.Value)
+                .Where(x => x.Value.Id == new Guid(model.AttachmentId))
+                .Where(x => x.Object.SourceAccount!.Users!.Any(xx => xx.UserId == user.Id) || x.Object.DestinationAccount!.Users!.Any(xx => xx.UserId == user.Id))
+                .Where(x => x.Field.Users!.Any(xx => xx.UserId == user.Id))
+                .SingleOrDefault();
+
+            if (attachment == null)
+            {
+                return NotFound();
+            }
+
+            var stream = await _attachment.GetAttachment(attachment.Value);
+            return File(stream, "application/octet-stream", attachment.Value.FileName);
+        }
+        public class ViewGetAttachmentRequest
+        {
+            public required string AttachmentId { get; set; }
+            public required string JwtToken { get; set; }
         }
     }
 }

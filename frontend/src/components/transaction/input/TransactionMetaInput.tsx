@@ -1,4 +1,4 @@
-import { FieldValueType } from "../../../models/meta";
+import { FieldValueType, MetaFieldValue } from "../../../models/meta";
 import * as React from "react";
 import InputTextOrNull from "../../input/InputTextOrNull";
 import InputNumber from "../../input/InputNumber";
@@ -10,11 +10,12 @@ import InputAccount from "../../account/input/InputAccount";
 import InputTextArea from "../../input/InputTextArea";
 import InputTransaction from "./InputTransaction";
 import { useTranslation } from "react-i18next";
+import InputFile from "../../input/InputFile";
 
 interface Props {
     disabled: boolean
     errors?: string[]
-    onChange: (value: string | Decimal | boolean | Account | Transaction | null) => void
+    onChange: (value: MetaFieldValue["value"]) => void
     field: MetaFieldType
 };
 
@@ -29,13 +30,13 @@ export type MetaFieldType = {
     value: boolean
 } | {
     type: FieldValueType.Account
-    value: Account
+    value: Account | null
 } | {
     type: FieldValueType.Transaction
-    value: Transaction
+    value: Transaction | null
 } | {
     type: FieldValueType.Attachment
-    value: string
+    value: { name: string, value?: File, id: string } | null
 };
 
 export default function TransactionMetaInput (props: Props): React.ReactElement {
@@ -92,7 +93,11 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
                 disabled={props.disabled}
                 errors={props.errors}
             />;
-        default:
-            throw new Error("Not implemented");
+        case FieldValueType.Attachment:
+            return <InputFile
+                filename={props.field.value?.name ?? null}
+                allowReset={true}
+                onChange={value => props.onChange(value !== null ? { name: value.name, file: value } : null)}
+            />;
     }
 }

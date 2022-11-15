@@ -947,6 +947,54 @@ const Meta = (token: string) => ({
                     reject(error);
                 });
         });
+    },
+
+    /**
+     * Uploads an attachment
+     * @param id The id of the meta field to fill
+     * @param type The type of object the meta field is associated to
+     * @param objectId The id of the object to associate the attachment to
+     * @param file The file to upload
+     */
+    uploadAttachment: async function (id: number, type: "transaction", objectId: number, file: File): Promise<Ok<{ name: string }> | NotFound> {
+        const formData = new FormData();
+        formData.append("file", file);
+        return await new Promise<Ok<{ name: string }> | NotFound>((resolve, reject) => {
+            axios.post<{ name: string }>(`${rootUrl}/api/v1/meta/${id}/${type}/attachment/${objectId}`, formData, {
+                headers: {
+                    authorization: "Bearer: " + token
+                }
+            }).then(result => resolve({ status: 200, data: result.data }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Creates a form and submits it to download the specified attachment
+     * @param id The id of the meta field to download
+     * @param type The type of object the meta field is associated to
+     * @param objectId The id of the object with the attachment
+     */
+    openAttachment: function (id: string, type: "transaction"): void {
+        const form = document.createElement("form");
+        form.method = "post";
+        form.target = "_blank";
+        form.action = `${rootUrl}/api/v1/meta/${type}/attachment/`;
+        form.innerHTML = `<input type="hidden" name="jwtToken" value="${token}"/>
+                          <input type="hidden" name="attachmentId" value="${id}"/>`;
+
+        console.log("form:", form);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
     }
 });
 
@@ -963,11 +1011,10 @@ const Taxonomy = (token: string) => ({
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
                 resolve(result.data);
-            })
-                .catch(e => {
-                    console.log(e);
-                    reject(e);
-                });
+            }).catch(e => {
+                console.log(e);
+                reject(e);
+            });
         });
     }
 });

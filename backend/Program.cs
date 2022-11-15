@@ -51,6 +51,7 @@ if (!Directory.Exists(dataDirectory)) {
 
     builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
+    builder.Services.AddScoped<AttachmentService>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IAutomationService, AutomationService>();
@@ -100,7 +101,6 @@ var app = builder.Build();
     app.UseSwaggerUI();
 
     app.UseStaticFiles();
-    app.UseHttpsRedirection();
     app.UseRouting();
 
     // No issues with cross origin requests since we don't use cookies

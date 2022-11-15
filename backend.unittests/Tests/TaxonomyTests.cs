@@ -22,53 +22,13 @@ using Xunit;
 
 namespace backend.unittests.Tests
 {
-    public class TaxonomyTests
+    public class TaxonomyTests : TestBase
     {
-        public AssetgridDbContext Context { get; set; }
-        public AccountController AccountController { get; set; }
-        public TransactionController TransactionController { get; set; }
-        public UserController UserController { get; set; }
-        public UserService UserService { get; set; }
-        public AccountService AccountService { get; set; }
-        public UserAuthenticatedResponse User { get; set; }
-        public TaxonomyController TaxonomyController { get; set; }
-        public AutomationService AutomationService { get; set; }
-        public MetaService MetaService { get; set; }
-
         public ViewAccount AccountA;
         public ViewAccount AccountB;
 
-        public TaxonomyTests()
+        public TaxonomyTests() : base()
         {
-            // Create DB context and connect
-            var connection = new MySqlConnector.MySqlConnection("DataSource=:memory:");
-            var options = new DbContextOptionsBuilder<AssetgridDbContext>()
-                .UseInMemoryDatabase("Taxonomy" + Guid.NewGuid().ToString())
-                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-            Context = new AssetgridDbContext(options.Options);
-
-            // Create user and log in
-            UserService = new UserService(JwtSecret.Get(), Context);
-            AccountService = new AccountService(Context);
-            AutomationService = new AutomationService(Context);
-            MetaService = new MetaService(Context);
-            UserController = new UserController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
-            UserController.CreateInitial(new AuthenticateModel { Email = "test", Password = "test" }).Wait();
-            User = UserController.Authenticate(new AuthenticateModel { Email = "test", Password = "test" }).Result.OkValue<UserAuthenticatedResponse>();
-            UserService.MockUser = UserService.GetById(User.Id).Result;
-
-            // Setup account controller
-            AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
-            TaxonomyController = new TaxonomyController(Context, UserService);
-
-            var objectValidator = new Mock<IObjectModelValidator>();
-            objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
-                                              It.IsAny<ValidationStateDictionary>(),
-                                              It.IsAny<string>(),
-                                              It.IsAny<Object>()));
-            TransactionController.ObjectValidator = objectValidator.Object;
-
             var accountModel = new ViewCreateAccount
             {
                 Name = "A",

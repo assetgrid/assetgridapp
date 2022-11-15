@@ -21,34 +21,15 @@ using Microsoft.Extensions.Logging;
 
 namespace backend.unittests.Tests
 {
-    public class UserTests
+    public class UserTests : TestBase
     {
-        public AssetgridDbContext Context { get; set; }
-        public UserController UserController { get; set; }
-        public AccountController AccountController { get; set; }
-        public TransactionController TransactionController { get; set; }
-        public UserService UserService { get; set; }
-        public AccountService AccountService { get; set; }
-        public AutomationService AutomationService { get; set; }
-        public MetaService MetaService { get; set; }
-
-        public UserTests()
+        public UserTests() : base()
         {
-            // Create DB context and connect
-            var connection = new MySqlConnector.MySqlConnection("DataSource=:memory:");
-            var options = new DbContextOptionsBuilder<AssetgridDbContext>()
-                .UseInMemoryDatabase("Transaction" + Guid.NewGuid().ToString())
-                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-            Context = new AssetgridDbContext(options.Options);
-
-            // Create user and log in
-            UserService = new UserService(JwtSecret.Get(), Context);
-            AccountService = new AccountService(Context);
-            AutomationService = new AutomationService(Context);
-            MetaService = new MetaService(Context);
-            UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
+            UserService.MockUser = UserA;
+            UserController.Delete().Wait();
+            UserService.MockUser = UserB;
+            UserController.Delete().Wait();
+            UserService.MockUser = null;
         }
 
         [Fact]

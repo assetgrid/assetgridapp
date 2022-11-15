@@ -24,10 +24,10 @@ import Hero from "../../common/Hero";
 import InputTextMultiple from "../../input/InputTextMultiple";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionMetaInput, { MetaFieldType } from "../../transaction/input/TransactionMetaInput";
-import { Account } from "../../../models/account";
 import TransactionMetaValue from "../../transaction/input/TransactionMetaValue";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
+import { MetaFieldValue } from "../../../models/meta";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -118,7 +118,27 @@ export default function PageTransaction (): React.ReactElement {
         });
 
         if (result.status === 200) {
-            setTransaction(result.data);
+            const newTransaction = result.data;
+
+            // Loop through meta fields
+            for (let i = 0; i < editModel.metaData.length; i++) {
+                const metaField = editModel.metaData[i];
+                if (typeof metaField.value !== "object" || metaField.value === null || !("file" in metaField.value) || metaField.value.file === undefined) {
+                    continue;
+                }
+
+                // An attachment was uploaded
+                const file = metaField.value.file;
+                const uploadResult = await api.Meta.uploadAttachment(metaField.metaId, "transaction", id, file);
+                if (uploadResult.status === 200) {
+                    const newMeta = newTransaction.metaData.find(x => x.metaId === metaField.metaId);
+                    if (newMeta !== undefined) {
+                        newMeta.value = uploadResult.data;
+                    }
+                }
+            }
+
+            setTransaction(newTransaction);
             setEditModel(null);
         } else if (result.status === 400) {
             setErors(result.errors);
@@ -560,7 +580,7 @@ function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
         </Card>;
     }
 
-    function updateField (newValue: string | Decimal | boolean | Account | Transaction | null, index: number): void {
+    function updateField (newValue: MetaFieldValue["value"], index: number): void {
         if (props.editModel === null) return;
 
         props.onChange({

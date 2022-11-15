@@ -25,9 +25,11 @@ namespace assetgrid_backend.Services
     public class MetaService : IMetaService
     {
         private readonly AssetgridDbContext _context;
-        public MetaService(AssetgridDbContext context)
+        private readonly AttachmentService _attachment;
+        public MetaService(AssetgridDbContext context, AttachmentService attachment)
         {
             _context = context;
+            _attachment = attachment;
         }
 
         internal struct MetaValue
@@ -50,6 +52,7 @@ namespace assetgrid_backend.Services
                 .Include(x => x.Field.TransactionMetaTextLong!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaTextLine!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaAttachment!.Where(xx => xx.ObjectId == transactionId))
+                    .ThenInclude(x => x.Value)
                 .Include(x => x.Field.TransactionMetaBoolean!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaNumber!.Where(xx => xx.ObjectId == transactionId))
                 .Include(x => x.Field.TransactionMetaAccount!.Where(xx => xx.ObjectId == transactionId))
@@ -87,7 +90,12 @@ namespace assetgrid_backend.Services
                 {
                     MetaFieldValueType.TextLine => x.Field.TransactionMetaTextLine?.SingleOrDefault()?.Value,
                     MetaFieldValueType.TextLong => x.Field.TransactionMetaTextLong?.SingleOrDefault()?.Value,
-                    MetaFieldValueType.Attachment => x.Field.TransactionMetaAttachment?.SingleOrDefault()?.Path,
+                    MetaFieldValueType.Attachment => x.Field.TransactionMetaAttachment?.Select(x => new
+                    {
+                        Id = x.Value.Id,
+                        Name = x.Value.FileName,
+                        FileSize = x.Value.FileSize
+                    }).SingleOrDefault(),
                     MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value.ToString(),
                     MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.ValueId != null
@@ -96,9 +104,9 @@ namespace assetgrid_backend.Services
                     MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.ValueId != null
                         ? transactions[x.Field.TransactionMetaTransaction.SingleOrDefault()!.ValueId]
                         : null,
+                    _ => throw new Exception("Unknown meta field value type")
                 }
             }).ToList();
-            #warning Implement attachments as well
         }
 
         public async Task SetTransactionMetaValues(int transactionId, int userId, List<ViewSetMetaField> values)
@@ -358,7 +366,19 @@ namespace assetgrid_backend.Services
                             break;
                         }
                     case MetaFieldValueType.Attachment:
-                        // Don't do anything about attachments as they are uploaded with a separate API
+                        // Only remove attachments. Attachments are added using a separate api
+                        if (fieldValue.Value == null || ((fieldValue.Value as JsonElement?)?.ValueKind == JsonValueKind.Null))
+                        {
+                            var previousValue = _context.TransactionMetaAttachment
+                                .Include(x => x.Value)
+                                .SingleOrDefault(x => x.ObjectId == transactionId && x.FieldId == fieldValue.MetaId);
+                            if (previousValue != null)
+                            {
+                                _attachment.DeleteAttachment(previousValue.Value);
+                                _context.Remove(previousValue.Value);
+                                _context.Remove(previousValue);
+                            }
+                        }
                         break;
                     default:
                         throw new Exception("Unknown meta field value type");
