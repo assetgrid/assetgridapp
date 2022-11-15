@@ -7,8 +7,7 @@ import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
-import { Account } from "../../../models/account";
-import { MetaField } from "../../../models/meta";
+import { MetaField, MetaFieldValue } from "../../../models/meta";
 import { ModifyTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
@@ -317,7 +316,7 @@ export default function PageCreateTransaction (): React.ReactElement {
         });
     }
 
-    function updateMetaField (newValue: string | Decimal | boolean | Account | Transaction | null, index: number): void {
+    function updateMetaField (newValue: MetaFieldValue["value"], index: number): void {
         if (model.metaData === null) return;
 
         setModel({
