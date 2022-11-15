@@ -150,8 +150,8 @@ namespace backend.unittests.Tests
             UserService.MockUser = await UserService.GetById(userA!.Id);
 
             // Update user preferences and verify that they were updated
-            await UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "å" });
-            Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "å"));
+            await UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "X" });
+            Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "X"));
 
             // Create some accounts
             var accountModel = new ViewCreateAccount
