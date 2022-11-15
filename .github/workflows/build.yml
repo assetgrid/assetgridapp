@@ -30,7 +30,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: backend
-        path: backend/bin/Release/net6.0
+        path: backend/bin/Release/net7.0
 
   test-backend:
     runs-on: ubuntu-latest
@@ -95,5 +95,5 @@ jobs:
         name: dockerfile
         path: |
           frontend/dist.production
-          backend/bin/Release/net6.0
+          backend/bin/Release/net7.0
           Dockerfile
