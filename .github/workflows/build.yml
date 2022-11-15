@@ -19,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Restore dependencies
       run: dotnet restore
       working-directory: ./backend
@@ -40,7 +40,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Restore dependencies
       run: dotnet restore
       working-directory: ./backend.unittests
@@ -84,7 +84,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: backend
-        path: backend/bin/Release/net6.0
+        path: backend/bin/Release/net7.0
     - name: Display structure of downloaded files
       run: ls -R
     - name: Upload artifacts
