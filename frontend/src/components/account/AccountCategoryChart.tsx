@@ -12,7 +12,9 @@ import {
     Tooltip,
     Legend,
     BarController,
-    BarElement
+    BarElement,
+    LegendElement,
+    ChartTypeRegistry
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
@@ -145,7 +147,7 @@ function AccountCategoryChart (props: Props): React.ReactElement {
                                     });
                                     ci.update();
                                 } else {
-                                    ChartJS.defaults.plugins.legend.onClick.bind(this as any)(e, legendItem, legend);
+                                    ChartJS.defaults.plugins.legend.onClick.bind(this as LegendElement<keyof ChartTypeRegistry>)(e, legendItem, legend);
                                 }
                             }
                         }

@@ -14,7 +14,9 @@ import {
     Tooltip,
     Legend,
     BarElement,
-    BarController
+    BarController,
+    LegendElement,
+    ChartTypeRegistry
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
@@ -37,10 +39,12 @@ interface Props {
     period: Period
 }
 
+const TimeResolutionValues = ["month", "day", "week", "year"] as const;
+
 export default React.memo(AccountBalanceChart);
 function AccountBalanceChart (props: Props): React.ReactElement {
     const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
-    const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
+    const [resolution, setResolution] = React.useState<typeof TimeResolutionValues[number]>("day");
     const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
     const api = useApi();
     const { t } = useTranslation();
@@ -166,7 +170,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                                     });
                                     ci.update();
                                 } else {
-                                    ChartJS.defaults.plugins.legend.onClick.bind(this as any)(e, legendItem, legend);
+                                    ChartJS.defaults.plugins.legend.onClick.bind(this as LegendElement<keyof ChartTypeRegistry>)(e, legendItem, legend);
                                 }
                             }
                         }
@@ -177,15 +181,15 @@ function AccountBalanceChart (props: Props): React.ReactElement {
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
             <p>{t("chart.aggregate_by")}</p>&nbsp;
-            {["day", "week", "month", "year"].map(option =>
+            {TimeResolutionValues.map(option =>
                 <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer" }}
                     className={option === resolution ? "tag is-primary" : "tag is-dark"}
-                    onClick={() => setResolution(option as any)}>
+                    onClick={() => setResolution(option)}>
                     {[
                         t("common.day"),
                         t("common.week"),
                         t("common.month"),
-                        t("common.year")][["day", "week", "month", "year"].indexOf(option as any)]}
+                        t("common.year")][TimeResolutionValues.indexOf(option)]}
                 </span>)}
         </div>
     </>;

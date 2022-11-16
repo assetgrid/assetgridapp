@@ -86,7 +86,7 @@ export default function PageMeta (): React.ReactElement {
                     </tbody>
                 </table>}
             </Card>
-            <CreateFieldCard onCreated={forget(updateFields)} fieldTypes={fieldTypes as any} />
+            <CreateFieldCard onCreated={forget(updateFields)} fieldTypes={fieldTypes} />
 
             {/* Deletion modal */}
             {deletingField !== null && <Modal
@@ -127,7 +127,7 @@ export default function PageMeta (): React.ReactElement {
 
 interface CreateFieldProps {
     onCreated: () => void
-    fieldTypes: Array<{ key: string, value: string, type: FieldValueType }>
+    fieldTypes: Readonly<Array<{ key: string, value: string, type: FieldValueType }>>
 }
 
 function CreateFieldCard (props: CreateFieldProps): React.ReactElement {

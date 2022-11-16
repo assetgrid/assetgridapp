@@ -129,15 +129,15 @@ export function getPossibleOperators (column: ConditionModel["column"]): Array<t
     switch (column) {
         case "Id":
         case "Total":
-            return Operators.filter(op => numericOperators.includes(op.operator as any));
+            return Operators.filter(op => (numericOperators as readonly SearchOperator[]).includes(op.operator));
         case "DateTime":
-            return Operators.filter(op => dateTimeOperators.includes(op.operator as any));
+            return Operators.filter(op => (dateTimeOperators as readonly SearchOperator[]).includes(op.operator));
         case "SourceAccountId":
         case "DestinationAccountId":
-            return Operators.filter(op => accountOperators.includes(op.operator as any));
+            return Operators.filter(op => (accountOperators as readonly SearchOperator[]).includes(op.operator));
         case "Category":
         case "Description":
-            return Operators.filter(op => stringOperators.includes(op.operator as any));
+            return Operators.filter(op => (stringOperators as readonly SearchOperator[]).includes(op.operator));
     }
 }
 
