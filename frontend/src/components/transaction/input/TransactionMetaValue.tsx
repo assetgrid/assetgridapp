@@ -45,12 +45,14 @@ export default function TransactionMetaValue (props: Props): React.ReactElement 
             return props.field.value === null
                 ? <span>{t("common.no_value")}</span>
                 : <TransactionLink transaction={props.field.value} />;
-        case FieldValueType.Attachment:
-            return props.field.value === null
+        case FieldValueType.Attachment: {
+            const field = props.field;
+            return field.value === null
                 ? <span>{t("common.no_attachment")}</span>
-                : <a onClick={() => api?.Meta.openAttachment((props.field.value as any).id, "transaction")}>
+                : <a onClick={() => api?.Meta.openAttachment(field.value!.id, "transaction")}>
                     <FontAwesomeIcon icon={faPaperclip} />
-                    {props.field.value.name}
+                    {field.value.name}
                 </a>;
+        }
     }
 }
