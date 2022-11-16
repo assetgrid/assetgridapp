@@ -29,49 +29,19 @@ interface Props<T> {
 export default function TransactionActionEditor (props: Props<TransactionAction>): React.ReactElement {
     switch (props.action.key) {
         case "set-description":
-            return <SetDescriptionEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetDescriptionEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-timestamp":
-            return <SetTimestampEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetTimestampEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-amount":
-            return <SetAmountEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetAmountEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-lines":
-            return <SetLinesEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetLinesEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-account":
-            return <SetAccountEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetAccountEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-category":
-            return <SetCategoryEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetCategoryEditor {...props} action={props.action} onChange={props.onChange} />;
         case "delete":
-            return <DeleteEditor {...props} action={props.action} onChange={onChange} />;
-    }
-
-    function onChange (newAction: TransactionAction): void {
-        if (newAction.key !== props.action.key) {
-            let action: TransactionAction;
-            switch (newAction.key) {
-                case "delete":
-                    action = { key: "delete" };
-                    break;
-                case "set-amount":
-                    action = { key: "set-amount", value: new Decimal(0) };
-                    break;
-                case "set-description":
-                case "set-category":
-                    action = { key: newAction.key, value: "" };
-                    break;
-                case "set-account":
-                    action = { key: newAction.key, value: null, account: "source" };
-                    break;
-                case "set-timestamp":
-                    action = { key: "set-timestamp", value: DateTime.now() };
-                    break;
-                case "set-lines":
-                    action = { key: "set-lines", value: [] };
-                    break;
-            }
-            props.onChange(action);
-            return;
-        }
-        props.onChange(newAction);
+            return <DeleteEditor {...props} action={props.action} onChange={props.onChange} />;
     }
 }
 
@@ -94,7 +64,7 @@ function DefaultEditorLayout (props: { children?: React.ReactNode, description: 
                 disabled={props.disabled}
                 items={[...actions]}
                 value={props.action.key}
-                onChange={value => props.onChange({ ...props.action, key: value } as any as TransactionAction)} />
+                onChange={onChange} />
             {props.description}
             {props.delete !== undefined && <InputIconButton className="btn-delete" icon={faTrashCan} onClick={() => props.delete!()} />}
         </div>
@@ -103,6 +73,30 @@ function DefaultEditorLayout (props: { children?: React.ReactNode, description: 
             {props.children}
         </div>
     </div>;
+
+    function onChange (newKey: typeof actions[number]["key"]): void {
+        if (newKey === props.action.key) return;
+        switch (newKey) {
+            case "delete":
+                props.onChange({ key: "delete" });
+                return;
+            case "set-amount":
+                props.onChange({ key: "set-amount", value: new Decimal(0) });
+                return;
+            case "set-description":
+            case "set-category":
+                props.onChange({ key: newKey, value: "" });
+                return;
+            case "set-account":
+                props.onChange({ key: newKey, value: null, account: "source" });
+                return;
+            case "set-timestamp":
+                props.onChange({ key: "set-timestamp", value: DateTime.now() });
+                return;
+            case "set-lines":
+                props.onChange({ key: "set-lines", value: [] });
+        }
+    }
 }
 
 function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactElement {
