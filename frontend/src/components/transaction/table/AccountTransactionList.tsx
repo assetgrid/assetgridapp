@@ -9,7 +9,6 @@ import TransactionTableLine from "./TransactionTableLine";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../../lib/routes";
-import { serializeQueryForHistory } from "../filter/FilterHelpers";
 import MergeTransactionsModal from "../input/MergeTransactionsModal";
 import { useTranslation } from "react-i18next";
 
@@ -206,7 +205,7 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
 
         navigate(routes.transactionEditMultiple(), {
             state: {
-                query: serializeQueryForHistory(query),
+                query,
                 showBack: true
             }
         });

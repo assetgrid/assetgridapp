@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "../account";
-import { SearchGroup, serializeTransactionQuery } from "../search";
+import { SearchGroup } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
 
 export interface TransactionAutomation {
@@ -34,7 +34,7 @@ export enum TransactionAutomationPermissions {
 export function serializeTransactionAutomation (value: TransactionAutomation): TransactionAutomation {
     return {
         ...value,
-        query: serializeTransactionQuery(value.query),
+        query: value.query,
         actions: value.actions.map(action => serializeTransactionAction(action))
     };
 }

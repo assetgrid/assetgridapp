@@ -13,7 +13,7 @@ import InputButton from "../../../input/InputButton";
 import InputCheckbox from "../../../input/InputCheckbox";
 import InputText from "../../../input/InputText";
 import TransactionActionEditor from "../../../transaction/automation/TransactionActionEditor";
-import TransactionFilterEditor from "../../../transaction/filter/TransactionFilterEditor";
+import TransactionFilterEditor from "../../../transaction/TransactionFilterEditor";
 import TransactionList from "../../../transaction/table/TransactionList";
 import Page404 from "../../Page404";
 import PageError from "../../PageError";

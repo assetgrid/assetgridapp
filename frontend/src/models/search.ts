@@ -1,6 +1,3 @@
-import Decimal from "decimal.js";
-import { DateTime } from "luxon";
-
 export interface SearchRequest {
     from: number
     to: number
@@ -26,7 +23,7 @@ export interface OrSearchGroup {
 
 export interface SearchQuery {
     column: string
-    value: string | number | Decimal | DateTime | string[] | number[] | Decimal[] | null | boolean
+    value: string | number | string[] | number[] | boolean | null
     operator: SearchOperator
     not: boolean
 }
@@ -48,31 +45,4 @@ export enum SearchGroupType {
 export interface SearchResponse<T> {
     data: T[]
     totalItems: number
-}
-
-export function serializeTransactionQuery (query: SearchGroup): SearchGroup {
-    switch (query.type) {
-        case SearchGroupType.And:
-        case SearchGroupType.Or:
-            return {
-                type: query.type,
-                children: query.children.map(child => serializeTransactionQuery(child))
-            };
-        case SearchGroupType.Query: {
-            const result: SearchGroup = {
-                type: query.type,
-                query: {
-                    ...query.query
-                }
-            };
-            if (query.query.column === "Total") {
-                if (query.query.operator === SearchOperator.In) {
-                    result.query.value = (result.query.value as Decimal[]).map(number => number.times(10000).toNumber());
-                } else {
-                    result.query.value = (result.query.value as Decimal).times(10000).toNumber();
-                }
-            }
-            return result;
-        }
-    }
 }

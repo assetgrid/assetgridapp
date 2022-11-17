@@ -179,40 +179,66 @@ namespace assetgrid_backend.Data
                     /*
                      * First parse the JSON value into the correct type
                      */
-                    if (query.Value == null && !allowNull)
+                    object? value = query.Value;
+                    JsonValueKind? valueKind = value != null ? ((JsonElement)value).ValueKind : null;
+                    if (value == null && !allowNull)
                     {
                         throw new Exception($"Operator '{query.Operator}' expects value of type '{numericType}' but received type null");
                     }
-                    if (query.Value != null)
+
+                    if (valueKind != null && value != null)
                     {
-                        if ((numericType == typeof(DateTime) && ((JsonElement)query.Value).ValueKind != JsonValueKind.String) ||
-                            (numericType != typeof(DateTime) && ((JsonElement)query.Value).ValueKind != JsonValueKind.Number))
+                        // Dates must be sent as string
+                        if ((numericType == typeof(DateTime) && valueKind != JsonValueKind.String) ||
+                            // Numbers may be sent as a json number or a string to prevent floating point errors
+                            (numericType != typeof(DateTime) && valueKind != JsonValueKind.Number && valueKind != JsonValueKind.String))
                         {
-                            throw new Exception($"Operator '{query.Operator}' expects value of type '{numericType}' but received type {((JsonElement)query.Value).ValueKind}");
+                            throw new Exception($"Operator '{query.Operator}' expects value of type '{numericType}' but received type {valueKind}");
                         }
-                    }
-                    var value = query.Value;
-                    if (query.Value != null)
-                    {
-                        if (numericType == typeof(int) || numericType == typeof(int?))
+
+                        if (value is JsonElement)
                         {
-                            value = ((JsonElement)query.Value).GetInt32();
-                        }
-                        else if (numericType == typeof(long) || numericType == typeof(long?))
-                        {
-                            value = ((JsonElement)query.Value).GetInt64();
-                        }
-                        else if (numericType == typeof(decimal) || numericType == typeof(decimal?))
-                        {
-                            value = ((JsonElement)query.Value).GetDecimal();
-                        }
-                        else if (numericType == typeof(DateTime))
-                        {
-                            value = ((JsonElement)query.Value).GetDateTime();
-                        }
-                        else
-                        {
-                            throw new Exception($"Type '{numericType}' is not a valid numeric type");
+                            if (numericType == typeof(int) || numericType == typeof(int?))
+                            {
+                                if (valueKind == JsonValueKind.String)
+                                {
+                                    value = int.Parse(((JsonElement)value).GetString() ?? "");
+                                }
+                                else
+                                {
+                                    value = ((JsonElement)value).GetInt32();
+                                }
+                            }
+                            else if (numericType == typeof(long) || numericType == typeof(long?))
+                            {
+                                if (valueKind == JsonValueKind.String)
+                                {
+                                    value = long.Parse(((JsonElement)value).GetString() ?? "");
+                                }
+                                else
+                                {
+                                    value = ((JsonElement)value).GetInt64();
+                                }
+                            }
+                            else if (numericType == typeof(decimal) || numericType == typeof(decimal?))
+                            {
+                                if (valueKind == JsonValueKind.String)
+                                {
+                                    value = decimal.Parse(((JsonElement)value).GetString() ?? "");
+                                }
+                                else
+                                {
+                                    value = ((JsonElement)value).GetDecimal();
+                                }
+                            }
+                            else if (numericType == typeof(DateTime))
+                            {
+                                value = ((JsonElement)value).GetDateTime();
+                            }
+                            else
+                            {
+                                throw new Exception($"Type '{numericType}' is not a valid numeric type");
+                            }
                         }
                     }
 
@@ -249,15 +275,21 @@ namespace assetgrid_backend.Data
 
                     if (numericType == typeof(int))
                     {
-                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.GetInt32()).ToArray();
+                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.ValueKind == JsonValueKind.Number
+                                                                                            ? obj.GetInt32()
+                                                                                            : int.Parse(obj.GetString() ?? "")).ToArray();
                     }
                     else if (numericType == typeof(long))
                     {
-                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.GetInt64()).ToArray();
+                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.ValueKind == JsonValueKind.Number
+                                                                                            ? obj.GetInt64()
+                                                                                            : long.Parse(obj.GetString() ?? "")).ToArray();
                     }
                     else if (numericType == typeof(decimal))
                     {
-                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.GetDecimal()).ToArray();
+                        value = ((JsonElement)query.Value).EnumerateArray().Select(obj => obj.ValueKind == JsonValueKind.Number
+                                                                                            ? obj.GetDecimal()
+                                                                                            : decimal.Parse(obj.GetString() ?? "")).ToArray();
                     }
                     else if (numericType == typeof(DateTime))
                     {

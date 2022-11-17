@@ -663,7 +663,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     source: getAccount(row),
-                    sourceText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
+                    sourceText: accountType === "single" ? "" : parseWithOptions(getValue(row, column), parseOptions)
                 }))
             ];
         } else {
@@ -671,7 +671,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     destination: getAccount(row),
-                    destinationText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
+                    destinationText: accountType === "single" ? "" : parseWithOptions(getValue(row, column), parseOptions)
                 }))
             ];
         }
@@ -690,14 +690,14 @@ export default function MapCsvFields (props: Props): React.ReactElement {
         }
         props.onChange(updateAutoIdentifiers(newTransactions, newOptions), newOptions);
 
-        function getAccount (row: string[]): Account | null {
+        function getAccount (row: { [key: string]: string }): Account | null {
             if (accountType === "single") {
                 return value;
             } else {
-                if (column === null || isNullOrWhitespace(row[column as any])) {
+                if (column === null || isNullOrWhitespace(getValue(row, column))) {
                     return null;
                 } else {
-                    const identifier = parseWithOptions(row[column as any], parseOptions);
+                    const identifier = parseWithOptions(getValue(row, column), parseOptions);
                     return props.accounts.find(account => account.identifiers.includes(identifier)) ?? null;
                 }
             }

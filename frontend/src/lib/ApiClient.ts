@@ -4,7 +4,7 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CategorySummaryItem, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
-import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
+import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine, deserializeTransaction } from "../models/transaction";
 import { useContext } from "react";
 import { userContext } from "../components/App";
@@ -716,7 +716,7 @@ const Transaction = (token: string) => ({
     deleteMultiple: async function (query: SearchGroup): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
             axios.delete<TransactionModel>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
-                data: serializeTransactionQuery(query),
+                data: query,
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
@@ -745,11 +745,7 @@ const Transaction = (token: string) => ({
 
     search: async function (query: SearchRequest): Promise<SearchResponse<TransactionModel>> {
         return await new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
-            const fixedQuery = query;
-            if (query.query != null) {
-                query.query = serializeTransactionQuery(query.query);
-            }
-            axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, fixedQuery, {
+            axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, query, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({ ...result.data, data: result.data.data.map(t => deserializeTransaction(t)) }))
                 .catch(error => {

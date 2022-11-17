@@ -36,7 +36,7 @@ function arrayToObject<A, K extends string | number, V> (array: A[], selector: (
  * @param selector A function selecting the key to group by for each array element
  * @returns An object where the key is the group and the value is an array grouped by the selected key
  */
-function groupBy<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]): { [key in string | number]: V[] } {
+function groupBy<A, K extends string | number, V> (array: A[], selector: (item: A) => [K, V]): { [key in K]: V[] } {
     const output: { [key: string]: V[] } = {};
 
     for (const item of array) {
@@ -47,7 +47,7 @@ function groupBy<A, K extends string | number, V> (array: A[], selector: (item: 
         output[key.toString()].push(value);
     }
 
-    return output;
+    return output as { [key in K]: V[] };
 }
 
 function objectMap<A, B> (object: { [key: string]: A }, selector: (item: A) => B): { [key: string]: B } {

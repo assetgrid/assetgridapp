@@ -9,15 +9,14 @@ import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
 import TransactionActionEditor from "../../transaction/automation/TransactionActionEditor";
-import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
-import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
+import TransactionFilterEditor from "../../transaction/TransactionFilterEditor";
 import TransactionList from "../../transaction/table/TransactionList";
 
 export default function PageEditMultipleTransactions (): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [draw, setDraw] = React.useState(0);
     const [query, setQuery] = React.useState<SearchGroup>(typeof window.history.state.usr?.query === "object"
-        ? deserializeQueryForHistory(window.history.state.usr.query)
+        ? window.history.state.usr.query
         : emptyQuery);
     const [action, setAction] = React.useState<TransactionAction>({ key: "set-description", value: "" });
     const { t } = useTranslation();
@@ -70,7 +69,7 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
         window.history.replaceState({
             ...window.history.state,
             usr: {
-                query: serializeQueryForHistory(query),
+                query,
                 showBack
             }
         }, "");

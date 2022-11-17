@@ -51,14 +51,14 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
         </>}>
         <p>{t("transaction.merge_confirm_and_information")}</p>
         <p>{t("transaction.merge_chose_which_to_keep")}</p>
-        <TransactionList
+        {props.active && <TransactionList
             allowLinks={false}
             allowEditing={false}
             pageSize={5}
             query={query}
             draw={draw}
             selectedTransaction={[selectedTransactionId, setSelectedTransactionId]}
-        />
+        />}
     </Modal>;
 
     async function mergeTransactions (): Promise<void> {

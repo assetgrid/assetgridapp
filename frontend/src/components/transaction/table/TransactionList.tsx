@@ -9,7 +9,6 @@ import { faArrowDownAZ, faArrowDownShortWide, faArrowDownWideShort, faArrowDownZ
 import InputCheckbox from "../../input/InputCheckbox";
 import { useNavigate } from "react-router";
 import { routes } from "../../../lib/routes";
-import { serializeQueryForHistory } from "./../filter/FilterHelpers";
 import MergeTransactionsModal from "./../input/MergeTransactionsModal";
 import DropdownContent from "../../common/DropdownContent";
 import { useTranslation } from "react-i18next";
@@ -166,7 +165,6 @@ function TransactionList (props: Props): React.ReactElement {
             // Multi edit requires a query
             return;
         }
-
         const query: SearchGroup = type === "all"
             ? props.query
             : {
@@ -184,7 +182,7 @@ function TransactionList (props: Props): React.ReactElement {
 
         navigate(routes.transactionEditMultiple(), {
             state: {
-                query: serializeQueryForHistory(query),
+                query,
                 showBack: true
             }
         });

@@ -6,9 +6,8 @@ import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/se
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
-import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
+import TransactionFilterEditor from "../../transaction/TransactionFilterEditor";
 import TransactionList from "../../transaction/table/TransactionList";
-import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 import { useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +23,7 @@ interface LocationState {
 export default function PageTransactions (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const locationState = useLocation().state as Partial<LocationState> | undefined;
-    const [query, setQuery] = React.useState<SearchGroup>(typeof locationState?.query === "object" ? deserializeQueryForHistory(locationState.query) : emptyQuery);
+    const [query, setQuery] = React.useState<SearchGroup>(typeof locationState?.query === "object" ? locationState.query : emptyQuery);
     const [searchString, setSearchString] = React.useState<string>(typeof (locationState?.searchString) === "string" ? locationState.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (locationState?.searchMode) === "string" ? locationState.searchMode : "simple");
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof locationState?.orderBy === "object" ? locationState.orderBy : { column: "DateTime", descending: true });
@@ -109,7 +108,7 @@ export default function PageTransactions (): React.ReactElement {
         window.history.replaceState({
             ...window.history.state,
             usr: {
-                query: serializeQueryForHistory(query),
+                query,
                 searchMode,
                 page,
                 orderBy,
