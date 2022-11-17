@@ -50,7 +50,7 @@ export default function AccountSelector (props: Props): React.ReactElement {
                         </a>
                     </Tooltip>
                 </td>
-                <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier)) ?? null}
+                <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier))?.id ?? null}
                     disabled={api === null || isUpdating}
                     allowNull={true}
                     nullSelectedText={t("common.no_account")!}

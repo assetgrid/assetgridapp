@@ -9,10 +9,11 @@ import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
 import DropdownContent from "../../common/DropdownContent";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
     label?: string
-    value: number | Account | null
+    value: number | null
     disabled: boolean
     allowNull: boolean
     onChange: (account: Account | null) => void
@@ -23,24 +24,23 @@ interface Props {
 
 export default function InputAccount (props: Props): React.ReactElement {
     let text: string;
+    const { data: account } = useQuery({
+        queryKey: ["account", props.value],
+        queryFn: updateAccount
+    });
     const isError = props.errors !== undefined && props.errors.length > 0;
-    const [account, setAccount] = React.useState<Account | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const [creatingAccount, setCreatingAccount] = React.useState(false);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
-    if (props.value === null) {
+    if (props.value === null || account === null) {
         if (props.nullSelectedText !== undefined) {
             text = props.nullSelectedText;
         } else {
             text = t("common.select_account");
         }
-    } else if (account == null) {
-        if (typeof props.value === "number") {
-            text = `# ${props.value} …`;
-        } else {
-            text = `# ${props.value.id} ${props.value.name}`;
-        }
+    } else if (account === undefined) {
+        text = `# ${props.value} …`;
     } else {
         text = `# ${account.id} ${account.name}`;
     }
@@ -50,14 +50,6 @@ export default function InputAccount (props: Props): React.ReactElement {
     const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null);
     const selectedAccountId = account?.id ?? props.value as number;
     const api = useApi();
-
-    // Fetch the account based on the id in the props, if none is available
-    React.useEffect(() => {
-        if (props.value !== null && typeof (props.value) === "number" && (account === null || props.value !== account.id)) {
-            // An id was provided. Fetch the account
-            void updateAccount();
-        }
-    }, [api, props.value]);
 
     // Fetch dropdown options
     React.useEffect(() => {
@@ -136,11 +128,7 @@ export default function InputAccount (props: Props): React.ReactElement {
             }} /> }
     </div>;
 
-    /**
-     * Selects no account
-     */
     function setSelectedAccount (account: Account | null): void {
-        setAccount(account);
         setSearchQuery("");
         setOpen(false);
         props.onChange(account);
@@ -186,8 +174,10 @@ export default function InputAccount (props: Props): React.ReactElement {
     /**
      * Fetch the selected account, if it hasn't yet been fetched
      */
-    async function updateAccount (): Promise<void> {
-        if (api === null) return;
+    async function updateAccount (): Promise<Account | null> {
+        if (props.value === null) {
+            return null;
+        }
 
         const result = await api.Account.search({
             from: 0,
@@ -197,7 +187,7 @@ export default function InputAccount (props: Props): React.ReactElement {
                 query: {
                     column: "Id",
                     operator: 0,
-                    value: props.value as number,
+                    value: props.value,
                     not: false
                 }
             },
@@ -207,9 +197,9 @@ export default function InputAccount (props: Props): React.ReactElement {
 
         if (result.data.totalItems === 0) {
             // No items found. Reset the selection
-            props.onChange(null);
+            return null;
         } else {
-            setAccount(result.data.data[0]);
+            return result.data.data[0];
         }
     }
 

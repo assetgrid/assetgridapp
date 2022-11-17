@@ -242,38 +242,52 @@ namespace assetgrid_backend.Controllers
                     }
 
                     var sourceUserAccount = dbObject.SourceAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
-                    if (dbObject.SourceAccountId != model.SourceId && model.SourceId != null)
+                    if (dbObject.SourceAccountId != model.SourceId)
                     {
-                        // Make sure that the user has write permissions to the account they are creating the transaction on
-                        sourceUserAccount = await _context.UserAccounts
-                            .Include(x => x.Account)
-                            .Include(x => x.Account.Identifiers)
-                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
-
-                        if (sourceUserAccount == null)
+                        if (model.SourceId == null)
                         {
-                            return Forbid();
+                            dbObject.SourceAccount = null;
                         }
+                        else
+                        {
+                            // Make sure that the user has write permissions to the account they are creating the transaction on
+                            sourceUserAccount = await _context.UserAccounts
+                                .Include(x => x.Account)
+                                .Include(x => x.Account.Identifiers)
+                                .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
 
-                        dbObject.SourceAccountId = model.SourceId;
-                        dbObject.SourceAccount = sourceUserAccount.Account;
+                            if (sourceUserAccount == null)
+                            {
+                                return Forbid();
+                            }
+
+                            dbObject.SourceAccountId = model.SourceId;
+                            dbObject.SourceAccount = sourceUserAccount.Account;
+                        }
                     }
                     var destinationUserAccount = dbObject.DestinationAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
-                    if (dbObject.DestinationAccountId != model.DestinationId && model.DestinationId != null)
+                    if (dbObject.DestinationAccountId != model.DestinationId)
                     {
-                        // Make sure that the user has write permissions to the account they are creating the transaction on
-                        destinationUserAccount = await _context.UserAccounts
-                            .Include(x => x.Account)
-                            .Include(x => x.Account.Identifiers)
-                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
-
-                        if (destinationUserAccount == null)
+                        if (model.DestinationId == null)
                         {
-                            return Forbid();
+                            dbObject.DestinationAccountId = null;
                         }
+                        else
+                        {
+                            // Make sure that the user has write permissions to the account they are creating the transaction on
+                            destinationUserAccount = await _context.UserAccounts
+                                .Include(x => x.Account)
+                                .Include(x => x.Account.Identifiers)
+                                .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
 
-                        dbObject.DestinationAccountId = model.DestinationId;
-                        dbObject.DestinationAccount = destinationUserAccount.Account;
+                            if (destinationUserAccount == null)
+                            {
+                                return Forbid();
+                            }
+
+                            dbObject.DestinationAccountId = model.DestinationId;
+                            dbObject.DestinationAccount = destinationUserAccount.Account;
+                        }
                     }
                     dbObject.DestinationAccountId = model.DestinationId;
                     dbObject.DateTime = model.DateTime;

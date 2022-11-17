@@ -201,7 +201,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         {(props.balance != null) && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithUser(props.balance, user)}</div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <div>
             <InputAccount
-                value={model.source}
+                value={model.source?.id ?? null}
                 disabled={props.disabled}
                 allowNull={true}
                 onChange={account => setModel({ ...model, source: account })}
@@ -210,7 +210,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         </div>}
         {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
             <InputAccount
-                value={model.destination}
+                value={model.destination?.id ?? null}
                 disabled={props.disabled}
                 allowNull={true}
                 onChange={account => setModel({ ...model, destination: account })}

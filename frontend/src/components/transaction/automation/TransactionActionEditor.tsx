@@ -161,7 +161,7 @@ function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
             label={t("transaction.source_or_destination")!}
             onChange={value => props.onChange({ ...props.action, account: value as "source" | "destination" })} />
         <InputAccount label={t("transaction.select_account")!}
-            value={props.action.value}
+            value={props.action.value?.id ?? null}
             onChange={value => props.onChange({ ...props.action, value })}
             disabled={props.disabled}
             allowNull={true}

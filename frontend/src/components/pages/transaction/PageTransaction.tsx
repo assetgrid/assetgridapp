@@ -311,7 +311,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         <td>{t("transaction.source")}</td>
                         <td>
                             <InputAccount
-                                value={editModel.source}
+                                value={editModel.source?.id ?? null}
                                 onChange={value => props.onChange({ ...editModel, source: value })}
                                 allowNull={true}
                                 allowCreateNewAccount={true}
@@ -323,7 +323,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
                         <td>{t("transaction.destination")}</td>
                         <td>
                             <InputAccount
-                                value={editModel.destination}
+                                value={editModel.destination?.id ?? null}
                                 onChange={value => props.onChange({ ...editModel, destination: value })}
                                 allowNull={true}
                                 allowCreateNewAccount={true}

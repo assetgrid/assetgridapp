@@ -76,7 +76,7 @@ export default function TransactionMetaInput (props: Props): React.ReactElement 
             />;
         case FieldValueType.Account:
             return <InputAccount
-                value={props.field.value}
+                value={props.field.value?.id ?? null}
                 allowNull={true}
                 nullSelectedText={t("common.no_value")!}
                 onChange={value => props.onChange(value)}

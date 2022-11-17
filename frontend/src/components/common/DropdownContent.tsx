@@ -1,6 +1,5 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { modalContainerContext } from "../App";
 
 interface Props {
     children: React.ReactNode
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export default function DropdownContent (props: Props): React.ReactElement {
-    const { container } = React.useContext(modalContainerContext);
     const ref = React.useRef<HTMLSpanElement>(null);
     const timeoutRef = React.useRef<NodeJS.Timer | null>(null);
     const parentRef = React.useRef<HTMLDivElement>(null);
@@ -20,8 +18,6 @@ export default function DropdownContent (props: Props): React.ReactElement {
         timeoutRef.current = setInterval(() => updateContent(), 100);
         return () => clearInterval(timeoutRef.current!);
     }, []);
-
-    if (container == null) { return <></>; }
 
     return <>
         <span ref={ref}></span>
@@ -32,7 +28,7 @@ export default function DropdownContent (props: Props): React.ReactElement {
         }}
         className={props.active ? "dropdown is-active" : ""}>
             {props.children}
-        </div>, container)}
+        </div>, document.body)}
     </>;
 
     function updateContent (): void {

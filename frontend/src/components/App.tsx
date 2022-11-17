@@ -26,7 +26,6 @@ import PageAutomationTransactionModify from "./pages/automation/transaction/Page
 import PageMeta from "./pages/PageMeta";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 
-export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -36,7 +35,6 @@ const queryClient = new QueryClient({
 });
 
 export default function AssetgridApp (): React.ReactElement {
-    const modalContainer = React.useRef<HTMLDivElement>(null);
     const [showSidebar, setShowSidebar] = React.useState(false);
 
     return <React.StrictMode>
@@ -45,41 +43,38 @@ export default function AssetgridApp (): React.ReactElement {
                 <Route path={routes.login()} element={<PageLogin />} />
                 <Route path={routes.signup()} element={<PageSignup />} />
                 <Route path='*' element={<>
-                    <modalContainerContext.Provider value={{ container: modalContainer.current }}>
-                        <div className="mobile-header-spacing"></div>
-                        <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
-                        <div style={{ display: "flex", flexGrow: 1 }}>
-                            <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
-                            <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
-                                <Routes>
-                                    <Route path={routes.dashboard()} element={<PageDashboard />} />
-                                    <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />} />
+                    <div className="mobile-header-spacing"></div>
+                    <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
+                    <div style={{ display: "flex", flexGrow: 1 }}>
+                        <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
+                        <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
+                            <Routes>
+                                <Route path={routes.dashboard()} element={<PageDashboard />} />
+                                <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />} />
 
-                                    <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
-                                    <Route path={routes.transactions()} element={<PageTransactions />}/>
-                                    <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
-                                    <Route path={routes.transactionCreate()} element={<PageCreateTransaction />} />
+                                <Route path={routes.transaction(":id")} element={<PageTransaction />}/>
+                                <Route path={routes.transactions()} element={<PageTransactions />}/>
+                                <Route path={routes.transactionEditMultiple()} element={<PageEditMultipleTransactions />}/>
+                                <Route path={routes.transactionCreate()} element={<PageCreateTransaction />} />
 
-                                    <Route path={routes.accounts()} element={<PageAccountOverview />} />
-                                    <Route path={routes.account(":id")} element={<PageAccount />} />
-                                    <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
-                                    <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
+                                <Route path={routes.accounts()} element={<PageAccountOverview />} />
+                                <Route path={routes.account(":id")} element={<PageAccount />} />
+                                <Route path={routes.accountDelete(":id")} element={<PageAccountConfirmDelete />} />
+                                <Route path={routes.accountCreate()} element={<PageCreateAccount />} />
 
-                                    <Route path={routes.automation()} element={<PageAutomation />} />
-                                    <Route path={routes.automationTransactionCreate()} element={<PageAutomationTransactionCreate />} />
-                                    <Route path={routes.automationTransactionEdit(":id")} element={<PageAutomationTransactionModify />} />
+                                <Route path={routes.automation()} element={<PageAutomation />} />
+                                <Route path={routes.automationTransactionCreate()} element={<PageAutomationTransactionCreate />} />
+                                <Route path={routes.automationTransactionEdit(":id")} element={<PageAutomationTransactionModify />} />
 
-                                    <Route path={routes.meta()} element={<PageMeta />} />
+                                <Route path={routes.meta()} element={<PageMeta />} />
 
-                                    <Route path={routes.preferences()} element={<PagePreferences />} />
-                                    <Route path={routes.profile()} element={<PageProfile />} />
+                                <Route path={routes.preferences()} element={<PagePreferences />} />
+                                <Route path={routes.profile()} element={<PageProfile />} />
 
-                                    <Route path='*' element={<Page404 />} />
-                                </Routes>
-                            </div>
+                                <Route path='*' element={<Page404 />} />
+                            </Routes>
                         </div>
-                    </modalContainerContext.Provider>
-                    <div ref={modalContainer}></div>
+                    </div>
                 </>} />
             </Routes>
         </QueryClientProvider>
