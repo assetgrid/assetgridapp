@@ -123,18 +123,10 @@ export default function PagePreferences (): React.ReactElement {
                 <InputButton
                     disabled={isUpdating || api === null}
                     className="is-primary"
-                    onClick={saveChanges}>
+                    onClick={() => mutate(model)}>
                     {t("common.save_changes")}
                 </InputButton>
             </div>
         </Card>;
-    }
-
-    function saveChanges (): void {
-        if (isUpdating || model === "fetching" || api === null) {
-            return;
-        }
-
-        mutate(model);
     }
 }

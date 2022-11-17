@@ -120,7 +120,7 @@ const User = (token: string) => ({
                 resolve(result.data);
             }).catch((e: AxiosError) => {
                 if (e.response?.status === 400) {
-                    reject(e.response.data as BadRequest);
+                    reject(e.response.data);
                     return;
                 }
                 console.log(e);
@@ -277,8 +277,8 @@ const Account = (token: string) => ({
      * @param id Account id
      * @returns The account with the specified id
      */
-    get: async function (id: number): Promise<Ok<AccountModel> | NotFound | BadRequest> {
-        return await new Promise<Ok<AccountModel> | NotFound | BadRequest>((resolve, reject) => {
+    get: async function (id: number): Promise<AccountModel | null> {
+        return await new Promise<AccountModel | null>((resolve, reject) => {
             axios.get<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, {
                 headers: { authorization: "Bearer: " + token }
             })
@@ -286,15 +286,15 @@ const Account = (token: string) => ({
                     const data = result.data as AccountModel & { balanceString?: string };
                     data.balance = new Decimal(data.balanceString!).div(new Decimal(10000));
                     delete data.balanceString;
-                    resolve({ status: 200, data: result.data });
+                    resolve(result.data);
                 })
                 .catch((e: AxiosError) => {
                     switch (e.response?.status) {
                         case 400:
-                            resolve(e.response.data as BadRequest);
+                            reject(e.response.data);
                             break;
                         case 404:
-                            resolve(NotFoundResult);
+                            resolve(null);
                             break;
                     }
                     console.log(e);
@@ -309,29 +309,27 @@ const Account = (token: string) => ({
      * @param account The new account
      * @returns The updated account
      */
-    update: async function (id: number, updatedAccount: CreateAccount): Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest> {
-        return await new Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
-            axios.put<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, updatedAccount, {
+    update: async function (id: number, updatedAccount: CreateAccount): Promise<AccountModel> {
+        return await new Promise<AccountModel>((resolve, reject) => {
+            axios.put<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, { ...updatedAccount, balance: 0 }, {
                 headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: result.data });
-                })
-                .catch((e: AxiosError) => {
-                    switch (e.response?.status) {
-                        case 400:
-                            resolve(e.response.data as BadRequest);
-                            break;
-                        case 403:
-                            resolve(ForbidResult);
-                            break;
-                        case 404:
-                            resolve(NotFoundResult);
-                            break;
-                    }
-                    console.log(e);
-                    reject(e);
-                });
+            }).then(result => {
+                resolve(result.data);
+            }).catch((e: AxiosError) => {
+                switch (e.response?.status) {
+                    case 400:
+                        reject(e.response.data);
+                        break;
+                    case 403:
+                        reject(ForbidResult);
+                        break;
+                    case 404:
+                        reject(NotFoundResult);
+                        break;
+                }
+                console.log(e);
+                reject(e);
+            });
         });
     },
 

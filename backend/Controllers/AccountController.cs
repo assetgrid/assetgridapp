@@ -147,7 +147,7 @@ namespace assetgrid_backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new ViewAccount(
-                id: result.Id,
+                id: result.AccountId,
                 name: result.Account.Name,
                 description: result.Account.Description,
                 identifiers: result.Account.Identifiers.Select(x => x.Identifier).ToList(),

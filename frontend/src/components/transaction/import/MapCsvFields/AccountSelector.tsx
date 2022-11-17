@@ -88,13 +88,11 @@ export default function AccountSelector (props: Props): React.ReactElement {
             });
 
             // Update current accounts
-            if (result.status === 200) {
-                newAccounts.forEach(account => {
-                    if (account.id === result.data.id) {
-                        account.identifiers = account.identifiers.filter(x => x !== identifier);
-                    }
-                });
-            }
+            newAccounts.forEach(account => {
+                if (account.id === result.id) {
+                    account.identifiers = account.identifiers.filter(x => x !== identifier);
+                }
+            });
         }
         // Add the identifier to the newly selected account
         if (account !== null) {
@@ -104,13 +102,11 @@ export default function AccountSelector (props: Props): React.ReactElement {
             });
 
             // Update current accounts
-            if (result.status === 200) {
-                const previousAccount = newAccounts.find(account => account.id === result.data.id);
-                if (previousAccount != null) {
-                    previousAccount.identifiers = account.identifiers.concat(identifier);
-                } else {
-                    newAccounts.push(result.data);
-                }
+            const previousAccount = newAccounts.find(account => account.id === result.id);
+            if (previousAccount != null) {
+                previousAccount.identifiers = account.identifiers.concat(identifier);
+            } else {
+                newAccounts.push(result);
             }
         }
 

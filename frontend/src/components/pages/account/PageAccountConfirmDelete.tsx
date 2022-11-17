@@ -39,9 +39,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         if (account === "fetching" && api !== null) {
             api.Account.get(id)
                 .then(result => {
-                    if (result.status === 200) {
-                        setAccount(result.data);
-                    }
+                    setAccount(result);
                 })
                 .catch(e => {
                     console.log(e);
