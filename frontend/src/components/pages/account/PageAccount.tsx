@@ -36,7 +36,7 @@ export default function PageAccount (): React.ReactElement {
         type: "month",
         start: DateTime.now().startOf("month")
     };
-    if (typeof window.history.state.usr?.period === "object") {
+    if (typeof window.history.state.usr?.period === "string") {
         try {
             const period = PeriodFunctions.parse(window.history.state.usr.period);
             if (period != null) {
@@ -46,11 +46,12 @@ export default function PageAccount (): React.ReactElement {
     }
 
     const api = useApi();
-    const { data: account, isError } = useQuery({ queryKey: ["account", id], queryFn: async () => await api.Account.get(id) });
+    const { data: account, isError } = useQuery({ queryKey: ["account", "full", id], queryFn: async () => await api.Account.get(id) });
     const queryClient = useQueryClient();
     const { mutate, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
         mutationFn: async account => await api.Account.update(id, account),
         onSuccess: result => {
+            queryClient.setQueryData<Account>(["account", "full", id], _ => result);
             queryClient.setQueryData<Account>(["account", id], _ => result);
             // Update favorite accounts
             if (result.favorite !== account?.favorite) {
@@ -69,7 +70,6 @@ export default function PageAccount (): React.ReactElement {
         }
     });
     const [page, setPage] = React.useState(typeof (window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
-    const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
     const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(
         typeof window.history.state.usr?.selectedTransactions === "object"
@@ -115,7 +115,7 @@ export default function PageAccount (): React.ReactElement {
                 </span>} #{account.id} {account.name}
         </>}
         subtitle={account.description.trim() !== "" ? account.description : PeriodFunctions.print(period)}
-        period={[period, period => { setPeriod(period); setPage(1); setDraw(draw => draw + 1); }]} />,
+        period={[period, period => { setPeriod(period); setPage(1); }]} />,
         <AccountDetailsCard account={account} isUpdatingFavorite={isMutating} />,
         <AccountCategoryChart id={id} period={period} />,
         <AccountBalanceChart id={id} period={period} />,
@@ -125,7 +125,6 @@ export default function PageAccount (): React.ReactElement {
             page={page}
             goToPage={forget(goToPage)}
             pageSize={pageSize}
-            draw={draw}
             selectedTransactions={selectedTransactions}
             setSelectedTransactions={setSelectedTransactions}
         />,
@@ -170,7 +169,6 @@ export default function PageAccount (): React.ReactElement {
         } else {
             setPage(newPage);
         }
-        setDraw(draw => draw + 1);
     }
 
     function toggleFavorite (): void {

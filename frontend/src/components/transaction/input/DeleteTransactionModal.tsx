@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
@@ -8,13 +9,14 @@ import InputButton from "../../input/InputButton";
 
 interface Props {
     close: () => void
-    deleted: () => void
+    deleted?: () => void
     transaction: Transaction
 }
 
 export default function DeleteTransactionModal (props: Props): React.ReactElement {
     const [isDeleting, setisDeleting] = React.useState(false);
     const api = useApi();
+    const queryClient = useQueryClient();
     const { t } = useTranslation();
 
     return <Modal
@@ -34,6 +36,16 @@ export default function DeleteTransactionModal (props: Props): React.ReactElemen
 
         setisDeleting(true);
         await api.Transaction.delete(props.transaction.id);
-        props.deleted();
+        props.deleted?.();
+
+        await queryClient.invalidateQueries(["transactions"]);
+        if (props.transaction.source !== null) {
+            await queryClient.invalidateQueries(["account-movements", props.transaction.source.id]);
+            await queryClient.invalidateQueries(["account-category-summary", props.transaction.source.id]);
+        }
+        if (props.transaction.destination !== null) {
+            await queryClient.invalidateQueries(["account-movements", props.transaction.destination.id]);
+            await queryClient.invalidateQueries(["account-category-summary", props.transaction.destination.id]);
+        }
     }
 }

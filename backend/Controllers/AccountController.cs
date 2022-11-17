@@ -244,7 +244,7 @@ namespace assetgrid_backend.Controllers
                 query = query.OrderBy(transaction => transaction.DateTime)
                     .ThenBy(transaction => transaction.Id);
             }
-
+            
             var result = await query
                 .Skip(request.From)
                 .Take(request.To - request.From)

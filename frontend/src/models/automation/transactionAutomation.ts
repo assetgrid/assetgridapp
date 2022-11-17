@@ -1,6 +1,5 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
-import { Account } from "../account";
 import { SearchGroup } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
 
@@ -70,7 +69,7 @@ export interface ActionSetLines {
 
 export interface ActionSetAccount {
     key: "set-account"
-    value: Account | null
+    value: number | null
     account: "source" | "destination"
 }
 
@@ -89,8 +88,6 @@ export function serializeTransactionAction (action: TransactionAction): Transact
             const { value, ...rest } = action;
             return { ...rest, valueString: value.times(10000).toString() } as any as TransactionAction;
         }
-        case "set-account":
-            return { ...action, value: action.value === null ? null : action.value.id } as any as TransactionAction;
         case "set-timestamp":
             return { ...action, value: action.value.toISO() } as any as TransactionAction;
         case "set-lines":

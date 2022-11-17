@@ -56,7 +56,6 @@ export default function PageAutomation (): React.ReactElement {
                     goToPage={setTransactionAutomationPage}
                     draw={transactionAutomationDraw}
                     type="sync"
-                    renderType="table"
                     headings={<tr>
                         <th>{t("common.name")}</th>
                         <th>{t("common.description")}</th>

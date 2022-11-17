@@ -50,18 +50,20 @@ export default function AccountSelector (props: Props): React.ReactElement {
                         </a>
                     </Tooltip>
                 </td>
-                <td><InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier))?.id ?? null}
-                    disabled={api === null || isUpdating}
-                    allowNull={true}
-                    nullSelectedText={t("common.no_account")!}
-                    onChange={forget(async value => await accountSelected(identifier, value))}
-                    allowCreateNewAccount={true} /></td>
+                <td>
+                    <InputAccount value={props.accounts.find(x => x.identifiers.some(id => id === identifier))?.id ?? null}
+                        disabled={api === null || isUpdating}
+                        allowNull={true}
+                        nullSelectedText={t("common.no_account")!}
+                        onChange={forget(async value => await accountSelected(identifier, value))}
+                        allowCreateNewAccount={true}
+                    />
+                </td>
             </tr>}
             page={page}
             goToPage={setPage}
             draw={draw}
             type="sync"
-            renderType="table"
             headings={<tr>
                 <th>{t("account.identifier")!}</th>
                 <th>{t("common.account")!}</th>

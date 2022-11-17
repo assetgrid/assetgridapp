@@ -9,7 +9,7 @@ import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
 import DropdownContent from "../../common/DropdownContent";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Props {
     label?: string
@@ -49,6 +49,7 @@ export default function InputAccount (props: Props): React.ReactElement {
     const [searchQuery, setSearchQuery] = React.useState("");
     const [dropdownOptions, setDropdownOptions] = React.useState<Account[] | null>(null);
     const selectedAccountId = account?.id ?? props.value as number;
+    const queryClient = useQueryClient();
     const api = useApi();
 
     // Fetch dropdown options
@@ -169,6 +170,13 @@ export default function InputAccount (props: Props): React.ReactElement {
             orderByColumn: "Id"
         });
         setDropdownOptions(result.data.data);
+        // Update the query cache, so we don't reload these accounts
+        result.data.data.forEach(account => {
+            queryClient.setQueryData<Account>(["account", account.id], _ => account);
+            queryClient.setQueryData<Account>(["account", "full", account.id], old => old !== undefined
+                ? { ...account, balance: old.balance }
+                : undefined);
+        });
     }
 
     /**

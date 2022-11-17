@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
@@ -20,6 +21,7 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
     const [selectedTransactionId, setSelectedTransactionId] = React.useState<number | null>(null);
     const [draw, setDraw] = React.useState(0);
     const { t } = useTranslation();
+    const queryClient = useQueryClient();
 
     const query: SearchGroup = React.useMemo(() => ({
         type: SearchGroupType.Query,
@@ -96,5 +98,17 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
         });
         setIsMerging(false);
         props.merged();
+
+        await queryClient.invalidateQueries(["transactions"]);
+        for (const transaction of transactions.data) {
+            if (transaction.source !== null) {
+                await queryClient.invalidateQueries(["account-movements", transaction.source.id]);
+                await queryClient.invalidateQueries(["account-category-summary", transaction.source.id]);
+            }
+            if (transaction.destination !== null) {
+                await queryClient.invalidateQueries(["account-movements", transaction.destination.id]);
+                await queryClient.invalidateQueries(["account-category-summary", transaction.destination.id]);
+            }
+        }
     }
 }

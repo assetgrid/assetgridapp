@@ -28,7 +28,6 @@ export default function AccountList (props: Props): React.ReactElement {
         pageSize={20}
         draw={props.draw}
         type="async"
-        renderType="table"
         fetchItems={fetchItems}
         renderItem={account =>
             <tr key={account.id}>

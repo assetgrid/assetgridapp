@@ -1,9 +1,12 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+import { useQuery } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../../../lib/ApiClient";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
+import { Account } from "../../../models/account";
 import {
     ActionDelete,
     ActionSetAccount,
@@ -147,12 +150,17 @@ function SetCategoryEditor (props: Props<ActionSetCategory>): React.ReactElement
 
 function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
     const { t } = useTranslation();
+    const { data: account } = useQuery({
+        queryKey: ["account", props.action.value],
+        queryFn: getAccount
+    });
+    const api = useApi();
     const accountTypes = [{ key: "source", value: t("transaction.source") }, { key: "destination", value: t("transaction.destination") }];
     const description = props.action.value === null
         ? (props.action.account === "source" ? t("transaction.set_source_account_to_no_account") : t("transaction.set_destination_account_to_no_account"))
         : (props.action.account === "source"
-            ? t("transaction.set_source_account_to_value", { value: `#${props.action.value.id} ${props.action.value.name}` })
-            : t("transaction.set_destination_account_to_value", { value: `#${props.action.value.id} ${props.action.value.name}` }));
+            ? t("transaction.set_source_account_to_value", { value: `#${props.action.value} ${account?.name ?? "…"}` })
+            : t("transaction.set_destination_account_to_value", { value: `#${props.action.value} ${account?.name ?? "…"}` }));
     return <DefaultEditorLayout {...props} description={description}>
         <InputSelect
             items={accountTypes}
@@ -161,12 +169,41 @@ function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
             label={t("transaction.source_or_destination")!}
             onChange={value => props.onChange({ ...props.action, account: value as "source" | "destination" })} />
         <InputAccount label={t("transaction.select_account")!}
-            value={props.action.value?.id ?? null}
-            onChange={value => props.onChange({ ...props.action, value })}
+            value={props.action.value ?? null}
+            onChange={value => props.onChange({ ...props.action, value: value?.id ?? null })}
             disabled={props.disabled}
             allowNull={true}
             allowCreateNewAccount={true} />
     </DefaultEditorLayout>;
+
+    async function getAccount (): Promise<Account | null> {
+        if (props.action.value === null) {
+            return null;
+        }
+
+        const result = await api.Account.search({
+            from: 0,
+            to: 1,
+            query: {
+                type: 2,
+                query: {
+                    column: "Id",
+                    operator: 0,
+                    value: props.action.value,
+                    not: false
+                }
+            },
+            descending: false,
+            orderByColumn: "Id"
+        });
+
+        if (result.data.totalItems === 0) {
+            // No items found. Reset the selection
+            return null;
+        } else {
+            return result.data.data[0];
+        }
+    }
 }
 
 function DeleteEditor (props: Props<ActionDelete>): React.ReactElement {

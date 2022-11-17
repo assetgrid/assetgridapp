@@ -112,7 +112,6 @@ export function Import (props: Props): React.ReactElement {
             page={page}
             goToPage={setPage}
             type="sync"
-            renderType="table"
             headings={<tr>
                 <th>{t("common.identifier")}</th>
                 <th>{t("common.timestamp")}</th>

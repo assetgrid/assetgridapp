@@ -10,7 +10,7 @@ async function init (): Promise<void> {
         .init({
             fallbackLng: "en",
             lng: "da",
-            debug: true,
+            debug: false,
             interpolation: {
                 escapeValue: false // react already safe from xss
             },

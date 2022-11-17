@@ -87,7 +87,7 @@ export default function Sidebar (props: Props): React.ReactElement {
     }
 
     function signOut (): void {
-        queryClient.setQueryData<User>(["user"], () => undefined);
+        queryClient.setQueryData<User | null>(["user"], () => null);
         localStorage.removeItem("token");
         navigate(routes.login());
     }

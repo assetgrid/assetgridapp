@@ -22,16 +22,17 @@ import InputCheckbox from "../../input/InputCheckbox";
 import TransactionCategory from "./TransactionCategory";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../App";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
-    transaction: Transaction
-    updateItem: (id: number, item: Transaction | null) => void
+    transactionId: number
     accountId?: number
     balance?: Decimal
     allowSelection?: boolean
     allowEditing?: boolean
     allowLinks?: boolean
     selected?: boolean
+    transaction: Transaction
     toggleSelected?: (transaction: Transaction) => void
 }
 
@@ -66,26 +67,28 @@ type TableTransactionProps = Props & {
     isConfirmingDeletion: boolean
 };
 function TableTransaction (props: TableTransactionProps): React.ReactElement {
-    const offsetAccount = props.accountId !== undefined ? props.transaction.destination?.id === props.accountId ? props.transaction.source : props.transaction.destination : null;
-    const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
-    const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
-    const [expandSplit, setExpandSplit] = React.useState(false);
     const user = useUser();
     const { t } = useTranslation();
+    const [expandSplit, setExpandSplit] = React.useState(false);
+    const transaction = props.transaction;
 
-    return <div key={props.transaction.id} className="table-row">
+    const offsetAccount = props.accountId !== undefined ? transaction.destination?.id === props.accountId ? transaction.source : transaction.destination : null;
+    const total = props.accountId === undefined || transaction.destination?.id === props.accountId ? transaction.total : transaction.total.neg();
+    const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
+
+    return <div key={props.transactionId} className="table-row">
         <div>
-            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
-            <TransactionLink transaction={props.transaction} disabled={!(props.allowLinks ?? true)} />
-            {props.transaction.isSplit && <Tooltip
+            {props.selected !== undefined && props.allowSelection === true && <InputCheckbox onChange={() => props.toggleSelected?.(transaction)} value={props.selected} />}
+            <TransactionLink transaction={transaction} disabled={!(props.allowLinks ?? true)} />
+            {transaction.isSplit && <Tooltip
                 content={expandSplit ? t("transaction.transaction_is_split_click_to_collapse") : t("transaction.transaction_is_split_click_to_expand")}>
                 <InputIconButton icon={solid.faEllipsisVertical} onClick={() => setExpandSplit(expand => !expand)} />
             </Tooltip>}
         </div>
-        <div>{formatDateTimeWithUser(props.transaction.dateTime, user)}</div>
-        <div>{props.transaction.description.length < 50
-            ? props.transaction.description
-            : <Tooltip content={props.transaction.description}>{props.transaction.description.substring(0, 50)}&hellip;</Tooltip>}</div>
+        <div>{formatDateTimeWithUser(transaction.dateTime, user)}</div>
+        <div>{transaction.description.length < 50
+            ? transaction.description
+            : <Tooltip content={transaction.description}>{transaction.description.substring(0, 50)}&hellip;</Tooltip>}</div>
         <div className={"number-total " + totalClass}>
             {formatNumberWithUser(total, user)}
         </div>
@@ -95,13 +98,13 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
         <div>
             {props.accountId !== undefined
                 ? offsetAccount !== null && <AccountLink account={offsetAccount} disabled={!(props.allowLinks ?? true)} />
-                : props.transaction.source !== null && <AccountLink account={props.transaction.source} disabled={!(props.allowLinks ?? true)} />}
+                : transaction.source !== null && <AccountLink account={transaction.source} disabled={!(props.allowLinks ?? true)} />}
         </div>
         {props.accountId === undefined && <div>
-            {props.transaction.destination !== null && <AccountLink account={props.transaction.destination} disabled={!(props.allowLinks ?? true)} />}
+            {transaction.destination !== null && <AccountLink account={transaction.destination} disabled={!(props.allowLinks ?? true)} />}
         </div>}
         <div>
-            <TransactionCategory categories={props.transaction.lines.map(line => line.category)} />
+            <TransactionCategory categories={transaction.lines.map(line => line.category)} />
         </div>
         {props.allowEditing === true && <div>
             {!props.disabled && <>
@@ -112,11 +115,10 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
             {/* Deletion modal */}
             {props.isConfirmingDeletion && <DeleteTransactionModal
                 close={() => props.setState(null)}
-                deleted={() => props.updateItem(props.transaction.id, null)}
-                transaction={props.transaction} />}
+                transaction={transaction} />}
         </div>}
-        {expandSplit && props.transaction.isSplit && <div className="transaction-lines split">
-            {props.transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === props.transaction.lines.length - 1 ? " last" : "")}>
+        {expandSplit && transaction.isSplit && <div className="transaction-lines split">
+            {transaction.lines.map((line, i) => <div key={i} className={"transaction-line" + (i === transaction.lines.length - 1 ? " last" : "")}>
                 <div style={{ gridColumn: "colstart/innerstart" }}></div>
                 <div className="description">
                     {line.description}
@@ -145,31 +147,35 @@ type TransactionEditorProps = Props & {
 };
 
 function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
-    const defaultModel = {
-        total: props.transaction.total,
-        dateTime: props.transaction.dateTime,
-        description: props.transaction.description,
-        source: props.transaction.source,
-        destination: props.transaction.destination,
-        lines: props.transaction.lines,
-        isSplit: props.transaction.isSplit
-    };
-    const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const user = useUser();
     const api = useApi();
     const { t } = useTranslation();
+    const transaction = props.transaction;
+    const [model, setModel] = React.useState<TransactionEditingModel | null>({
+        total: transaction.total,
+        dateTime: transaction.dateTime,
+        description: transaction.description,
+        source: transaction.source,
+        destination: transaction.destination,
+        lines: transaction.lines,
+        isSplit: transaction.isSplit
+    });
+    const queryClient = useQueryClient();
 
-    const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
+    if (transaction === undefined || transaction === null || model === null) {
+        return <></>;
+    }
+    const total = props.accountId === undefined || transaction.destination?.id === props.accountId ? transaction.total : transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     // If the current account is the source, all amounts should be negative
-    const amountMultiplier = props.accountId !== undefined && props.accountId === props.transaction.source?.id ? new Decimal(-1) : new Decimal(1);
+    const amountMultiplier = props.accountId !== undefined && props.accountId === transaction.source?.id ? new Decimal(-1) : new Decimal(1);
 
-    return <div key={props.transaction.id} className="table-row editing">
+    return <div key={transaction.id} className="table-row editing">
         <div>
             {props.selected !== undefined && props.allowSelection === true &&
-                <InputCheckbox onChange={() => props.toggleSelected?.(props.transaction)} value={props.selected} />}
-            <TransactionLink transaction={props.transaction} />
+                <InputCheckbox onChange={() => props.toggleSelected?.(transaction)} value={props.selected} />}
+            <TransactionLink transaction={transaction} />
         </div>
         <div>
             <InputDateTime value={model.dateTime}
@@ -186,6 +192,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             ? <div>
                 <InputNumber allowNull={false}
                     value={model.total.times(amountMultiplier)}
+                    disabled={props.disabled}
                     onChange={newTotal => setModel({
                         ...model,
                         total: newTotal.times(amountMultiplier),
@@ -199,7 +206,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             </div>
         }
         {(props.balance != null) && <div className={"number-total"} style={{ fontWeight: "normal" }}>{formatNumberWithUser(props.balance, user)}</div>}
-        {(props.accountId === undefined || props.accountId !== props.transaction.source?.id) && <div>
+        {(props.accountId === undefined || props.accountId !== transaction.source?.id) && <div>
             <InputAccount
                 value={model.source?.id ?? null}
                 disabled={props.disabled}
@@ -208,7 +215,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
                 allowCreateNewAccount={true}
                 errors={errors.SourceId} />
         </div>}
-        {(props.accountId === undefined || props.accountId !== props.transaction.destination?.id) && <div>
+        {(props.accountId === undefined || props.accountId !== transaction.destination?.id) && <div>
             <InputAccount
                 value={model.destination?.id ?? null}
                 disabled={props.disabled}
@@ -260,12 +267,12 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     </div>;
 
     async function saveChanges (): Promise<void> {
-        if (model === null || api === null) return;
+        if (model === null || transaction === undefined || transaction === null) return;
 
         props.setDisabled(true);
         setErrors({});
 
-        const result = await api.Transaction.update(props.transaction.id, {
+        const result = await api.Transaction.update(props.transactionId, {
             dateTime: model.dateTime,
             description: model.description,
             sourceId: model.source?.id ?? null,
@@ -273,13 +280,23 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
             total: model.total,
             lines: model.lines,
             isSplit: model.isSplit,
-            identifiers: props.transaction.identifiers,
+            identifiers: transaction.identifiers,
             metaData: null
         });
 
         if (result.status === 200) {
-            props.updateItem(props.transaction.id, result.data);
             props.stopEditing();
+
+            queryClient.setQueryData<Transaction>(["transaction", props.transactionId], _ => result.data);
+            await queryClient.invalidateQueries(["transactions"]);
+            if (result.data.source !== null) {
+                await queryClient.invalidateQueries(["account-movements", result.data.source.id]);
+                await queryClient.invalidateQueries(["account-category-summary", result.data.source.id]);
+            }
+            if (result.data.destination !== null) {
+                await queryClient.invalidateQueries(["account-movements", result.data.destination.id]);
+                await queryClient.invalidateQueries(["account-category-summary", result.data.destination.id]);
+            }
         } else if (result.status === 400) {
             setErrors(result.errors);
         }
@@ -287,6 +304,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     }
 
     function splitTransaction (): void {
+        if (model === null) return;
         setModel({
             ...model,
             isSplit: true,

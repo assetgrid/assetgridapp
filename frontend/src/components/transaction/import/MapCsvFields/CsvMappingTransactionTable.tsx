@@ -45,7 +45,6 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
         type="sync"
         page={page}
         goToPage={setPage}
-        renderType="table"
         renderItem={transaction =>
             <tr key={transaction.rowNumber}>
                 <td>{transaction.identifier !== null && <DuplicateIndicator identifier={transaction.identifier} duplicateIdentifiers={props.duplicateIdentifiers} />}

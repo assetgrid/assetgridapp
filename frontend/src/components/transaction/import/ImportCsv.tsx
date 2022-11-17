@@ -207,7 +207,6 @@ export default function ImportCsv (props: Props): React.ReactElement {
                 items={csvData.data}
                 type="sync"
                 draw={draw}
-                renderType="table"
                 renderItem={(row, i) => <tr key={i}>
                     {columnOffset !== 0 && <td></td>}
                     {columns.map(column =>
