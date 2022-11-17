@@ -17,11 +17,11 @@ import InputButton from "../../input/InputButton";
 import InputNumber from "../../input/InputNumber";
 import Tooltip from "../../common/Tooltip";
 import InputIconButton from "../../input/InputIconButton";
-import { userContext } from "../../App";
 import DeleteTransactionModal from "./../input/DeleteTransactionModal";
 import InputCheckbox from "../../input/InputCheckbox";
 import TransactionCategory from "./TransactionCategory";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../../App";
 
 interface Props {
     transaction: Transaction
@@ -70,7 +70,7 @@ function TableTransaction (props: TableTransactionProps): React.ReactElement {
     const total = props.accountId === undefined || props.transaction.destination?.id === props.accountId ? props.transaction.total : props.transaction.total.neg();
     const totalClass = (total.greaterThan(0) && props.accountId !== undefined ? "positive" : (total.lessThan(0) && props.accountId !== undefined ? "negative" : ""));
     const [expandSplit, setExpandSplit] = React.useState(false);
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
 
     return <div key={props.transaction.id} className="table-row">
@@ -156,7 +156,7 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
     };
     const [model, setModel] = React.useState<TransactionEditingModel>(defaultModel);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const api = useApi();
     const { t } = useTranslation();
 

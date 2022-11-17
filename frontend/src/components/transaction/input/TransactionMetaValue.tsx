@@ -2,7 +2,6 @@ import { FieldValueType } from "../../../models/meta";
 import * as React from "react";
 import { MetaFieldType } from "./TransactionMetaInput";
 import YesNoDisplay from "../../input/YesNoDisplay";
-import { userContext } from "../../App";
 import { formatNumberWithUser } from "../../../lib/Utils";
 import AccountLink from "../../account/AccountLink";
 import TransactionLink from "../TransactionLink";
@@ -10,13 +9,14 @@ import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperclip } from "@fortawesome/free-solid-svg-icons";
+import { useUser } from "../../App";
 
 interface Props {
     field: MetaFieldType
 };
 
 export default function TransactionMetaValue (props: Props): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
     const api = useApi();
 

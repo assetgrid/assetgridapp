@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../../lib/Utils";
 import { CsvImportProfile } from "../../../../models/csvImportProfile";
 import AccountLink from "../../../account/AccountLink";
-import { userContext } from "../../../App";
+import { useUser } from "../../../App";
 import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
 import { CsvCreateTransaction } from "../importModels";
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export default function CsvMappingTransactionTable (props: Props): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const [page, setPage] = React.useState(1);
     const { t } = useTranslation();
 

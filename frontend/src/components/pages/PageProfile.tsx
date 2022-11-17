@@ -1,16 +1,16 @@
 import * as React from "react";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
-import { userContext } from "../App";
 import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 import DeleteUserModal from "../user/DeleteUserModal";
-import { useApi } from "../../lib/ApiClient";
 import { forget } from "../../lib/Utils";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../App";
+import { useApi } from "../../lib/ApiClient";
 
 export default function PageProfile (): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const api = useApi();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = React.useState(false);
@@ -25,7 +25,7 @@ export default function PageProfile (): React.ReactElement {
     return <>
         <Hero
             title={t("user.profile")}
-            subtitle={user === "fetching" ? <>&hellip;</> : user.email} />
+            subtitle={user === undefined ? <>&hellip;</> : user.email} />
         <div className="p-3">
             <Card title={t("user.change_password")!} isNarrow={true}>
                 { passwordWasChanged && <article className="message is-link">

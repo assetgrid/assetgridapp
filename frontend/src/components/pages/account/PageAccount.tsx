@@ -13,7 +13,7 @@ import { DateTime } from "luxon";
 import { Period, PeriodFunctions } from "../../../models/period";
 import AccountCategoryChart from "../../account/AccountCategoryChart";
 import { routes } from "../../../lib/routes";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import InputButton from "../../input/InputButton";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Page404 from "../Page404";
@@ -22,6 +22,8 @@ import AccountDetailsCard from "../../account/AccountDetailsCard";
 import Hero from "../../common/Hero";
 import { Link } from "react-router-dom";
 import { t } from "i18next";
+import { User } from "../../../models/user";
+import { useQueryClient } from "@tanstack/react-query";
 
 const pageSize = 20;
 
@@ -45,7 +47,8 @@ export default function PageAccount (): React.ReactElement {
 
     const [account, setAccount] = React.useState<"fetching" | "error" | null | Account>("fetching");
     const [updatingFavorite, setUpdatingFavorite] = React.useState(false);
-    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const user = useUser();
+    const queryClient = useQueryClient();
     const [page, setPage] = React.useState(typeof (window.history.state.usr?.page) === "number" ? window.history.state.usr.page : 1);
     const [draw, setDraw] = React.useState(0);
     const [period, setPeriod] = React.useState<Period>(defaultPeriod);
@@ -179,11 +182,17 @@ export default function PageAccount (): React.ReactElement {
     }
 
     function updateAccountFavoriteInPreferences (account: Account, favorite: boolean): void {
-        if (user !== "fetching") {
+        if (user !== undefined) {
             if (favorite) {
-                updateFavoriteAccounts([...user.favoriteAccounts, account]);
+                queryClient.setQueryData<User>(["user"], old => ({
+                    ...old!,
+                    favoriteAccounts: [...user.favoriteAccounts, account]
+                }));
             } else {
-                updateFavoriteAccounts(user.favoriteAccounts.filter(fav => fav.id !== account.id));
+                queryClient.setQueryData<User>(["user"], old => ({
+                    ...old!,
+                    favoriteAccounts: old!.favoriteAccounts.filter(fav => fav.id !== account.id)
+                }));
             }
         }
     }

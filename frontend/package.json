@@ -61,6 +61,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/react-fontawesome": "^0.1.18",
+    "@tanstack/react-query": "^4.16.1",
     "axios": "^0.27.2",
     "chart.js": "^3.9.1",
     "chartjs-adapter-luxon": "^1.2.0",

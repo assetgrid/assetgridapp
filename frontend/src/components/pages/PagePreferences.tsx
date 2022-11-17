@@ -1,11 +1,13 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { useApi } from "../../lib/ApiClient";
+import { getUser, useApi } from "../../lib/ApiClient";
 import { formatDateTimeWithPreferences, formatDateWithPreferences, formatNumberWithPreferences } from "../../lib/Utils";
+import { HttpErrorResult } from "../../models/api";
 import { Preferences } from "../../models/preferences";
-import { userContext } from "../App";
+import { User } from "../../models/user";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
 import InputButton from "../input/InputButton";
@@ -14,19 +16,22 @@ import InputText from "../input/InputText";
 import InputTextOrNull from "../input/InputTextOrNull";
 
 export default function PagePreferences (): React.ReactElement {
-    const { user, updatePreferences } = React.useContext(userContext);
-    const [model, setModel] = React.useState<Preferences | "fetching">(user === "fetching" ? "fetching" : user.preferences);
-    const [isUpdating, setIsUpdating] = React.useState(false);
-    const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
-    const api = useApi();
     const { t } = useTranslation();
 
-    React.useEffect(() => {
-        // Whenever global preferences change, update this component to match
-        if (user !== "fetching") {
-            setModel(user.preferences);
-        }
-    }, [user === "fetching" ? "fetching" : user.preferences]);
+    const api = useApi();
+    const queryClient = useQueryClient();
+    const { data: user } = useQuery({
+        queryKey: ["user"],
+        queryFn: getUser,
+        keepPreviousData: true,
+        onSuccess: user => { setModel(user.preferences); }
+    });
+    const [model, setModel] = React.useState<Preferences | "fetching">(user === undefined ? "fetching" : user.preferences);
+    const { mutate, error, isLoading: isUpdating } = useMutation<Preferences, HttpErrorResult, Preferences, unknown>({
+        mutationFn: api.User.updatePreferences,
+        onSuccess: result => { queryClient.setQueryData<User>(["user"], old => ({ ...old!, preferences: result })); }
+    });
+    const errors = error?.status === 400 ? error.errors : {};
     const exampleDateTime = React.useMemo(() => DateTime.fromJSDate(new Date()), []);
 
     return <>
@@ -130,20 +135,6 @@ export default function PagePreferences (): React.ReactElement {
             return;
         }
 
-        setIsUpdating(true);
-        setErrors({});
-        api.User.updatePreferences(model)
-            .then(result => {
-                setIsUpdating(false);
-                if (result.status === 200) {
-                    updatePreferences(result.data);
-                } else if (result.status === 400) {
-                    setErrors(result.errors);
-                }
-            })
-            .catch(e => {
-                console.log(e);
-                setIsUpdating(false);
-            });
+        mutate(model);
     }
 }

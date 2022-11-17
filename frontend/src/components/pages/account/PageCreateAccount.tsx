@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { t } from "i18next";
 import * as React from "react";
 import { Trans } from "react-i18next";
@@ -6,8 +7,9 @@ import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
 import { Account, CreateAccount } from "../../../models/account";
+import { User } from "../../../models/user";
 import AccountLink from "../../account/AccountLink";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
@@ -27,7 +29,8 @@ const defaultAccount = {
 export default function PageCreateAccount (): React.ReactElement {
     const [value, setValue] = React.useState<CreateAccount>(defaultAccount);
     const [isCreating, setIsCreating] = React.useState(false);
-    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const user = useUser();
+    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const [createdAccount, setCreatedAccount] = React.useState<Account | null>(null);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
@@ -101,8 +104,11 @@ export default function PageCreateAccount (): React.ReactElement {
 
         if (result.status === 200) {
             if (result.data.favorite) {
-                if (user !== "fetching") {
-                    updateFavoriteAccounts([...user.favoriteAccounts, result.data]);
+                if (user !== undefined) {
+                    queryClient.setQueryData<User>(["user"], old => ({
+                        ...old!,
+                        favoriteAccounts: [...old!.favoriteAccounts, result.data]
+                    }));
                 }
             }
 

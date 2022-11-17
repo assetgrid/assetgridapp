@@ -11,7 +11,7 @@ import {
 } from "../../../models/automation/transactionAutomation";
 import { TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
@@ -110,7 +110,7 @@ function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactE
 }
 
 function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
     return <DefaultEditorLayout {...props} description={t("transaction.set_timestamp_to_value", { value: formatDateTimeWithUser(props.action.value, user) })}>
         <InputDateTime label={t("transaction.select_timestamp")!}
@@ -122,7 +122,7 @@ function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactEleme
 }
 
 function SetAmountEditor (props: Props<ActionSetAmount>): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
     return <DefaultEditorLayout {...props} description={t("transaction.set_total_to_value", { value: formatNumberWithUser(props.action.value, user) })}>
         <InputNumber label={t("transaction.enter_total")!}

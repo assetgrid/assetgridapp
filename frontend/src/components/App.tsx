@@ -6,7 +6,6 @@ import PageCreateTransaction from "./pages/transaction/PageCreateTransaction";
 import PageDashboard from "./pages/PageDashboard";
 import PageImportTransactionsCsv from "./pages/transaction/PageImportTransactionsCsv";
 import PageAccount from "./pages/account/PageAccount";
-import { Preferences } from "../models/preferences";
 import PagePreferences from "./pages/PagePreferences";
 import PageAccountOverview from "./pages/account/PageAccountOverview";
 import * as Api from "../lib/ApiClient";
@@ -18,7 +17,6 @@ import Page404 from "./pages/Page404";
 import PageCreateAccount from "./pages/account/PageCreateAccount";
 import MobileHeader from "./common/MobileHeader";
 import { User } from "../models/user";
-import { Account } from "../models/account";
 import PageLogin from "./pages/PageLogin";
 import PageSignup from "./pages/PageSignup";
 import PageProfile from "./pages/PageProfile";
@@ -26,27 +24,23 @@ import PageAutomation from "./pages/automation/PageAutomation";
 import PageAutomationTransactionCreate from "./pages/automation/transaction/PageAutomationTransactionCreate";
 import PageAutomationTransactionModify from "./pages/automation/transaction/PageAutomationTransactionModify";
 import PageMeta from "./pages/PageMeta";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 
-export const userContext = React.createContext<UserContext>({ user: "fetching", updatePreferences: () => 0, updateFavoriteAccounts: () => 0, setUser: () => 0 });
 export const modalContainerContext = React.createContext<{ container: HTMLDivElement | null }>({ container: null });
-
-interface UserContext {
-    user: User | "fetching"
-    updatePreferences: (newPreferences: Preferences) => void
-    updateFavoriteAccounts: (newFavoriteAccounts: Account[]) => void
-    setUser: (user: User | null) => void
-}
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 5 * 60 * 60
+        }
+    }
+});
 
 export default function AssetgridApp (): React.ReactElement {
-    const [user, setUser] = React.useState<User | "fetching">("fetching");
     const modalContainer = React.useRef<HTMLDivElement>(null);
     const [showSidebar, setShowSidebar] = React.useState(false);
-    const navigate = useNavigate();
-
-    React.useEffect(() => { void authenticate(); }, []);
 
     return <React.StrictMode>
-        <userContext.Provider value={{ user, updatePreferences, updateFavoriteAccounts, setUser: updateUser }}>
+        <QueryClientProvider client={queryClient}>
             <Routes>
                 <Route path={routes.login()} element={<PageLogin />} />
                 <Route path={routes.signup()} element={<PageSignup />} />
@@ -88,44 +82,21 @@ export default function AssetgridApp (): React.ReactElement {
                     <div ref={modalContainer}></div>
                 </>} />
             </Routes>
-        </userContext.Provider>
+        </QueryClientProvider>
     </React.StrictMode>;
+}
 
-    async function authenticate (): Promise<void> {
-        const result = await Api.getUser();
-        if (result.status === 200) {
-            setUser(result.data);
-        } else {
-            // Navigate to the login page
-            navigate(routes.login());
-        }
-    }
-
-    function updatePreferences (newPreferences: Preferences): void {
-        if (user === "fetching") return;
-
-        setUser({
-            ...user,
-            preferences: newPreferences
-        });
-    }
-
-    function updateFavoriteAccounts (newFavoriteAccounts: Account[]): void {
-        if (user === "fetching") return;
-
-        setUser({
-            ...user,
-            favoriteAccounts: newFavoriteAccounts
-        });
-    }
-
-    function updateUser (newUser: User | null): void {
-        if (newUser === null) {
+export function useUser (): User | undefined {
+    const navigate = useNavigate();
+    const { data } = useQuery({
+        queryKey: ["user"],
+        queryFn: Api.getUser,
+        keepPreviousData: true,
+        retry: 0,
+        onError: () => {
             localStorage.removeItem("token");
-            setUser("fetching");
             navigate(routes.login());
-        } else {
-            setUser(newUser);
         }
-    }
+    });
+    return data;
 }

@@ -6,8 +6,8 @@ import { Api, useApi } from "../../../lib/ApiClient";
 import { debounce, formatDateTimeWithUser } from "../../../lib/Utils";
 import DropdownContent from "../../common/DropdownContent";
 import { Transaction } from "../../../models/transaction";
-import { userContext } from "../../App";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../../App";
 
 interface Props {
     label?: string
@@ -24,7 +24,7 @@ export default function InputTransaction (props: Props): React.ReactElement {
     const isError = props.errors !== undefined && props.errors.length > 0;
     const [transaction, setTransaction] = React.useState<Transaction | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
 
     if (props.value === null) {

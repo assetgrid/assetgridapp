@@ -4,7 +4,6 @@ import { useApi } from "../../../lib/ApiClient";
 import { forget, formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
 import { Transaction, TransactionLine } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
-import { userContext } from "../../App";
 import Card from "../../common/Card";
 import InputIconButton from "../../input/InputIconButton";
 import * as solid from "@fortawesome/free-solid-svg-icons";
@@ -28,6 +27,7 @@ import TransactionMetaValue from "../../transaction/input/TransactionMetaValue";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 import { MetaFieldValue } from "../../../models/meta";
+import { useUser } from "../../App";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
@@ -157,7 +157,7 @@ interface TransactionDetailsCardProps {
     errors: { [key: string]: string[] }
 }
 function TransactionDetailsCard (props: TransactionDetailsCardProps): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const transaction = props.transaction;
     const editModel = props.editModel;
     const { t } = useTranslation();
@@ -361,7 +361,7 @@ interface TransactionLinesCardProps {
     errors: { [key: string]: string[] }
 }
 function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const transaction = props.transaction;
     const editModel = props.editModel;
 

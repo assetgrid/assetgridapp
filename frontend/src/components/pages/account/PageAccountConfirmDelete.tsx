@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router";
@@ -8,7 +9,8 @@ import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
-import { userContext } from "../../App";
+import { User } from "../../../models/user";
+import { useUser } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
@@ -24,7 +26,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         : "fetching");
     const allowBack = history.state.usr?.allowBack === true;
     const navigate = useNavigate();
-    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const user = useUser();
+    const queryClient = useQueryClient();
     const api = useApi();
     const { t } = useTranslation();
 
@@ -132,8 +135,11 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         setisDeleting(true);
         await api.Account.delete(account.id);
         if (account.favorite) {
-            if (user !== "fetching") {
-                updateFavoriteAccounts(user.favoriteAccounts.filter(favorite => favorite.id !== account.id));
+            if (user !== undefined) {
+                queryClient.setQueryData<User>(["user"], old => ({
+                    ...old!,
+                    favoriteAccounts: user.favoriteAccounts.filter(favorite => favorite.id !== account.id)
+                }));
             }
         }
         navigate(routes.accounts());

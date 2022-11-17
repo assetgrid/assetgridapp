@@ -9,7 +9,7 @@ import { CsvImportProfile } from "../../../models/csvImportProfile";
 import { SearchGroupType, SearchOperator } from "../../../models/search";
 import { ModifyTransaction, Transaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import Card from "../../common/Card";
 import Modal from "../../common/Modal";
 import Table from "../../common/Table";
@@ -39,8 +39,7 @@ export function Import (props: Props): React.ReactElement {
     const [isSavingProfile, setIsSavingProfile] = React.useState(false);
     const api = useApi();
     const { t } = useTranslation();
-
-    const { user } = React.useContext(userContext);
+    const user = useUser();
 
     switch (state) {
         case "waiting":

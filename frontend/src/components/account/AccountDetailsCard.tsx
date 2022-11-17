@@ -5,7 +5,6 @@ import { useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
 import { forget, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
-import { userContext } from "../App";
 import Card from "../common/Card";
 import InputButton from "../input/InputButton";
 import InputCheckbox from "../input/InputCheckbox";
@@ -16,6 +15,7 @@ import * as solid from "@fortawesome/free-solid-svg-icons";
 import * as regular from "@fortawesome/free-regular-svg-icons";
 import InputTextMultiple from "../input/InputTextMultiple";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../App";
 
 interface Props {
     account: Account
@@ -28,7 +28,7 @@ interface Props {
 export default function AccountDetailsCard (props: Props): React.ReactElement {
     const [editingModel, setEditingModel] = React.useState<Account | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const navigate = useNavigate();
     const api = useApi();

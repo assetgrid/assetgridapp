@@ -90,8 +90,8 @@ export function classList (classes: { [className: string]: boolean | undefined }
  * @param user The user whose preferences to use
  * @returns A string representation of the date
  */
-export function formatDateWithUser (date: DateTime, user: User | "fetching"): string {
-    return formatDateWithPreferences(date, user === "fetching" ? "fetching" : user.preferences);
+export function formatDateWithUser (date: DateTime, user?: User): string {
+    return formatDateWithPreferences(date, user?.preferences ?? "fetching");
 }
 
 /**
@@ -114,8 +114,8 @@ export function formatDateWithPreferences (date: DateTime, preferences: Preferen
  * @param user The user whose preferences to use
  * @returns A string representation of the dateTime
  */
-export function formatDateTimeWithUser (dateTime: DateTime, user: User | "fetching"): string {
-    return formatDateTimeWithPreferences(dateTime, user === "fetching" ? "fetching" : user.preferences);
+export function formatDateTimeWithUser (dateTime: DateTime, user?: User): string {
+    return formatDateTimeWithPreferences(dateTime, user?.preferences ?? "fetching");
 }
 
 /**
@@ -132,8 +132,8 @@ export function formatDateTimeWithPreferences (dateTime: DateTime, preferences: 
     }
 }
 
-export function formatNumberWithUser (number: Decimal, user: User | "fetching"): string {
-    return formatNumberWithPreferences(number, user === "fetching" ? "fetching" : user.preferences);
+export function formatNumberWithUser (number: Decimal, user?: User): string {
+    return formatNumberWithPreferences(number, user?.preferences ?? "fetching");
 }
 
 export function formatNumberWithPreferences (number: Decimal, preferences: Preferences | "fetching"): string {

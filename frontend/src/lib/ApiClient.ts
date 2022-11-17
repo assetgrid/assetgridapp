@@ -6,13 +6,12 @@ import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
 import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
 import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine, deserializeTransaction } from "../models/transaction";
-import { useContext } from "react";
-import { userContext } from "../components/App";
 import * as React from "react";
-import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
+import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
 import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
 import { CreateMetaField, MetaField, serializeSetMetaFieldValue } from "../models/meta";
+import { useQuery } from "@tanstack/react-query";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -26,26 +25,26 @@ DateTime.prototype.toJSON = function () {
 /**
  * Get the currently signed in user
  */
-export async function getUser (): Promise<Ok<UserModel> | Unauthorized> {
+export async function getUser (): Promise<UserModel> {
     const token = localStorage.getItem("token");
-    return await new Promise<Ok<UserModel> | Unauthorized>((resolve, reject) => {
+    return await new Promise<UserModel>((resolve, reject) => {
         if (token === null) {
-            resolve(UnauthorizedResult);
-        } else {
-            axios.get<UserModel>(rootUrl + "/api/v1/user", {
-                headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: { ...result.data, token } });
-                }).catch((e: AxiosError) => {
-                    if (e.response?.status === 401) {
-                        resolve(UnauthorizedResult);
-                        return;
-                    }
-                    console.log(e);
-                    reject(e);
-                });
+            reject(UnauthorizedResult);
+            return;
         }
+
+        axios.get<UserModel>(rootUrl + "/api/v1/user", {
+            headers: { authorization: "Bearer: " + token }
+        }).then(result => {
+            resolve({ ...result.data, token });
+        }).catch((e: AxiosError) => {
+            if (e.response?.status === 401) {
+                reject(UnauthorizedResult);
+                return;
+            }
+            console.log(e);
+            reject(e);
+        });
     });
 }
 
@@ -113,15 +112,15 @@ const User = (token: string) => ({
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    updatePreferences: async function (preferences: PreferencesModel): Promise<Ok<PreferencesModel> | BadRequest> {
-        return await new Promise<Ok<PreferencesModel> | BadRequest>((resolve, reject) => {
+    updatePreferences: async function (preferences: PreferencesModel): Promise<PreferencesModel> {
+        return await new Promise<PreferencesModel>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + "/api/v1/user/preferences", preferences, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
-                resolve({ status: 200, data: result.data });
+                resolve(result.data);
             }).catch((e: AxiosError) => {
                 if (e.response?.status === 400) {
-                    resolve(e.response.data as BadRequest);
+                    reject(e.response.data as BadRequest);
                     return;
                 }
                 console.log(e);
@@ -457,21 +456,18 @@ const Account = (token: string) => ({
      * @param query A query to subset the transactions to include in the summary
      * @returns A dictionary with the category as the key and the revenue and expenses the value in a tuple in that order
      */
-    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<Ok<CategorySummaryItem[]> | NotFound> {
-        return await new Promise<Ok<CategorySummaryItem[]> | NotFound>((resolve, reject) => {
+    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<CategorySummaryItem[]> {
+        return await new Promise<CategorySummaryItem[]>((resolve, reject) => {
             axios.post<CategorySummaryItem[]>(`${rootUrl}/api/v1/account/${accountId}/categorysummary`, query, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({
-                status: 200,
-                data: result.data.map(obj => ({
-                    category: obj.category,
-                    transfer: obj.transfer,
-                    revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
-                    expenses: new Decimal(obj.expenses).div(new Decimal(10000))
-                }))
-            })).catch((error: AxiosError) => {
+            }).then(result => resolve(result.data.map(obj => ({
+                category: obj.category,
+                transfer: obj.transfer,
+                revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
+                expenses: new Decimal(obj.expenses).div(new Decimal(10000))
+            })))).catch((error: AxiosError) => {
                 if (error.response?.status === 404) {
-                    resolve(NotFoundResult);
+                    reject(NotFoundResult);
                     return;
                 }
                 console.log(error);
@@ -488,8 +484,8 @@ const Account = (token: string) => ({
      * @param resolution The time resolution at which to aggregate the results
      * @returns An object containing information about account movements
      */
-    getMovements: async function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<Ok<GetMovementResponse> | NotFound> {
-        return await new Promise<Ok<GetMovementResponse> | NotFound>((resolve, reject) => {
+    getMovements: async function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
+        return await new Promise<GetMovementResponse>((resolve, reject) => {
             axios.post<GetMovementResponse>(`${rootUrl}/api/v1/account/${accountId}/movements`, {
                 from,
                 to,
@@ -497,23 +493,20 @@ const Account = (token: string) => ({
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
-                status: 200,
-                data: {
-                    ...result.data,
-                    initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
-                    items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
-                        .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
-                            ...item,
-                            dateTime: DateTime.fromISO(item.dateTime as any as string),
-                            revenue: new Decimal(revenueString).div(new Decimal(10000)),
-                            transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
-                            expenses: new Decimal(expensesString).div(new Decimal(10000)),
-                            transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
-                        }))
-                }
+                ...result.data,
+                initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
+                items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
+                    .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
+                        ...item,
+                        dateTime: DateTime.fromISO(item.dateTime as any as string),
+                        revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                        transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
+                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                        transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
+                    }))
             })).catch((error: AxiosError) => {
                 if (error.response?.status === 404) {
-                    resolve(NotFoundResult);
+                    reject(NotFoundResult);
                     return;
                 }
                 console.log(error);
@@ -1026,15 +1019,15 @@ const ApiClient = (token: string) => ({
 });
 export default ApiClient;
 
-export function useApi (): Api | null {
-    const { user } = useContext(userContext);
+export function useApi (): Api {
+    const { data: user } = useQuery({ queryKey: ["user"], queryFn: getUser, keepPreviousData: true });
     return React.useMemo(() => {
-        if (user === "fetching") {
-            return null;
+        if (user === undefined) {
+            return ApiClient(localStorage.getItem("token") ?? "");
         } else {
             return ApiClient(user.token);
         }
-    }, [user === "fetching" ? "fetching" : user.token]);
+    }, [user === undefined ? "fetching" : user.token]);
 }
 
 export type Api = ReturnType<typeof ApiClient>;

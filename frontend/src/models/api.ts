@@ -31,3 +31,5 @@ export interface Unauthorized {
 export const UnauthorizedResult = {
     status: 401
 } as const;
+
+export type HttpErrorResult = | NotFound | Forbid | BadRequest | Unauthorized;

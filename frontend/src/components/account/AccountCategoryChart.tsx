@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Api, useApi } from "../../lib/ApiClient";
+import { useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import {
@@ -18,7 +18,7 @@ import {
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
-import { t } from "i18next";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
     LinearScale,
@@ -43,18 +43,19 @@ interface ChartDataType { category: string, revenue: number, expenses: number, t
 export default React.memo(AccountCategoryChart, (a, b) => a.id === b.id && a.period === b.period && a.type === b.type);
 
 function AccountCategoryChart (props: Props): React.ReactElement {
-    const [data, setData] = React.useState<DataType | "fetching">("fetching");
     const api = useApi();
+    const { data, isSuccess } = useQuery({
+        queryKey: ["account-category-summary", props.id, PeriodFunctions.serialize(props.period)],
+        queryFn: updateData,
+        keepPreviousData: true
+    });
     const { t } = useTranslation();
 
-    React.useEffect(() => {
-        if (api !== null) {
-            void updateData(api, props.id, props.period, setData);
-        }
-    }, [api, props.id, props.period]);
-
-    if (data === "fetching") {
+    if (data === undefined) {
         return <>{t("common.please_wait")}</>;
+    }
+    if (!isSuccess) {
+        return <>{t("common.error_occured")}</>;
     }
 
     const mergedData: Map<string, ChartDataType> = new Map();
@@ -157,38 +158,36 @@ function AccountCategoryChart (props: Props): React.ReactElement {
             </div>
         </div>
     </>;
-}
 
-async function updateData (api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">): Promise<void> {
-    const [start, end] = PeriodFunctions.getRange(period);
-    const query: SearchGroup = {
-        type: SearchGroupType.And,
-        children: [{
-            type: SearchGroupType.Query,
-            query: {
-                column: "DateTime",
-                value: start.toISO(),
-                operator: SearchOperator.GreaterThanOrEqual,
-                not: false
-            }
-        }, {
-            type: SearchGroupType.Query,
-            query: {
-                column: "DateTime",
-                value: end.toISO(),
-                operator: SearchOperator.GreaterThan,
-                not: true
-            }
-        }]
-    };
+    async function updateData (): Promise<DataType> {
+        const [start, end] = PeriodFunctions.getRange(props.period);
+        const query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [{
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true
+                }
+            }]
+        };
 
-    const result = await api.Account.getCategorySummary(id, query);
-    if (result.status === 200) {
-        setData(result.data.map(obj => ({
+        const result = await api.Account.getCategorySummary(props.id, query);
+        return result.map(obj => ({
             category: obj.category !== "" ? obj.category : t("common.no_category"),
             transfer: obj.transfer,
             expenses: obj.expenses.toNumber(),
             revenue: obj.revenue.toNumber()
-        })));
+        }));
     }
 }

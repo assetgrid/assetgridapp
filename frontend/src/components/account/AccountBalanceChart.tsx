@@ -1,6 +1,6 @@
 import * as React from "react";
 import { GetMovementResponse, TimeResolution } from "../../models/account";
-import { Api, useApi } from "../../lib/ApiClient";
+import { useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import "chartjs-adapter-luxon";
 import {
@@ -20,6 +20,7 @@ import {
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
     LinearScale,
@@ -41,22 +42,23 @@ interface Props {
 
 const TimeResolutionValues = ["month", "day", "week", "year"] as const;
 
-export default React.memo(AccountBalanceChart);
-function AccountBalanceChart (props: Props): React.ReactElement {
-    const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
+export default function AccountBalanceChart (props: Props): React.ReactElement {
     const [resolution, setResolution] = React.useState<typeof TimeResolutionValues[number]>("day");
-    const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
-    const api = useApi();
     const { t } = useTranslation();
+    const api = useApi();
+    const { data, isSuccess } = useQuery({
+        queryKey: ["account-movements", props.id, resolution, PeriodFunctions.serialize(props.period)],
+        queryFn: updateData,
+        keepPreviousData: true
+    });
+    const movements = data?.movements;
+    const displayingPeriod = data?.period ?? props.period;
 
-    React.useEffect(() => {
-        if (api !== null) {
-            void updateData(api, props.id, props.period, setDisplayingPeriod, resolution, setMovements);
-        }
-    }, [api, props.period, resolution]);
-
-    if (movements === "fetching") {
+    if (movements === undefined) {
         return <>{t("common.please_wait")}</>;
+    }
+    if (!isSuccess) {
+        return <>{t("common.error_occured")}</>;
     }
 
     let balances: number[] = [];
@@ -193,30 +195,26 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                 </span>)}
         </div>
     </>;
-}
 
-async function updateData (api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,
-    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>): Promise<void> {
-    let resolution: TimeResolution;
-    const [start, end] = PeriodFunctions.getRange(period);
-    switch (resolutionString) {
-        case "day":
-            resolution = TimeResolution.Daily;
-            break;
-        case "month":
-            resolution = TimeResolution.Monthly;
-            break;
-        case "year":
-            resolution = TimeResolution.Yearly;
-            break;
-        case "week":
-            resolution = TimeResolution.Weekly;
-            break;
-    }
+    async function updateData (): Promise<{ movements: GetMovementResponse, period: Period }> {
+        let resolutionValue: TimeResolution;
+        const [start, end] = PeriodFunctions.getRange(props.period);
+        switch (resolution) {
+            case "day":
+                resolutionValue = TimeResolution.Daily;
+                break;
+            case "month":
+                resolutionValue = TimeResolution.Monthly;
+                break;
+            case "year":
+                resolutionValue = TimeResolution.Yearly;
+                break;
+            case "week":
+                resolutionValue = TimeResolution.Weekly;
+                break;
+        }
 
-    const result = await api.Account.getMovements(id, start, end, resolution);
-    if (result.status === 200) {
-        setDisplayingPeriod(period);
-        setData(result.data);
+        const result = await api.Account.getMovements(props.id, start, end, resolutionValue);
+        return { movements: result, period: props.period };
     }
 }

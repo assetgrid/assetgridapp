@@ -19,10 +19,10 @@ import {
     BarController
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
-import { userContext } from "../App";
 import Card from "../common/Card";
 import AccountLink from "./AccountLink";
 import { useTranslation } from "react-i18next";
+import { useUser } from "../App";
 
 ChartJS.register(
     LinearScale,
@@ -250,7 +250,7 @@ interface NetWorthTableProps {
     accountBalances: Array<{ account: Account, balance: number, revenue: number, expenses: number }>
 }
 function NetWorthTable (props: NetWorthTableProps): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const { t } = useTranslation();
 
     return <Card isNarrow={true} title={t("chart.net_worth")!}>
