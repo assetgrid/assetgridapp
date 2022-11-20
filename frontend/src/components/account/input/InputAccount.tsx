@@ -173,9 +173,6 @@ export default function InputAccount (props: Props): React.ReactElement {
         // Update the query cache, so we don't reload these accounts
         result.data.data.forEach(account => {
             queryClient.setQueryData<Account>(["account", account.id], _ => account);
-            queryClient.setQueryData<Account>(["account", "full", account.id], old => old !== undefined
-                ? { ...account, balance: old.balance }
-                : undefined);
         });
     }
 

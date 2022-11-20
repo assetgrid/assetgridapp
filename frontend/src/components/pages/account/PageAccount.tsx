@@ -46,12 +46,12 @@ export default function PageAccount (): React.ReactElement {
     }
 
     const api = useApi();
-    const { data: account, isError } = useQuery({ queryKey: ["account", "full", id], queryFn: async () => await api.Account.get(id) });
+    const { data: account, isError } = useQuery({ queryKey: ["account", id, "full"], queryFn: async () => await api.Account.get(id) });
     const queryClient = useQueryClient();
     const { mutate, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
         mutationFn: async account => await api.Account.update(id, account),
         onSuccess: result => {
-            queryClient.setQueryData<Account>(["account", "full", id], _ => result);
+            queryClient.setQueryData<Account>(["account", id, "full"], _ => result);
             queryClient.setQueryData<Account>(["account", id], _ => result);
             // Update favorite accounts
             if (result.favorite !== account?.favorite) {

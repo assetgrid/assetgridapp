@@ -34,7 +34,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
     const { mutate, error, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
         mutationFn: async account => await api.Account.update(props.account.id, account),
         onSuccess: result => {
-            queryClient.setQueryData<Account>(["account", "full", props.account.id], _ => result);
+            queryClient.setQueryData<Account>(["account", props.account.id, "full"], _ => result);
             queryClient.setQueryData<Account>(["account", props.account.id], _ => result);
             // Update favorite accounts
             if (result.favorite !== props.account.favorite) {

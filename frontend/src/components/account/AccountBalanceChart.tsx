@@ -47,7 +47,7 @@ export default function AccountBalanceChart (props: Props): React.ReactElement {
     const { t } = useTranslation();
     const api = useApi();
     const { data, isSuccess } = useQuery({
-        queryKey: ["account-movements", props.id, resolution, PeriodFunctions.serialize(props.period)],
+        queryKey: ["account", props.id, "transactions", "movements", resolution, PeriodFunctions.serialize(props.period)],
         queryFn: updateData,
         keepPreviousData: true
     });

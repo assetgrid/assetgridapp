@@ -45,7 +45,7 @@ export default React.memo(AccountCategoryChart, (a, b) => a.id === b.id && a.per
 function AccountCategoryChart (props: Props): React.ReactElement {
     const api = useApi();
     const { data, isSuccess } = useQuery({
-        queryKey: ["account-category-summary", props.id, PeriodFunctions.serialize(props.period)],
+        queryKey: ["account", props.id, "transactions", "category-summary", PeriodFunctions.serialize(props.period)],
         queryFn: updateData,
         keepPreviousData: true
     });

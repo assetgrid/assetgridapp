@@ -289,13 +289,11 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
 
             queryClient.setQueryData<Transaction>(["transaction", props.transactionId, "full"], _ => result.data);
             await queryClient.invalidateQueries(["transaction", "list"]);
-            if (result.data.source !== null) {
-                await queryClient.invalidateQueries(["account-movements", result.data.source.id]);
-                await queryClient.invalidateQueries(["account-category-summary", result.data.source.id]);
+            if (props.transaction.source !== null) {
+                await queryClient.invalidateQueries(["account", props.transaction.source.id, "transactions"]);
             }
-            if (result.data.destination !== null) {
-                await queryClient.invalidateQueries(["account-movements", result.data.destination.id]);
-                await queryClient.invalidateQueries(["account-category-summary", result.data.destination.id]);
+            if (props.transaction.destination !== null) {
+                await queryClient.invalidateQueries(["account", props.transaction.destination.id, "transactions"]);
             }
         } else if (result.status === 400) {
             setErrors(result.errors);

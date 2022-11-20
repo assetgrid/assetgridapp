@@ -103,12 +103,10 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
         for (const transaction of transactions.data) {
             await queryClient.invalidateQueries(["transaction", transaction.id]);
             if (transaction.source !== null) {
-                await queryClient.invalidateQueries(["account-movements", transaction.source.id]);
-                await queryClient.invalidateQueries(["account-category-summary", transaction.source.id]);
+                await queryClient.invalidateQueries(["account", transaction.source.id, "transactions"]);
             }
             if (transaction.destination !== null) {
-                await queryClient.invalidateQueries(["account-movements", transaction.destination.id]);
-                await queryClient.invalidateQueries(["account-category-summary", transaction.destination.id]);
+                await queryClient.invalidateQueries(["account", transaction.destination.id, "transactions"]);
             }
         }
     }
