@@ -111,5 +111,26 @@
                 "kind": "build",
             }
         },
+        {
+            "label": "extract i18n strings for frontend",
+            "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack",
+            "windows": {
+                "command": "${workspaceFolder}/frontend/node_modules/.bin/webpack.cmd"
+            },
+            "args": [
+                "--progress",
+            ],
+            "options": {
+                "cwd": "./frontend",
+                "env": {
+                    "babel": "true"
+                }
+            },
+            "problemMatcher": "$tsc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
     ]
 }

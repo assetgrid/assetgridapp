@@ -48,7 +48,7 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 use: [{
-                    loader: "ts-loader"
+                    loader: process.env.babel === "true" ? "babel-loader" : "ts-loader"
                 }],
                 exclude: /node_modules/
             },
