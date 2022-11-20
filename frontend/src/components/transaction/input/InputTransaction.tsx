@@ -8,6 +8,7 @@ import DropdownContent from "../../common/DropdownContent";
 import { Transaction } from "../../../models/transaction";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../../App";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
     label?: string
@@ -25,6 +26,7 @@ export default function InputTransaction (props: Props): React.ReactElement {
     const [transaction, setTransaction] = React.useState<Transaction | null>(props.value !== null && typeof (props.value) !== "number" ? props.value : null);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
     const user = useUser();
+    const queryClient = useQueryClient();
     const { t } = useTranslation();
 
     if (props.value === null) {
@@ -155,13 +157,15 @@ export default function InputTransaction (props: Props): React.ReactElement {
                 ]
             };
         }
-        const result = await api.Transaction.search({
-            from: 0,
-            to: 5,
-            query,
-            descending: false,
-            orderByColumn: "Id"
-        });
+
+        const result = await queryClient.fetchQuery(["transaction", "list", "inputtransaction", searchQuery],
+            async () => await api.Transaction.search({
+                from: 0,
+                to: 5,
+                query,
+                descending: false,
+                orderByColumn: "Id"
+            }));
         setDropdownOptions(result.data);
     }
 

@@ -21,7 +21,6 @@ export default function PageAutomation (): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [transactionAutomations, setTransactionAutomations] = React.useState<TransactionAutomationSummary[]>([]);
     const [transactionAutomationPage, setTransactionAutomationPage] = React.useState(1);
-    const [transactionAutomationDraw, setTransactionAutomationDraw] = React.useState(1);
     const [transactionAutomationDeleting, setTransactionAutomationDeleting] = React.useState<TransactionAutomationSummary | null>(null);
     const { t } = useTranslation();
 
@@ -54,8 +53,6 @@ export default function PageAutomation (): React.ReactElement {
                     </tr>}
                     page={transactionAutomationPage}
                     goToPage={setTransactionAutomationPage}
-                    draw={transactionAutomationDraw}
-                    type="sync"
                     headings={<tr>
                         <th>{t("common.name")}</th>
                         <th>{t("common.description")}</th>
@@ -95,7 +92,6 @@ export default function PageAutomation (): React.ReactElement {
         const result = await api.Automation.Transaction.list();
         if (result.status === 200) {
             setTransactionAutomations(result.data);
-            setTransactionAutomationDraw(draw => draw + 1);
         }
     }
 

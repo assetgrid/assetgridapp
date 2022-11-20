@@ -111,6 +111,7 @@ export default function PageCreateAccount (): React.ReactElement {
                     }));
                 }
             }
+            await queryClient.invalidateQueries(["account", "list"]);
 
             if (stay) {
                 setValue(defaultAccount);

@@ -57,6 +57,7 @@ export default function CreateAccountModal (props: Props): React.ReactElement {
                     }));
                 }
             }
+            await queryClient.invalidateQueries(["account", "list"]);
             props.created(result.data);
             if (props.closeOnChange !== undefined) {
                 props.close();

@@ -60,7 +60,6 @@ export default function InputParseOptions (props: InputParseOptionsProps): React
                     </tr>}
                     items={props.previewData}
                     paginationSize={7}
-                    type="sync"
                     renderItem={(item, index) => <tr key={index}>
                         <td>{item}</td>
                         <td>

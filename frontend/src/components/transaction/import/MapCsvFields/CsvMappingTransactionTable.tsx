@@ -41,8 +41,6 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
             <th>{t("transaction.destination")}</th>
             <th>{t("common.category")}</th>
         </tr>}
-        draw={props.tableDraw}
-        type="sync"
         page={page}
         goToPage={setPage}
         renderItem={transaction =>

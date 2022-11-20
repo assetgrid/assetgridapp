@@ -21,7 +21,6 @@ interface Props {
 export default function AccountSelector (props: Props): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [page, setPage] = React.useState(1);
-    const [draw, setDraw] = React.useState(1);
     const api = useApi();
     const { t } = useTranslation();
 
@@ -30,8 +29,6 @@ export default function AccountSelector (props: Props): React.ReactElement {
         .map(x => x.trim())
         .filter(x => x !== "")
         .filter((a, index, array) => array.findIndex(b => b === a) === index); // Only unique
-
-    React.useEffect(() => setDraw(draw => draw + 1), [props.accounts, props.transactions]);
 
     if (identifiers.length === 0) {
         return <Card title={t("common.accounts")!} isNarrow={true}>
@@ -62,8 +59,6 @@ export default function AccountSelector (props: Props): React.ReactElement {
             </tr>}
             page={page}
             goToPage={setPage}
-            draw={draw}
-            type="sync"
             headings={<tr>
                 <th>{t("account.identifier")!}</th>
                 <th>{t("common.account")!}</th>

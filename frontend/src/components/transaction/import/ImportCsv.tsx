@@ -41,7 +41,6 @@ export default function ImportCsv (props: Props): React.ReactElement {
     const [profileNames, setProfileNames] = React.useState<string[] | "fetching">("fetching");
     const [selectedProfile, setSelectedProfile] = React.useState<string | null>(null);
     const [encoding, setEncoding] = React.useState<string | null>(props.options.csvTextEncoding);
-    const [draw, setDraw] = React.useState(0);
     const api = useApi();
     const { t } = useTranslation();
 
@@ -205,8 +204,6 @@ export default function ImportCsv (props: Props): React.ReactElement {
                 goToPage={setPage}
                 pageSize={pageSize}
                 items={csvData.data}
-                type="sync"
-                draw={draw}
                 renderItem={(row, i) => <tr key={i}>
                     {columnOffset !== 0 && <td></td>}
                     {columns.map(column =>
@@ -260,7 +257,6 @@ export default function ImportCsv (props: Props): React.ReactElement {
                 complete: (a) => {
                     props.csvParsed(a.data, ((event?.target?.result ?? "") as string).split(a.meta.linebreak));
                     setCsvData(a);
-                    setDraw(draw => draw + 1);
                 }
             });
         };

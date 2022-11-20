@@ -53,6 +53,8 @@ export default function PageAccount (): React.ReactElement {
         onSuccess: result => {
             queryClient.setQueryData<Account>(["account", id, "full"], _ => result);
             queryClient.setQueryData<Account>(["account", id], _ => result);
+            forget(queryClient.invalidateQueries)(["account", "list"]);
+
             // Update favorite accounts
             if (result.favorite !== account?.favorite) {
                 if (result.favorite) {

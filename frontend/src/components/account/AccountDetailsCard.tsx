@@ -3,7 +3,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { formatNumberWithUser } from "../../lib/Utils";
+import { forget, formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import Card from "../common/Card";
 import InputButton from "../input/InputButton";
@@ -36,6 +36,8 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
         onSuccess: result => {
             queryClient.setQueryData<Account>(["account", props.account.id, "full"], _ => result);
             queryClient.setQueryData<Account>(["account", props.account.id], _ => result);
+            forget(queryClient.invalidateQueries)(["account", "list"]);
+
             // Update favorite accounts
             if (result.favorite !== props.account.favorite) {
                 if (result.favorite) {

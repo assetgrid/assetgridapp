@@ -9,7 +9,7 @@ import InputButton from "../../input/InputButton";
 import CreateAccountModal from "./CreateAccountModal";
 import DropdownContent from "../../common/DropdownContent";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Props {
     label?: string
@@ -55,7 +55,7 @@ export default function InputAccount (props: Props): React.ReactElement {
     // Fetch dropdown options
     React.useEffect(() => {
         if (api !== null) {
-            refreshDropdownDebounced(api, searchQuery);
+            refreshDropdownDebounced(api, queryClient, searchQuery);
         }
     }, [searchQuery, api]);
 
@@ -135,7 +135,7 @@ export default function InputAccount (props: Props): React.ReactElement {
         props.onChange(account);
     }
 
-    async function refreshDropdown (api: Api, searchQuery: string): Promise<void> {
+    async function refreshDropdown (api: Api, queryClient: QueryClient, searchQuery: string): Promise<void> {
         let query: SearchGroup | undefined;
         if (searchQuery !== "") {
             query = {
@@ -164,13 +164,16 @@ export default function InputAccount (props: Props): React.ReactElement {
                 ]
             };
         }
-        const result = await api.Account.search({
-            from: 0,
-            to: 5,
-            query,
-            descending: false,
-            orderByColumn: "Id"
-        });
+
+        const result = await queryClient.fetchQuery(["account", "list", "inputaccount", searchQuery],
+            async () => await api.Account.search({
+                from: 0,
+                to: 5,
+                query,
+                descending: false,
+                orderByColumn: "Id"
+            })
+        );
         setDropdownOptions(result.data.data);
         // Update the query cache, so we don't reload these accounts
         result.data.data.forEach(account => {
