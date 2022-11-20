@@ -17,6 +17,7 @@ import TransactionFilterEditor from "../../../transaction/TransactionFilterEdito
 import TransactionList from "../../../transaction/table/TransactionList";
 import Page404 from "../../Page404";
 import PageError from "../../PageError";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface LocationState {
     expandPreview?: boolean
@@ -34,6 +35,7 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
     const id = idString === undefined ? NaN : Number.parseInt(idString);
     const [changesSaved, setChangesSaved] = React.useState(false);
     const [showRunSingleModal, setShowRunSingleModal] = React.useState(false);
+    const queryClient = useQueryClient();
     const { t } = useTranslation();
 
     React.useEffect(() => {
@@ -186,6 +188,7 @@ export default function PageAutomationTransactionModify (): React.ReactElement {
 
         setIsSaving(true);
         await api.Automation.Transaction.runSingle(model);
+        await queryClient.invalidateQueries(["transaction"]);
         setIsSaving(false);
         setDraw(draw => draw + 1);
         setShowRunSingleModal(false);

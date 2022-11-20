@@ -99,8 +99,9 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
         setIsMerging(false);
         props.merged();
 
-        await queryClient.invalidateQueries(["transactions"]);
+        await queryClient.invalidateQueries(["transaction"]);
         for (const transaction of transactions.data) {
+            await queryClient.invalidateQueries(["transaction", transaction.id]);
             if (transaction.source !== null) {
                 await queryClient.invalidateQueries(["account-movements", transaction.source.id]);
                 await queryClient.invalidateQueries(["account-category-summary", transaction.source.id]);

@@ -1,4 +1,5 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
@@ -7,7 +8,6 @@ import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
-import { MetaField, MetaFieldValue } from "../../../models/meta";
 import { ModifyTransaction, Transaction, TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
 import Card from "../../common/Card";
@@ -19,7 +19,7 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
-import TransactionMetaInput, { MetaFieldType } from "../../transaction/input/TransactionMetaInput";
+import TransactionMetaEditor from "../../transaction/input/TransactionMetaEditor";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionLink from "../../transaction/TransactionLink";
 
@@ -37,17 +37,15 @@ export default function PageCreateTransaction (): React.ReactElement {
     };
 
     const [model, setModel] = React.useState<ModifyTransaction>(defaultModel);
-    const [metaFields, setMetaFields] = React.useState<Map<number, MetaField> | "fetching">("fetching");
     const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
     const [isCreating, setCreating] = React.useState(false);
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
     const actionOnComplete: "back" | "chose" = window.history.state.usr?.actionOnComplete ?? "chose";
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
+    const queryClient = useQueryClient();
     const api = useApi();
     const { t } = useTranslation();
-
-    React.useEffect(forget(loadMetaFields), [api]);
 
     return <>
         <Hero title={t("transaction.create_new")} />
@@ -180,45 +178,27 @@ export default function PageCreateTransaction (): React.ReactElement {
             </Card>
 
             <Card title={t("metadata.custom_fields")!} isNarrow={true}>
-                {model.metaData === null && <p>{t("transaction.loading_custom_fields")!}</p>}
-                {model.metaData !== null && metaFields !== "fetching" && <table className="table is-fullwidth">
-                    <thead>
-                        <tr>
-                            <th>{t("common.name")!}</th>
-                            <th>{t("common.value")!}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {model.metaData.map((field, i) => <tr key={i}>
-                            <td>{metaFields.get(field.metaId)?.name}</td>
-                            <td>
-                                <TransactionMetaInput
-                                    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                                    field={{ value: field.value, type: metaFields.get(field.metaId)!.valueType } as MetaFieldType}
-                                    onChange={value => updateMetaField(value, i)}
-                                    disabled={isCreating}
-                                    errors={modelErrors[`MetaData[${i}].Value`]}
-                                />
-                            </td>
-                        </tr>)}
-                    </tbody>
-                </table>}
+                <TransactionMetaEditor disabled={isCreating}
+                    value={model.metaData}
+                    onChange={value => setModel({ ...model, metaData: value })}
+                    errors={modelErrors} />
             </Card>
 
             <Card title={t("common.actions")!} isNarrow={true}>
                 <div className="buttons">
                     {actionOnComplete === "chose" && <>
-                        <InputButton className="is-primary" disabled={api === null || isCreating || metaFields === "fetching"}
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
                             onClick={forget(async () => await create("stay"))}>
                             {t("common.create_and_stay")!}
                         </InputButton>
-                        <InputButton className="is-primary" disabled={api === null || isCreating || metaFields === "fetching"}
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
                             onClick={forget(async () => await create("view"))}>
                             {t("transaction.create_and_view")!}
                         </InputButton>
                     </>}
                     {actionOnComplete === "back" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("back"))}>
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
+                            onClick={forget(async () => await create("back"))}>
                             {t("transaction.create_transaction")!}
                         </InputButton>
                     </>}
@@ -273,59 +253,51 @@ export default function PageCreateTransaction (): React.ReactElement {
     }
 
     async function create (action: "stay" | "view" | "back"): Promise<void> {
-        if (api === null || metaFields === "fetching") return;
+        if (api === null) return;
 
         setCreating(true);
         setCreatedTransaction(null);
         const result = await api.Transaction.create(model);
-        if (result.status === 200) {
-            if (action === "stay") {
-                setModel({
-                    ...defaultModel,
-                    metaData: [...metaFields.values()].map(x => ({
-                        metaId: x.id,
-                        type: x.type,
-                        value: null
-                    }))
-                });
-                setCreating(false);
-                setCreatedTransaction(result.data);
-            } else if (action === "back") {
-                navigate(-1);
-            } else {
-                navigate(routes.transaction(result.data.id.toString()));
-            }
-        } else if (result.status === 400) {
+        if (result.status === 400) {
             setCreating(false);
             setModelErrors(result.errors);
+            return;
+        } else if (result.status !== 200) {
+            throw new Error("An error occurred");
         }
-    }
 
-    async function loadMetaFields (): Promise<void> {
-        if (api === null) return;
+        // Loop through meta fields
+        if (model.metaData !== null) {
+            for (let i = 0; i < model.metaData.length; i++) {
+                const metaField = model.metaData[i];
+                if (typeof metaField.value !== "object" || metaField.value === null || !("file" in metaField.value) || metaField.value.file === undefined) {
+                    continue;
+                }
 
-        const result = await api.Meta.list();
-        setMetaFields(new Map(result.data.map(x => [x.id, x])));
-        setModel({
-            ...model,
-            metaData: result.data.map(x => ({
-                metaId: x.id,
-                type: x.valueType,
-                value: null
-            }))
-        });
-    }
+                // An attachment was uploaded
+                const file = metaField.value.file;
+                const uploadResult = await api.Meta.uploadAttachment(metaField.metaId, "transaction", result.data.id, file);
+                if (uploadResult.status === 200) {
+                    const newMeta = result.data.metaData.find(x => x.metaId === metaField.metaId);
+                    if (newMeta !== undefined) {
+                        newMeta.value = uploadResult.data;
+                    }
+                }
+            }
+        }
+        await queryClient.invalidateQueries(["transaction", "list"]);
+        await queryClient.setQueryData(["transaction", result.data.id], result.data);
 
-    function updateMetaField (newValue: MetaFieldValue["value"], index: number): void {
-        if (model.metaData === null) return;
-
-        setModel({
-            ...model,
-            metaData: [
-                ...model.metaData.slice(0, index),
-                { ...model.metaData[index], value: newValue },
-                ...model.metaData.slice(index + 1)
-            ]
-        });
+        if (action === "stay") {
+            setModel({
+                ...defaultModel
+            });
+            setCreating(false);
+            setCreatedTransaction(result.data);
+        } else if (action === "back") {
+            navigate(-1);
+        } else {
+            navigate(routes.transaction(result.data.id.toString()));
+        }
     }
 }

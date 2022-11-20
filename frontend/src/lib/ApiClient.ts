@@ -563,22 +563,20 @@ const Transaction = (token: string) => ({
      * @param id Transaction id
      * @returns The transaction with the specified id
      */
-    get: async function (id: number): Promise<Ok<TransactionModel> | NotFound> {
-        return await new Promise<Ok<TransactionModel> | NotFound>((resolve, reject) => {
+    get: async function (id: number): Promise<TransactionModel | null> {
+        return await new Promise<TransactionModel | null>((resolve, reject) => {
             axios.get<TransactionModel>(`${rootUrl}/api/v1/transaction/${Number(id)}`, {
                 headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: deserializeTransaction(result.data) });
-                })
-                .catch((e: AxiosError) => {
-                    if (e.response?.status === 404) {
-                        resolve(NotFoundResult);
-                    } else {
-                        console.log(e);
-                        reject(e);
-                    }
-                });
+            }).then(result => {
+                resolve(deserializeTransaction(result.data));
+            }).catch((e: AxiosError) => {
+                if (e.response?.status === 404) {
+                    resolve(null);
+                } else {
+                    console.log(e);
+                    reject(e);
+                }
+            });
         });
     },
 
@@ -880,12 +878,12 @@ const Meta = (token: string) => ({
     /**
      * Get all meta fields that the current user has access to
      */
-    list: async function (): Promise<Ok<MetaField[]>> {
-        return await new Promise<Ok<MetaField[]>>((resolve, reject) => {
+    list: async function (): Promise<MetaField[]> {
+        return await new Promise<MetaField[]>((resolve, reject) => {
             axios.get(`${rootUrl}/api/v1/meta`, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
-                resolve({ status: 200, data: result.data });
+                resolve(result.data);
             }).catch(error => {
                 console.log(error);
                 reject(error);

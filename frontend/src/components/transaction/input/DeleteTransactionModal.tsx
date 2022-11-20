@@ -38,7 +38,8 @@ export default function DeleteTransactionModal (props: Props): React.ReactElemen
         await api.Transaction.delete(props.transaction.id);
         props.deleted?.();
 
-        await queryClient.invalidateQueries(["transactions"]);
+        await queryClient.invalidateQueries(["transaction", "list"]);
+        await queryClient.invalidateQueries(["transaction", props.transaction.id]);
         if (props.transaction.source !== null) {
             await queryClient.invalidateQueries(["account-movements", props.transaction.source.id]);
             await queryClient.invalidateQueries(["account-category-summary", props.transaction.source.id]);

@@ -11,7 +11,7 @@ import { routes } from "../../../lib/routes";
 import MergeTransactionsModal from "./../input/MergeTransactionsModal";
 import DropdownContent from "../../common/DropdownContent";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "../../common/Pagination";
 
 interface Props {
@@ -43,7 +43,6 @@ function TransactionList (props: Props): React.ReactElement {
     const [selectedTransactions, setSelectedTransactions] = (props.selectedTransactions != null) ? props.selectedTransactions : React.useState<Set<number>>(new Set());
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const [page, setPage] = (props.page != null) ? props.page : React.useState(1);
-    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const pageSize = props.pageSize ?? 20;
     const from = (page - 1) * pageSize;
@@ -52,7 +51,7 @@ function TransactionList (props: Props): React.ReactElement {
     const { t } = useTranslation();
 
     const { data, isError } = useQuery({
-        queryKey: ["transactions", "list", {
+        queryKey: ["transaction", "list", {
             from,
             to,
             query: props.query,
@@ -140,17 +139,6 @@ function TransactionList (props: Props): React.ReactElement {
             setSelectedTransactions(new Set());
         }
         firstRender.current = false;
-
-        // Update query data as row rendering uses the query cache
-        transactions.forEach(transaction => {
-            queryClient.setQueryData<Transaction>(["transaction", transaction.id], _ => transaction);
-            queryClient.setQueryData<Transaction>(["transaction", "full", transaction.id], old => old !== undefined
-                ? {
-                    ...transaction,
-                    metaData: transaction.metaData
-                }
-                : undefined);
-        });
 
         return {
             items: transactions,

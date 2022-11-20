@@ -11,6 +11,7 @@ import InputButton from "../../input/InputButton";
 import TransactionActionEditor from "../../transaction/automation/TransactionActionEditor";
 import TransactionFilterEditor from "../../transaction/TransactionFilterEditor";
 import TransactionList from "../../transaction/table/TransactionList";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PageEditMultipleTransactions (): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
@@ -19,6 +20,7 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
         ? window.history.state.usr.query
         : emptyQuery);
     const [action, setAction] = React.useState<TransactionAction>({ key: "set-description", value: "" });
+    const queryClient = useQueryClient();
     const { t } = useTranslation();
 
     // The table query is modified separately and debounced from the main query to prevent excessive redraws when modifying the query
@@ -91,6 +93,7 @@ export default function PageEditMultipleTransactions (): React.ReactElement {
             query,
             permissions: TransactionAutomationPermissions.Modify
         });
+        await queryClient.invalidateQueries(["transaction"]);
 
         setIsUpdating(false);
         setDraw(draw => draw + 1);

@@ -15,6 +15,7 @@ import InputText from "../../../input/InputText";
 import TransactionActionEditor from "../../../transaction/automation/TransactionActionEditor";
 import TransactionFilterEditor from "../../../transaction/TransactionFilterEditor";
 import TransactionList from "../../../transaction/table/TransactionList";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface LocationState {
     expandPreview?: boolean
@@ -38,6 +39,7 @@ export default function PageAutomationTransactionCreate (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const [showRunSingleModal, setShowRunSingleModal] = React.useState(false);
+    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { t } = useTranslation();
 
@@ -158,6 +160,7 @@ export default function PageAutomationTransactionCreate (): React.ReactElement {
 
         setIsCreating(true);
         await api.Automation.Transaction.runSingle(model);
+        await queryClient.invalidateQueries(["transaction"]);
         setIsCreating(false);
         setDraw(draw => draw + 1);
         setShowRunSingleModal(false);

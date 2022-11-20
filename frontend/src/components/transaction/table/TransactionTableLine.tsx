@@ -287,8 +287,8 @@ function TransactionEditor (props: TransactionEditorProps): React.ReactElement {
         if (result.status === 200) {
             props.stopEditing();
 
-            queryClient.setQueryData<Transaction>(["transaction", props.transactionId], _ => result.data);
-            await queryClient.invalidateQueries(["transactions"]);
+            queryClient.setQueryData<Transaction>(["transaction", props.transactionId, "full"], _ => result.data);
+            await queryClient.invalidateQueries(["transaction", "list"]);
             if (result.data.source !== null) {
                 await queryClient.invalidateQueries(["account-movements", result.data.source.id]);
                 await queryClient.invalidateQueries(["account-category-summary", result.data.source.id]);

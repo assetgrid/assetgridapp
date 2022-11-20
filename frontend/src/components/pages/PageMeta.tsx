@@ -1,4 +1,5 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useApi } from "../../lib/ApiClient";
@@ -11,6 +12,7 @@ import InputButton from "../input/InputButton";
 import InputIconButton from "../input/InputIconButton";
 import InputSelect from "../input/InputSelect";
 import InputText from "../input/InputText";
+import PageError from "./PageError";
 
 export default function PageMeta (): React.ReactElement {
     const { t } = useTranslation();
@@ -52,20 +54,23 @@ export default function PageMeta (): React.ReactElement {
         }
     ] as const;
 
-    const [fields, setFields] = React.useState<MetaField[] | "fetching">("fetching");
     const [deletingField, setDeletingField] = React.useState<MetaField | null>(null);
     const [isDeletingField, setIsDeletingField] = React.useState(false);
     const api = useApi();
+    const queryClient = useQueryClient();
+    const { data: fields, isError } = useQuery({ queryKey: ["meta"], queryFn: api.Meta.list });
 
-    React.useEffect(forget(updateFields), [api]);
+    if (isError) {
+        return <PageError />;
+    }
 
     return <>
         <Hero title={t("metadata.custom_fields")} subtitle={t("metadata.create_or_modify_custom_fields")} />
         <div className="p-3">
             <Card title={t("metadata.transaction_fields")!} isNarrow={true}>
-                {fields === "fetching" && <>{t("metadata.please_wait_loading")}</>}
-                {fields.length === 0 && <>{t("metadata.no_custom_fields_exist")}</>}
-                {fields !== "fetching" && fields.length > 0 && <table className="table">
+                {fields === undefined && <>{t("metadata.please_wait_loading")}</>}
+                {fields !== undefined && fields.length === 0 && <>{t("metadata.no_custom_fields_exist")}</>}
+                {fields !== undefined && fields.length > 0 && <table className="table">
                     <thead>
                         <tr>
                             <th>{t("metadata.field_name")}</th>
@@ -86,7 +91,7 @@ export default function PageMeta (): React.ReactElement {
                     </tbody>
                 </table>}
             </Card>
-            <CreateFieldCard onCreated={forget(updateFields)} fieldTypes={fieldTypes} />
+            <CreateFieldCard fieldTypes={fieldTypes} />
 
             {/* Deletion modal */}
             {deletingField !== null && <Modal
@@ -94,7 +99,7 @@ export default function PageMeta (): React.ReactElement {
                 title={t("metadata.delete_custom_field")!}
                 close={() => setDeletingField(null)}
                 footer={<>
-                    {<InputButton onClick={forget(deleteField)} disabled={isDeletingField || api === null || fields === "fetching"}
+                    {<InputButton onClick={forget(deleteField)} disabled={isDeletingField || api === null || fields === undefined}
                         className="is-danger">
                         {t("metadata.delete_field")}
                     </InputButton>}
@@ -106,27 +111,18 @@ export default function PageMeta (): React.ReactElement {
         </div>
     </>;
 
-    async function updateFields (): Promise<void> {
-        if (api === null) return;
-
-        setFields("fetching");
-        const result = await api.Meta.list();
-        setFields(result.data);
-    }
-
     async function deleteField (): Promise<void> {
         if (api === null) return;
         if (deletingField === null) return;
 
         setIsDeletingField(true);
         await api.Meta.delete(deletingField.id);
-        await updateFields();
+        await queryClient.setQueryData<MetaField[]>(["meta"], old => old?.filter(x => x.id !== deletingField.id));
         setDeletingField(null);
     }
 }
 
 interface CreateFieldProps {
-    onCreated: () => void
     fieldTypes: Readonly<Array<{ key: string, value: string, type: FieldValueType }>>
 }
 
@@ -140,6 +136,7 @@ function CreateFieldCard (props: CreateFieldProps): React.ReactElement {
     const [isCreating, setIsCreating] = React.useState(false);
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const queryClient = useQueryClient();
     const { t } = useTranslation();
 
     return <Card title={t("metadata.add_custom_field")!} isNarrow={true}>
@@ -183,7 +180,7 @@ function CreateFieldCard (props: CreateFieldProps): React.ReactElement {
                 type: 0,
                 valueType: model.valueType
             });
-            props.onCreated();
+            await queryClient.setQueryData<MetaField[]>(["meta"], old => old !== undefined ? [...old, result.data] : undefined);
         } else if (result.status === 400) {
             setErrors(result.errors);
         }

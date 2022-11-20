@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { routes } from "../../../lib/routes";
 import MergeTransactionsModal from "../input/MergeTransactionsModal";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { t } from "i18next";
 import { Pagination } from "../../common/Pagination";
 
@@ -40,11 +40,10 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
     const firstRender = React.useRef(true);
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const [start, end] = PeriodFunctions.getRange(props.period);
     const api = useApi();
     const { data, isError } = useQuery({
-        queryKey: ["transactions", "account", {
+        queryKey: ["transaction", "list", "account", {
             from,
             to,
             start,
@@ -161,17 +160,6 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
         }
         firstRender.current = false;
         setShownTransactions(transactions);
-
-        // Update query data as row rendering uses the query cache
-        result.data.data.forEach(transaction => {
-            queryClient.setQueryData<Transaction>(["transaction", transaction.id], _ => transaction);
-            queryClient.setQueryData<Transaction>(["transaction", "full", transaction.id], old => old !== undefined
-                ? {
-                    ...transaction,
-                    metaData: transaction.metaData
-                }
-                : undefined);
-        });
 
         return {
             items: transactions.map((t, i) => ({

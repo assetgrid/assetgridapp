@@ -28,29 +28,29 @@ import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 import { MetaFieldValue } from "../../../models/meta";
 import { useUser } from "../../App";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function PageTransaction (): React.ReactElement {
     const id = Number(useParams().id);
-    const [transaction, setTransaction] = React.useState<Transaction | "fetching" | null | "error">("fetching");
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [editModel, setEditModel] = React.useState<Transaction | null>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [errors, setErors] = React.useState<{ [key: string]: string[] }>({});
     const navigate = useNavigate();
     const api = useApi();
+    const queryClient = useQueryClient();
+    const { data: transaction, isError } = useQuery({ queryKey: ["transaction", id], queryFn: async () => await api.Transaction.get(id) });
     const { t } = useTranslation();
-
-    React.useEffect(forget(fetchTransaction), [id, api]);
 
     if (transaction === null) {
         return <Page404 />;
     }
-    if (transaction === "error") {
+    if (isError) {
         return <PageError />;
     }
 
     return <>
-        <Hero title={t("transaction.transaction_with_id", { id })} subtitle={transaction !== "fetching" ? transaction.description : <>&hellip;</>} />
+        <Hero title={t("transaction.transaction_with_id", { id })} subtitle={transaction !== undefined ? transaction.description : <>&hellip;</>} />
         <div className="p-3">
             <div className="columns m-0">
                 <div className="column p-0 is-half is-flex">
@@ -80,31 +80,11 @@ export default function PageTransaction (): React.ReactElement {
         </div>
 
         {/* Deletion modal */}
-        {isDeleting && transaction !== "fetching" && <DeleteTransactionModal
+        {isDeleting && transaction !== undefined && <DeleteTransactionModal
             close={() => setIsDeleting(false)}
             deleted={() => navigate(routes.transactions())}
             transaction={transaction} />}
     </>;
-
-    async function fetchTransaction (): Promise<void> {
-        setTransaction("fetching");
-
-        if (isNaN(id)) {
-            setTransaction("error");
-        } else if (api !== null) {
-            const result = await api.Transaction.get(id);
-            switch (result.status) {
-                case 200:
-                    setTransaction(result.data);
-                    break;
-                case 404:
-                    setTransaction(null);
-                    break;
-                default:
-                    setTransaction("error");
-            }
-        }
-    }
 
     async function update (): Promise<void> {
         if (editModel === null || api === null) return;
@@ -138,7 +118,9 @@ export default function PageTransaction (): React.ReactElement {
                 }
             }
 
-            setTransaction(newTransaction);
+            await queryClient.invalidateQueries(["transaction", "list"]);
+            await queryClient.setQueryData(["transaction", result.data.id], result.data);
+
             setEditModel(null);
         } else if (result.status === 400) {
             setErors(result.errors);
@@ -148,7 +130,7 @@ export default function PageTransaction (): React.ReactElement {
 }
 
 interface TransactionDetailsCardProps {
-    transaction: Transaction | "fetching"
+    transaction?: Transaction
     isUpdating: boolean
     onChange: (editModel: Transaction | null) => void
     editModel: Transaction | null
@@ -162,7 +144,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
     const editModel = props.editModel;
     const { t } = useTranslation();
 
-    if (transaction === "fetching") {
+    if (transaction === undefined) {
         return <Card title={t("transaction.transaction_details")!} isNarrow={true}>
             <table className="table is-fullwidth">
                 <tbody>
@@ -354,7 +336,7 @@ function TransactionDetailsCard (props: TransactionDetailsCardProps): React.Reac
 }
 
 interface TransactionLinesCardProps {
-    transaction: Transaction | "fetching"
+    transaction?: Transaction
     isUpdating: boolean
     onChange: (transaction: Transaction) => void
     editModel: Transaction | null
@@ -365,7 +347,7 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
     const transaction = props.transaction;
     const editModel = props.editModel;
 
-    if (transaction === "fetching") {
+    if (transaction === undefined) {
         return <Card title={t("transaction.transaction_lines")!} isNarrow={false}>
             {t("common.please_wait")}
         </Card>;
@@ -518,14 +500,14 @@ function TransactionLinesCard (props: TransactionLinesCardProps): React.ReactEle
 }
 
 interface TransactionMetaProps {
-    transaction: Transaction | "fetching"
+    transaction?: Transaction
     editModel: Transaction | null
     onChange: (transaction: Transaction) => void
     isUpdating: boolean
     errors: { [key: string]: string[] }
 }
 function TransactionMetaCard (props: TransactionMetaProps): React.ReactElement {
-    if (props.transaction === "fetching") {
+    if (props.transaction === undefined) {
         return <Card title={t("transaction.custom_fields")!} isNarrow={true}>
             {t("common.please_wait")}
         </Card>;
