@@ -54,12 +54,12 @@ namespace backend.unittests
             // Setup services
             UserService = new UserService(JwtSecret.Get(), Context);
             AccountService = new AccountService(Context);
-            AutomationService = new AutomationService(Context);
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?> { { "UploadDirectory", "./Content" } })
                 .Build();
             AttachmentService = new AttachmentService(configuration, Context);
             MetaService = new MetaService(Context, AttachmentService);
+            AutomationService = new AutomationService(Context, MetaService);
 
             // Create users
             UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
@@ -70,7 +70,7 @@ namespace backend.unittests
             UserB = UserService.CreateUser("userB", "test").Result;
 
             // Setup controllers controller
-            AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()));
+            AccountController = new AccountController(Context, UserService, AccountService, Options.Create(new ApiBehaviorOptions()), MetaService);
             TransactionController = new TransactionController(Context, UserService, Options.Create(new ApiBehaviorOptions()), AutomationService, MetaService, Mock.Of<ILogger<TransactionController>>());
             var objectValidator = new Mock<IObjectModelValidator>();
             objectValidator.Setup(o => o.Validate(It.IsAny<ActionContext>(),
@@ -78,7 +78,7 @@ namespace backend.unittests
                                             It.IsAny<string>(),
                                             It.IsAny<Object>()));
             TransactionController.ObjectValidator = objectValidator.Object;
-            AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!));
+            AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), MetaService);
             TaxonomyController = new TaxonomyController(Context, UserService);
         }
     }

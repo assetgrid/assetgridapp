@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.ComponentModel.DataAnnotations;
 using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
+using assetgrid_backend.models.ViewModels;
 
 namespace assetgrid_backend.Controllers
 {
@@ -158,7 +159,7 @@ namespace assetgrid_backend.Controllers
                         .ToListAsync();
                     foreach (var automation in automations)
                     {
-                        _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                        await _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                     }
 
                     await _context.SaveChangesAsync();
@@ -333,7 +334,7 @@ namespace assetgrid_backend.Controllers
                         .ToListAsync();
                     foreach (var automation in automations)
                     {
-                        _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
+                        await _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
                     }
 
                     await _context.SaveChangesAsync();
@@ -434,10 +435,11 @@ namespace assetgrid_backend.Controllers
                         .Select(account => account.AccountId)
                         .ToListAsync();
 
+                    var metaFields = await _meta.GetFields(user.Id);
                     var transactions = await _context.Transactions
                         .Include(t => t.TransactionLines)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(query)
+                        .ApplySearch(query, metaFields)
                         .ToListAsync();
 
                     _context.RemoveRange(transactions.SelectMany(transaction => transaction.TransactionLines));
@@ -456,12 +458,13 @@ namespace assetgrid_backend.Controllers
         public async Task<IActionResult> Search(ViewSearch query)
         {
             var user = _user.GetCurrent(HttpContext)!;
+            var metaFields = await _meta.GetFields(user.Id);
             if (ModelState.IsValid)
             {
-                var result = await _context.Transactions
+                var transactionQuery = _context.Transactions.ApplySearch(query, true, metaFields);
+                var result = await transactionQuery
                     .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
                         (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
-                    .ApplySearch(query, true)
                     .Skip(query.From)
                     .Take(query.To - query.From)
                     .SelectView(user.Id)
@@ -470,7 +473,7 @@ namespace assetgrid_backend.Controllers
                 return Ok(new ViewSearchResponse<ViewTransaction>
                 {
                     Data = result,
-                    TotalItems = await _context.Transactions.ApplySearch(query, false).CountAsync(),
+                    TotalItems = await transactionQuery.CountAsync(),
                 });
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
@@ -578,7 +581,7 @@ namespace assetgrid_backend.Controllers
 
                             foreach (var automation in automations)
                             {
-                                _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                                await _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                             }
 
                             _context.Transactions.Add(result);

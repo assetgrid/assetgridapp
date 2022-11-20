@@ -20,6 +20,7 @@ namespace assetgrid_backend.Services
     {
         Task<List<ViewMetaFieldValue>> GetTransactionMetaValues(int transactionId, int userId);
         Task SetTransactionMetaValues(int transactionId, int userId, List<ViewSetMetaField> values);
+        Task<Dictionary<int, MetaField>> GetFields(int userId);
     }
 
     public class MetaService : IMetaService
@@ -107,6 +108,15 @@ namespace assetgrid_backend.Services
                     _ => throw new Exception("Unknown meta field value type")
                 }
             }).ToList();
+        }
+
+        public async Task<Dictionary<int, MetaField>> GetFields(int userId)
+        {
+            return (await _context.UserMetaFields
+                .Include(x => x.Field)
+                .Where(x => x.UserId == userId)
+                .ToListAsync())
+                .ToDictionary(x => x.FieldId, x => x.Field);
         }
 
         public async Task SetTransactionMetaValues(int transactionId, int userId, List<ViewSetMetaField> values)

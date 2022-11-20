@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using assetgrid_backend.models.MetaFields;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace assetgrid_backend.Models
@@ -18,6 +19,18 @@ namespace assetgrid_backend.Models
         public bool IsSplit { get; set; }
         public required virtual List<TransactionLine> TransactionLines { get; set; }
         public required virtual List<TransactionUniqueIdentifier> Identifiers { get; set; }
+
+        #region Meta data values
+
+        public virtual List<MetaTextLine<Transaction>>? MetaTextLineValues { get; set; }
+        public virtual List<MetaTextLong<Transaction>>? MetaTextLongValues { get; set; }
+        public virtual List<MetaNumber<Transaction>>? MetaTextNumberValues { get; set; }
+        public virtual List<MetaTransaction<Transaction>>? MetaTransactionValues { get; set; }
+        public virtual List<MetaAccount<Transaction>>? MetaAccounts { get; set; }
+        public virtual List<MetaAttachment<Transaction>>? MetaAttachment { get; set; }
+        public virtual List<MetaBoolean<Transaction>>? MetaBooleans { get; set; }
+
+        #endregion
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {

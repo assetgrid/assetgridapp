@@ -95,6 +95,28 @@ namespace assetgrid_backend.Models
                     .HasConversion(valueConverter)
                     .HasColumnType("json");
             });
+
+            #region Transaction metadata
+
+            builder.Entity<Transaction>(entity =>
+            {
+                entity.HasMany(x => x.MetaAccounts)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaAttachment)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaBooleans)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTextLineValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTextLongValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTextNumberValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTransactionValues)
+                    .WithOne(x => x.Object);
+            });
+
+            #endregion
         }
 
         public DbSet<User> Users { get; set; } = null!;

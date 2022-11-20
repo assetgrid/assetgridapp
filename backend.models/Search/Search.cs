@@ -13,6 +13,7 @@ namespace assetgrid_backend.models.Search
         public object? Value { get; set; }
         public SearchOperator Operator { get; set; }
         public bool Not { get; set; }
+        public bool MetaData { get; set; }
 
         public string OperatorString
         {

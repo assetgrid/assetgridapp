@@ -19,11 +19,18 @@ namespace assetgrid_backend.Controllers.Automation
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
-        public TransactionAutomationController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+        private readonly MetaService _meta;
+
+        public TransactionAutomationController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions,
+            MetaService meta)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _meta = meta;
         }
 
         /// <summary>
@@ -45,6 +52,7 @@ namespace assetgrid_backend.Controllers.Automation
                         .Select(account => account.AccountId)
                         .ToListAsync();
 
+                    var metaFields = await _meta.GetFields(user.Id);
                     var query = _context.Transactions
                         .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
                         .Include(t => t.SourceAccount!.Identifiers)
@@ -53,7 +61,7 @@ namespace assetgrid_backend.Controllers.Automation
                         .Include(t => t.TransactionLines)
                         .Include(t => t.Identifiers)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(automation.Query);
+                        .ApplySearch(automation.Query, metaFields);
 
                     foreach (var action in automation.Actions)
                     {

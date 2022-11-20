@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.models.Search;
+﻿using assetgrid_backend.models.MetaFields;
+using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
 using System.Linq.Expressions;
@@ -15,18 +16,19 @@ namespace assetgrid_backend.Data.Search
 
         public static IQueryable<UserAccount> ApplySearch(this IQueryable<UserAccount> items, ViewSearch query, bool applyOrder)
         {
+            var metaFields = new Dictionary<int, MetaField>();
             var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
-                { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(Expression.Property(parameter, "Account"), "Id")) },
-                { "Name", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(Expression.Property(parameter, "Account"), "Name")) },
-                { "Description", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(Expression.Property(parameter, "Account"), "Description")) },
-                { "Favorite", (query, parameter) => DataExtensionMethods.BooleanExpression(query, Expression.Property(parameter, "Favorite")) },
-                { "IncludeInNetWorth", (query, parameter) => DataExtensionMethods.BooleanExpression(query, Expression.Property(parameter, "IncludeInNetWorth")) },
+                { "Id", (query, parameter) => Search.NumericExpression(query, typeof(int), false, Expression.Property(Expression.Property(parameter, "Account"), "Id")) },
+                { "Name", (query, parameter) => Search.StringExpression(query, false, Expression.Property(Expression.Property(parameter, "Account"), "Name")) },
+                { "Description", (query, parameter) => Search.StringExpression(query, false, Expression.Property(Expression.Property(parameter, "Account"), "Description")) },
+                { "Favorite", (query, parameter) => Search.BooleanExpression(query, Expression.Property(parameter, "Favorite")) },
+                { "IncludeInNetWorth", (query, parameter) => Search.BooleanExpression(query, Expression.Property(parameter, "IncludeInNetWorth")) },
             };
             var parameter = Expression.Parameter(typeof(UserAccount), "account");
 
             if (query.Query != null)
             {
-                var expression = DataExtensionMethods.SearchGroupToExpression(query.Query, columns, parameter);
+                var expression = Search.SearchGroupToExpression<UserAccount>(query.Query, columns, parameter, metaFields);
                 if (expression != null)
                 {
                     return items.Where(Expression.Lambda<Func<UserAccount, bool>>(expression, parameter));

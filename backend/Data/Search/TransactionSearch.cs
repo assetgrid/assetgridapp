@@ -1,4 +1,5 @@
-﻿using assetgrid_backend.models.Search;
+﻿using assetgrid_backend.models.MetaFields;
+using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using assetgrid_backend.Models.ViewModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -27,23 +28,23 @@ namespace assetgrid_backend.Data.Search
             { "Category", typeof(string) },
         };
 
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, ViewSearch query, bool applyOrder, Dictionary<int, MetaField> metaFields)
         {
             var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
-                { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
-                { "SourceAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "SourceAccountId")) },
-                { "DestinationAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "DestinationAccountId")) },
-                { "Description", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(parameter, "Description")) },
-                { "DateTime", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(DateTime), false, Expression.Property(parameter, "DateTime")) },
-                { "Total", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(long), true, Expression.Property(parameter, "Total")) },
+                { "Id", (query, parameter) => Search.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
+                { "SourceAccountId", (query, parameter) => Search.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "SourceAccountId")) },
+                { "DestinationAccountId", (query, parameter) => Search.NumericExpression(query, typeof(int?), true, Expression.Property(parameter, "DestinationAccountId")) },
+                { "Description", (query, parameter) => Search.StringExpression(query, false, Expression.Property(parameter, "Description")) },
+                { "DateTime", (query, parameter) => Search.NumericExpression(query, typeof(DateTime), false, Expression.Property(parameter, "DateTime")) },
+                { "Total", (query, parameter) => Search.NumericExpression(query, typeof(long), true, Expression.Property(parameter, "Total")) },
                 { "Category", (query, parameter) => TransactionLinesAny(parameter,
-                    childParameter => DataExtensionMethods.StringExpression(query, true, Expression.Property(childParameter, "Category"))) },
+                    childParameter => Search.StringExpression(query, true, Expression.Property(childParameter, "Category"))) },
             };
             var parameter = Expression.Parameter(typeof(Transaction), "transaction");
 
             if (query.Query != null)
             {
-                var expression = DataExtensionMethods.SearchGroupToExpression(query.Query, columns, parameter);
+                var expression = Search.SearchGroupToExpression<Transaction>(query.Query, columns, parameter, metaFields);
                 if (expression != null)
                 {
                     items = items.Where(Expression.Lambda<Func<Transaction, bool>>(expression, parameter));
@@ -77,7 +78,7 @@ namespace assetgrid_backend.Data.Search
         /// <summary>
         /// Applies a search group but does not apply ordering
         /// </summary>
-        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, SearchGroup? query)
+        public static IQueryable<Transaction> ApplySearch(this IQueryable<Transaction> items, SearchGroup? query, Dictionary<int, MetaField> metaFields)
         {
             if (query == null) return items;
 
@@ -88,7 +89,7 @@ namespace assetgrid_backend.Data.Search
                 To = 0,
                 OrderByColumn = null,
                 Query = query,
-            }, false);
+            }, false, metaFields);
         }
 
         /// <summary>
@@ -97,22 +98,22 @@ namespace assetgrid_backend.Data.Search
         /// <param name="items"></param>
         /// <param name="query"></param>
         /// <returns></returns>
-        public static IQueryable<TransactionLine> ApplySearch(this IQueryable<TransactionLine> items, SearchGroup? query)
+        public static IQueryable<TransactionLine> ApplySearch(this IQueryable<TransactionLine> items, SearchGroup? query, Dictionary<int, MetaField> metaData)
         {
             var columns = new Dictionary<string, Func<SearchQuery, Expression, Expression>> {
-                { "Id", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
-                { "SourceAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "SourceAccountId")) },
-                { "DestinationAccountId", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "DestinationAccountId")) },
-                { "Description", (query, parameter) => DataExtensionMethods.StringExpression(query, false, Expression.Property(parameter, "Description")) },
-                { "DateTime", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(DateTime), false, Expression.Property(parameter, "DateTime")) },
-                { "Total", (query, parameter) => DataExtensionMethods.NumericExpression(query, typeof(long), true, Expression.Property(parameter, "Total")) },
+                { "Id", (query, parameter) => Search.NumericExpression(query, typeof(int), false, Expression.Property(parameter, "Id")) },
+                { "SourceAccountId", (query, parameter) => Search.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "SourceAccountId")) },
+                { "DestinationAccountId", (query, parameter) => Search.NumericExpression(query, typeof(int), true, Expression.Property(parameter, "DestinationAccountId")) },
+                { "Description", (query, parameter) => Search.StringExpression(query, false, Expression.Property(parameter, "Description")) },
+                { "DateTime", (query, parameter) => Search.NumericExpression(query, typeof(DateTime), false, Expression.Property(parameter, "DateTime")) },
+                { "Total", (query, parameter) => Search.NumericExpression(query, typeof(long), true, Expression.Property(parameter, "Total")) },
             };
             var parameter = Expression.Parameter(typeof(TransactionLine), "transaction");
             var parentTransactionExpression = Expression.Property(parameter, "Transaction")!;
 
             if (query != null)
             {
-                var expression = DataExtensionMethods.SearchGroupToExpression(query, columns, parentTransactionExpression);
+                var expression = Search.SearchGroupToExpression<Transaction>(query, columns, parentTransactionExpression, metaData);
                 if (expression != null)
                 {
                     items = items.Where(Expression.Lambda<Func<TransactionLine, bool>>(expression, parameter));

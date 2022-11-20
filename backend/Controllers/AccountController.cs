@@ -13,6 +13,7 @@ using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
 using System.Linq;
 using System.Security.Principal;
+using assetgrid_backend.models.MetaFields;
 
 namespace assetgrid_backend.Controllers
 {
@@ -25,17 +26,20 @@ namespace assetgrid_backend.Controllers
         private readonly IUserService _user;
         private readonly IAccountService _account;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
+        private readonly IMetaService _meta;
 
         public AccountController(
             AssetgridDbContext context,
             IUserService userService,
             IAccountService accountService,
-            IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions,
+            IMetaService meta)
         {
             _context = context;
             _user = userService;
             _account = accountService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _meta = meta;
         }
 
         /// <summary>
@@ -231,7 +235,8 @@ namespace assetgrid_backend.Controllers
 
             if (request.Query != null)
             {
-                query = query.ApplySearch(request.Query);
+                var metaFields = await _meta.GetFields(user.Id);
+                query = query.ApplySearch(request.Query, metaFields);
             }
 
             if (request.Descending)
@@ -290,7 +295,8 @@ namespace assetgrid_backend.Controllers
 
             if (requestQuery != null)
             {
-                query = query.ApplySearch(requestQuery);
+                var metaFields = await _meta.GetFields(user.Id);
+                query = query.ApplySearch(requestQuery, metaFields);
             }
 
             return Ok(await query.CountAsync());
@@ -603,7 +609,7 @@ namespace assetgrid_backend.Controllers
 
             return Ok(await _context.TransactionLines
                 .Where(line => line.Transaction.SourceAccountId == id || line.Transaction.DestinationAccountId == id)
-                .ApplySearch(query)
+                .ApplySearch(query, new Dictionary<int, MetaField>())
                 .GroupBy(line => new {
                     line.Category,
                     Transfer = line.Transaction.SourceAccountId != null && netWorthAccountIds.Contains(line.Transaction.SourceAccountId.Value) &&
