@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { SearchQuery } from "../../models/search";
 import InputAccount from "../account/input/InputAccount";
 import InputCategory from "../input/InputCategory";
+import InputCheckbox from "../input/InputCheckbox";
 import InputDateTime from "../input/InputDateTime";
 import InputNumber from "../input/InputNumber";
 import InputNumbers from "../input/InputNumbers";
@@ -132,4 +133,12 @@ export function ConditionValueEditorTransaction (props: Props): React.ReactEleme
         onChange={value => props.onChange(value?.id ?? null)}
         disabled={props.disabled}
         allowNull={true} />;
+}
+
+export function ConditionValueEditorBoolean (props: Props): React.ReactElement {
+    return <InputCheckbox
+        value={props.value as boolean}
+        onChange={e => props.onChange(e.target.checked)}
+        disabled={props.disabled}
+    />;
 }

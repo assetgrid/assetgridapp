@@ -100,17 +100,17 @@ namespace assetgrid_backend.Models
 
             builder.Entity<Transaction>(entity =>
             {
-                entity.HasMany(x => x.MetaAccounts)
+                entity.HasMany(x => x.MetaAccountValues)
                     .WithOne(x => x.Object);
-                entity.HasMany(x => x.MetaAttachment)
+                entity.HasMany(x => x.MetaAttachmentValues)
                     .WithOne(x => x.Object);
-                entity.HasMany(x => x.MetaBooleans)
+                entity.HasMany(x => x.MetaBooleanValues)
                     .WithOne(x => x.Object);
                 entity.HasMany(x => x.MetaTextLineValues)
                     .WithOne(x => x.Object);
                 entity.HasMany(x => x.MetaTextLongValues)
                     .WithOne(x => x.Object);
-                entity.HasMany(x => x.MetaTextNumberValues)
+                entity.HasMany(x => x.MetaNumberValues)
                     .WithOne(x => x.Object);
                 entity.HasMany(x => x.MetaTransactionValues)
                     .WithOne(x => x.Object);

@@ -121,24 +121,72 @@ namespace assetgrid_backend.Data.Search
                 Expression.Property(parameter, valuePropertyName),
                 innerExpression);
 
+            if (query.Operator == SearchOperator.IsNull)
+            {
+                if (query.Not)
+                {
+                    return Expression.NotEqual(metaValue, Expression.Constant(null));
+                }
+                return Expression.Equal(metaValue, Expression.Constant(null));
+            }
+
             switch (metaField.ValueType)
             {
                 case MetaFieldValueType.TextLine:
                     if (query.Not)
                     {
                         return Expression.OrElse(
-                            // The meta value must be set (not null)
                             Expression.Equal(metaValue, Expression.Constant(null)),
                             StringExpression(query, false, Expression.Property(metaValue, "Value")));
                     }
                     return Expression.AndAlso(
-                        // The meta value must be set (not null)
                         Expression.NotEqual(metaValue, Expression.Constant(null)),
                         StringExpression(query, false, Expression.Property(metaValue, "Value")));
+                case MetaFieldValueType.Number:
+                    if (query.Not)
+                    {
+                        return Expression.OrElse(
+                            Expression.Equal(metaValue, Expression.Constant(null)),
+                            NumericExpression(query, typeof(long), false, Expression.Property(metaValue, "Value")));
+                    }
+                    return Expression.AndAlso(
+                        Expression.NotEqual(metaValue, Expression.Constant(null)),
+                        NumericExpression(query, typeof(long), false, Expression.Property(metaValue, "Value")));
+                case MetaFieldValueType.Transaction:
+                case MetaFieldValueType.Account:
+                    if (query.Value == null)
+                    {
+                        if (query.Not)
+                        {
+                            return Expression.NotEqual(metaValue, Expression.Constant(null));
+                        }
+                        return Expression.Equal(metaValue, Expression.Constant(null));
+                    }
+
+                    if (query.Not)
+                    {
+                        return Expression.OrElse(
+                            Expression.Equal(metaValue, Expression.Constant(null)),
+                            NumericExpression(query, typeof(int), false, Expression.Property(metaValue, "ValueId")));
+                    }
+                    return Expression.AndAlso(
+                        Expression.NotEqual(metaValue, Expression.Constant(null)),
+                        NumericExpression(query, typeof(int), false, Expression.Property(metaValue, "ValueId")));
+                case MetaFieldValueType.Boolean:
+                    var value = query.Value switch
+                    {
+                        JsonElement x => x.GetBoolean(),
+                        bool x => x,
+                        _ => throw new Exception("Invalid value type for field of type boolean")
+                    };
+                    if (query.Not ^ value)
+                    {
+                        return Expression.NotEqual(metaValue, Expression.Constant(null));
+                    }
+                    return Expression.Equal(metaValue, Expression.Constant(null));
             }
 
-            #warning Implmement search for remaining meta fields as well as search missing
-            throw new NotImplementedException();
+            throw new Exception("Unknown meta field");
         }
 
         #endregion

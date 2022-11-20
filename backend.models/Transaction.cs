@@ -24,11 +24,11 @@ namespace assetgrid_backend.Models
 
         public virtual List<MetaTextLine<Transaction>>? MetaTextLineValues { get; set; }
         public virtual List<MetaTextLong<Transaction>>? MetaTextLongValues { get; set; }
-        public virtual List<MetaNumber<Transaction>>? MetaTextNumberValues { get; set; }
+        public virtual List<MetaNumber<Transaction>>? MetaNumberValues { get; set; }
         public virtual List<MetaTransaction<Transaction>>? MetaTransactionValues { get; set; }
-        public virtual List<MetaAccount<Transaction>>? MetaAccounts { get; set; }
-        public virtual List<MetaAttachment<Transaction>>? MetaAttachment { get; set; }
-        public virtual List<MetaBoolean<Transaction>>? MetaBooleans { get; set; }
+        public virtual List<MetaAccount<Transaction>>? MetaAccountValues { get; set; }
+        public virtual List<MetaAttachment<Transaction>>? MetaAttachmentValues { get; set; }
+        public virtual List<MetaBoolean<Transaction>>? MetaBooleanValues { get; set; }
 
         #endregion
 

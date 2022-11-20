@@ -8,7 +8,10 @@ import { FieldValueType, MetaField } from "../../models/meta";
 import { SearchOperator, SearchQuery } from "../../models/search";
 import InputIconButton from "../input/InputIconButton";
 import InputSelect from "../input/InputSelect";
-import { ConditionValueEditorAccount, ConditionValueEditorDecimal, ConditionValueEditorDecimalArray, ConditionValueEditorText, ConditionValueEditorTextArray, ConditionValueEditorTransaction } from "./SearchConditionValueEditor";
+import {
+    ConditionValueEditorAccount, ConditionValueEditorBoolean, ConditionValueEditorDecimal, ConditionValueEditorDecimalArray, ConditionValueEditorIntegerArray, ConditionValueEditorText,
+    ConditionValueEditorTextArray, ConditionValueEditorTransaction
+} from "./SearchConditionValueEditor";
 
 interface Props {
     disabled: boolean
@@ -23,7 +26,13 @@ export interface SearchConditionField {
     label: string
     operators: SearchOperator[]
     defaultValue: SearchQuery["value"]
-    editor: (props: { disabled: boolean, value: SearchQuery["value"], onChange: (value: SearchQuery["value"]) => void }) => React.ReactElement
+    editor: (
+        (props: {
+            disabled: boolean
+            value: SearchQuery["value"]
+            onChange: (value: SearchQuery["value"]) => void
+        }) => React.ReactElement
+    ) | null
 }
 
 export default function SearchConditionEditor (props: Props): React.ReactElement {
@@ -42,7 +51,10 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
         [SearchOperator.GreaterThanOrEqual, true,    t("search.less_than")],
         [SearchOperator.GreaterThan,        true,    t("search.less_than_or_equal")],
         [SearchOperator.In,                 false,   t("search.in_list_of_values")],
-        [SearchOperator.In,                 true,    t("search.not_in_list_of_values")]] as const;
+        [SearchOperator.In,                 true,    t("search.not_in_list_of_values")],
+        [SearchOperator.IsNull,             false,   t("search.does_not_have_value")],
+        [SearchOperator.IsNull,             true,    t("search.has_value")]
+    ] as const;
     /* eslint-enable no-multi-spaces */
 
     const operatorLabels = new Map(operatorLabelDefinition
@@ -92,10 +104,10 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
 
         {/* Value */}
         <div className="column">
-            <field.editor disabled={props.disabled}
+            {field.editor !== null && <field.editor disabled={props.disabled}
                 onChange={valueChanged}
                 value={props.model.value}
-            />
+            />}
         </div>
 
         <div className="column is-narrow">
@@ -158,6 +170,13 @@ function fieldsFromMetaField (field: MetaField): Array<SearchConditionField & { 
             return [{
                 column: field.id.toString(),
                 label: field.name,
+                operators: [SearchOperator.IsNull],
+                defaultValue: "",
+                editor: null,
+                metaData: true
+            }, {
+                column: field.id.toString(),
+                label: field.name,
                 operators: [SearchOperator.Equals, SearchOperator.Contains],
                 defaultValue: "",
                 editor: ConditionValueEditorText,
@@ -172,6 +191,13 @@ function fieldsFromMetaField (field: MetaField): Array<SearchConditionField & { 
             }];
         case FieldValueType.Number:
             return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.IsNull],
+                defaultValue: "",
+                editor: null,
+                metaData: true
+            }, {
                 column: field.id.toString(),
                 label: field.name,
                 operators: [SearchOperator.Equals, SearchOperator.GreaterThan, SearchOperator.GreaterThanOrEqual],
@@ -191,7 +217,7 @@ function fieldsFromMetaField (field: MetaField): Array<SearchConditionField & { 
                 column: field.id.toString(),
                 label: field.name,
                 operators: [SearchOperator.Equals],
-                defaultValue: 0,
+                defaultValue: null,
                 editor: ConditionValueEditorAccount,
                 metaData: true
             }];
@@ -200,18 +226,33 @@ function fieldsFromMetaField (field: MetaField): Array<SearchConditionField & { 
                 column: field.id.toString(),
                 label: field.name,
                 operators: [SearchOperator.Equals],
-                defaultValue: 0,
+                defaultValue: null,
                 editor: ConditionValueEditorTransaction,
                 metaData: true
+            }, {
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.In],
+                defaultValue: [],
+                editor: ConditionValueEditorIntegerArray,
+                metaData: true
             }];
-        case FieldValueType.Boolean:
         case FieldValueType.Attachment:
             return [{
                 column: field.id.toString(),
                 label: field.name,
+                operators: [SearchOperator.IsNull],
+                defaultValue: "",
+                editor: null,
+                metaData: true
+            }];
+        case FieldValueType.Boolean:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
                 operators: [SearchOperator.Equals],
-                defaultValue: 0,
-                editor: ConditionValueEditorTransaction,
+                defaultValue: true,
+                editor: ConditionValueEditorBoolean,
                 metaData: true
             }];
     }

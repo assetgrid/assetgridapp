@@ -35,6 +35,7 @@ export enum SearchOperator {
     In = 2,
     GreaterThan = 3,
     GreaterThanOrEqual = 4,
+    IsNull = 5
 }
 
 export enum SearchGroupType {

@@ -31,6 +31,8 @@ namespace assetgrid_backend.models.Search
                         return Not ? "<=" : ">";
                     case SearchOperator.GreaterThanOrEqual:
                         return Not ? "<" : ">=";
+                    case SearchOperator.IsNull:
+                        return Not ? "is null" : "is not null";
                     default:
                         throw new Exception("Invalid operator");
                 }
@@ -77,5 +79,6 @@ namespace assetgrid_backend.models.Search
         In,
         GreaterThan,
         GreaterThanOrEqual,
+        IsNull
     }
 }
