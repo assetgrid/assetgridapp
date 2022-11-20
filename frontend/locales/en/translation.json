@@ -217,7 +217,7 @@
     "select_column": "Select column",
     "select_import_profile": "Select profile",
     "separate_debit_credit_columns": "Separate column for credit and debit amount",
-    "show_transactions": "Show all transactions",
+    "show_transactions": "Show transactions",
     "show_transactions_for_account": "Show transactions with this account",
     "showing_transactions_with_identifier": "Showing transactions with accounts with identifier {{identifier}}",
     "skip_first_lines": "Skip the first lines of the file",

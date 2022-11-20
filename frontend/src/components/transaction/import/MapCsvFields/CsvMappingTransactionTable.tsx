@@ -28,7 +28,7 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
         return <p>{t("common.loading_please_wait")}</p>;
     }
 
-    const items = props.transactions.filter(props.tableFilter);
+    const items = React.useMemo(() => props.transactions.filter(props.tableFilter), [props.tableFilter]);
 
     return <Table pageSize={20}
         items={items}

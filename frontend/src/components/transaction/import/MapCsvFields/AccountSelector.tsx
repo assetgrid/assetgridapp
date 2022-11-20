@@ -24,11 +24,12 @@ export default function AccountSelector (props: Props): React.ReactElement {
     const api = useApi();
     const { t } = useTranslation();
 
-    const identifiers = props.transactions
+    const identifiers = React.useMemo(() => props.transactions
         .flatMap(x => [x.sourceText, x.destinationText])
         .map(x => x.trim())
         .filter(x => x !== "")
-        .filter((a, index, array) => array.findIndex(b => b === a) === index); // Only unique
+        .filter((a, index, array) => array.findIndex(b => b === a) === index), // Only unique
+    [props.transactions]);
 
     if (identifiers.length === 0) {
         return <Card title={t("common.accounts")!} isNarrow={true}>
