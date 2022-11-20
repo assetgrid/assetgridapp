@@ -115,7 +115,7 @@ function TransactionList (props: Props): React.ReactElement {
             page={page}
             pageSize={pageSize}
             paginationSize={9}
-            reversePagination={true}
+            reversePagination={false}
             totalItems={data?.totalItems ?? 0}
         />
         {(props.selectedTransactions != null) && <MergeTransactionsModal active={isMergingTransactions}
