@@ -1,10 +1,14 @@
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { useApi } from "../../lib/ApiClient";
 import Utils from "../../lib/Utils";
+import { FieldValueType, MetaField } from "../../models/meta";
 import { SearchOperator, SearchQuery } from "../../models/search";
 import InputIconButton from "../input/InputIconButton";
 import InputSelect from "../input/InputSelect";
+import { ConditionValueEditorAccount, ConditionValueEditorDecimal, ConditionValueEditorDecimalArray, ConditionValueEditorText, ConditionValueEditorTextArray, ConditionValueEditorTransaction } from "./SearchConditionValueEditor";
 
 interface Props {
     disabled: boolean
@@ -15,7 +19,7 @@ interface Props {
 }
 
 export interface SearchConditionField {
-    key: string
+    column: string
     label: string
     operators: SearchOperator[]
     defaultValue: SearchQuery["value"]
@@ -23,6 +27,8 @@ export interface SearchConditionField {
 }
 
 export default function SearchConditionEditor (props: Props): React.ReactElement {
+    const api = useApi();
+    const { data: metaDataFields } = useQuery({ queryKey: ["meta"], queryFn: api.Meta.list });
     const { t } = useTranslation();
 
     /* eslint-disable no-multi-spaces */
@@ -41,9 +47,16 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
 
     const operatorLabels = new Map(operatorLabelDefinition
         .map((label, i) => [i, ({ id: i, operator: label[0], negated: label[1], label: label[2] })]));
-    const fields = React.useMemo(() => new Map(Object.entries(Utils.groupBy(props.fields, (item) => [item.key, item]))), [props.fields]);
+    const fields = React.useMemo(() => new Map(Object.entries(Utils.groupBy(props.fields, (item) => [item.column, { ...item, metaData: false }]))), [props.fields]);
+    const metaFields = React.useMemo(() => metaDataFields === undefined
+        ? undefined
+        : new Map(metaDataFields.map(x => [x.id.toString(), fieldsFromMetaField(x)])), [metaDataFields]);
 
-    const possibleFields = fields.get(props.model.column);
+    if (metaFields === undefined) {
+        return <>{t("common.loading_please_wait")}</>;
+    }
+
+    const possibleFields = (props.model.metaData ? metaFields : fields).get(props.model.column);
     if (possibleFields === undefined) throw new Error("Unknown column");
     const possibleOperators = possibleFields.flatMap(x => Array.from(operatorLabels.values()).filter(label => x.operators.includes(label.operator)));
 
@@ -54,8 +67,11 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
         {/* Column */}
         <div className="column">
             <InputSelect isFullwidth={true}
-                items={Array.from(fields, ([key, value]) => ({ key, value: value[0].label }))}
-                value={props.model.column}
+                items={[
+                    ...Array.from(fields, ([key, value]) => ({ key, value: value[0].label })),
+                    ...Array.from(metaFields, ([key, value]) => ({ key: `meta.${key}`, value: value[0].label }))
+                ]}
+                value={props.model.metaData ? `meta.${props.model.column}` : props.model.column}
                 onChange={value => operatorOrColumnChanged(value, props.model.operator, props.model.not)} />
         </div>
 
@@ -69,7 +85,7 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
                 }))}
                 value={Array.from(operatorLabels.values()).find(op => op.operator === props.model.operator && op.negated === props.model.not)?.id.toString() ?? "0"}
                 onChange={value => operatorOrColumnChanged(
-                    props.model.column,
+                    props.model.metaData ? `meta.${props.model.column}` : props.model.column,
                     operatorLabels.get(Number(value))?.operator ?? SearchOperator.Equals,
                     operatorLabels.get(Number(value))?.negated ?? false)} />
         </div>
@@ -88,10 +104,19 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
     </div>;
 
     function operatorOrColumnChanged (newColumn: string, newOperator: SearchOperator, newNegation: boolean): void {
-        const previousField = fields.get(props.model.column)?.find(x => x.operators.includes(props.model.operator));
+        if (metaFields === undefined) { return; }
+
+        const previousField = (props.model.metaData ? metaFields : fields)
+            .get(props.model.column)
+            ?.find(x => x.operators.includes(props.model.operator));
         if (previousField === undefined) throw new Error("Unknown field");
 
-        const possibleNewFields = fields.get(newColumn);
+        const isMeta = newColumn.indexOf("meta.") === 0;
+        if (isMeta) newColumn = newColumn.substring("meta.".length);
+        const possibleNewFields = isMeta
+            ? metaFields.get(newColumn)
+            : fields.get(newColumn);
+
         // Make sure fields exist for this column
         if (possibleNewFields === undefined) throw new Error("Attempted to set column to an unknown value");
         // Get field with korrekt operator
@@ -113,6 +138,7 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
             column: newColumn,
             operator: newOperator,
             not: newNegation,
+            metaData: newField.metaData,
             value
         });
     }
@@ -122,5 +148,71 @@ export default function SearchConditionEditor (props: Props): React.ReactElement
             ...props.model,
             value: newValue
         });
+    }
+}
+
+function fieldsFromMetaField (field: MetaField): Array<SearchConditionField & { metaData: true }> {
+    switch (field.valueType) {
+        case FieldValueType.TextLine:
+        case FieldValueType.TextLong:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.Equals, SearchOperator.Contains],
+                defaultValue: "",
+                editor: ConditionValueEditorText,
+                metaData: true
+            }, {
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.In],
+                defaultValue: [],
+                editor: ConditionValueEditorTextArray,
+                metaData: true
+            }];
+        case FieldValueType.Number:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.Equals, SearchOperator.GreaterThan, SearchOperator.GreaterThanOrEqual],
+                defaultValue: 0,
+                editor: ConditionValueEditorDecimal,
+                metaData: true
+            }, {
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.In],
+                defaultValue: [],
+                editor: ConditionValueEditorDecimalArray,
+                metaData: true
+            }];
+        case FieldValueType.Account:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.Equals],
+                defaultValue: 0,
+                editor: ConditionValueEditorAccount,
+                metaData: true
+            }];
+        case FieldValueType.Transaction:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.Equals],
+                defaultValue: 0,
+                editor: ConditionValueEditorTransaction,
+                metaData: true
+            }];
+        case FieldValueType.Boolean:
+        case FieldValueType.Attachment:
+            return [{
+                column: field.id.toString(),
+                label: field.name,
+                operators: [SearchOperator.Equals],
+                defaultValue: 0,
+                editor: ConditionValueEditorTransaction,
+                metaData: true
+            }];
     }
 }

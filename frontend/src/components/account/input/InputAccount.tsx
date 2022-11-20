@@ -147,7 +147,8 @@ export default function InputAccount (props: Props): React.ReactElement {
                             column: "Id",
                             operator: 0,
                             value: Number(searchQuery.replace(/\D/g, "")),
-                            not: false
+                            not: false,
+                            metaData: false
                         }
                     },
                     {
@@ -156,7 +157,8 @@ export default function InputAccount (props: Props): React.ReactElement {
                             column: "Name",
                             operator: 1,
                             value: searchQuery,
-                            not: false
+                            not: false,
+                            metaData: false
                         }
                     }
                 ]
@@ -193,7 +195,8 @@ export default function InputAccount (props: Props): React.ReactElement {
                     column: "Id",
                     operator: 0,
                     value: props.value,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             },
             descending: false,

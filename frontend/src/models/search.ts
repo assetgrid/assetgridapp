@@ -26,6 +26,7 @@ export interface SearchQuery {
     value: string | number | string[] | number[] | boolean | null
     operator: SearchOperator
     not: boolean
+    metaData: boolean
 }
 
 export enum SearchOperator {

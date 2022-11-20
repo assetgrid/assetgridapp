@@ -132,7 +132,8 @@ export default function PageTransactions (): React.ReactElement {
                     column: "Id",
                     not: false,
                     operator: SearchOperator.Equals,
-                    value: Number(searchString.replace(/\D/g, ""))
+                    value: Number(searchString.replace(/\D/g, "")),
+                    metaData: false
                 }
             },
             {
@@ -141,7 +142,8 @@ export default function PageTransactions (): React.ReactElement {
                     column: "Description",
                     not: false,
                     operator: SearchOperator.Contains,
-                    value: searchString
+                    value: searchString,
+                    metaData: false
                 }
             }]
         });

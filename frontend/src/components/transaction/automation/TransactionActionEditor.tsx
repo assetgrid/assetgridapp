@@ -190,7 +190,8 @@ function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
                     column: "Id",
                     operator: 0,
                     value: props.action.value,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             },
             descending: false,

@@ -124,6 +124,13 @@ namespace assetgrid_backend.Data.Search
             switch (metaField.ValueType)
             {
                 case MetaFieldValueType.TextLine:
+                    if (query.Not)
+                    {
+                        return Expression.OrElse(
+                            // The meta value must be set (not null)
+                            Expression.Equal(metaValue, Expression.Constant(null)),
+                            StringExpression(query, false, Expression.Property(metaValue, "Value")));
+                    }
                     return Expression.AndAlso(
                         // The meta value must be set (not null)
                         Expression.NotEqual(metaValue, Expression.Constant(null)),

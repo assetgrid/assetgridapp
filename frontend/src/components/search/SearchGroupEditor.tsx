@@ -106,7 +106,8 @@ function AndOrGroup (props: AndOrGroupProps): React.ReactElement {
                     column: "Id",
                     not: false,
                     operator: SearchOperator.Equals,
-                    value: 0
+                    value: 0,
+                    metaData: false
                 }
             }]
         });
@@ -123,7 +124,8 @@ function AndOrGroup (props: AndOrGroupProps): React.ReactElement {
                         column: "Id",
                         not: false,
                         operator: SearchOperator.Equals,
-                        value: 0
+                        value: 0,
+                        metaData: false
                     }
                 }]
             }]

@@ -84,7 +84,8 @@ export function Import (props: Props): React.ReactElement {
                             column: "Id",
                             not: false,
                             operator: SearchOperator.In,
-                            value: succeeded.map(x => x.id)
+                            value: succeeded.map(x => x.id),
+                            metaData: false
                         }
                     }} />
                 </Card>

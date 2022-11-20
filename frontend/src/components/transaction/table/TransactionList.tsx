@@ -180,7 +180,8 @@ function TransactionList (props: Props): React.ReactElement {
                         column: "Id",
                         not: false,
                         operator: SearchOperator.In,
-                        value: [...selectedTransactions]
+                        value: [...selectedTransactions],
+                        metaData: false
                     }
                 }]
             };

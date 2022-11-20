@@ -70,7 +70,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "SourceAccountId",
                         value: null,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 },
                 {
@@ -79,7 +80,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "DestinationAccountId",
                         value: account.id,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }
             ]
@@ -92,7 +94,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "SourceAccountId",
                         value: account.id,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 },
                 {
@@ -101,7 +104,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "DestinationAccountId",
                         value: null,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }
             ]

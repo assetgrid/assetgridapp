@@ -186,7 +186,8 @@ export default function PageAccount (): React.ReactElement {
                     column: "DateTime",
                     value: start.toISO(),
                     operator: SearchOperator.GreaterThanOrEqual,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             }, {
                 type: SearchGroupType.Query,
@@ -194,7 +195,8 @@ export default function PageAccount (): React.ReactElement {
                     column: "DateTime",
                     value: end.toISO(),
                     operator: SearchOperator.GreaterThan,
-                    not: true
+                    not: true,
+                    metaData: false
                 }
             }]
         };

@@ -122,7 +122,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                     column: "DateTime",
                     value: start.toISO(),
                     operator: SearchOperator.GreaterThanOrEqual,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             }, {
                 type: SearchGroupType.Query,
@@ -130,7 +131,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                     column: "DateTime",
                     value: end.toISO(),
                     operator: SearchOperator.GreaterThan,
-                    not: true
+                    not: true,
+                    metaData: false
                 }
             }]
         };
@@ -182,7 +184,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             column: "SourceAccountId",
                             not: false,
                             operator: SearchOperator.Equals,
-                            value: props.accountId
+                            value: props.accountId,
+                            metaData: false
                         }
                     },
                     {
@@ -191,7 +194,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             column: "DestinationAccountId",
                             not: false,
                             operator: SearchOperator.Equals,
-                            value: props.accountId
+                            value: props.accountId,
+                            metaData: false
                         }
                     }
                 ]
@@ -204,7 +208,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                         column: "Id",
                         not: false,
                         operator: SearchOperator.In,
-                        value: [...props.selectedTransactions]
+                        value: [...props.selectedTransactions],
+                        metaData: false
                     }
                 }]
             };

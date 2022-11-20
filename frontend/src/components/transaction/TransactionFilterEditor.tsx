@@ -19,67 +19,67 @@ interface Props {
 export default function TransactionFilterEditor (props: Props): React.ReactElement {
     const { t } = useTranslation();
     const fields: SearchConditionField[] = [{
-        key: "Id",
+        column: "Id",
         label: t("transaction.transaction_id"),
         defaultValue: 0,
         operators: [SearchOperator.Equals],
         editor: ConditionValueEditorInteger
     }, {
-        key: "Id",
+        column: "Id",
         label: t("transaction.transaction_id"),
         defaultValue: [],
         operators: [SearchOperator.In],
         editor: ConditionValueEditorIntegerArray
     }, {
-        key: "SourceAccountId",
+        column: "SourceAccountId",
         label: t("transaction.source_account"),
         defaultValue: null,
         operators: [SearchOperator.Equals],
         editor: ConditionValueEditorAccount
     }, {
-        key: "DestinationAccountId",
+        column: "DestinationAccountId",
         label: t("transaction.destination_account"),
         defaultValue: null,
         operators: [SearchOperator.Equals],
         editor: ConditionValueEditorAccount
     }, {
-        key: "DateTime",
+        column: "DateTime",
         label: t("common.timestamp"),
         defaultValue: DateTime.now().toISO(),
         operators: [SearchOperator.Equals, SearchOperator.GreaterThan, SearchOperator.GreaterThanOrEqual],
         editor: ConditionValueEditorDateTime
     }, {
-        key: "Category",
+        column: "Category",
         label: t("common.category"),
         defaultValue: "",
         operators: [SearchOperator.Equals, SearchOperator.Contains],
         editor: ConditionValueEditorCategory
     }, {
-        key: "Category",
+        column: "Category",
         label: t("common.category"),
         defaultValue: [],
         operators: [SearchOperator.In],
         editor: ConditionValueEditorTextArray
     }, {
-        key: "Description",
+        column: "Description",
         label: t("common.description"),
         defaultValue: "",
         operators: [SearchOperator.Equals, SearchOperator.Contains],
         editor: ConditionValueEditorText
     }, {
-        key: "Description",
+        column: "Description",
         label: t("common.description"),
         defaultValue: [],
         operators: [SearchOperator.In],
         editor: ConditionValueEditorTextArray
     }, {
-        key: "Total",
+        column: "Total",
         label: t("account.total"),
         defaultValue: 0,
         operators: [SearchOperator.Equals, SearchOperator.GreaterThan, SearchOperator.GreaterThanOrEqual],
         editor: ConditionValueEditorDecimal
     }, {
-        key: "Total",
+        column: "Total",
         label: t("account.total"),
         defaultValue: [],
         operators: [SearchOperator.In],

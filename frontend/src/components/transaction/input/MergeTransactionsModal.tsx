@@ -29,7 +29,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
             column: "Id",
             operator: SearchOperator.In,
             value: [...props.transactions],
-            not: false
+            not: false,
+            metaData: false
         }
     }), [props.active, props.transactions]);
 
@@ -91,7 +92,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
                         column: "Id",
                         value: selectedTransactionId,
                         not: true,
-                        operator: SearchOperator.Equals
+                        operator: SearchOperator.Equals,
+                        metaData: false
                     }
                 }
             ]

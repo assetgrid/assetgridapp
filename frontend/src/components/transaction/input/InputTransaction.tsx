@@ -138,7 +138,8 @@ export default function InputTransaction (props: Props): React.ReactElement {
                             column: "Id",
                             operator: 0,
                             value: Number(searchQuery.replace(/\D/g, "")),
-                            not: false
+                            not: false,
+                            metaData: false
                         }
                     },
                     {
@@ -147,7 +148,8 @@ export default function InputTransaction (props: Props): React.ReactElement {
                             column: "Description",
                             operator: 1,
                             value: searchQuery,
-                            not: false
+                            not: false,
+                            metaData: false
                         }
                     }
                 ]
@@ -178,7 +180,8 @@ export default function InputTransaction (props: Props): React.ReactElement {
                     column: "Id",
                     operator: 0,
                     value: props.value as number,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             },
             descending: false,

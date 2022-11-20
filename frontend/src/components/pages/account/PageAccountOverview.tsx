@@ -25,7 +25,8 @@ export default function PageAccountOverview (): React.ReactElement {
                         column: "IncludeInNetWorth",
                         value: true,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }} />
             </Card>
@@ -38,7 +39,8 @@ export default function PageAccountOverview (): React.ReactElement {
                         column: "IncludeInNetWorth",
                         value: false,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }} />
             </Card>
