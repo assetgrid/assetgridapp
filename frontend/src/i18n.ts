@@ -15,7 +15,7 @@ async function init (): Promise<void> {
                 escapeValue: false // react already safe from xss
             },
             backend: {
-                loadPath: "/locales/{{lng}}/{{ns}}.json"
+                loadPath: "/dist/locales/{{lng}}/{{ns}}.json"
             }
         });
 }
