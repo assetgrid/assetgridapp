@@ -24,14 +24,14 @@ namespace assetgrid_backend.Models.ViewModels
     {
         [MaxLength(100, ErrorMessage = "Email must be shorter than 100 characters.")]
         [MinLength(3, ErrorMessage = "Please enter your email address.")]
-        public string Email { get; set; } = null!;
+        public required string Email { get; set; }
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
-        public string Password { get; set; } = null!;
+        public required string Password { get; set; }
     }
 
     public class UpdatePasswordModel
     {
-        public string OldPassword { get; set; } = null!;
-        public string NewPassword { get; set; } = null!;
+        public required string OldPassword { get; set; }
+        public required string NewPassword { get; set; }
     }
 }

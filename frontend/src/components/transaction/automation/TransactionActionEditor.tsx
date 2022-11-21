@@ -1,8 +1,12 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+import { useQuery } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useApi } from "../../../lib/ApiClient";
 import { formatDateTimeWithUser, formatNumberWithUser } from "../../../lib/Utils";
+import { Account } from "../../../models/account";
 import {
     ActionDelete,
     ActionSetAccount,
@@ -10,7 +14,7 @@ import {
 } from "../../../models/automation/transactionAutomation";
 import { TransactionLine } from "../../../models/transaction";
 import InputAccount from "../../account/input/InputAccount";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import InputButton from "../../input/InputButton";
 import InputCategory from "../../input/InputCategory";
 import InputDateTime from "../../input/InputDateTime";
@@ -18,16 +22,6 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputSelect from "../../input/InputSelect";
 import InputText from "../../input/InputText";
-
-const actions: Array<{ key: TransactionAction["key"], value: string }> = [
-    { key: "set-timestamp", value: "Set timestamp" },
-    { key: "set-description", value: "Set description" },
-    { key: "set-amount", value: "Set total" },
-    { key: "set-lines", value: "Set lines" },
-    { key: "set-account", value: "Set account" },
-    { key: "set-category", value: "Set category" },
-    { key: "delete", value: "Delete" }
-];
 
 interface Props<T> {
     action: T
@@ -38,53 +32,34 @@ interface Props<T> {
 export default function TransactionActionEditor (props: Props<TransactionAction>): React.ReactElement {
     switch (props.action.key) {
         case "set-description":
-            return <SetDescriptionEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetDescriptionEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-timestamp":
-            return <SetTimestampEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetTimestampEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-amount":
-            return <SetAmountEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetAmountEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-lines":
-            return <SetLinesEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetLinesEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-account":
-            return <SetAccountEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetAccountEditor {...props} action={props.action} onChange={props.onChange} />;
         case "set-category":
-            return <SetCategoryEditor {...props} action={props.action} onChange={onChange} />;
+            return <SetCategoryEditor {...props} action={props.action} onChange={props.onChange} />;
         case "delete":
-            return <DeleteEditor {...props} action={props.action} onChange={onChange} />;
-    }
-
-    function onChange (newAction: TransactionAction): void {
-        if (newAction.key !== props.action.key) {
-            let action: TransactionAction;
-            switch (newAction.key) {
-                case "delete":
-                    action = { key: "delete" };
-                    break;
-                case "set-amount":
-                    action = { key: "set-amount", value: new Decimal(0) };
-                    break;
-                case "set-description":
-                case "set-category":
-                    action = { key: newAction.key, value: "" };
-                    break;
-                case "set-account":
-                    action = { key: newAction.key, value: null, account: "source" };
-                    break;
-                case "set-timestamp":
-                    action = { key: "set-timestamp", value: DateTime.now() };
-                    break;
-                case "set-lines":
-                    action = { key: "set-lines", value: [] };
-                    break;
-            }
-            props.onChange(action);
-            return;
-        }
-        props.onChange(newAction);
+            return <DeleteEditor {...props} action={props.action} onChange={props.onChange} />;
     }
 }
 
 function DefaultEditorLayout (props: { children?: React.ReactNode, description: string } & Props<TransactionAction>): React.ReactElement {
+    const { t } = useTranslation();
+    const actions: Array<{ key: TransactionAction["key"], value: string }> = [
+        { key: "set-timestamp", value: t("transaction.set_timestamp") },
+        { key: "set-description", value: t("transaction.set_description") },
+        { key: "set-amount", value: t("transaction.set_total") },
+        { key: "set-lines", value: t("transaction.set_lines") },
+        { key: "set-account", value: t("transaction.set_account") },
+        { key: "set-category", value: t("transaction.set_category") },
+        { key: "delete", value: t("common.delete") }
+    ];
+
     return <div className="filter-group">
         <div className="filter-group--header">
             <InputSelect
@@ -92,7 +67,7 @@ function DefaultEditorLayout (props: { children?: React.ReactNode, description: 
                 disabled={props.disabled}
                 items={[...actions]}
                 value={props.action.key}
-                onChange={value => props.onChange({ ...props.action, key: value } as any as TransactionAction)} />
+                onChange={onChange} />
             {props.description}
             {props.delete !== undefined && <InputIconButton className="btn-delete" icon={faTrashCan} onClick={() => props.delete!()} />}
         </div>
@@ -101,11 +76,36 @@ function DefaultEditorLayout (props: { children?: React.ReactNode, description: 
             {props.children}
         </div>
     </div>;
+
+    function onChange (newKey: typeof actions[number]["key"]): void {
+        if (newKey === props.action.key) return;
+        switch (newKey) {
+            case "delete":
+                props.onChange({ key: "delete" });
+                return;
+            case "set-amount":
+                props.onChange({ key: "set-amount", value: new Decimal(0) });
+                return;
+            case "set-description":
+            case "set-category":
+                props.onChange({ key: newKey, value: "" });
+                return;
+            case "set-account":
+                props.onChange({ key: newKey, value: null, account: "source" });
+                return;
+            case "set-timestamp":
+                props.onChange({ key: "set-timestamp", value: DateTime.now() });
+                return;
+            case "set-lines":
+                props.onChange({ key: "set-lines", value: [] });
+        }
+    }
 }
 
 function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactElement {
-    return <DefaultEditorLayout {...props} description={`Set description to '${props.action.value}'`}>
-        <InputText label="Enter description"
+    const { t } = useTranslation();
+    return <DefaultEditorLayout {...props} description={t("transaction.set_description_to_value", { value: props.action.value })}>
+        <InputText label={t("transaction.enter_description")!}
             disabled={props.disabled}
             value={props.action.value}
             onChange={e => props.onChange({ ...props.action, value: e.target.value })} />
@@ -113,9 +113,10 @@ function SetDescriptionEditor (props: Props<ActionSetDescription>): React.ReactE
 }
 
 function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactElement {
-    const { user } = React.useContext(userContext);
-    return <DefaultEditorLayout {...props} description={`Set timestamp to '${formatDateTimeWithUser(props.action.value, user)}'`}>
-        <InputDateTime label="Select timestamp"
+    const user = useUser();
+    const { t } = useTranslation();
+    return <DefaultEditorLayout {...props} description={t("transaction.set_timestamp_to_value", { value: formatDateTimeWithUser(props.action.value, user) })}>
+        <InputDateTime label={t("transaction.select_timestamp")!}
             disabled={props.disabled}
             fullwidth={false}
             value={props.action.value}
@@ -124,74 +125,116 @@ function SetTimestampEditor (props: Props<ActionSetTimestmap>): React.ReactEleme
 }
 
 function SetAmountEditor (props: Props<ActionSetAmount>): React.ReactElement {
-    const { user } = React.useContext(userContext);
-    return <DefaultEditorLayout {...props} description={`Set total to '${formatNumberWithUser(props.action.value, user)}'`}>
-        <InputNumber label="Enter total"
+    const user = useUser();
+    const { t } = useTranslation();
+    return <DefaultEditorLayout {...props} description={t("transaction.set_total_to_value", { value: formatNumberWithUser(props.action.value, user) })}>
+        <InputNumber label={t("transaction.enter_total")!}
             value={props.action.value}
             onChange={value => props.onChange({ ...props.action, value })}
             disabled={props.disabled}
             allowNull={false} />
-        <p className="help">Will not affect split transactions</p>
+        <p className="help">{t("transaction.will_not_affect_split_transactions")!}</p>
     </DefaultEditorLayout>;
 }
 
 function SetCategoryEditor (props: Props<ActionSetCategory>): React.ReactElement {
-    return <DefaultEditorLayout {...props} description={`Set category to '${props.action.value}'`}>
+    const { t } = useTranslation();
+    return <DefaultEditorLayout {...props} description={t("transaction.set_category_to_value", { value: props.action.value })}>
         <InputCategory label="Enter category"
             value={props.action.value}
             onChange={value => props.onChange({ ...props.action, value })}
             disabled={props.disabled} />
-        <p className="help">Split transactions will get this category for all lines.</p>
+        <p className="help">{t("transaction.will_set_category_for_all_lines_on_split")!}</p>
     </DefaultEditorLayout>;
 }
 
 function SetAccountEditor (props: Props<ActionSetAccount>): React.ReactElement {
-    const accountTypes = [{ key: "source", value: "Source" }, { key: "destination", value: "Destination" }];
+    const { t } = useTranslation();
+    const { data: account } = useQuery({
+        queryKey: ["account", props.action.value],
+        queryFn: getAccount
+    });
+    const api = useApi();
+    const accountTypes = [{ key: "source", value: t("transaction.source") }, { key: "destination", value: t("transaction.destination") }];
     const description = props.action.value === null
-        ? `Set ${props.action.account} account to no account`
-        : `Set ${props.action.account} account to #${props.action.value.id} ${props.action.value.name}`;
+        ? (props.action.account === "source" ? t("transaction.set_source_account_to_no_account") : t("transaction.set_destination_account_to_no_account"))
+        : (props.action.account === "source"
+            ? t("transaction.set_source_account_to_value", { value: `#${props.action.value} ${account?.name ?? "…"}` })
+            : t("transaction.set_destination_account_to_value", { value: `#${props.action.value} ${account?.name ?? "…"}` }));
     return <DefaultEditorLayout {...props} description={description}>
         <InputSelect
             items={accountTypes}
             value={props.action.account}
             isFullwidth={true}
-            label="Source or destination"
+            label={t("transaction.source_or_destination")!}
             onChange={value => props.onChange({ ...props.action, account: value as "source" | "destination" })} />
-        <InputAccount label="Select account"
-            value={props.action.value}
-            onChange={value => props.onChange({ ...props.action, value })}
+        <InputAccount label={t("transaction.select_account")!}
+            value={props.action.value ?? null}
+            onChange={value => props.onChange({ ...props.action, value: value?.id ?? null })}
             disabled={props.disabled}
             allowNull={true}
             allowCreateNewAccount={true} />
     </DefaultEditorLayout>;
+
+    async function getAccount (): Promise<Account | null> {
+        if (props.action.value === null) {
+            return null;
+        }
+
+        const result = await api.Account.search({
+            from: 0,
+            to: 1,
+            query: {
+                type: 2,
+                query: {
+                    column: "Id",
+                    operator: 0,
+                    value: props.action.value,
+                    not: false,
+                    metaData: false
+                }
+            },
+            descending: false,
+            orderByColumn: "Id"
+        });
+
+        if (result.data.totalItems === 0) {
+            // No items found. Reset the selection
+            return null;
+        } else {
+            return result.data.data[0];
+        }
+    }
 }
 
 function DeleteEditor (props: Props<ActionDelete>): React.ReactElement {
-    return <DefaultEditorLayout {...props} description="Delete transactions">
-        Running this will permanently delete all transactions matching the filter.
+    const { t } = useTranslation();
+    return <DefaultEditorLayout {...props} description={t("transaction.delete_transactions")!}>
+        {t("automation.transaction.warning_will_delete_all_matching")!}
     </DefaultEditorLayout>;
 }
 
 function SetLinesEditor (props: Props<ActionSetLines>): React.ReactElement {
+    const { t } = useTranslation();
     if (props.action.value.length === 0) {
-        return <DefaultEditorLayout {...props} description="Turn split transactions into non-split transactinos">
-            <p>No lines have been added. This will turn split transactions into non-split transactions with same total and the category of the first line.</p>
-            <p>To set the total, you can use the &ldquo;Set amount&rdquo; action on the same transactions after removing the lines.</p>
+        return <DefaultEditorLayout {...props} description={t("transaction.turn_split_into_non_split")}>
+            <p>{t("transaction.will_turn_split_into_non_split")}</p>
+            <p>{t("transaction.how_to_set_total_after_split_into_nonsplit")}</p>
             <div className="buttons mb-3 mt-1">
-                <InputButton onClick={() => onChange([{ description: "Transaction line", amount: new Decimal(0), category: "" }])}>
-                    Add lines
+                <InputButton onClick={() => onChange([{ description: t("transaction.transaction_line"), amount: new Decimal(0), category: "" }])}>
+                    {t("transaction.add_lines")}
                 </InputButton>
             </div>
         </DefaultEditorLayout>;
     }
 
-    return <DefaultEditorLayout {...props} description="Split transactions and set lines">
+    return <DefaultEditorLayout {...props} description={t("transaction.split_and_set_lines")}>
         <table className="table is-fullwidth">
             <thead>
                 <tr>
-                    <th>Description</th>
-                    <th className="has-text-right">Amount</th>
-                    <th>Category</th>
+                    <th>{t("common.description")}</th>
+                    <th className="has-text-right">{t("transaction.amount")}</th>
+                    <th>{t("common.category")}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -236,12 +279,12 @@ function SetLinesEditor (props: Props<ActionSetLines>): React.ReactElement {
                 onClick={() => onChange([
                     ...props.action.value,
                     {
-                        description: "Transaction line",
+                        description: t("transaction.transaction_line"),
                         amount: new Decimal(0),
                         category: ""
                     }
                 ])}>
-                Add line
+                {t("transaction.add_line")}
             </InputButton>
         </div>
     </DefaultEditorLayout>;

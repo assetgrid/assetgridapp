@@ -21,32 +21,15 @@ using Microsoft.Extensions.Logging;
 
 namespace backend.unittests.Tests
 {
-    public class UserTests
+    public class UserTests : TestBase
     {
-        public AssetgridDbContext Context { get; set; }
-        public UserController UserController { get; set; }
-        public AccountController AccountController { get; set; }
-        public TransactionController TransactionController { get; set; }
-        public UserService UserService { get; set; }
-        public AccountService AccountService { get; set; }
-        public AutomationService AutomationService { get; set; }
-
-        public UserTests()
+        public UserTests() : base()
         {
-            // Create DB context and connect
-            var connection = new MySqlConnector.MySqlConnection("DataSource=:memory:");
-            var options = new DbContextOptionsBuilder<AssetgridDbContext>()
-                .UseInMemoryDatabase("Transaction" + Guid.NewGuid().ToString())
-                .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-            Context = new AssetgridDbContext(options.Options);
-
-            // Create user and log in
-            UserService = new UserService(JwtSecret.Get(), Context);
-            AccountService = new AccountService(Context);
-            AutomationService = new AutomationService(Context);
-            UserController = new UserController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            AccountController = new AccountController(Context, UserService, AccountService, Options.Create<ApiBehaviorOptions>(null!));
-            TransactionController = new TransactionController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AutomationService, Mock.Of<ILogger<TransactionController>>());
+            UserService.MockUser = UserA;
+            UserController.Delete().Wait();
+            UserService.MockUser = UserB;
+            UserController.Delete().Wait();
+            UserService.MockUser = null;
         }
 
         [Fact]
@@ -167,8 +150,8 @@ namespace backend.unittests.Tests
             UserService.MockUser = await UserService.GetById(userA!.Id);
 
             // Update user preferences and verify that they were updated
-            await UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "å" });
-            Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "å"));
+            await UserController.Preferences(new ViewPreferences(UserService.GetPreferences(userA)) { DecimalSeparator = "X" });
+            Assert.Single(Context.UserPreferences.Where(x => x.UserId == userA.Id && x.DecimalSeparator == "X"));
 
             // Create some accounts
             var accountModel = new ViewCreateAccount
@@ -185,8 +168,20 @@ namespace backend.unittests.Tests
             var accountABWrite = (await AccountController.Create(accountModel)).OkValue<ViewAccount>();
 
             // Share the AB accounts with user B and give correct permission
-            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABAll.Id, Permissions = UserAccountPermissions.All });
-            Context.UserAccounts.Add(new UserAccount { UserId = userB.Id, AccountId = accountABWrite.Id, Permissions = UserAccountPermissions.ModifyTransactions });
+            Context.UserAccounts.Add(new UserAccount {
+                UserId = userB.Id,
+                User = userB,
+                AccountId = accountABAll.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountABAll.Id),
+                Permissions = UserAccountPermissions.All
+            });
+            Context.UserAccounts.Add(new UserAccount {
+                UserId = userB.Id,
+                User = userB,
+                AccountId = accountABWrite.Id,
+                Account = Context.Accounts.Single(x => x.Id == accountABWrite.Id),
+                Permissions = UserAccountPermissions.ModifyTransactions
+            });
 
             // Create some accounts as user B
             UserService.MockUser = await UserService.GetById(userB!.Id);
@@ -205,7 +200,8 @@ namespace backend.unittests.Tests
                 Lines = new List<ViewTransactionLine> {
                     new ViewTransactionLine(amount: 120, description: "Line 1", ""),
                     new ViewTransactionLine(amount: -20, description: "Line 2", ""),
-                }
+                },
+                MetaData = new List<assetgrid_backend.models.ViewModels.ViewSetMetaField>(),
             })).OkValue<ViewTransaction>();
 
             // These transactions will not be deleted, when the user is deleted

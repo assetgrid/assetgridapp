@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.ComponentModel.DataAnnotations;
 using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
+using assetgrid_backend.models.ViewModels;
 
 namespace assetgrid_backend.Controllers
 {
@@ -20,17 +21,26 @@ namespace assetgrid_backend.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly AssetgridDbContext _context;
+        private readonly IMetaService _meta;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly IAutomationService _automation;
         private readonly ILogger<TransactionController> _logger;
 
-        public TransactionController(AssetgridDbContext context, IUserService userService, IOptions<ApiBehaviorOptions> apiBehaviorOptions, IAutomationService automationService, ILogger<TransactionController> logger)
+        public TransactionController(
+            AssetgridDbContext context,
+            IUserService userService,
+            IOptions<ApiBehaviorOptions>
+            apiBehaviorOptions,
+            IAutomationService automationService,
+            IMetaService metaService,
+            ILogger<TransactionController> logger)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
             _automation = automationService;
+            _meta = metaService;
             _logger = logger;
         }
 
@@ -48,6 +58,8 @@ namespace assetgrid_backend.Controllers
                 .SingleOrDefaultAsync(transaction => transaction.Id == id);
 
             if (result == null) return NotFound();
+
+            result.MetaData = await _meta.GetTransactionMetaValues(id, user.Id);
 
             return Ok(result);
         }
@@ -69,7 +81,7 @@ namespace assetgrid_backend.Controllers
                     if (otherTransactionsWithSameIdentifiers)
                     {
                         ModelState.AddModelError(nameof(model.Identifiers), "Another transaction with this identifier exists");
-                        return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
+                        return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory?.Invoke(ControllerContext) ?? BadRequest();
                     }
                 }
 
@@ -99,19 +111,20 @@ namespace assetgrid_backend.Controllers
                         Description = model.Description,
                         DestinationAccountId = model.DestinationId,
                         IsSplit = model.IsSplit,
-                        Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier
-                        {
-                            Identifier = x
-                        }).ToList(),
+                        Identifiers = null!,
                         Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum(),
-                        TransactionLines = model.Lines.Select((line, i) => new TransactionLine
-                        {
-                            Amount = line.Amount,
-                            Description = line.Description,
-                            Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
-                            Order = i + 1,
-                        }).ToList(),
+                        TransactionLines = null!,
                     };
+                    result.Identifiers = model.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
+                    result.TransactionLines = model.Lines.Select((line, i) => new TransactionLine
+                    {
+                        Amount = line.Amount,
+                        Description = line.Description,
+                        Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                        Order = i + 1,
+                        Transaction = result,
+                        TransactionId = result.Id
+                    }).ToList();
 
                     // Always store transactions in a format where the total is positive
                     if (result.Total < 0)
@@ -130,6 +143,14 @@ namespace assetgrid_backend.Controllers
 
                         result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
                     }
+                    _context.Transactions.Add(result);
+                    await _context.SaveChangesAsync();
+
+                    // Set metadata
+                    if (model.MetaData != null)
+                    {
+                        await _meta.SetTransactionMetaValues(result.Id, user.Id, model.MetaData);
+                    }
 
                     // Get all automations enabled for this user that trigger on create
                     var automations = await _context.UserTransactionAutomations
@@ -138,12 +159,13 @@ namespace assetgrid_backend.Controllers
                         .ToListAsync();
                     foreach (var automation in automations)
                     {
-                        _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                        await _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                     }
 
-                    _context.Transactions.Add(result);
-                    transaction.Commit();
                     await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    var metaData = await _meta.GetTransactionMetaValues(result.Id, user.Id);
 
                     return Ok(new ViewTransaction {
                         Id = result.Id,
@@ -178,6 +200,7 @@ namespace assetgrid_backend.Controllers
                             .OrderBy(line => line.Order)
                             .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
+                        MetaData = metaData
                     });
                 }
             }
@@ -220,46 +243,57 @@ namespace assetgrid_backend.Controllers
                     }
 
                     var sourceUserAccount = dbObject.SourceAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
-                    if (dbObject.SourceAccountId != model.SourceId && model.SourceId != null)
+                    if (dbObject.SourceAccountId != model.SourceId)
                     {
-                        // Make sure that the user has write permissions to the account they are creating the transaction on
-                        sourceUserAccount = await _context.UserAccounts
-                            .Include(x => x.Account)
-                            .Include(x => x.Account.Identifiers)
-                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
-
-                        if (sourceUserAccount == null)
+                        if (model.SourceId == null)
                         {
-                            return Forbid();
+                            dbObject.SourceAccount = null;
                         }
+                        else
+                        {
+                            // Make sure that the user has write permissions to the account they are creating the transaction on
+                            sourceUserAccount = await _context.UserAccounts
+                                .Include(x => x.Account)
+                                .Include(x => x.Account.Identifiers)
+                                .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.SourceId && writePermissions.Contains(x.Permissions));
 
-                        dbObject.SourceAccountId = model.SourceId;
-                        dbObject.SourceAccount = sourceUserAccount.Account;
+                            if (sourceUserAccount == null)
+                            {
+                                return Forbid();
+                            }
+
+                            dbObject.SourceAccountId = model.SourceId;
+                            dbObject.SourceAccount = sourceUserAccount.Account;
+                        }
                     }
                     var destinationUserAccount = dbObject.DestinationAccount?.Users!.SingleOrDefault(x => x.UserId == user.Id);
-                    if (dbObject.DestinationAccountId != model.DestinationId && model.DestinationId != null)
+                    if (dbObject.DestinationAccountId != model.DestinationId)
                     {
-                        // Make sure that the user has write permissions to the account they are creating the transaction on
-                        destinationUserAccount = await _context.UserAccounts
-                            .Include(x => x.Account)
-                            .Include(x => x.Account.Identifiers)
-                            .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
-
-                        if (destinationUserAccount == null)
+                        if (model.DestinationId == null)
                         {
-                            return Forbid();
+                            dbObject.DestinationAccountId = null;
                         }
+                        else
+                        {
+                            // Make sure that the user has write permissions to the account they are creating the transaction on
+                            destinationUserAccount = await _context.UserAccounts
+                                .Include(x => x.Account)
+                                .Include(x => x.Account.Identifiers)
+                                .SingleOrDefaultAsync(x => x.UserId == user.Id && x.AccountId == model.DestinationId && writePermissions.Contains(x.Permissions));
 
-                        dbObject.DestinationAccountId = model.DestinationId;
-                        dbObject.DestinationAccount = destinationUserAccount.Account;
+                            if (destinationUserAccount == null)
+                            {
+                                return Forbid();
+                            }
+
+                            dbObject.DestinationAccountId = model.DestinationId;
+                            dbObject.DestinationAccount = destinationUserAccount.Account;
+                        }
                     }
                     dbObject.DestinationAccountId = model.DestinationId;
                     dbObject.DateTime = model.DateTime;
                     dbObject.Description = model.Description;
-                    dbObject.Identifiers = model.Identifiers.Select(identifier => new TransactionUniqueIdentifier
-                    {
-                        Identifier = identifier
-                    }).ToList();
+                    dbObject.Identifiers = model.Identifiers.Select(identifier => new TransactionUniqueIdentifier(dbObject, identifier)).ToList();
                     dbObject.IsSplit = model.IsSplit;
                     dbObject.Total = model.Total ?? model.Lines.Select(line => line.Amount).Sum();
                     dbObject.TransactionLines = model.Lines.Select((line, index) => new TransactionLine
@@ -285,6 +319,13 @@ namespace assetgrid_backend.Controllers
                         sourceUserAccount = destinationUserAccount;
                         destinationUserAccount = temp;
                     }
+                    await _context.SaveChangesAsync();
+
+                    // Set metadata
+                    if (model.MetaData != null)
+                    {
+                        await _meta.SetTransactionMetaValues(id, user.Id, model.MetaData);
+                    }
 
                     // Get all automations enabled for this user that trigger on create
                     var automations = await _context.UserTransactionAutomations
@@ -293,11 +334,13 @@ namespace assetgrid_backend.Controllers
                         .ToListAsync();
                     foreach (var automation in automations)
                     {
-                        _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
+                        await _automation.ApplyAutomationToTransaction(dbObject, automation.TransactionAutomation, user);
                     }
 
                     await _context.SaveChangesAsync();
                     transaction.Commit();
+
+                    var metaData = await _meta.GetTransactionMetaValues(id, user.Id);
 
                     return Ok(new ViewTransaction
                     {
@@ -333,6 +376,7 @@ namespace assetgrid_backend.Controllers
                             .OrderBy(line => line.Order)
                             .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
                             .ToList(),
+                        MetaData = metaData
                     });
                 }
             }
@@ -391,10 +435,11 @@ namespace assetgrid_backend.Controllers
                         .Select(account => account.AccountId)
                         .ToListAsync();
 
+                    var metaFields = await _meta.GetFields(user.Id);
                     var transactions = await _context.Transactions
                         .Include(t => t.TransactionLines)
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(query)
+                        .ApplySearch(query, metaFields)
                         .ToListAsync();
 
                     _context.RemoveRange(transactions.SelectMany(transaction => transaction.TransactionLines));
@@ -413,12 +458,13 @@ namespace assetgrid_backend.Controllers
         public async Task<IActionResult> Search(ViewSearch query)
         {
             var user = _user.GetCurrent(HttpContext)!;
+            var metaFields = await _meta.GetFields(user.Id);
             if (ModelState.IsValid)
             {
-                var result = await _context.Transactions
+                var transactionQuery = _context.Transactions.ApplySearch(query, true, metaFields);
+                var result = await transactionQuery
                     .Where(transaction => _context.UserAccounts.Any(account => account.UserId == user.Id &&
                         (account.AccountId == transaction.SourceAccountId || account.AccountId == transaction.DestinationAccountId)))
-                    .ApplySearch(query, true)
                     .Skip(query.From)
                     .Take(query.To - query.From)
                     .SelectView(user.Id)
@@ -427,7 +473,7 @@ namespace assetgrid_backend.Controllers
                 return Ok(new ViewSearchResponse<ViewTransaction>
                 {
                     Data = result,
-                    TotalItems = await _context.Transactions.ApplySearch(query, false).CountAsync(),
+                    TotalItems = await transactionQuery.CountAsync(),
                 });
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();
@@ -508,19 +554,20 @@ namespace assetgrid_backend.Controllers
                                 Description = transaction.Description,
                                 DestinationAccountId = transaction.DestinationId,
                                 IsSplit = transaction.IsSplit,
-                                Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier
-                                {
-                                    Identifier = x.Trim()
-                                }).ToList(),
+                                Identifiers = null!,
                                 Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                                TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
-                                {
-                                    Amount = line.Amount,
-                                    Description = line.Description,
-                                    Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
-                                    Order = i + 1,
-                                }).ToList(),
+                                TransactionLines = null!,
                             };
+                            result.Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
+                            result.TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
+                            {
+                                Amount = line.Amount,
+                                Description = line.Description,
+                                Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                                Order = i + 1,
+                                Transaction = result,
+                                TransactionId = result.Id
+                            }).ToList();
 
                             // Always store transactions in a format where the total is positive
                             if (result.Total < 0)
@@ -534,7 +581,7 @@ namespace assetgrid_backend.Controllers
 
                             foreach (var automation in automations)
                             {
-                                _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
+                                await _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
                             }
 
                             _context.Transactions.Add(result);

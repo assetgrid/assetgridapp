@@ -13,6 +13,7 @@ using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
 using System.Linq;
 using System.Security.Principal;
+using assetgrid_backend.models.MetaFields;
 
 namespace assetgrid_backend.Controllers
 {
@@ -25,17 +26,20 @@ namespace assetgrid_backend.Controllers
         private readonly IUserService _user;
         private readonly IAccountService _account;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
+        private readonly IMetaService _meta;
 
         public AccountController(
             AssetgridDbContext context,
             IUserService userService,
             IAccountService accountService,
-            IOptions<ApiBehaviorOptions> apiBehaviorOptions)
+            IOptions<ApiBehaviorOptions> apiBehaviorOptions,
+            IMetaService meta)
         {
             _context = context;
             _user = userService;
             _account = accountService;
             _apiBehaviorOptions = apiBehaviorOptions;
+            _meta = meta;
         }
 
         /// <summary>
@@ -56,21 +60,21 @@ namespace assetgrid_backend.Controllers
                     {
                         Name = model.Name,
                         Description = model.Description,
-                        Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
-                        {
-                            Identifier = x
-                        }).ToList()
+                        Identifiers = null!
                     };
+                    result.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier(result, x)).ToList();
                     _context.Accounts.Add(result);
                     await _context.SaveChangesAsync();
 
                     var userAccount = new UserAccount
                     {
                         AccountId = result.Id,
+                        Account = result,
                         Favorite = model.Favorite,
                         IncludeInNetWorth = model.IncludeInNetWorth,
                         Permissions = UserAccountPermissions.All,
                         UserId = user.Id,
+                        User = user,
                     };
                     _context.UserAccounts.Add(userAccount);
                     await _context.SaveChangesAsync();
@@ -138,10 +142,7 @@ namespace assetgrid_backend.Controllers
             }
 
             _context.AccountUniqueIdentifiers.RemoveRange(_context.AccountUniqueIdentifiers.Where(x => x.AccountId == id));
-            result.Account.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier
-            {
-                Identifier = x
-            }).ToList();
+            result.Account.Identifiers = model.Identifiers.Select(x => new AccountUniqueIdentifier(result.Account, x)).ToList();
             result.Account.Description = model.Description;
             result.Account.Name = model.Name;
             result.Favorite = model.Favorite;
@@ -150,7 +151,7 @@ namespace assetgrid_backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new ViewAccount(
-                id: result.Id,
+                id: result.AccountId,
                 name: result.Account.Name,
                 description: result.Account.Description,
                 identifiers: result.Account.Identifiers.Select(x => x.Identifier).ToList(),
@@ -234,7 +235,8 @@ namespace assetgrid_backend.Controllers
 
             if (request.Query != null)
             {
-                query = query.ApplySearch(request.Query);
+                var metaFields = await _meta.GetFields(user.Id);
+                query = query.ApplySearch(request.Query, metaFields);
             }
 
             if (request.Descending)
@@ -247,7 +249,7 @@ namespace assetgrid_backend.Controllers
                 query = query.OrderBy(transaction => transaction.DateTime)
                     .ThenBy(transaction => transaction.Id);
             }
-
+            
             var result = await query
                 .Skip(request.From)
                 .Take(request.To - request.From)
@@ -293,7 +295,8 @@ namespace assetgrid_backend.Controllers
 
             if (requestQuery != null)
             {
-                query = query.ApplySearch(requestQuery);
+                var metaFields = await _meta.GetFields(user.Id);
+                query = query.ApplySearch(requestQuery, metaFields);
             }
 
             return Ok(await query.CountAsync());
@@ -606,7 +609,7 @@ namespace assetgrid_backend.Controllers
 
             return Ok(await _context.TransactionLines
                 .Where(line => line.Transaction.SourceAccountId == id || line.Transaction.DestinationAccountId == id)
-                .ApplySearch(query)
+                .ApplySearch(query, new Dictionary<int, MetaField>())
                 .GroupBy(line => new {
                     line.Category,
                     Transfer = line.Transaction.SourceAccountId != null && netWorthAccountIds.Contains(line.Transaction.SourceAccountId.Value) &&

@@ -15,6 +15,7 @@ import InputAccount from "../../../account/input/InputAccount";
 import { CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
 import AccountSelector from "./AccountSelector";
 import InputCheckbox from "../../../input/InputCheckbox";
+import { Trans, useTranslation } from "react-i18next";
 
 interface Props {
     data: any[]
@@ -40,6 +41,7 @@ function isNullOrWhitespace (input: string | null | undefined): boolean {
 export default function MapCsvFields (props: Props): React.ReactElement {
     const [tableDraw, setTableDraw] = React.useState(0);
     const [modal, setModal] = React.useState<React.ReactElement | null>(null);
+    const { t } = useTranslation();
 
     const [tableFilterMessage, settableFilterMessage] = React.useState<string>();
     const [tableFilter, setTableFilter] = React.useState<{ filter: (transaction: CsvCreateTransaction) => boolean }>({ filter: () => true });
@@ -60,31 +62,35 @@ export default function MapCsvFields (props: Props): React.ReactElement {
     return <>
         {modal !== null && modal}
 
-        <Card title="Mapping options" isNarrow={true}>
+        <Card title={t("import.mapping_options")!} isNarrow={true}>
 
             <div className="content">
-                <p>Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference/import/csv" target="_blank" rel="noreferrer">reference documentation</a></p>
+                <p>
+                    <Trans i18nKey="import.read_more_about_import_in_documentation">
+                        Read more about the CSV import tool in the Assetgrid <a href="https://assetgrid.app/reference/import/csv" target="_blank" rel="noreferrer">reference documentation</a>
+                    </Trans>
+                </p>
             </div>
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Duplicate handling"
+                    <InputSelect label={t("import.duplicate_handling")!}
                         isFullwidth={true}
                         value={props.options.duplicateHandling}
                         disabled={!props.apiReady}
                         onChange={result => updateDuplicateHandling(result as DuplicateHandlingOptions, props.options.identifierColumn, props.options.identifierParseOptions)}
                         items={[
-                            { key: "automatic", value: "Auto" },
-                            { key: "identifier", value: "Unique ID colum" },
-                            { key: "none", value: "Allow duplicates" }
+                            { key: "automatic", value: t("import.duplicate_handling_automatic") },
+                            { key: "identifier", value: t("import.unique_id_column") },
+                            { key: "none", value: t("import.allow_duplicates") }
                         ]} />
                 </div>
                 <div className="column">
                     {["identifier", "identifier-rownumber"].includes(props.options.duplicateHandling) &&
-                        <InputSelect label="Identifier column"
+                        <InputSelect label={t("import.identifier_column")!}
                             isFullwidth={true}
                             value={props.options.identifierColumn}
-                            placeholder={"Select column"}
+                            placeholder={t("import.select_column")!}
                             disabled={!props.apiReady}
                             onChange={result => updateDuplicateHandling(props.options.duplicateHandling, result, props.options.identifierParseOptions)}
                             items={Object.keys(props.data[0]).map(item => {
@@ -105,7 +111,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                                 close={() => setModal(null)}
                                                 closeOnChange={true} />
                                             )}>
-                                        Parse Options
+                                            {t("import.parse_options")}
                                         </button>
                                     </div>
                                     : undefined
@@ -115,21 +121,23 @@ export default function MapCsvFields (props: Props): React.ReactElement {
             </div>
 
             <div className="content">
-                <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
-                    This value will be compared during import and transactions with the same identifier will be ignored</p>
-                <ul>
-                    <li><b>Auto:</b> Automatically calculate an identifier based on transaction source, destination, timestamp and amount.</li>
-                    <li><b>Unique ID column:</b> Use a column as a unique identifier</li>
-                    <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
-                </ul>
+                <Trans i18nKey="import.duplicate_handling_info">
+                    <p>Duplicates are handled by calculating an identifier for each transaction and storing this.
+                        This value will be compared during import and transactions with the same identifier will be ignored</p>
+                    <ul>
+                        <li><b>Auto:</b> Automatically calculate an identifier based on transaction source, destination, timestamp and amount.</li>
+                        <li><b>Unique ID column:</b> Use a column as a unique identifier</li>
+                        <li><b>Allow duplicates:</b> No duplicate checking will occur.</li>
+                    </ul>
+                </Trans>
             </div>
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Timestamp column"
+                    <InputSelect label={t("import.timestamp_column")!}
                         isFullwidth={true}
                         value={props.options.dateColumn}
-                        placeholder={"Select column"}
+                        placeholder={t("import.select_column")!}
                         disabled={!props.apiReady}
                         onChange={result => updateDateMapping(result, props.options.dateFormat, props.options.dateParseOptions)}
                         items={Object.keys(props.data[0]).map(item => {
@@ -150,28 +158,28 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
-                                    Parse Options
+                                        {t("import.parse_options")}
                                     </button>
                                 </div>
                                 : undefined
                         } />
                 </div>
                 {props.options.dateColumn !== null && <div className="column">
-                    <InputText label="Timestamp format"
+                    <InputText label={t("import.timestamp_format")!}
                         value={props.options.dateFormat}
                         disabled={!props.apiReady}
                         onChange={e => updateDateMapping(props.options.dateColumn, e.target.value, props.options.dateParseOptions)}
                     />
-                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank" rel="noreferrer">Read more</a>
+                    <a href="https://moment.github.io/luxon/#/parsing?id=table-of-tokens" target="_blank" rel="noreferrer">{t("common.read_more")!}</a>
                 </div>}
             </div>
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Source account"
+                    <InputSelect label={t("transaction.source_account")!}
                         isFullwidth={true}
                         value={props.options.sourceAccountType}
-                        placeholder={"Source account"}
+                        placeholder={t("transaction.source_account")!}
                         disabled={!props.apiReady}
                         onChange={result => updateAccountMapping("source",
                             result,
@@ -179,27 +187,27 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                             props.accounts.find(x => x.id === props.options.sourceAccountId) ?? null,
                             props.options.sourceAccountParseOptions)}
                         items={[
-                            { key: "column", value: "CSV column" },
-                            { key: "single", value: "Same account for all transactions" }
+                            { key: "column", value: t("import.csv_column") },
+                            { key: "single", value: t("import.same_account_all_transactions") }
                         ]} />
                 </div>
                 <div className="column">
                     {props.options.sourceAccountType === "single"
-                        ? <InputAccount label="Select account"
+                        ? <InputAccount label={t("common.select_account")!}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             disabled={!props.apiReady}
-                            nullSelectedText={"No account"}
+                            nullSelectedText={t("common.no_account")!}
                             value={props.options.sourceAccountId}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountType, null, result, props.options.sourceAccountParseOptions)}/>
-                        : <InputSelect label="Column"
+                        : <InputSelect label={t("import.source_account_column")!}
                             isFullwidth={true}
                             value={props.options.sourceAccountColumn}
-                            placeholder={"Select column"}
+                            placeholder={t("import.select_column")!}
                             disabled={!props.apiReady}
                             onChange={result => updateAccountMapping("source", props.options.sourceAccountType, result, null, props.options.sourceAccountParseOptions)}
                             items={[
-                                { key: "___NULL___", value: "No source account" },
+                                { key: "___NULL___", value: t("import.no_source_account") },
                                 ...Object.keys(props.data[0]).map(item => ({
                                     key: item,
                                     value: item
@@ -217,7 +225,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                                 close={() => setModal(null)}
                                                 closeOnChange={true} />
                                             )}>
-                                        Parse Options
+                                            {t("import.parse_options")}
                                         </button>
                                     </div>
                                     : undefined
@@ -227,10 +235,10 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Destination account"
+                    <InputSelect label={t("transaction.destination_account")!}
                         isFullwidth={true}
                         value={props.options.destinationAccountType}
-                        placeholder={"Destination account"}
+                        placeholder={t("import.destination_account")!}
                         disabled={!props.apiReady}
                         onChange={result => updateAccountMapping("destination",
                             result,
@@ -238,27 +246,27 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                             props.accounts.find(x => x.id === props.options.destinationAccountId) ?? null,
                             props.options.destinationAccountParseOptions)}
                         items={[
-                            { key: "column", value: "CSV column" },
-                            { key: "single", value: "Same account for all transactions" }
+                            { key: "column", value: t("import.csv_column") },
+                            { key: "single", value: t("import.same_account_all_transactions") }
                         ]} />
                 </div>
                 <div className="column">
                     {props.options.destinationAccountType === "single"
-                        ? <InputAccount label="Select account"
+                        ? <InputAccount label={t("common.select_account")!}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             disabled={!props.apiReady}
-                            nullSelectedText={"No account"}
+                            nullSelectedText={t("common.no_account")!}
                             value={props.options.destinationAccountId}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, null, result, props.options.destinationAccountParseOptions)} />
-                        : <InputSelect label="Destination account column"
+                        : <InputSelect label={t("import.destination_account_column")!}
                             isFullwidth={true}
                             value={props.options.destinationAccountColumn}
-                            placeholder={"Select column"}
+                            placeholder={t("import.select_column")!}
                             disabled={!props.apiReady}
                             onChange={result => updateAccountMapping("destination", props.options.destinationAccountType, result, null, props.options.destinationAccountParseOptions)}
                             items={[
-                                { key: "___NULL___", value: "No destination account" },
+                                { key: "___NULL___", value: t("import.no_destination_account") },
                                 ...Object.keys(props.data[0]).map(item => ({
                                     key: item,
                                     value: item
@@ -276,7 +284,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                                 close={() => setModal(null)}
                                                 closeOnChange={true} />
                                             )}>
-                                        Parse Options
+                                            {t("import.parse_options")}
                                         </button>
                                     </div>
                                     : undefined
@@ -286,10 +294,10 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label={props.options.separateCreditDebitColumns ? "Debit amount column" : "Amount column"}
+                    <InputSelect label={props.options.separateCreditDebitColumns ? t("import.debit_amount_column")! : t("import.amount_column")!}
                         isFullwidth={true}
                         value={props.options.debitAmountColumn}
-                        placeholder={"Select column"}
+                        placeholder={t("import.select_column")!}
                         disabled={!props.apiReady}
                         onChange={result => updateAmountMapping(result,
                             props.options.debitAmountParseOptions,
@@ -320,7 +328,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
-                                    Parse Options
+                                        {t("import.parse_options")}
                                     </button>
                                 </div>
                                 : undefined
@@ -328,7 +336,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 </div>
                 <div className="column">
                     {props.options.debitAmountColumn !== null &&
-                        <InputText label="Decimal separator"
+                        <InputText label={t("import.decimal_separator")!}
                             value={props.options.decimalSeparator}
                             disabled={!props.apiReady}
                             onChange={e => updateAmountMapping(props.options.debitAmountColumn,
@@ -343,10 +351,10 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             {props.options.separateCreditDebitColumns && <div className="columns">
                 <div className="column">
-                    <InputSelect label={"Credit amount column"}
+                    <InputSelect label={t("import.credit_amount_column")!}
                         isFullwidth={true}
                         value={props.options.creditAmountColumn}
-                        placeholder={"Select column"}
+                        placeholder={t("import.select_column")!}
                         disabled={!props.apiReady}
                         onChange={result => updateAmountMapping(props.options.debitAmountColumn,
                             props.options.debitAmountParseOptions,
@@ -377,7 +385,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
-                                    Parse Options
+                                        {t("import.parse_options")!}
                                     </button>
                                 </div>
                                 : undefined
@@ -386,7 +394,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 <div className="column"></div>
             </div>}
 
-            <InputCheckbox label="Separate debit and credit amount columns"
+            <InputCheckbox label={t("import.separate_debit_credit_columns")!}
                 disabled={!props.apiReady}
                 value={props.options.separateCreditDebitColumns}
                 onChange={e => updateAmountMapping(props.options.debitAmountColumn,
@@ -398,13 +406,13 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Description column"
+                    <InputSelect label={t("import.description_column")!}
                         isFullwidth={true}
                         value={props.options.descriptionColumn}
-                        placeholder={"Select column"}
+                        placeholder={t("import.select_column")!}
                         disabled={!props.apiReady}
                         onChange={result => updateDescriptionMapping(result, props.options.descriptionParseOptions)}
-                        items={[{ key: "___NULL___", value: "No description" },
+                        items={[{ key: "___NULL___", value: t("common.no_description")! },
                             ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
                                 value: item
@@ -422,7 +430,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                             close={() => setModal(null)}
                                             closeOnChange={true} />
                                         )}>
-                                    Parse Options
+                                        {t("import.parse_options")!}
                                     </button>
                                 </div>
                                 : undefined
@@ -433,14 +441,14 @@ export default function MapCsvFields (props: Props): React.ReactElement {
 
             <div className="columns">
                 <div className="column">
-                    <InputSelect label="Category column"
+                    <InputSelect label={t("import.category_column")!}
                         isFullwidth={true}
                         value={props.options.categoryColumn}
-                        placeholder={"Select column"}
+                        placeholder={t("import.select_column")!}
                         disabled={!props.apiReady}
                         onChange={result => updateCategoryMapping(result, props.options.categoryParseOptions)}
                         items={[
-                            { key: "___NULL___", value: "No category" },
+                            { key: "___NULL___", value: t("common.no_category") },
                             ...Object.keys(props.data[0]).map(item => ({
                                 key: item,
                                 value: item
@@ -458,7 +466,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                                             close={() => setModal(null)}
                                             closeOnChange={true}
                                         />)}>
-                                    Parse Options
+                                        {t("import.parse_options")!}
                                     </button>
                                 </div>
                                 : undefined
@@ -476,14 +484,14 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 setAccounts={props.setAccounts}
                 transactions={props.transactions ?? []} />}
 
-        {(props.transactions != null) && <Card title="Import preview" isNarrow={false}>
+        {(props.transactions != null) && <Card title={t("import.import_preview")!} isNarrow={false}>
             {tableFilterMessage !== undefined && <Message title="Filter is active" type="link">
-                Some transactions are hidden! {tableFilterMessage}{" "}
+                {t("import.some_transactions_hidden")} {tableFilterMessage}{" "}
                 <a className="has-text-link" onClick={() => {
                     setTableFilter({ filter: () => true });
                     settableFilterMessage(undefined);
                     setTableDraw(draw => draw + 1);
-                }}>Show all transactions</a>
+                }}>{t("common.show_all_transactions")}</a>
             </Message>}
             <CsvMappingTransactionTable
                 transactions={props.transactions}
@@ -493,14 +501,14 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 tableDraw={tableDraw} />
         </Card>}
 
-        {(props.transactions != null) && <Card title="Continue" isNarrow={true}>
+        {(props.transactions != null) && <Card title={t("common.continue")!} isNarrow={true}>
             <CsvMappingIssues
                 transactions={props.transactions}
                 duplicateIdentifiers={props.duplicateIdentifiers}
                 setTableFilter={(message, filter) => { settableFilterMessage(message); setTableFilter({ filter }); setTableDraw(draw => draw + 1); }} />
             <div className="buttons">
-                <InputButton onClick={props.goToPrevious}>Back</InputButton>
-                <InputButton className="is-primary" onClick={props.goToNext}>Continue</InputButton>
+                <InputButton onClick={props.goToPrevious}>{t("common.back")}</InputButton>
+                <InputButton className="is-primary" onClick={props.goToNext}>{t("common.continue")}</InputButton>
             </div>
         </Card>}
     </>;
@@ -655,7 +663,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     source: getAccount(row),
-                    sourceText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
+                    sourceText: accountType === "single" ? "" : parseWithOptions(getValue(row, column), parseOptions)
                 }))
             ];
         } else {
@@ -663,7 +671,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     destination: getAccount(row),
-                    destinationText: accountType === "single" ? "" : parseWithOptions(row[column as any], parseOptions)
+                    destinationText: accountType === "single" ? "" : parseWithOptions(getValue(row, column), parseOptions)
                 }))
             ];
         }
@@ -682,14 +690,14 @@ export default function MapCsvFields (props: Props): React.ReactElement {
         }
         props.onChange(updateAutoIdentifiers(newTransactions, newOptions), newOptions);
 
-        function getAccount (row: string[]): Account | null {
+        function getAccount (row: { [key: string]: string }): Account | null {
             if (accountType === "single") {
                 return value;
             } else {
-                if (column === null || isNullOrWhitespace(row[column as any])) {
+                if (column === null || isNullOrWhitespace(getValue(row, column))) {
                     return null;
                 } else {
-                    const identifier = parseWithOptions(row[column as any], parseOptions);
+                    const identifier = parseWithOptions(getValue(row, column), parseOptions);
                     return props.accounts.find(account => account.identifiers.includes(identifier)) ?? null;
                 }
             }

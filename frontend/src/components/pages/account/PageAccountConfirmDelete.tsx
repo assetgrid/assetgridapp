@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router";
 
 import { Link } from "react-router-dom";
@@ -7,7 +9,8 @@ import { routes } from "../../../lib/routes";
 import { forget } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
-import { userContext } from "../../App";
+import { User } from "../../../models/user";
+import { useUser } from "../../App";
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputButton from "../../input/InputButton";
@@ -23,8 +26,10 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         : "fetching");
     const allowBack = history.state.usr?.allowBack === true;
     const navigate = useNavigate();
-    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const user = useUser();
+    const queryClient = useQueryClient();
     const api = useApi();
+    const { t } = useTranslation();
 
     // Update account when id is changed
     React.useEffect(() => {
@@ -34,9 +39,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         if (account === "fetching" && api !== null) {
             api.Account.get(id)
                 .then(result => {
-                    if (result.status === 200) {
-                        setAccount(result.data);
-                    }
+                    setAccount(result);
                 })
                 .catch(e => {
                     console.log(e);
@@ -46,7 +49,7 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
     }, [api, id]);
 
     if (account === "fetching") {
-        return <>Please wait</>;
+        return <>{t("common.please_wait")}</>;
     }
     if (account === null) {
         return <Page404 />;
@@ -67,7 +70,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "SourceAccountId",
                         value: null,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 },
                 {
@@ -76,7 +80,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "DestinationAccountId",
                         value: account.id,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }
             ]
@@ -89,7 +94,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "SourceAccountId",
                         value: account.id,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 },
                 {
@@ -98,7 +104,8 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
                         column: "DestinationAccountId",
                         value: null,
                         operator: SearchOperator.Equals,
-                        not: false
+                        not: false,
+                        metaData: false
                     }
                 }
             ]
@@ -106,19 +113,19 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
     };
 
     return <>
-        <Hero title="Delete account" subtitle={<>#{account.id} {account.name}</>} isDanger={true} />
+        <Hero title={t("common.delete_account")} subtitle={<>#{account.id} {account.name}</>} isDanger={true} />
         <div className="p-3">
-            <Card title="Delete account" isNarrow={false}>
-                <p>Are you sure you want to delete this account? This action is irreversible!</p>
-                <p>Transactions that do not have a source or destination after the deletion of this account will be deleted as well.</p>
+            <Card title={t("common.delete_account")!} isNarrow={false}>
+                <p>{t("delete.account.are_you_sure")}</p>
+                <p>{t("delete.account.transactions_will_be_deleted")}</p>
                 <div className="buttons mt-3">
-                    <InputButton onClick={forget(deleteAccount)} disabled={isDeleting || api === null} className="is-danger">Delete account</InputButton>
+                    <InputButton onClick={forget(deleteAccount)} disabled={isDeleting || api === null} className="is-danger">{t("common.delete_account")}</InputButton>
                     {allowBack
                         ? <button className="button" onClick={() => navigate(-1)}>Cancel</button>
-                        : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>Cancel</Link>}
+                        : <Link to={routes.account(id.toString())} className="button" onClick={() => navigate(-1)}>{t("common.cancel")}</Link>}
                 </div>
             </Card>
-            <Card title="The following transactions will be deleted" isNarrow={false}>
+            <Card title={t("delete.account.the_following_transactions_will_be_deleted")!} isNarrow={false}>
                 <TransactionList allowEditing={false} allowLinks={false} query={query} />
             </Card>
         </div>
@@ -130,8 +137,11 @@ export default function PageAccountConfirmDelete (): React.ReactElement {
         setisDeleting(true);
         await api.Account.delete(account.id);
         if (account.favorite) {
-            if (user !== "fetching") {
-                updateFavoriteAccounts(user.favoriteAccounts.filter(favorite => favorite.id !== account.id));
+            if (user !== undefined) {
+                queryClient.setQueryData<User>(["user"], old => ({
+                    ...old!,
+                    favoriteAccounts: user.favoriteAccounts.filter(favorite => favorite.id !== account.id)
+                }));
             }
         }
         navigate(routes.accounts());

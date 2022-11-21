@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import * as Api from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
@@ -13,6 +14,7 @@ export default function PageSignup (): React.ReactElement {
     const [state, setState] = React.useState<"signing-up" | "waiting">("waiting");
     const navigate = useNavigate();
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         Api.anyUsers().then(result => {
@@ -23,22 +25,22 @@ export default function PageSignup (): React.ReactElement {
     }, []);
 
     return <section className="page-login">
-        <Card title="Create a new account for Assetgrid" isNarrow={true}>
+        <Card title={t("user.create_new_account_for_assetgrid")!} isNarrow={true}>
             <InputText value={email}
-                label="Email"
+                label={t("user.email")!}
                 onChange={e => setEmail(e.target.value)}
                 disabled={state === "signing-up"}
                 errors={errors.Email !== undefined ? errors.email : Object.keys(errors).length > 0} />
             <InputText value={password}
                 password={true}
-                label="Password"
+                label={t("user.password")!}
                 disabled={state === "signing-up"}
                 onChange={e => setPassword(e.target.value)} errors={errors.Password !== undefined ? errors.Password : Object.keys(errors).length > 0} />
             <InputButton
                 className="is-primary"
                 disabled={state === "signing-up"}
                 onClick={forget(signUp)}>
-                Sign up
+                {t("user.sign_up")!}
             </InputButton>
         </Card>
     </section>;

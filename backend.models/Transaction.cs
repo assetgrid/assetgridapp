@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using assetgrid_backend.models.MetaFields;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace assetgrid_backend.Models
@@ -13,11 +14,23 @@ namespace assetgrid_backend.Models
         public DateTime DateTime { get; set; }
 
         [MaxLength(250)]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public long Total { get; set; }
         public bool IsSplit { get; set; }
-        public virtual List<TransactionLine> TransactionLines { get; set; } = null!;
-        public virtual List<TransactionUniqueIdentifier> Identifiers { get; set; } = null!;
+        public required virtual List<TransactionLine> TransactionLines { get; set; }
+        public required virtual List<TransactionUniqueIdentifier> Identifiers { get; set; }
+
+        #region Meta data values
+
+        public virtual List<MetaTextLine<Transaction>>? MetaTextLineValues { get; set; }
+        public virtual List<MetaTextLong<Transaction>>? MetaTextLongValues { get; set; }
+        public virtual List<MetaNumber<Transaction>>? MetaNumberValues { get; set; }
+        public virtual List<MetaTransaction<Transaction>>? MetaTransactionValues { get; set; }
+        public virtual List<MetaAccount<Transaction>>? MetaAccountValues { get; set; }
+        public virtual List<MetaAttachment<Transaction>>? MetaAttachmentValues { get; set; }
+        public virtual List<MetaBoolean<Transaction>>? MetaBooleanValues { get; set; }
+
+        #endregion
 
         IEnumerable<ValidationResult> IValidatableObject.Validate(ValidationContext validationContext)
         {

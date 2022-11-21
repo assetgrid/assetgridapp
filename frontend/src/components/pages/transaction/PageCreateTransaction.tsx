@@ -1,7 +1,9 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
@@ -17,6 +19,7 @@ import InputIconButton from "../../input/InputIconButton";
 import InputNumber from "../../input/InputNumber";
 import InputText from "../../input/InputText";
 import InputTextOrNull from "../../input/InputTextOrNull";
+import TransactionMetaEditor from "../../transaction/input/TransactionMetaEditor";
 import TransactionCategory from "../../transaction/table/TransactionCategory";
 import TransactionLink from "../../transaction/TransactionLink";
 
@@ -29,69 +32,74 @@ export default function PageCreateTransaction (): React.ReactElement {
         identifiers: [],
         lines: [{ amount: new Decimal(0), description: "", category: "" }],
         total: new Decimal(0),
-        isSplit: false
+        isSplit: false,
+        metaData: null
     };
 
     const [model, setModel] = React.useState<ModifyTransaction>(defaultModel);
     const [modelErrors, setModelErrors] = React.useState<{ [key: string]: string[] }>({});
-    const [creating, setCreating] = React.useState(false);
+    const [isCreating, setCreating] = React.useState(false);
     const navigate = useNavigate();
     const allowBack = window.history.state.usr?.allowBack === true;
     const actionOnComplete: "back" | "chose" = window.history.state.usr?.actionOnComplete ?? "chose";
     const [createdTransaction, setCreatedTransaction] = React.useState<Transaction | null>();
+    const queryClient = useQueryClient();
     const api = useApi();
+    const { t } = useTranslation();
 
     return <>
-        <Hero title="Create new transaction" />
+        <Hero title={t("transaction.create_new")} />
         <div className="p-3">
-            <Card title="Transaction details" isNarrow={true}>
+            <Card title={t("transaction.transaction_details")!} isNarrow={true}>
                 { (createdTransaction != null) && <article className="message is-link">
                     <div className="message-body">
-                        Transaction has been created: <TransactionLink transaction={createdTransaction} />
+                        <Trans i18nKey="transaction.has_been_created_link">
+                            Transaction <TransactionLink transaction={createdTransaction} /> has been created.
+                        </Trans>
                     </div>
                 </article>}
 
-                <InputDateTime label="Timestamp"
+                <InputDateTime label={t("common.timestamp")!}
                     value={model.dateTime}
                     onChange={value => setModel({ ...model, dateTime: value })}
                     fullwidth={false}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.DateTime} />
-                <InputTextOrNull label="Unique identifier"
+                <InputTextOrNull label={t("common.unique_identifier")!}
                     value={model.identifiers[0] ?? ""}
-                    noValueText="Ignore duplicates"
+                    noValueText={t("common.ignore_duplicates")}
                     onChange={value => setModel({ ...model, identifiers: value === null ? [] : [value] })}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.Identifiers}/>
-                <InputNumber label={"Total"}
+                <InputNumber label={t("account.total")!}
                     allowNull={false}
                     value={model.total}
-                    disabled={model.isSplit || creating}
+                    disabled={model.isSplit || isCreating}
                     onChange={value => setModel({
                         ...model,
                         total: new Decimal(value),
                         lines: [{ ...model.lines[0], amount: new Decimal(value) }]
                     })}
                     errors={modelErrors?.Total}/>
-                <InputText label="Description"
+                <InputText label={t("common.description")!}
                     value={model.description}
                     onChange={e => setModel({ ...model, description: e.target.value })}
-                    disabled={creating}
+                    disabled={isCreating}
                     errors={modelErrors?.Description}/>
                 <div className="columns">
                     <div className="column is-6">
-                        <InputAccount label="Source"
+                        <InputAccount label={t("transaction.source")!}
                             value={model.sourceId}
-                            disabled={creating}
+                            disabled={isCreating}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             onChange={account => setModel({ ...model, sourceId: account?.id ?? null })}
                             errors={modelErrors?.SourceId} />
                     </div>
                     <div className="column is-6">
-                        <InputAccount label="Destination"
+                        <InputAccount label={t("transaction.destination")!}
                             value={model.destinationId}
-                            disabled={creating}
+                            disabled={isCreating}
                             allowNull={true}
                             allowCreateNewAccount={true}
                             onChange={account => setModel({ ...model, destinationId: account?.id ?? null })}
@@ -100,12 +108,12 @@ export default function PageCreateTransaction (): React.ReactElement {
                 </div>
                 {model.isSplit
                     ? <div>
-                        <label className="label">Category</label>
+                        <label className="label">{t("common.category")!}</label>
                         <TransactionCategory categories={model.lines.map(line => line.category)} />
                     </div>
-                    : <InputCategory label="Category"
+                    : <InputCategory label={t("common.category")!}
                         value={model.lines[0].category}
-                        disabled={creating}
+                        disabled={isCreating}
                         onChange={value => setModel({
                             ...model,
                             lines: [{ ...model.lines[0], category: value }]
@@ -113,42 +121,42 @@ export default function PageCreateTransaction (): React.ReactElement {
                         errors={modelErrors?.["Lines[0].Category"]} />}
             </Card>
 
-            <Card title="Transaction lines" isNarrow={true}>
+            <Card title={t("transaction.lines")!} isNarrow={true}>
                 {!model.isSplit
                     ? < InputButton onClick={splitTransaction}>
-                        Split transaction
+                        {t("transaction.action_split_transaction")!}
                     </InputButton>
                     : <>
                         {model.lines.map((line, i) => <div key={i} className="columns">
                             <div className="column is-3">
-                                <InputNumber label={i === 0 ? "Amount" : undefined}
+                                <InputNumber label={i === 0 ? t("transaction.amount")! : undefined}
                                     allowNull={false}
                                     value={line.amount}
                                     onChange={value => updateLine(i, {
                                         ...model.lines[i],
                                         amount: new Decimal(value)
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Amount`]} />
                             </div>
                             <div className="column">
-                                <InputText label={i === 0 ? "Description" : undefined}
+                                <InputText label={i === 0 ? t("common.description")! : undefined}
                                     value={line.description}
                                     onChange={e => updateLine(i, {
                                         ...model.lines[i],
                                         description: e.target.value
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Description`]}/>
                             </div>
                             <div className="column">
-                                <InputCategory label={i === 0 ? "Category" : undefined}
+                                <InputCategory label={i === 0 ? t("common.category")! : undefined}
                                     value={line.category}
                                     onChange={value => updateLine(i, {
                                         ...model.lines[i],
                                         category: value
                                     })}
-                                    disabled={creating}
+                                    disabled={isCreating}
                                     errors={modelErrors?.[`Lines[${i}].Category`]} />
                             </div>
                             {model.lines.length !== 0 &&
@@ -162,21 +170,39 @@ export default function PageCreateTransaction (): React.ReactElement {
                         </div>
                         )}
                         <div className="buttons">
-                            <InputButton onClick={() => addLine()}>Add line</InputButton>
+                            <InputButton onClick={() => addLine()}>
+                                {t("transaction.add_line")!}
+                            </InputButton>
                         </div>
                     </>}
             </Card>
 
-            <Card title="Actions" isNarrow={true}>
+            <Card title={t("metadata.custom_fields")!} isNarrow={true}>
+                <TransactionMetaEditor disabled={isCreating}
+                    value={model.metaData}
+                    onChange={value => setModel({ ...model, metaData: value })}
+                    errors={modelErrors} />
+            </Card>
+
+            <Card title={t("common.actions")!} isNarrow={true}>
                 <div className="buttons">
                     {actionOnComplete === "chose" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("stay"))}>Create and stay</InputButton>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("view"))}>Create and view transaction</InputButton>
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
+                            onClick={forget(async () => await create("stay"))}>
+                            {t("common.create_and_stay")!}
+                        </InputButton>
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
+                            onClick={forget(async () => await create("view"))}>
+                            {t("transaction.create_and_view")!}
+                        </InputButton>
                     </>}
                     {actionOnComplete === "back" && <>
-                        <InputButton className="is-primary" disabled={api === null} onClick={forget(async () => await create("back"))}>Create transaction</InputButton>
+                        <InputButton className="is-primary" disabled={api === null || isCreating}
+                            onClick={forget(async () => await create("back"))}>
+                            {t("transaction.create_transaction")!}
+                        </InputButton>
                     </>}
-                    {allowBack && <InputButton onClick={() => navigate(-1)}>Back</InputButton>}
+                    {allowBack && <InputButton onClick={() => navigate(-1)}>{t("common.back")!}</InputButton>}
                 </div>
             </Card>
         </div>
@@ -186,7 +212,7 @@ export default function PageCreateTransaction (): React.ReactElement {
         setModel({
             ...model,
             isSplit: true,
-            lines: [{ ...model.lines[0], description: model.description === "" ? "Transaction line" : model.description }]
+            lines: [{ ...model.lines[0], description: model.description === "" ? t("transaction.transaction_line") : model.description }]
         });
     }
 
@@ -207,7 +233,7 @@ export default function PageCreateTransaction (): React.ReactElement {
                 ...model.lines,
                 {
                     amount: new Decimal(0),
-                    description: "Transaction line",
+                    description: t("transaction.transaction_line"),
                     category: ""
                 }
             ]
@@ -232,19 +258,46 @@ export default function PageCreateTransaction (): React.ReactElement {
         setCreating(true);
         setCreatedTransaction(null);
         const result = await api.Transaction.create(model);
-        if (result.status === 200) {
-            if (action === "stay") {
-                setModel(defaultModel);
-                setCreating(false);
-                setCreatedTransaction(result.data);
-            } else if (action === "back") {
-                navigate(-1);
-            } else {
-                navigate(routes.transaction(result.data.id.toString()));
-            }
-        } else if (result.status === 400) {
+        if (result.status === 400) {
             setCreating(false);
             setModelErrors(result.errors);
+            return;
+        } else if (result.status !== 200) {
+            throw new Error("An error occurred");
+        }
+
+        // Loop through meta fields
+        if (model.metaData !== null) {
+            for (let i = 0; i < model.metaData.length; i++) {
+                const metaField = model.metaData[i];
+                if (typeof metaField.value !== "object" || metaField.value === null || !("file" in metaField.value) || metaField.value.file === undefined) {
+                    continue;
+                }
+
+                // An attachment was uploaded
+                const file = metaField.value.file;
+                const uploadResult = await api.Meta.uploadAttachment(metaField.metaId, "transaction", result.data.id, file);
+                if (uploadResult.status === 200) {
+                    const newMeta = result.data.metaData.find(x => x.metaId === metaField.metaId);
+                    if (newMeta !== undefined) {
+                        newMeta.value = uploadResult.data;
+                    }
+                }
+            }
+        }
+        await queryClient.invalidateQueries(["transaction", "list"]);
+        await queryClient.setQueryData(["transaction", result.data.id], result.data);
+
+        if (action === "stay") {
+            setModel({
+                ...defaultModel
+            });
+            setCreating(false);
+            setCreatedTransaction(result.data);
+        } else if (action === "back") {
+            navigate(-1);
+        } else {
+            navigate(routes.transaction(result.data.id.toString()));
         }
     }
 }

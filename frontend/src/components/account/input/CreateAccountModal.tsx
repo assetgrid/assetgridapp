@@ -1,8 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { Account, CreateAccount as CreateAccountModel } from "../../../models/account";
-import { userContext } from "../../App";
+import { User } from "../../../models/user";
+import { useUser } from "../../App";
 import Modal from "../../common/Modal";
 import InputModifyAccount from "./InputModifyAccount";
 
@@ -16,17 +19,19 @@ interface Props {
 export default function CreateAccountModal (props: Props): React.ReactElement {
     const [model, setModel] = React.useState(props.preset);
     const [isCreating, setIsCreating] = React.useState(false);
-    const { user, updateFavoriteAccounts } = React.useContext(userContext);
+    const user = useUser();
+    const queryClient = useQueryClient();
     const [errors, setErrors] = React.useState<{ [key: string]: string[] }>({});
     const api = useApi();
+    const { t } = useTranslation();
 
     return <Modal
         active={true}
-        title={"Create account"}
+        title={t("common.create_account")}
         close={() => props.close()}
         footer={<>
-            <button className="button is-success" onClick={forget(create)} disabled={isCreating || api === null}>Create account</button>
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            <button className="button is-success" onClick={forget(create)} disabled={isCreating || api === null}>{t("common.create_account")}</button>
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
         <InputModifyAccount
             errors={errors}
@@ -45,10 +50,14 @@ export default function CreateAccountModal (props: Props): React.ReactElement {
         setIsCreating(false);
         if (result.status === 200) {
             if (result.data.favorite) {
-                if (user !== "fetching") {
-                    updateFavoriteAccounts([...user.favoriteAccounts, result.data]);
+                if (user !== undefined) {
+                    queryClient.setQueryData<User>(["user"], old => ({
+                        ...old!,
+                        favoriteAccounts: [...old!.favoriteAccounts, result.data]
+                    }));
                 }
             }
+            await queryClient.invalidateQueries(["account", "list"]);
             props.created(result.data);
             if (props.closeOnChange !== undefined) {
                 props.close();

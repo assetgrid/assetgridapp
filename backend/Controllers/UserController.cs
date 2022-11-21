@@ -61,6 +61,7 @@ namespace assetgrid_backend.Controllers
 
             var user = await _context.Users
                 .Include(user => user.Preferences)
+                .AsSingleQuery()
                 .Where(user => user.Id == signedInUser.Id)
                 .Select(user => new
                 {
@@ -145,15 +146,23 @@ namespace assetgrid_backend.Controllers
                 if (preferences == null)
                 {
                     preferencesExist = false;
-                    preferences = new UserPreferences();
-                    preferences.UserId = user.Id;
+                    preferences = new UserPreferences
+                    {
+                        DateFormat = model.DateFormat,
+                        DateTimeFormat = model.DateTimeFormat,
+                        DecimalDigits = model.DecimalDigits,
+                        DecimalSeparator = model.DecimalSeparator,
+                        ThousandsSeparator = model.ThousandsSeparator,
+                        User = user,
+                        UserId = user.Id,
+                    };
                 }
 
-                preferences.ThousandsSeparator = model.ThousandsSeparator;
-                preferences.DecimalSeparator = model.DecimalSeparator;
-                preferences.DecimalDigits = model.DecimalDigits;
                 preferences.DateFormat = model.DateFormat;
                 preferences.DateTimeFormat = model.DateTimeFormat;
+                preferences.DecimalDigits = model.DecimalDigits;
+                preferences.DecimalSeparator = model.DecimalSeparator;
+                preferences.ThousandsSeparator = model.ThousandsSeparator;
             
                 if (!preferencesExist)
                 {
@@ -280,6 +289,7 @@ namespace assetgrid_backend.Controllers
                     ImportProfile = profile,
                     ProfileName = name,
                     UserId = user.Id,
+                    User = user,
                     Version = 1
                 });
                 await _context.SaveChangesAsync();

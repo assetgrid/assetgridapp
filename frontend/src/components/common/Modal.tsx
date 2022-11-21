@@ -1,6 +1,5 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { modalContainerContext } from "../App";
 
 export interface Props {
     active: boolean
@@ -11,10 +10,6 @@ export interface Props {
 }
 
 export default function Modal (props: Props): React.ReactElement {
-    const { container } = React.useContext(modalContainerContext);
-
-    if (container == null) { return <></>; }
-
     return createPortal(<div className={"modal" + (props.active ? " is-active" : "")}>
         <div className="modal-background"></div>
         <div className="modal-card">
@@ -29,5 +24,5 @@ export default function Modal (props: Props): React.ReactElement {
                 {props.footer}
             </footer>}
         </div>
-    </div>, container);
+    </div>, document.body);
 }

@@ -4,10 +4,10 @@ import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { DateTime } from "luxon";
 import { Calendar } from "react-date-range";
 import { formatDateTimeWithUser } from "../../lib/Utils";
-import { userContext } from "../App";
 import InputNumber from "./InputNumber";
 import Decimal from "decimal.js";
 import DropdownContent from "../common/DropdownContent";
+import { useUser } from "../App";
 
 export interface Props {
     label?: string
@@ -20,7 +20,7 @@ export interface Props {
 
 export default function InputDateTime (props: Props): React.ReactElement {
     const [open, setOpen] = React.useState(false);
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const isError = props.errors !== undefined && props.errors.length > 0;
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 

@@ -1,11 +1,14 @@
+/* eslint-disable semi */
+/* eslint-disable quotes */
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: "./src/index.tsx",
     output: {
         filename: "bundle.js",
-        path: __dirname + "/dist",
+        path: path.join(__dirname, "dist")
     },
 
     mode: "development",
@@ -15,17 +18,24 @@ module.exports = {
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"],
+        extensions: [".ts", ".tsx", ".js", ".json"]
     },
-    plugins: [new MiniCssExtractPlugin()],
+    plugins: [
+        new MiniCssExtractPlugin(),
+        new CopyPlugin({
+            patterns: [
+                { from: "locales", to: "locales" }
+            ]
+        })
+    ],
 
     devServer: {
-        allowedHosts: 'all',
+        allowedHosts: "all",
         devMiddleware: {
-            publicPath: '/dist/',
+            publicPath: "/dist/"
         },
         static: {
-            directory: path.join(__dirname, 'dist'),
+            directory: path.join(__dirname, "dist")
         },
         historyApiFallback: true,
         // watchFiles: "/dist",
@@ -38,15 +48,12 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 use: [{
-                    loader: 'ts-loader',
-                    options: {
-                        configFile: "tsconfig.json",
-                    },
+                    loader: process.env.babel === "true" ? "babel-loader" : "ts-loader"
                 }],
-                exclude: /node_modules/,
+                exclude: /node_modules/
             },
 
-            /*// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+            /* // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             {
                 enforce: "pre",
                 test: /\.js$/,
@@ -55,7 +62,7 @@ module.exports = {
                     // These modules have broken source maps
                     /react-rte/,
                 ],
-            },*/
+            }, */
 
             // Compile scss files
             {
@@ -66,8 +73,8 @@ module.exports = {
                     // Translates CSS into CommonJS
                     "css-loader",
                     // Compiles Sass to CSS
-                    "sass-loader",
-                ],
+                    "sass-loader"
+                ]
             },
 
             // Load plain css
@@ -75,12 +82,12 @@ module.exports = {
                 test: /\.css$/,
                 use: [
                     {
-                        loader: "style-loader",
+                        loader: "style-loader"
                     },
                     {
-                        loader: "css-loader",
-                    },
-                ],
+                        loader: "css-loader"
+                    }
+                ]
             },
 
             // Load files that should just be copied over
@@ -88,14 +95,20 @@ module.exports = {
                 test: /\.(png|jpe?g|gif|svg|html)$/i,
                 use: [
                     {
-                    loader: 'file-loader',
+                        loader: "file-loader",
                         options: {
-                            name: '[name].[ext]',
-                        },
-                    },
-                ],
+                            name: "[name].[ext]"
+                        }
+                    }
+                ]
             },
-        ],
+
+            // Load json files
+            {
+                test: /\.json$/,
+                type: "json"
+            }
+        ]
     },
 
     // When importing a module whose path matches one of the following, just
@@ -103,7 +116,7 @@ module.exports = {
     // This is important because it allows us to avoid bundling all of our
     // dependencies, which allows browsers to cache those libraries between builds.
     externals: {
-        "react": "React",
-        "react-dom": "ReactDOM",
-    },
+        react: "React",
+        "react-dom": "ReactDOM"
+    }
 };

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Api, useApi } from "../../lib/ApiClient";
+import { useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../models/search";
 import {
@@ -12,9 +12,13 @@ import {
     Tooltip,
     Legend,
     BarController,
-    BarElement
+    BarElement,
+    LegendElement,
+    ChartTypeRegistry
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
     LinearScale,
@@ -39,17 +43,19 @@ interface ChartDataType { category: string, revenue: number, expenses: number, t
 export default React.memo(AccountCategoryChart, (a, b) => a.id === b.id && a.period === b.period && a.type === b.type);
 
 function AccountCategoryChart (props: Props): React.ReactElement {
-    const [data, setData] = React.useState<DataType | "fetching">("fetching");
     const api = useApi();
+    const { data, isSuccess } = useQuery({
+        queryKey: ["account", props.id, "transactions", "category-summary", PeriodFunctions.serialize(props.period)],
+        queryFn: updateData,
+        keepPreviousData: true
+    });
+    const { t } = useTranslation();
 
-    React.useEffect(() => {
-        if (api !== null) {
-            void updateData(api, props.id, props.period, setData);
-        }
-    }, [api, props.id, props.period]);
-
-    if (data === "fetching") {
-        return <>Please wait&hellip;</>;
+    if (data === undefined) {
+        return <>{t("common.please_wait")}</>;
+    }
+    if (!isSuccess) {
+        return <>{t("common.error_occured")}</>;
     }
 
     const mergedData: Map<string, ChartDataType> = new Map();
@@ -84,28 +90,28 @@ function AccountCategoryChart (props: Props): React.ReactElement {
                 <Chart type={"line"} height="400px" data={{
                     labels: sortedData.map(point => point.category),
                     datasets: [{
-                        label: "Revenue",
+                        label: t("account.revenue")!,
                         data: sortedData.map(point => point.revenue),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#4db09b"
                     },
                     {
-                        label: "Expenses",
+                        label: t("account.expenses")!,
                         data: sortedData.map(point => point.expenses > 0 ? -point.expenses : point.expenses),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#ff6b6b"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: sortedData.map(point => point.transferRevenue),
                         type: "bar",
                         borderColor: "transparent",
                         backgroundColor: "#487eb0"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: sortedData.map(point => point.transferExpenses > 0 ? -point.transferExpenses : point.transferExpenses),
                         type: "bar",
                         borderColor: "transparent",
@@ -142,7 +148,7 @@ function AccountCategoryChart (props: Props): React.ReactElement {
                                     });
                                     ci.update();
                                 } else {
-                                    ChartJS.defaults.plugins.legend.onClick.bind(this as any)(e, legendItem, legend);
+                                    ChartJS.defaults.plugins.legend.onClick.bind(this as LegendElement<keyof ChartTypeRegistry>)(e, legendItem, legend);
                                 }
                             }
                         }
@@ -152,38 +158,38 @@ function AccountCategoryChart (props: Props): React.ReactElement {
             </div>
         </div>
     </>;
-}
 
-async function updateData (api: Api, id: number, period: Period, setData: React.Dispatch<DataType | "fetching">): Promise<void> {
-    const [start, end] = PeriodFunctions.getRange(period);
-    const query: SearchGroup = {
-        type: SearchGroupType.And,
-        children: [{
-            type: SearchGroupType.Query,
-            query: {
-                column: "DateTime",
-                value: start.toISO(),
-                operator: SearchOperator.GreaterThanOrEqual,
-                not: false
-            }
-        }, {
-            type: SearchGroupType.Query,
-            query: {
-                column: "DateTime",
-                value: end.toISO(),
-                operator: SearchOperator.GreaterThan,
-                not: true
-            }
-        }]
-    };
+    async function updateData (): Promise<DataType> {
+        const [start, end] = PeriodFunctions.getRange(props.period);
+        const query: SearchGroup = {
+            type: SearchGroupType.And,
+            children: [{
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: start.toISO(),
+                    operator: SearchOperator.GreaterThanOrEqual,
+                    not: false,
+                    metaData: false
+                }
+            }, {
+                type: SearchGroupType.Query,
+                query: {
+                    column: "DateTime",
+                    value: end.toISO(),
+                    operator: SearchOperator.GreaterThan,
+                    not: true,
+                    metaData: false
+                }
+            }]
+        };
 
-    const result = await api.Account.getCategorySummary(id, query);
-    if (result.status === 200) {
-        setData(result.data.map(obj => ({
-            category: obj.category !== "" ? obj.category : "No category",
+        const result = await api.Account.getCategorySummary(props.id, query);
+        return result.map(obj => ({
+            category: obj.category !== "" ? obj.category : t("common.no_category"),
             transfer: obj.transfer,
             expenses: obj.expenses.toNumber(),
             revenue: obj.revenue.toNumber()
-        })));
+        }));
     }
 }

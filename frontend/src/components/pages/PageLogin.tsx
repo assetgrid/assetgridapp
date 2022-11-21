@@ -1,19 +1,21 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import * as Api from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
 import { forget } from "../../lib/Utils";
-import { userContext } from "../App";
+import { User } from "../../models/user";
 import Card from "../common/Card";
-import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 
 export default function PageLogin (): React.ReactElement {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [state, setState] = React.useState<"signing-in" | "waiting" | "error">("waiting");
-    const { setUser } = React.useContext(userContext);
     const navigate = useNavigate();
+    const { t } = useTranslation();
+    const queryClient = useQueryClient();
 
     React.useEffect(() => {
         Api.anyUsers().then(result => {
@@ -24,24 +26,27 @@ export default function PageLogin (): React.ReactElement {
     }, []);
 
     return <section className="page-login">
-        <Card title="Sign in to Assetgrid" isNarrow={true}>
-            <InputText
-                value={email}
-                label="Email"
-                disabled={state === "signing-in"}
-                onChange={e => setEmail(e.target.value)} errors={state === "error"} />
-            <InputText
-                value={password}
-                password={true}
-                label="Password"
-                disabled={state === "signing-in"}
-                onChange={e => setPassword(e.target.value)} errors={state === "error" ? ["Invalid username or password"] : undefined} />
-            <InputButton
-                className="is-primary"
-                disabled={state === "signing-in"}
-                onClick={forget(signIn)}>
-                Sign in
-            </InputButton>
+        <Card title={t("login.sign_in_to_assetgrid")!} isNarrow={true}>
+            <form>
+                <InputText
+                    value={email}
+                    label={t("user.email")!}
+                    disabled={state === "signing-in"}
+                    onChange={e => setEmail(e.target.value)} errors={state === "error"} />
+                <InputText
+                    value={password}
+                    password={true}
+                    label={t("user.password")!}
+                    disabled={state === "signing-in"}
+                    onChange={e => setPassword(e.target.value)} errors={state === "error" ? [t("user.invalid_username_or_password")] : undefined} />
+                <input
+                    type="submit"
+                    className="button is-primary"
+                    disabled={state === "signing-in"}
+                    onClick={forget(signIn)!}
+                    value={t("user.sign_in")!}
+                />
+            </form>
         </Card>
     </section>;
 
@@ -51,7 +56,7 @@ export default function PageLogin (): React.ReactElement {
         setPassword("");
         if (result.status === 200) {
             setState("waiting");
-            setUser(result.data);
+            queryClient.setQueryData<User>(["user"], old => result.data);
             navigate(routes.dashboard());
         } else {
             setState("error");

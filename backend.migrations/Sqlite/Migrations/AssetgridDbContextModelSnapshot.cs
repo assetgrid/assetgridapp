@@ -121,6 +121,253 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.ToTable("UserTransactionAutomations");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.Attachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Attachments");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaAccount<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ValueId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.HasIndex("ValueId");
+
+                    b.ToTable("TransactionMetaAccount");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaAttachment<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ValueId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.HasIndex("ValueId");
+
+                    b.ToTable("TransactionMetaAttachment");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaBoolean<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Value")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.ToTable("TransactionMetaBoolean");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaField", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ValueType")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MetaFields");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaNumber<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Value")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.ToTable("TransactionMetaNumber");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTextLine<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.ToTable("TransactionMetaTextLine");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTextLong<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.ToTable("TransactionMetaTextLong");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTransaction<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ObjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ValueId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("ObjectId");
+
+                    b.HasIndex("ValueId");
+
+                    b.ToTable("TransactionMetaTransaction");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.UserMetaField", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FieldId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMetaFields");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -371,6 +618,182 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaAccount<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaAccount")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaAccountValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Account", "Value")
+                        .WithMany()
+                        .HasForeignKey("ValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+
+                    b.Navigation("Value");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaAttachment<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaAttachment")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaAttachmentValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.models.MetaFields.Attachment", "Value")
+                        .WithMany()
+                        .HasForeignKey("ValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+
+                    b.Navigation("Value");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaBoolean<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaBoolean")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaBooleanValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaNumber<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaNumber")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaNumberValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTextLine<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaTextLine")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaTextLineValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTextLong<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaTextLong")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaTextLongValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaTransaction<assetgrid_backend.Models.Transaction>", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("TransactionMetaTransaction")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Object")
+                        .WithMany("MetaTransactionValues")
+                        .HasForeignKey("ObjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.Transaction", "Value")
+                        .WithMany()
+                        .HasForeignKey("ValueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("Object");
+
+                    b.Navigation("Value");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.UserMetaField", b =>
+                {
+                    b.HasOne("assetgrid_backend.models.MetaFields.MetaField", "Field")
+                        .WithMany("Users")
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("assetgrid_backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Field");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
                     b.HasOne("assetgrid_backend.Models.Account", "DestinationAccount")
@@ -456,9 +879,42 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaField", b =>
+                {
+                    b.Navigation("TransactionMetaAccount");
+
+                    b.Navigation("TransactionMetaAttachment");
+
+                    b.Navigation("TransactionMetaBoolean");
+
+                    b.Navigation("TransactionMetaNumber");
+
+                    b.Navigation("TransactionMetaTextLine");
+
+                    b.Navigation("TransactionMetaTextLong");
+
+                    b.Navigation("TransactionMetaTransaction");
+
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("assetgrid_backend.Models.Transaction", b =>
                 {
                     b.Navigation("Identifiers");
+
+                    b.Navigation("MetaAccountValues");
+
+                    b.Navigation("MetaAttachmentValues");
+
+                    b.Navigation("MetaBooleanValues");
+
+                    b.Navigation("MetaNumberValues");
+
+                    b.Navigation("MetaTextLineValues");
+
+                    b.Navigation("MetaTextLongValues");
+
+                    b.Navigation("MetaTransactionValues");
 
                     b.Navigation("TransactionLines");
                 });
@@ -469,8 +925,7 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
 
                     b.Navigation("CsvImportProfiles");
 
-                    b.Navigation("Preferences")
-                        .IsRequired();
+                    b.Navigation("Preferences");
                 });
 #pragma warning restore 612, 618
         }

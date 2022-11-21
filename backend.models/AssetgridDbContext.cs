@@ -1,8 +1,12 @@
 ﻿using assetgrid_backend.models.Automation;
+using assetgrid_backend.models.MetaFields;
 using assetgrid_backend.models.Search;
 using assetgrid_backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
 using System.Text.Json;
 
 namespace assetgrid_backend.Models
@@ -66,7 +70,7 @@ namespace assetgrid_backend.Models
                     }
                 );
                 entity.Property(e => e.Query)
-                    .HasConversion(queryValueConverter)
+                    .HasConversion(queryValueConverter, new ValueComparer<SearchGroup>((a, b) => a != null ? a.Equals(b) : a == b, x => x.GetHashCode(), x => x))
                     .HasColumnType("json");
 
                 var actionsValueConverter = new ValueConverter<List<TransactionAutomationAction>, string>(
@@ -74,7 +78,10 @@ namespace assetgrid_backend.Models
                     v => JsonSerializer.Deserialize<List<TransactionAutomationAction>>(v, (JsonSerializerOptions?)null) ?? new List<TransactionAutomationAction>()
                 );
                 entity.Property(e => e.Actions)
-                    .HasConversion(actionsValueConverter)
+                    .HasConversion(actionsValueConverter, new ValueComparer<List<TransactionAutomationAction>>(
+                        (a, b) => (a == null && b == null) || (a != null && b != null && a.SequenceEqual(b)),
+                        x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        x => x.ToList()))
                     .HasColumnType("json");
             });
 
@@ -88,6 +95,28 @@ namespace assetgrid_backend.Models
                     .HasConversion(valueConverter)
                     .HasColumnType("json");
             });
+
+            #region Transaction metadata
+
+            builder.Entity<Transaction>(entity =>
+            {
+                entity.HasMany(x => x.MetaAccountValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaAttachmentValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaBooleanValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTextLineValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTextLongValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaNumberValues)
+                    .WithOne(x => x.Object);
+                entity.HasMany(x => x.MetaTransactionValues)
+                    .WithOne(x => x.Object);
+            });
+
+            #endregion
         }
 
         public DbSet<User> Users { get; set; } = null!;
@@ -101,5 +130,22 @@ namespace assetgrid_backend.Models
         public DbSet<UserCsvImportProfile> UserCsvImportProfiles { get; set; } = null!;
         public DbSet<TransactionAutomation> TransactionAutomations { get; set; } = null!;
         public DbSet<UserTransactionAutomation> UserTransactionAutomations { get; set; } = null!;
+        public DbSet<MetaField> MetaFields { get; set; } = null!;
+        public DbSet<UserMetaField> UserMetaFields { get; set; } = null!;
+
+        #region Meta field value tables
+        public DbSet<Attachment> Attachments { get; set; } = null!;
+
+        #region Transaction
+        public DbSet<MetaTextLine<Transaction>> TransactionMetaTextLine { get; set; } = null!;
+        public DbSet<MetaTextLong<Transaction>> TransactionMetaTextLong { get; set; } = null!;
+        public DbSet<MetaTransaction<Transaction>> TransactionMetaTransaction { get; set; } = null!;
+        public DbSet<MetaAccount<Transaction>> TransactionMetaAccount { get; set; } = null!;
+        public DbSet<MetaAttachment<Transaction>> TransactionMetaAttachment { get; set; } = null!;
+        public DbSet<MetaBoolean<Transaction>> TransactionMetaBoolean { get; set; } = null!;
+        public DbSet<MetaNumber<Transaction>> TransactionMetaNumber { get; set; } = null!;
+        #endregion
+
+        #endregion
     }
 }

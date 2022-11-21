@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { forget, formatDateTimeWithUser } from "../../../lib/Utils";
 import { Account } from "../../../models/account";
@@ -8,7 +9,7 @@ import { CsvImportProfile } from "../../../models/csvImportProfile";
 import { SearchGroupType, SearchOperator } from "../../../models/search";
 import { ModifyTransaction, Transaction } from "../../../models/transaction";
 import AccountLink from "../../account/AccountLink";
-import { userContext } from "../../App";
+import { useUser } from "../../App";
 import Card from "../../common/Card";
 import Modal from "../../common/Modal";
 import Table from "../../common/Table";
@@ -37,50 +38,63 @@ export function Import (props: Props): React.ReactElement {
     const [page, setPage] = React.useState(1);
     const [isSavingProfile, setIsSavingProfile] = React.useState(false);
     const api = useApi();
-
-    const { user } = React.useContext(userContext);
+    const { t } = useTranslation();
+    const user = useUser();
 
     switch (state) {
         case "waiting":
             return <Card isNarrow={true} title="Begin import">
                 <div className="buttons mt-3">
-                    <InputButton className="is-primary" disabled={api === null} onClick={forget(importTransactions)}>Import Transactions</InputButton>
-                    <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
-                    <InputButton onClick={() => props.goToPrevious()}>Back</InputButton>
+                    <InputButton className="is-primary"
+                        disabled={api === null}
+                        onClick={forget(importTransactions)}>
+                        {t("import.import_transactions")}
+                    </InputButton>
+                    <InputButton className="is-primary"
+                        disabled={api === null}
+                        onClick={() => setIsSavingProfile(true)}>
+                        {t("import.save_import_profile")}
+                    </InputButton>
+                    <InputButton onClick={() => props.goToPrevious()}>
+                        {t("common.back")}
+                    </InputButton>
                 </div>
                 <SaveProfileModal active={isSavingProfile} close={() => setIsSavingProfile(false)} profile={props.profile} />
             </Card>;
         case "importing":
-            return <Card isNarrow={true} title="Importing&hellip;">
-                <p>{progress} of {props.transactions.length} transactions have been imported.</p>
-                <p>Please wait while the import is completed</p>
+            return <Card isNarrow={true} title={t("import.importing")!}>
+                <p>{t("import.transaction_import_progress", { completed: progress, count: props.transactions.length })}</p>
+                <p>{t("import.please_wait_until_import_comlpete")}</p>
             </Card>;
         case "imported":
             return <>
-                <Card title="Import complete" isNarrow={true}>
-                    Your transactions have been imported
+                <Card title={t("import.import_completed")!} isNarrow={true}>
+                    {t("import.transactions_have_been_completed")}
                     <div className="buttons mt-3">
-                        <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>Save import profile</InputButton>
+                        <InputButton className="is-primary" disabled={api === null} onClick={() => setIsSavingProfile(true)}>
+                            {t("import.save_import_profile")}
+                        </InputButton>
                     </div>
                 </Card>
-                <Card title="Succeeded" isNarrow={false}>
-                    <p className="mb-3">The following transactions were successfully created:</p>
+                <Card title={t("import.succeeded")!} isNarrow={false}>
+                    <p className="mb-3">{t("import.following_successfully_created")!}</p>
                     <TransactionList draw={0} allowEditing={false} allowLinks={false} query={{
                         type: SearchGroupType.Query,
                         query: {
                             column: "Id",
                             not: false,
                             operator: SearchOperator.In,
-                            value: succeeded.map(x => x.id)
+                            value: succeeded.map(x => x.id),
+                            metaData: false
                         }
                     }} />
                 </Card>
-                <Card title="Duplicate" isNarrow={false}>
-                    <p className="mb-3">The following transactions could not be created due to duplicate identifiers:</p>
+                <Card title={t("import.duplicate")!} isNarrow={false}>
+                    <p className="mb-3">{t("import.following_failed_due_to_duplicates")!}</p>
                     {transactionTable(duplicate)}
                 </Card>
-                <Card title="Failed" isNarrow={false}>
-                    <p className="mb-3">The following transactions could not be created due to errors:</p>
+                <Card title={t("import.failed")!} isNarrow={false}>
+                    <p className="mb-3">{t("import.following_failed_due_to_errors")!}</p>
                     {transactionTable(failed)}
                 </Card>
                 <SaveProfileModal active={isSavingProfile} close={() => setIsSavingProfile(false)} profile={props.profile} />
@@ -90,7 +104,7 @@ export function Import (props: Props): React.ReactElement {
     function transactionTable (transactions: ModifyTransaction[]): React.ReactElement {
         return <Table pageSize={20}
             renderItem={(transaction, i) => <tr key={i}>
-                <td>{transaction.identifiers[0] ?? "None"}</td>
+                <td>{transaction.identifiers[0] ?? t("common.none")}</td>
                 <td>{formatDateTimeWithUser(transaction.dateTime, user)}</td>
                 <td>{transaction.description}</td>
                 <td>{transaction.sourceId !== null && <AccountLink account={props.accounts.find(account => account.id === transaction.sourceId)!} targetBlank={true} />}</td>
@@ -98,14 +112,12 @@ export function Import (props: Props): React.ReactElement {
             </tr>}
             page={page}
             goToPage={setPage}
-            type="sync"
-            renderType="table"
             headings={<tr>
-                <th>Identifier</th>
-                <th>Created</th>
-                <th>Description</th>
-                <th>Source</th>
-                <th>Destination</th>
+                <th>{t("common.identifier")}</th>
+                <th>{t("common.timestamp")}</th>
+                <th>{t("common.description")}</th>
+                <th>{t("transaction.source")}</th>
+                <th>{t("transaction.destination")}</th>
             </tr>} items={transactions} />;
     }
 
@@ -128,7 +140,8 @@ export function Import (props: Props): React.ReactElement {
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
             total: transaction.amount === "invalid" ? new Decimal(0) : transaction.amount,
             isSplit: false,
-            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }],
+            metaData: null
         }));
         let progress = invalidTransactions.length;
         let succeeded: Transaction[] = [];
@@ -148,7 +161,8 @@ export function Import (props: Props): React.ReactElement {
             identifiers: transaction.identifier !== null ? [transaction.identifier] : [],
             total: transaction.amount as Decimal, // We know it's not invalid as we filter those out earlier
             isSplit: false,
-            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }]
+            lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }],
+            metaData: null
         }));
 
         while (progress - invalidTransactions.length < createModels.length - 1) {
@@ -183,23 +197,24 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
     const [isCreating, setIsSaving] = React.useState(false);
     const api = useApi();
     const [hasSaved, setHasSaved] = React.useState(false);
+    const { t } = useTranslation();
 
     return <Modal
         active={props.active}
-        title={"Save import profile"}
+        title={t("import.save_import_profile")}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={forget(saveProfile)} disabled={isCreating || api === null} className="is-primary">Save profile</InputButton>}
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            {<InputButton onClick={forget(saveProfile)} disabled={isCreating || api === null} className="is-primary">{t("import.save_import_profile")}</InputButton>}
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
         <div style={{ minHeight: "20rem" }}>
             {hasSaved && <article className="message is-link">
                 <div className="message-body">
-                    Your changes have been saved
+                    {t("common.changes_have_been_saved")}
                 </div>
             </article>}
             <InputImportProfile
-                label="Profile name"
+                label={t("import.import_profile_name")!}
                 value={name}
                 onChange={value => setName(value)}
                 disabled={isCreating}

@@ -4,14 +4,14 @@ import { DateTime } from "luxon";
 import { Account as AccountModel, CategorySummaryItem, CreateAccount, GetMovementAllResponse, GetMovementResponse, MovementItem, TimeResolution } from "../models/account";
 import { Preferences as PreferencesModel } from "../models/preferences";
 import { User as UserModel } from "../models/user";
-import { SearchGroup, SearchRequest, SearchResponse, serializeTransactionQuery } from "../models/search";
-import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine } from "../models/transaction";
-import { useContext } from "react";
-import { userContext } from "../components/App";
+import { SearchGroup, SearchRequest, SearchResponse } from "../models/search";
+import { Transaction as TransactionModel, ModifyTransaction, TransactionListResponse, TransactionLine, deserializeTransaction } from "../models/transaction";
 import * as React from "react";
-import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, Unauthorized, UnauthorizedResult } from "../models/api";
+import { BadRequest, Forbid, ForbidResult, NotFound, NotFoundResult, Ok, UnauthorizedResult } from "../models/api";
 import { CsvImportProfile } from "../models/csvImportProfile";
 import { serializeTransactionAutomation, TransactionAutomation, TransactionAutomationSummary } from "../models/automation/transactionAutomation";
+import { CreateMetaField, MetaField, serializeSetMetaFieldValue } from "../models/meta";
+import { useQuery } from "@tanstack/react-query";
 
 let rootUrl = "https://localhost:7262";
 if (process.env.NODE_ENV === "production") {
@@ -25,26 +25,26 @@ DateTime.prototype.toJSON = function () {
 /**
  * Get the currently signed in user
  */
-export async function getUser (): Promise<Ok<UserModel> | Unauthorized> {
+export async function getUser (): Promise<UserModel> {
     const token = localStorage.getItem("token");
-    return await new Promise<Ok<UserModel> | Unauthorized>((resolve, reject) => {
+    return await new Promise<UserModel>((resolve, reject) => {
         if (token === null) {
-            resolve(UnauthorizedResult);
-        } else {
-            axios.get<UserModel>(rootUrl + "/api/v1/user", {
-                headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: { ...result.data, token } });
-                }).catch((e: AxiosError) => {
-                    if (e.response?.status === 401) {
-                        resolve(UnauthorizedResult);
-                        return;
-                    }
-                    console.log(e);
-                    reject(e);
-                });
+            reject(UnauthorizedResult);
+            return;
         }
+
+        axios.get<UserModel>(rootUrl + "/api/v1/user", {
+            headers: { authorization: "Bearer: " + token }
+        }).then(result => {
+            resolve({ ...result.data, token });
+        }).catch((e: AxiosError) => {
+            if (e.response?.status === 401) {
+                reject(UnauthorizedResult);
+                return;
+            }
+            console.log(e);
+            reject(e);
+        });
     });
 }
 
@@ -112,15 +112,15 @@ const User = (token: string) => ({
      * @param preferences New preferences
      * @returns Updated preferences
      */
-    updatePreferences: async function (preferences: PreferencesModel): Promise<Ok<PreferencesModel> | BadRequest> {
-        return await new Promise<Ok<PreferencesModel> | BadRequest>((resolve, reject) => {
+    updatePreferences: async function (preferences: PreferencesModel): Promise<PreferencesModel> {
+        return await new Promise<PreferencesModel>((resolve, reject) => {
             axios.put<PreferencesModel>(rootUrl + "/api/v1/user/preferences", preferences, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
-                resolve({ status: 200, data: result.data });
+                resolve(result.data);
             }).catch((e: AxiosError) => {
                 if (e.response?.status === 400) {
-                    resolve(e.response.data as BadRequest);
+                    reject(e.response.data);
                     return;
                 }
                 console.log(e);
@@ -277,8 +277,8 @@ const Account = (token: string) => ({
      * @param id Account id
      * @returns The account with the specified id
      */
-    get: async function (id: number): Promise<Ok<AccountModel> | NotFound | BadRequest> {
-        return await new Promise<Ok<AccountModel> | NotFound | BadRequest>((resolve, reject) => {
+    get: async function (id: number): Promise<AccountModel | null> {
+        return await new Promise<AccountModel | null>((resolve, reject) => {
             axios.get<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, {
                 headers: { authorization: "Bearer: " + token }
             })
@@ -286,15 +286,15 @@ const Account = (token: string) => ({
                     const data = result.data as AccountModel & { balanceString?: string };
                     data.balance = new Decimal(data.balanceString!).div(new Decimal(10000));
                     delete data.balanceString;
-                    resolve({ status: 200, data: result.data });
+                    resolve(result.data);
                 })
                 .catch((e: AxiosError) => {
                     switch (e.response?.status) {
                         case 400:
-                            resolve(e.response.data as BadRequest);
+                            reject(e.response.data);
                             break;
                         case 404:
-                            resolve(NotFoundResult);
+                            resolve(null);
                             break;
                     }
                     console.log(e);
@@ -309,29 +309,27 @@ const Account = (token: string) => ({
      * @param account The new account
      * @returns The updated account
      */
-    update: async function (id: number, updatedAccount: CreateAccount): Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest> {
-        return await new Promise<Ok<AccountModel> | NotFound | Forbid | BadRequest>((resolve, reject) => {
-            axios.put<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, updatedAccount, {
+    update: async function (id: number, updatedAccount: CreateAccount): Promise<AccountModel> {
+        return await new Promise<AccountModel>((resolve, reject) => {
+            axios.put<AccountModel>(`${rootUrl}/api/v1/account/${Number(id)}`, { ...updatedAccount, balance: 0 }, {
                 headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: result.data });
-                })
-                .catch((e: AxiosError) => {
-                    switch (e.response?.status) {
-                        case 400:
-                            resolve(e.response.data as BadRequest);
-                            break;
-                        case 403:
-                            resolve(ForbidResult);
-                            break;
-                        case 404:
-                            resolve(NotFoundResult);
-                            break;
-                    }
-                    console.log(e);
-                    reject(e);
-                });
+            }).then(result => {
+                resolve(result.data);
+            }).catch((e: AxiosError) => {
+                switch (e.response?.status) {
+                    case 400:
+                        reject(e.response.data);
+                        break;
+                    case 403:
+                        reject(ForbidResult);
+                        break;
+                    case 404:
+                        reject(NotFoundResult);
+                        break;
+                }
+                console.log(e);
+                reject(e);
+            });
         });
     },
 
@@ -456,21 +454,18 @@ const Account = (token: string) => ({
      * @param query A query to subset the transactions to include in the summary
      * @returns A dictionary with the category as the key and the revenue and expenses the value in a tuple in that order
      */
-    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<Ok<CategorySummaryItem[]> | NotFound> {
-        return await new Promise<Ok<CategorySummaryItem[]> | NotFound>((resolve, reject) => {
+    getCategorySummary: async function (accountId: number, query: SearchGroup): Promise<CategorySummaryItem[]> {
+        return await new Promise<CategorySummaryItem[]>((resolve, reject) => {
             axios.post<CategorySummaryItem[]>(`${rootUrl}/api/v1/account/${accountId}/categorysummary`, query, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({
-                status: 200,
-                data: result.data.map(obj => ({
-                    category: obj.category,
-                    transfer: obj.transfer,
-                    revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
-                    expenses: new Decimal(obj.expenses).div(new Decimal(10000))
-                }))
-            })).catch((error: AxiosError) => {
+            }).then(result => resolve(result.data.map(obj => ({
+                category: obj.category,
+                transfer: obj.transfer,
+                revenue: new Decimal(obj.revenue).div(new Decimal(10000)),
+                expenses: new Decimal(obj.expenses).div(new Decimal(10000))
+            })))).catch((error: AxiosError) => {
                 if (error.response?.status === 404) {
-                    resolve(NotFoundResult);
+                    reject(NotFoundResult);
                     return;
                 }
                 console.log(error);
@@ -487,8 +482,8 @@ const Account = (token: string) => ({
      * @param resolution The time resolution at which to aggregate the results
      * @returns An object containing information about account movements
      */
-    getMovements: async function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<Ok<GetMovementResponse> | NotFound> {
-        return await new Promise<Ok<GetMovementResponse> | NotFound>((resolve, reject) => {
+    getMovements: async function (accountId: number, from: DateTime, to: DateTime, resolution: TimeResolution): Promise<GetMovementResponse> {
+        return await new Promise<GetMovementResponse>((resolve, reject) => {
             axios.post<GetMovementResponse>(`${rootUrl}/api/v1/account/${accountId}/movements`, {
                 from,
                 to,
@@ -496,23 +491,20 @@ const Account = (token: string) => ({
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve({
-                status: 200,
-                data: {
-                    ...result.data,
-                    initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
-                    items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
-                        .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
-                            ...item,
-                            dateTime: DateTime.fromISO(item.dateTime as any as string),
-                            revenue: new Decimal(revenueString).div(new Decimal(10000)),
-                            transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
-                            expenses: new Decimal(expensesString).div(new Decimal(10000)),
-                            transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
-                        }))
-                }
+                ...result.data,
+                initialBalance: new Decimal((result.data as any).initialBalanceString).div(new Decimal(10000)),
+                items: (result.data.items as Array<MovementItem & { revenueString: string, expensesString: string, transferRevenueString: string, transferExpensesString: string }>)
+                    .map(({ revenueString, expensesString, transferExpensesString, transferRevenueString, ...item }) => ({
+                        ...item,
+                        dateTime: DateTime.fromISO(item.dateTime as any as string),
+                        revenue: new Decimal(revenueString).div(new Decimal(10000)),
+                        transferRevenue: new Decimal(transferRevenueString).div(new Decimal(10000)),
+                        expenses: new Decimal(expensesString).div(new Decimal(10000)),
+                        transferExpenses: new Decimal(transferExpensesString).div(new Decimal(10000))
+                    }))
             })).catch((error: AxiosError) => {
                 if (error.response?.status === 404) {
-                    resolve(NotFoundResult);
+                    reject(NotFoundResult);
                     return;
                 }
                 console.log(error);
@@ -571,22 +563,20 @@ const Transaction = (token: string) => ({
      * @param id Transaction id
      * @returns The transaction with the specified id
      */
-    get: async function (id: number): Promise<Ok<TransactionModel> | NotFound> {
-        return await new Promise<Ok<TransactionModel> | NotFound>((resolve, reject) => {
+    get: async function (id: number): Promise<TransactionModel | null> {
+        return await new Promise<TransactionModel | null>((resolve, reject) => {
             axios.get<TransactionModel>(`${rootUrl}/api/v1/transaction/${Number(id)}`, {
                 headers: { authorization: "Bearer: " + token }
-            })
-                .then(result => {
-                    resolve({ status: 200, data: fixTransaction(result.data) });
-                })
-                .catch((e: AxiosError) => {
-                    if (e.response?.status === 404) {
-                        resolve(NotFoundResult);
-                    } else {
-                        console.log(e);
-                        reject(e);
-                    }
-                });
+            }).then(result => {
+                resolve(deserializeTransaction(result.data));
+            }).catch((e: AxiosError) => {
+                if (e.response?.status === 404) {
+                    resolve(null);
+                } else {
+                    console.log(e);
+                    reject(e);
+                }
+            });
         });
     },
 
@@ -602,11 +592,16 @@ const Transaction = (token: string) => ({
                 ...model,
                 totalString: total.mul(new Decimal(10000)).round().toString(),
                 dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-                lines: transaction.lines.map(line => ({ ...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString() }))
+                lines: transaction.lines.map(line => ({
+                    ...line,
+                    amount: undefined,
+                    amountString: line.amount.mul(new Decimal(10000)).round().toString()
+                })),
+                metaData: model.metaData?.map(serializeSetMetaFieldValue)
             }, {
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
-                resolve({ status: 200, data: fixTransaction(result.data) });
+                resolve({ status: 200, data: deserializeTransaction(result.data) });
             }).catch((e: AxiosError) => {
                 if (e.response?.status === 400) {
                     resolve(e.response.data as BadRequest);
@@ -636,9 +631,9 @@ const Transaction = (token: string) => ({
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({
-                succeeded: result.data.succeeded.map(t => fixTransaction(t) as any as TransactionModel),
-                failed: result.data.failed.map(t => fixTransaction(t) as any as ModifyTransaction),
-                duplicate: result.data.duplicate.map(t => fixTransaction(t) as any as ModifyTransaction)
+                succeeded: result.data.succeeded.map(t => deserializeTransaction(t) as any as TransactionModel),
+                failed: result.data.failed.map(t => deserializeTransaction(t) as any as ModifyTransaction),
+                duplicate: result.data.duplicate.map(t => deserializeTransaction(t) as any as ModifyTransaction)
             }))
                 .catch(e => {
                     console.log(e);
@@ -663,10 +658,11 @@ const Transaction = (token: string) => ({
                     ...line,
                     amountString: line.amount.mul(new Decimal(10000)).round().toString(),
                     amount: undefined
-                }))
+                })),
+                metaData: model.metaData?.map(serializeSetMetaFieldValue)
             }, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ status: 200, data: fixTransaction(result.data) }))
+            }).then(result => resolve({ status: 200, data: deserializeTransaction(result.data) }))
                 .catch((e: AxiosError) => {
                     switch (e.response?.status) {
                         case 404:
@@ -709,7 +705,7 @@ const Transaction = (token: string) => ({
     deleteMultiple: async function (query: SearchGroup): Promise<void> {
         return await new Promise<void>((resolve, reject) => {
             axios.delete<TransactionModel>(`${rootUrl}/api/v1/transaction/deleteMultiple`, {
-                data: serializeTransactionQuery(query),
+                data: query,
                 headers: { authorization: "Bearer: " + token }
             }).then(result => resolve())
                 .catch(e => {
@@ -738,13 +734,9 @@ const Transaction = (token: string) => ({
 
     search: async function (query: SearchRequest): Promise<SearchResponse<TransactionModel>> {
         return await new Promise<SearchResponse<TransactionModel>>((resolve, reject) => {
-            const fixedQuery = query;
-            if (query.query != null) {
-                query.query = serializeTransactionQuery(query.query);
-            }
-            axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, fixedQuery, {
+            axios.post<SearchResponse<TransactionModel>>(`${rootUrl}/api/v1/transaction/search`, query, {
                 headers: { authorization: "Bearer: " + token }
-            }).then(result => resolve({ ...result.data, data: result.data.data.map(t => fixTransaction(t)) }))
+            }).then(result => resolve({ ...result.data, data: result.data.data.map(t => deserializeTransaction(t)) }))
                 .catch(error => {
                     console.log(error);
                     reject(error);
@@ -881,23 +873,115 @@ const Automation = (token: string) => ({
     }
 });
 
-/**
- * Converts fields from RAW json into complex javascript types
- * like decimal fields or date fields that are sent as string
- */
-function fixTransaction (transaction: TransactionModel | ModifyTransaction): TransactionModel {
-    const { totalString, ...rest } = transaction as TransactionModel & { totalString: string };
-    return {
-        ...rest,
-        dateTime: DateTime.fromISO(transaction.dateTime as any as string),
-        total: new Decimal(totalString).div(new Decimal(10000)),
-        lines: (transaction.lines as Array<TransactionLine & { amountString: string }>).map(({ amountString, ...line }) => ({
-            ...line,
-            description: line.description ?? "",
-            amount: new Decimal(amountString).div(new Decimal(10000))
-        }))
-    };
-}
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const Meta = (token: string) => ({
+    /**
+     * Get all meta fields that the current user has access to
+     */
+    list: async function (): Promise<MetaField[]> {
+        return await new Promise<MetaField[]>((resolve, reject) => {
+            axios.get(`${rootUrl}/api/v1/meta`, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => {
+                resolve(result.data);
+            }).catch(error => {
+                console.log(error);
+                reject(error);
+            });
+        });
+    },
+
+    /**
+     * Create a new meta field
+     * @param model The meta field to create
+     */
+    create: async function (model: CreateMetaField): Promise<Ok<MetaField> | BadRequest> {
+        return await new Promise<Ok<MetaField> | BadRequest>((resolve, reject) => {
+            axios.post(`${rootUrl}/api/v1/meta`, model, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({ status: 200, data: result.data }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 400) {
+                        resolve(error.response.data as BadRequest);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Delete a meta field
+     * @param id The id of the meta field to delete
+     */
+    delete: async function (id: number): Promise<Ok<undefined> | NotFound | Forbid> {
+        return await new Promise<Ok<undefined> | NotFound | Forbid>((resolve, reject) => {
+            axios.delete(`${rootUrl}/api/v1/meta/${id}`, {
+                headers: { authorization: "Bearer: " + token }
+            }).then(result => resolve({ status: 200, data: undefined }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    } else if (error.response?.status === 403) {
+                        resolve(ForbidResult);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Uploads an attachment
+     * @param id The id of the meta field to fill
+     * @param type The type of object the meta field is associated to
+     * @param objectId The id of the object to associate the attachment to
+     * @param file The file to upload
+     */
+    uploadAttachment: async function (id: number, type: "transaction", objectId: number, file: File): Promise<Ok<{ name: string }> | NotFound> {
+        const formData = new FormData();
+        formData.append("file", file);
+        return await new Promise<Ok<{ name: string }> | NotFound>((resolve, reject) => {
+            axios.post<{ name: string }>(`${rootUrl}/api/v1/meta/${id}/${type}/attachment/${objectId}`, formData, {
+                headers: {
+                    authorization: "Bearer: " + token
+                }
+            }).then(result => resolve({ status: 200, data: result.data }))
+                .catch((error: AxiosError) => {
+                    if (error.response?.status === 404) {
+                        resolve(NotFoundResult);
+                        return;
+                    }
+                    console.log(error);
+                    reject(error);
+                });
+        });
+    },
+
+    /**
+     * Creates a form and submits it to download the specified attachment
+     * @param id The id of the meta field to download
+     * @param type The type of object the meta field is associated to
+     * @param objectId The id of the object with the attachment
+     */
+    openAttachment: function (id: string, type: "transaction"): void {
+        const form = document.createElement("form");
+        form.method = "post";
+        form.target = "_blank";
+        form.action = `${rootUrl}/api/v1/meta/${type}/attachment/`;
+        form.innerHTML = `<input type="hidden" name="jwtToken" value="${token}"/>
+                          <input type="hidden" name="attachmentId" value="${id}"/>`;
+
+        console.log("form:", form);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+});
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const Taxonomy = (token: string) => ({
@@ -912,11 +996,10 @@ const Taxonomy = (token: string) => ({
                 headers: { authorization: "Bearer: " + token }
             }).then(result => {
                 resolve(result.data);
-            })
-                .catch(e => {
-                    console.log(e);
-                    reject(e);
-                });
+            }).catch(e => {
+                console.log(e);
+                reject(e);
+            });
         });
     }
 });
@@ -927,19 +1010,20 @@ const ApiClient = (token: string) => ({
     Account: Account(token),
     Transaction: Transaction(token),
     Taxonomy: Taxonomy(token),
-    Automation: Automation(token)
+    Automation: Automation(token),
+    Meta: Meta(token)
 });
 export default ApiClient;
 
-export function useApi (): Api | null {
-    const { user } = useContext(userContext);
+export function useApi (): Api {
+    const { data: user } = useQuery({ queryKey: ["user"], queryFn: getUser, keepPreviousData: true });
     return React.useMemo(() => {
-        if (user === "fetching") {
-            return null;
+        if (user === undefined) {
+            return ApiClient(localStorage.getItem("token") ?? "");
         } else {
             return ApiClient(user.token);
         }
-    }, [user === "fetching" ? "fetching" : user.token]);
+    }, [user === undefined ? "fetching" : user.token]);
 }
 
 export type Api = ReturnType<typeof ApiClient>;

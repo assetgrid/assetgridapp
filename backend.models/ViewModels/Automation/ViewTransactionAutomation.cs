@@ -16,14 +16,14 @@ namespace assetgrid_backend.models.ViewModels.Automation
         public bool Enabled { get; set; }
 
         [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; }
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
-        public string Description { get; set; } = null!;
+        public required string Description { get; set; }
         public bool TriggerOnCreate { get; set; }
         public bool TriggerOnModify { get; set; }
-        public SearchGroup Query { get; set; } = null!;
-        public List<TransactionAutomationAction> Actions { get; set; } = null!;
+        public required SearchGroup Query { get; set; }
+        public required List<TransactionAutomationAction> Actions { get; set; }
         public UserTransactionAutomation.AutomationPermissions Permissions { get; set; }
     }
 
@@ -31,8 +31,8 @@ namespace assetgrid_backend.models.ViewModels.Automation
     {
         public int Id { get; set; }
         public bool Enabled { get; set; }
-        public string Name { get; set; } = null!;
-        public string Description { get; set; } = null!;
+        public required string Name { get; set; }
+        public required string Description { get; set; }
         public bool TriggerOnCreate { get; set; }
         public bool TriggerOnModify { get; set; }
         public UserTransactionAutomation.AutomationPermissions Permissions { get; set; }

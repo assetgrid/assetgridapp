@@ -1,8 +1,10 @@
+/* eslint-disable semi */
+/* eslint-disable quotes */
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const path = require("path");
 
@@ -10,20 +12,21 @@ module.exports = {
     entry: "./src/index.tsx",
     output: {
         filename: "bundle.js",
-        path: __dirname + "/dist.production",
+        path: path.join(__dirname, "dist.production")
     },
 
     mode: "production",
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"],
+        extensions: [".ts", ".tsx", ".js", ".json"]
     },
     plugins: [
         new MiniCssExtractPlugin(),
         // new BundleAnalyzerPlugin()
         new CopyWebpackPlugin({
             patterns: [
-                { from: './index.production.html', to: './index.production.html' }
+                { from: "./index.production.html", to: "./index.production.html" },
+                { from: "locales", to: "locales" }
             ]
         })
     ],
@@ -32,8 +35,8 @@ module.exports = {
         minimize: true,
         minimizer: [
             new TerserPlugin(),
-            new CssMinimizerPlugin(),
-        ],
+            new CssMinimizerPlugin()
+        ]
     },
 
     module: {
@@ -42,12 +45,12 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 use: [{
-                    loader: 'ts-loader',
+                    loader: "ts-loader",
                     options: {
-                        configFile: "tsconfig.json",
-                    },
+                        configFile: "tsconfig.json"
+                    }
                 }],
-                exclude: /node_modules/,
+                exclude: /node_modules/
             },
 
             // Compile scss files
@@ -59,8 +62,8 @@ module.exports = {
                     // Translates CSS into CommonJS
                     "css-loader",
                     // Compiles Sass to CSS
-                    "sass-loader",
-                ],
+                    "sass-loader"
+                ]
             },
 
             // Load plain css
@@ -68,12 +71,12 @@ module.exports = {
                 test: /\.css$/,
                 use: [
                     {
-                        loader: "style-loader",
+                        loader: "style-loader"
                     },
                     {
-                        loader: "css-loader",
-                    },
-                ],
+                        loader: "css-loader"
+                    }
+                ]
             },
 
             // Load files that should just be copied over
@@ -81,14 +84,14 @@ module.exports = {
                 test: /\.(png|jpe?g|gif|svg|html)$/i,
                 use: [
                     {
-                    loader: 'file-loader',
+                        loader: "file-loader",
                         options: {
-                            name: '[name].[ext]',
-                        },
-                    },
-                ],
-            },
-        ],
+                            name: "[name].[ext]"
+                        }
+                    }
+                ]
+            }
+        ]
     },
 
     // When importing a module whose path matches one of the following, just
@@ -96,7 +99,7 @@ module.exports = {
     // This is important because it allows us to avoid bundling all of our
     // dependencies, which allows browsers to cache those libraries between builds.
     externals: {
-        "react": "React",
-        "react-dom": "ReactDOM",
-    },
+        react: "React",
+        "react-dom": "ReactDOM"
+    }
 };

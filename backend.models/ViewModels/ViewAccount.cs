@@ -80,11 +80,11 @@ namespace assetgrid_backend.Models.ViewModels
     public class ViewCreateAccount : IValidatableObject
     {
         [MaxLength(50, ErrorMessage = "Name must be shorter than 50 characters.")]
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; }
 
         [MaxLength(250, ErrorMessage = "Description must be shorter than 250 characters.")]
-        public string Description { get; set; } = null!;
-        public List<string> Identifiers { get; set; } = null!;
+        public required string Description { get; set; }
+        public required List<string> Identifiers { get; set; }
         public bool IncludeInNetWorth { get; set; }
         public bool Favorite { get; set; }
 
@@ -132,18 +132,18 @@ namespace assetgrid_backend.Models.ViewModels
     {
         public long InitialBalance { get; set; }
         public string InitialBalanceString { get => InitialBalance.ToString(); set => InitialBalance = long.Parse(value); }
-        public List<ViewAccountMovementItem> Items { get; set; } = null!;
+        public required List<ViewAccountMovementItem> Items { get; set; }
     }
 
     public class ViewGetMovementAllResponse
     {
-        public Dictionary<int, ViewGetMovementResponse> Items { get; set; } = null!;
-        public List<ViewAccount> Accounts { get; set; } = null!;
+        public required Dictionary<int, ViewGetMovementResponse> Items { get; set; }
+        public required List<ViewAccount> Accounts { get; set; }
     }
 
     public class ViewCategorySummary
     {
-        public string Category { get; set; } = null!;
+        public required string Category { get; set; }
 
         /// <summary>
         /// Whether this summary represents transfers between accounts included in net worth

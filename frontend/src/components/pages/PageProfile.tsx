@@ -1,18 +1,20 @@
 import * as React from "react";
 import Card from "../common/Card";
 import Hero from "../common/Hero";
-import { userContext } from "../App";
 import InputButton from "../input/InputButton";
 import InputText from "../input/InputText";
 import DeleteUserModal from "../user/DeleteUserModal";
-import { useApi } from "../../lib/ApiClient";
 import { forget } from "../../lib/Utils";
+import { useTranslation } from "react-i18next";
+import { useUser } from "../App";
+import { useApi } from "../../lib/ApiClient";
 
 export default function PageProfile (): React.ReactElement {
-    const { user } = React.useContext(userContext);
+    const user = useUser();
     const api = useApi();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = React.useState(false);
+    const { t } = useTranslation();
 
     const [currentPassword, setCurrentPassword] = React.useState("");
     const [newPassword, setNewPassword] = React.useState("");
@@ -22,28 +24,28 @@ export default function PageProfile (): React.ReactElement {
 
     return <>
         <Hero
-            title="Profile"
-            subtitle={user === "fetching" ? <>&hellip;</> : user.email} />
+            title={t("user.profile")}
+            subtitle={user === undefined ? <>&hellip;</> : user.email} />
         <div className="p-3">
-            <Card title="Change password" isNarrow={true}>
+            <Card title={t("user.change_password")!} isNarrow={true}>
                 { passwordWasChanged && <article className="message is-link">
                     <div className="message-body">
-                        Your password has been changed.
+                        {t("user.password_was_changed")}
                     </div>
                 </article>}
-                <InputText label="Current password"
+                <InputText label={t("user.current_password")!}
                     value={currentPassword}
                     onChange={e => setCurrentPassword(e.target.value)}
                     password={true}
                     disabled={isUpdating}
                     errors={changePasswordErrors.OldPassword} />
-                <InputText label="New password"
+                <InputText label={t("user.new_password")!}
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     password={true}
                     disabled={isUpdating}
                     errors={changePasswordErrors.NewPassword !== undefined}/>
-                <InputText label="Repeat password"
+                <InputText label={t("user.repeat_password")!}
                     value={repeatPassword}
                     onChange={e => setRepeatPassword(e.target.value)}
                     password={true}
@@ -51,12 +53,12 @@ export default function PageProfile (): React.ReactElement {
                     errors={changePasswordErrors.NewPassword}/>
                 <InputButton className="is-primary"
                     disabled={isUpdating || api === null}
-                    onClick={forget(updatePassword)}>Change password</InputButton>
+                    onClick={forget(updatePassword)}>{t("user.change_password")}</InputButton>
             </Card>
-            <Card title="Delete user" isNarrow={true}>
+            <Card title={t("user.delete_user")!} isNarrow={true}>
                 <InputButton className="is-danger"
                     disabled={isUpdating}
-                    onClick={() => setShowConfirmDeleteModal(true)}>Delete user</InputButton>
+                    onClick={() => setShowConfirmDeleteModal(true)}>{t("user.delete_user")}</InputButton>
             </Card>
         </div>
         <DeleteUserModal active={showConfirmDeleteModal} close={() => setShowConfirmDeleteModal(false)} />
@@ -67,7 +69,7 @@ export default function PageProfile (): React.ReactElement {
         setPasswordWasChanged(false);
         setIsUpdating(true);
         if (newPassword !== repeatPassword) {
-            setChangePasswordErrors({ NewPassword: ["Passwords do not match"] });
+            setChangePasswordErrors({ NewPassword: [t("user.passwords_do_not_match")] });
         } else if (api !== null) {
             const result = await api.User.changePassword(currentPassword, newPassword);
             if (result.status === 400) {

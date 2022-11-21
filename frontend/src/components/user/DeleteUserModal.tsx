@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useApi } from "../../lib/ApiClient";
 import { forget } from "../../lib/Utils";
@@ -14,16 +15,21 @@ export default function DeleteUserModal (props: Props): React.ReactElement {
     const [isDeleting, setisDeleting] = React.useState(false);
     const api = useApi();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return <Modal
         active={props.active}
-        title={"Delete user"}
+        title={t("user.delete_user")}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={forget(deleteUser)} disabled={isDeleting || api === null} className="is-danger">Delete user</InputButton>}
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            {<InputButton onClick={forget(deleteUser)}
+                disabled={isDeleting || api === null}
+                className="is-danger">
+                {t("user.delete_user")}
+            </InputButton>}
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
-        <p>Are you sure you want to delete your user account? This action is irreversible!</p>
+        <p>{t("user.confirm_delete")}</p>
     </Modal>;
 
     async function deleteUser (): Promise<void> {

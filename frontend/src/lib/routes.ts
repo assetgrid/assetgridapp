@@ -13,6 +13,7 @@ export const routes = {
     automation: () => "/automation",
     automationTransactionEdit: (id: string) => "/automation/transaction/" + id,
     automationTransactionCreate: () => "/automation/transaction/create",
+    meta: () => "/meta",
     login: () => "/login",
     signup: () => "/signup",
     profile: () => "/user/profile"

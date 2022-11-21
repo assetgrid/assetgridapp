@@ -14,6 +14,10 @@
         & > .field {
             margin-bottom: 0;
         }
+        & > span {
+            text-decoration: underline;
+            padding-right: 0.3rem;
+        }
 
         .button, .select > select {
             background-color: $primary;

@@ -6,10 +6,10 @@ import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/se
 import Card from "../../common/Card";
 import Hero from "../../common/Hero";
 import InputText from "../../input/InputText";
-import TransactionFilterEditor from "../../transaction/filter/TransactionFilterEditor";
+import TransactionFilterEditor from "../../transaction/TransactionFilterEditor";
 import TransactionList from "../../transaction/table/TransactionList";
-import { deserializeQueryForHistory, serializeQueryForHistory } from "../../transaction/filter/FilterHelpers";
 import { useLocation } from "react-router";
+import { useTranslation } from "react-i18next";
 
 interface LocationState {
     query: SearchGroup
@@ -23,12 +23,13 @@ interface LocationState {
 export default function PageTransactions (): React.ReactElement {
     const [draw, setDraw] = React.useState(0);
     const locationState = useLocation().state as Partial<LocationState> | undefined;
-    const [query, setQuery] = React.useState<SearchGroup>(typeof locationState?.query === "object" ? deserializeQueryForHistory(locationState.query) : emptyQuery);
+    const [query, setQuery] = React.useState<SearchGroup>(typeof locationState?.query === "object" ? locationState.query : emptyQuery);
     const [searchString, setSearchString] = React.useState<string>(typeof (locationState?.searchString) === "string" ? locationState.searchString : "");
     const [searchMode, setSearchMode] = React.useState<"simple" | "advanced">(typeof (locationState?.searchMode) === "string" ? locationState.searchMode : "simple");
     const [orderBy, setOrderBy] = React.useState<{ column: string, descending: boolean }>(typeof locationState?.orderBy === "object" ? locationState.orderBy : { column: "DateTime", descending: true });
     const [page, setPage] = React.useState(typeof (locationState?.page) === "number" ? locationState.page : 1);
     const [selectedTransactions, setSelectedTransactions] = React.useState<Set<number>>(typeof locationState?.selectedTransactions === "object" ? locationState.selectedTransactions : new Set());
+    const { t } = useTranslation();
 
     // Match query and search string (don't run this on first render. Only on subsequent changes to search string)
     const isFirst = React.useRef(true);
@@ -66,29 +67,29 @@ export default function PageTransactions (): React.ReactElement {
     }, [query]);
 
     return <>
-        <Hero title="Transactions" subtitle="Browse transactions" />
+        <Hero title={t("transaction.transactions")} subtitle={t("transaction.browse_transactions")} />
         <div className="p-3">
-            <Card title="Search" isNarrow={false}>
+            <Card title={t("search.search")!} isNarrow={false}>
                 {searchMode === "simple"
                     ? <>
                         <InputText
-                            label="Search for transactions"
+                            label={t("search.search_for_transactions")!}
                             value={searchString}
                             onChange={e => setSearchString(e.target.value)} />
-                        <a onClick={() => setSearchMode("advanced")}>Advanced search</a>
+                        <a onClick={() => setSearchMode("advanced")}>{t("search.advanced_search")}</a>
                     </>
                     : <>
                         <TransactionFilterEditor disabled={false} query={query} setQuery={setQuery} />
-                        <a onClick={() => setSearchMode("simple")}>Simple search</a>
+                        <a onClick={() => setSearchMode("simple")}>{t("search.simple_search")}</a>
                     </>}
             </Card>
-            <Card title="Actions" isNarrow={false}>
+            <Card title={t("common.actions")!} isNarrow={false}>
                 <Link to={routes.transactionCreate()} state={{ allowBack: true }}
                     className="button is-primary">
-                    Create Transaction
+                    {t("transaction.create_new")}
                 </Link>
             </Card>
-            <Card title="Transactions" isNarrow={false}>
+            <Card title={t("transaction.transactions")!} isNarrow={false}>
                 <TransactionList
                     query={tableQuery}
                     draw={draw}
@@ -107,7 +108,7 @@ export default function PageTransactions (): React.ReactElement {
         window.history.replaceState({
             ...window.history.state,
             usr: {
-                query: serializeQueryForHistory(query),
+                query,
                 searchMode,
                 page,
                 orderBy,
@@ -131,7 +132,8 @@ export default function PageTransactions (): React.ReactElement {
                     column: "Id",
                     not: false,
                     operator: SearchOperator.Equals,
-                    value: Number(searchString.replace(/\D/g, ""))
+                    value: Number(searchString.replace(/\D/g, "")),
+                    metaData: false
                 }
             },
             {
@@ -140,7 +142,8 @@ export default function PageTransactions (): React.ReactElement {
                     column: "Description",
                     not: false,
                     operator: SearchOperator.Contains,
-                    value: searchString
+                    value: searchString,
+                    metaData: false
                 }
             }]
         });

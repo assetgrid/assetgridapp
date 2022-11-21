@@ -1,19 +1,20 @@
 import * as React from "react";
 import { Transaction } from "../../../models/transaction";
-import Table from "../../common/Table";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
 import Decimal from "decimal.js";
-import { Api } from "../../../lib/ApiClient";
+import { useApi } from "../../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../../models/period";
 import TransactionTableLine from "./TransactionTableLine";
 import { TransactionSelectDropdownButton } from "./TransactionList";
 import { useNavigate } from "react-router";
 import { routes } from "../../../lib/routes";
-import { serializeQueryForHistory } from "../filter/FilterHelpers";
 import MergeTransactionsModal from "../input/MergeTransactionsModal";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { t } from "i18next";
+import { Pagination } from "../../common/Pagination";
 
 interface Props {
-    draw?: number
     accountId: number
     period: Period
     goToPage: (page: number | "increment" | "decrement") => void
@@ -31,32 +32,88 @@ interface TableLine {
 
 export default function AccountTransactionList (props: Props): React.ReactElement {
     const descending = true;
-    const [draw, setDraw] = React.useState(0);
+    const pageSize = props.pageSize ?? 20;
+    const from = (props.page - 1) * pageSize;
+    const to = props.page * pageSize;
+
     const [shownTransactions, setShownTransactions] = React.useState<Transaction[]>([]);
     const firstRender = React.useRef(true);
     const [isMergingTransactions, setIsMergingTransactions] = React.useState(false);
     const navigate = useNavigate();
+    const [start, end] = PeriodFunctions.getRange(props.period);
+    const api = useApi();
+    const { data, isError } = useQuery({
+        queryKey: ["transaction", "list", "account", {
+            from,
+            to,
+            start,
+            end,
+            accountId: props.accountId
+        }],
+        keepPreviousData: true,
+        queryFn: fetchItems,
+        onSuccess: result => {
+            if (result.totalItems < (props.page - 1) * pageSize) {
+                props.goToPage(1);
+            }
+        }
+    });
+
+    if (isError) {
+        return <div>{t("common.error_occured")}</div>;
+    }
 
     return <>
-        <Table<TableLine>
-            renderType="custom"
-            pageSize={props.pageSize ?? 20}
-            draw={(props.draw ?? 0) + draw}
-            type="async-increment"
-            fetchItems={fetchItems}
+        <div className="transaction-table table is-fullwidth is-hoverable multi-select">
+            <TableHeading
+                selectedTransactions={props.selectedTransactions}
+                setSelectedTransactions={props.setSelectedTransactions}
+                selectAllTransactions={selectAllTransactions}
+                beginEditMultiple={beginEditMultiple}
+                beginMerging={() => setIsMergingTransactions(true)}
+            />
+            <div className="table-body">
+                {data?.items.map(line => {
+                    return <TransactionTableLine
+                        accountId={props.accountId}
+                        transactionId={line.transaction.id}
+                        balance={line.balance}
+                        key={line.transaction.id}
+                        allowEditing={true}
+                        allowSelection={true}
+                        allowLinks={true}
+                        transaction={line.transaction}
+                        selected={props.selectedTransactions.has(line.transaction.id)}
+                        toggleSelected={() => props.selectedTransactions.has(line.transaction.id)
+                            ? deselectTransaction(line.transaction)
+                            : props.setSelectedTransactions(new Set([...props.selectedTransactions, line.transaction.id]))} />;
+                })}
+            </div>
+            <TableHeading
+                selectedTransactions={props.selectedTransactions}
+                setSelectedTransactions={props.setSelectedTransactions}
+                selectAllTransactions={selectAllTransactions}
+                beginEditMultiple={beginEditMultiple}
+                beginMerging={() => setIsMergingTransactions(true)}
+            />
+        </div>
+        <Pagination goToPage={props.goToPage}
             page={props.page}
-            goToPage={props.goToPage}
+            pageSize={pageSize}
+            paginationSize={9}
             reversePagination={true}
-            render={renderTable}
+            totalItems={data?.totalItems ?? 0}
+            decrementPeriod={() => props.goToPage("decrement")}
+            incrementPeriod={() => props.goToPage("increment")}
         />
         <MergeTransactionsModal active={isMergingTransactions}
             close={() => setIsMergingTransactions(false)}
             transactions={props.selectedTransactions}
-            merged={() => { setIsMergingTransactions(false); setDraw(draw => draw + 1); }} />
+            merged={() => setIsMergingTransactions(false)}
+        />
     </>;
 
-    async function fetchItems (api: Api, from: number, to: number, draw: number): Promise<{ items: TableLine[], totalItems: number, offset: number, draw: number }> {
-        const [start, end] = PeriodFunctions.getRange(props.period);
+    async function fetchItems (): Promise<{ items: TableLine[], totalItems: number, offset: number }> {
         const query: SearchGroup = {
             type: SearchGroupType.And,
             children: [{
@@ -65,7 +122,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                     column: "DateTime",
                     value: start.toISO(),
                     operator: SearchOperator.GreaterThanOrEqual,
-                    not: false
+                    not: false,
+                    metaData: false
                 }
             }, {
                 type: SearchGroupType.Query,
@@ -73,7 +131,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                     column: "DateTime",
                     value: end.toISO(),
                     operator: SearchOperator.GreaterThan,
-                    not: true
+                    not: true,
+                    metaData: false
                 }
             }]
         };
@@ -109,59 +168,9 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                 balance: balances[i],
                 transaction: t
             })),
-            draw,
             offset: from,
             totalItems: result.data.totalItems
         };
-    }
-
-    function renderTable (items: Array<{ item: TableLine, index: number }>, renderPagination: () => React.ReactElement): React.ReactElement {
-        const heading = <div className="table-heading">
-            <div>
-                <TransactionSelectDropdownButton
-                    clearSelection={() => props.setSelectedTransactions(new Set())}
-                    selectAll={() => selectAllTransactions()}
-                    selected={props.selectedTransactions.size > 0}
-                    editSelection={() => beginEditMultiple("selection")}
-                    editSelectionDisabled={props.selectedTransactions.size === 0}
-                    editAll={() => beginEditMultiple("all")}
-                    editAllText="Modify all transactions for this account"
-                    mergeSelection={() => setIsMergingTransactions(true)}
-                />
-            </div>
-            <div>Date</div>
-            <div>Description</div>
-            <div className="has-text-right">Amount</div>
-            <div className="has-text-right">Balance</div>
-            <div>Destination</div>
-            <div>Category</div>
-            <div>Actions</div>
-        </div>;
-
-        return <>
-            <div className="transaction-table table is-fullwidth is-hoverable multi-select">
-                {heading}
-                <div className="table-body">
-                    {items.map(({ item: line }) => {
-                        return <TransactionTableLine
-                            accountId={props.accountId}
-                            transaction={line.transaction}
-                            balance={line.balance}
-                            key={line.transaction.id}
-                            allowEditing={true}
-                            allowSelection={true}
-                            allowLinks={true}
-                            updateItem={redrawTable}
-                            selected={props.selectedTransactions.has(line.transaction.id)}
-                            toggleSelected={() => props.selectedTransactions.has(line.transaction.id)
-                                ? deselectTransaction(line.transaction)
-                                : props.setSelectedTransactions(new Set([...props.selectedTransactions, line.transaction.id]))} />;
-                    })}
-                </div>
-                {heading}
-            </div>
-            {renderPagination()}
-        </>;
     }
 
     function beginEditMultiple (type: "selection" | "all"): void {
@@ -175,7 +184,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             column: "SourceAccountId",
                             not: false,
                             operator: SearchOperator.Equals,
-                            value: props.accountId
+                            value: props.accountId,
+                            metaData: false
                         }
                     },
                     {
@@ -184,7 +194,8 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                             column: "DestinationAccountId",
                             not: false,
                             operator: SearchOperator.Equals,
-                            value: props.accountId
+                            value: props.accountId,
+                            metaData: false
                         }
                     }
                 ]
@@ -197,14 +208,15 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
                         column: "Id",
                         not: false,
                         operator: SearchOperator.In,
-                        value: [...props.selectedTransactions]
+                        value: [...props.selectedTransactions],
+                        metaData: false
                     }
                 }]
             };
 
         navigate(routes.transactionEditMultiple(), {
             state: {
-                query: serializeQueryForHistory(query),
+                query,
                 showBack: true
             }
         });
@@ -220,8 +232,36 @@ export default function AccountTransactionList (props: Props): React.ReactElemen
         const newSelectedTransactions = new Set(shownTransactions.map(t => t.id));
         props.setSelectedTransactions(newSelectedTransactions);
     }
+}
 
-    function redrawTable (): void {
-        setDraw(draw => draw + 1);
-    }
+interface TableHeadingProps {
+    selectedTransactions: Set<number>
+    setSelectedTransactions: (value: Set<number>) => void
+    selectAllTransactions: () => void
+    beginEditMultiple: (type: "selection" | "all") => void
+    beginMerging: () => void
+}
+function TableHeading (props: TableHeadingProps): React.ReactElement {
+    const { t } = useTranslation();
+    return <div className="table-heading">
+        <div>
+            <TransactionSelectDropdownButton
+                clearSelection={() => props.setSelectedTransactions(new Set())}
+                selectAll={() => props.selectAllTransactions()}
+                selected={props.selectedTransactions.size > 0}
+                editSelection={() => props.beginEditMultiple("selection")}
+                editSelectionDisabled={props.selectedTransactions.size === 0}
+                editAll={() => props.beginEditMultiple("all")}
+                editAllText={t("account.modify_all_transactions_for_account")}
+                mergeSelection={() => props.beginMerging()}
+            />
+        </div>
+        <div>{t("common.timestamp")}</div>
+        <div>{t("common.description")}</div>
+        <div className="has-text-right">{t("transaction.amount")}</div>
+        <div className="has-text-right">{t("account.balance")}</div>
+        <div>{t("transaction.destination")}</div>
+        <div>{t("common.category")}</div>
+        <div>{t("common.actions")}</div>
+    </div>;
 }

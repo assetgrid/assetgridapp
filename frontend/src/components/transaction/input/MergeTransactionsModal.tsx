@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useApi } from "../../../lib/ApiClient";
 import { forget } from "../../../lib/Utils";
 import { SearchGroup, SearchGroupType, SearchOperator } from "../../../models/search";
@@ -18,6 +20,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
     const api = useApi();
     const [selectedTransactionId, setSelectedTransactionId] = React.useState<number | null>(null);
     const [draw, setDraw] = React.useState(0);
+    const { t } = useTranslation();
+    const queryClient = useQueryClient();
 
     const query: SearchGroup = React.useMemo(() => ({
         type: SearchGroupType.Query,
@@ -25,7 +29,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
             column: "Id",
             operator: SearchOperator.In,
             value: [...props.transactions],
-            not: false
+            not: false,
+            metaData: false
         }
     }), [props.active, props.transactions]);
 
@@ -37,22 +42,26 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
 
     return <Modal
         active={props.active}
-        title={"Merge transactions"}
+        title={t("transaction.merge_transactions")}
         close={() => props.close()}
         footer={<>
-            {<InputButton onClick={forget(mergeTransactions)} disabled={isMerging || api === null || selectedTransactionId === null} className="is-primary">Merge transactions</InputButton>}
-            <button className="button" onClick={() => props.close()}>Cancel</button>
+            {<InputButton onClick={forget(mergeTransactions)}
+                disabled={isMerging || api === null || selectedTransactionId === null}
+                className="is-primary">
+                {t("transaction.merge_transactions")}
+            </InputButton>}
+            <button className="button" onClick={() => props.close()}>{t("common.cancel")}</button>
         </>}>
-        <p>Do you want to merge the following transactions. Merging will add the identifiers from all transactions to a single one and delete the others.</p>
-        <p>Chose which transaction you want to keep:</p>
-        <TransactionList
+        <p>{t("transaction.merge_confirm_and_information")}</p>
+        <p>{t("transaction.merge_chose_which_to_keep")}</p>
+        {props.active && <TransactionList
             allowLinks={false}
             allowEditing={false}
             pageSize={5}
             query={query}
             draw={draw}
             selectedTransaction={[selectedTransactionId, setSelectedTransactionId]}
-        />
+        />}
     </Modal>;
 
     async function mergeTransactions (): Promise<void> {
@@ -71,7 +80,8 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
             isSplit: selectedTransaction.isSplit,
             lines: selectedTransaction.lines,
             sourceId: selectedTransaction.source?.id ?? null,
-            total: selectedTransaction.total
+            total: selectedTransaction.total,
+            metaData: null
         });
         await api.Transaction.deleteMultiple({
             type: SearchGroupType.And,
@@ -82,12 +92,24 @@ export default function MergeTransactionsModal (props: Props): React.ReactElemen
                         column: "Id",
                         value: selectedTransactionId,
                         not: true,
-                        operator: SearchOperator.Equals
+                        operator: SearchOperator.Equals,
+                        metaData: false
                     }
                 }
             ]
         });
         setIsMerging(false);
         props.merged();
+
+        await queryClient.invalidateQueries(["transaction"]);
+        for (const transaction of transactions.data) {
+            await queryClient.invalidateQueries(["transaction", transaction.id]);
+            if (transaction.source !== null) {
+                await queryClient.invalidateQueries(["account", transaction.source.id, "transactions"]);
+            }
+            if (transaction.destination !== null) {
+                await queryClient.invalidateQueries(["account", transaction.destination.id, "transactions"]);
+            }
+        }
     }
 }

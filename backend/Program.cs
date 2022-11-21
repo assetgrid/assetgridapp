@@ -51,9 +51,11 @@ if (!Directory.Exists(dataDirectory)) {
 
     builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
+    builder.Services.AddScoped<AttachmentService>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IAutomationService, AutomationService>();
+    builder.Services.AddScoped<IMetaService, MetaService>();
     builder.Services.AddSingleton<JwtSecret, JwtSecret>((serviceProvider) => JwtSecret.Get(Path.Combine(dataDirectory, "./jwt_secret.txt")));
 
     builder.Services.AddDbContext<AssetgridDbContext>(options =>
@@ -61,7 +63,7 @@ if (!Directory.Exists(dataDirectory)) {
         // Support legacy configuration from before multi DB support
         var legacyConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-        var provider = string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("Provider", Sqlite.Name) : Mysql.Name;
+        var provider = (string.IsNullOrEmpty(legacyConnectionString) ? builder.Configuration.GetValue("Provider", Sqlite.Name) : null) ?? Mysql.Name;
         if (provider.ToLower() == Sqlite.Name.ToLower())
         {
             options.UseSqlite(
@@ -99,7 +101,6 @@ var app = builder.Build();
     app.UseSwaggerUI();
 
     app.UseStaticFiles();
-    app.UseHttpsRedirection();
     app.UseRouting();
 
     // No issues with cross origin requests since we don't use cookies
@@ -110,11 +111,8 @@ var app = builder.Build();
 
     app.UseMiddleware<JwtMiddleware>();
 
-    app.UseEndpoints(endpoints =>
-    {
-        endpoints.MapControllers();
-        endpoints.MapFallbackToFile("/dist/index.production.html");
-    });
+    app.MapControllers();
+    app.MapFallbackToFile("/dist/index.production.html");
 
     // migrate any database changes on startup (includes initial db creation)
     using (var scope = app.Services.CreateScope())

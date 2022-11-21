@@ -9,10 +9,11 @@ namespace assetgrid_backend.models.Search
     public class SearchQuery
     {
         public int Version => 1;
-        public string Column { get; set; } = null!;
-        public object? Value { get; set; } = null!;
+        public required string Column { get; set; }
+        public object? Value { get; set; }
         public SearchOperator Operator { get; set; }
         public bool Not { get; set; }
+        public bool MetaData { get; set; }
 
         public string OperatorString
         {
@@ -30,6 +31,8 @@ namespace assetgrid_backend.models.Search
                         return Not ? "<=" : ">";
                     case SearchOperator.GreaterThanOrEqual:
                         return Not ? "<" : ">=";
+                    case SearchOperator.IsNull:
+                        return Not ? "is null" : "is not null";
                     default:
                         throw new Exception("Invalid operator");
                 }
@@ -76,5 +79,6 @@ namespace assetgrid_backend.models.Search
         In,
         GreaterThan,
         GreaterThanOrEqual,
+        IsNull
     }
 }

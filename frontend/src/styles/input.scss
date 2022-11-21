@@ -152,3 +152,28 @@
         align-items: center;
     }
 }
+
+/*
+ * Display for multi-line text
+ */
+pre.multiline-text {
+    border: 1px solid hsl(0deg, 0%, 86%);
+    border-radius: 3px;
+    padding: 0.8rem;
+    font-family: inherit;
+}
+
+/*
+ * File input
+ */
+.file.has-addons {
+    & > label > :last-child > .button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: 0;
+    }
+    & > label > :not(:last-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}

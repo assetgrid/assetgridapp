@@ -1,6 +1,6 @@
 import * as React from "react";
 import { GetMovementResponse, TimeResolution } from "../../models/account";
-import { Api, useApi } from "../../lib/ApiClient";
+import { useApi } from "../../lib/ApiClient";
 import { Period, PeriodFunctions } from "../../models/period";
 import "chartjs-adapter-luxon";
 import {
@@ -14,9 +14,13 @@ import {
     Tooltip,
     Legend,
     BarElement,
-    BarController
+    BarController,
+    LegendElement,
+    ChartTypeRegistry
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
     LinearScale,
@@ -36,21 +40,25 @@ interface Props {
     period: Period
 }
 
-export default React.memo(AccountBalanceChart);
-function AccountBalanceChart (props: Props): React.ReactElement {
-    const [movements, setMovements] = React.useState<GetMovementResponse | "fetching">("fetching");
-    const [resolution, setResolution] = React.useState<"month" | "day" | "week" | "year">("day");
-    const [displayingPeriod, setDisplayingPeriod] = React.useState(props.period);
+const TimeResolutionValues = ["month", "day", "week", "year"] as const;
+
+export default function AccountBalanceChart (props: Props): React.ReactElement {
+    const [resolution, setResolution] = React.useState<typeof TimeResolutionValues[number]>("day");
+    const { t } = useTranslation();
     const api = useApi();
+    const { data, isSuccess } = useQuery({
+        queryKey: ["account", props.id, "transactions", "movements", resolution, PeriodFunctions.serialize(props.period)],
+        queryFn: updateData,
+        keepPreviousData: true
+    });
+    const movements = data?.movements;
+    const displayingPeriod = data?.period ?? props.period;
 
-    React.useEffect(() => {
-        if (api !== null) {
-            void updateData(api, props.id, props.period, setDisplayingPeriod, resolution, setMovements);
-        }
-    }, [api, props.period, resolution]);
-
-    if (movements === "fetching") {
-        return <>Please wait&hellip;</>;
+    if (movements === undefined) {
+        return <>{t("common.please_wait")}</>;
+    }
+    if (!isSuccess) {
+        return <>{t("common.error_occured")}</>;
     }
 
     let balances: number[] = [];
@@ -89,7 +97,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                 <Chart type={"line"} height="400px" data={{
                     labels,
                     datasets: [{
-                        label: "Balance",
+                        label: t("account.balance")!,
                         data: balances,
                         type: "line",
                         stepped: true,
@@ -97,7 +105,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         backgroundColor: "transparent"
                     },
                     {
-                        label: "Revenue",
+                        label: t("account.revenue")!,
                         data: revenues,
                         type: "bar",
                         borderColor: "transparent",
@@ -105,7 +113,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "revenue"
                     },
                     {
-                        label: "Expenses",
+                        label: t("account.expenses")!,
                         data: expenses,
                         type: "bar",
                         borderColor: "transparent",
@@ -113,7 +121,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "expenses"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: transferRevenues,
                         type: "bar",
                         borderColor: "transparent",
@@ -121,7 +129,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                         stack: "revenue"
                     },
                     {
-                        label: "Transfers",
+                        label: t("account.transfers")!,
                         data: transferExpenses,
                         type: "bar",
                         borderColor: "transparent",
@@ -164,7 +172,7 @@ function AccountBalanceChart (props: Props): React.ReactElement {
                                     });
                                     ci.update();
                                 } else {
-                                    ChartJS.defaults.plugins.legend.onClick.bind(this as any)(e, legendItem, legend);
+                                    ChartJS.defaults.plugins.legend.onClick.bind(this as LegendElement<keyof ChartTypeRegistry>)(e, legendItem, legend);
                                 }
                             }
                         }
@@ -174,39 +182,39 @@ function AccountBalanceChart (props: Props): React.ReactElement {
             </div>
         </div>
         <div className="tags" style={{ alignItems: "baseline" }}>
-            <p>Aggregate by:</p>&nbsp;
-            {["day", "week", "month", "year"].map(option =>
+            <p>{t("chart.aggregate_by")}</p>&nbsp;
+            {TimeResolutionValues.map(option =>
                 <span key={option} style={{ cursor: option === resolution ? "auto" : "pointer" }}
                     className={option === resolution ? "tag is-primary" : "tag is-dark"}
-                    onClick={() => setResolution(option as any)}>
-                    {["Day", "Week", "Month", "Year"][["day", "week", "month", "year"].indexOf(option as any)]}
+                    onClick={() => setResolution(option)}>
+                    {[
+                        t("common.day"),
+                        t("common.week"),
+                        t("common.month"),
+                        t("common.year")][TimeResolutionValues.indexOf(option)]}
                 </span>)}
         </div>
     </>;
-}
 
-async function updateData (api: Api, id: number, period: Period, setDisplayingPeriod: (period: Period) => void,
-    resolutionString: "day" | "week" | "year" | "month", setData: React.Dispatch<GetMovementResponse>): Promise<void> {
-    let resolution: TimeResolution;
-    const [start, end] = PeriodFunctions.getRange(period);
-    switch (resolutionString) {
-        case "day":
-            resolution = TimeResolution.Daily;
-            break;
-        case "month":
-            resolution = TimeResolution.Monthly;
-            break;
-        case "year":
-            resolution = TimeResolution.Yearly;
-            break;
-        case "week":
-            resolution = TimeResolution.Weekly;
-            break;
-    }
+    async function updateData (): Promise<{ movements: GetMovementResponse, period: Period }> {
+        let resolutionValue: TimeResolution;
+        const [start, end] = PeriodFunctions.getRange(props.period);
+        switch (resolution) {
+            case "day":
+                resolutionValue = TimeResolution.Daily;
+                break;
+            case "month":
+                resolutionValue = TimeResolution.Monthly;
+                break;
+            case "year":
+                resolutionValue = TimeResolution.Yearly;
+                break;
+            case "week":
+                resolutionValue = TimeResolution.Weekly;
+                break;
+        }
 
-    const result = await api.Account.getMovements(id, start, end, resolution);
-    if (result.status === 200) {
-        setDisplayingPeriod(period);
-        setData(result.data);
+        const result = await api.Account.getMovements(props.id, start, end, resolutionValue);
+        return { movements: result, period: props.period };
     }
 }

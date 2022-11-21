@@ -1,6 +1,7 @@
 import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { faPen, faPersonRunning } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Api, useApi } from "../../../lib/ApiClient";
 import { routes } from "../../../lib/routes";
@@ -20,17 +21,17 @@ export default function PageAutomation (): React.ReactElement {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [transactionAutomations, setTransactionAutomations] = React.useState<TransactionAutomationSummary[]>([]);
     const [transactionAutomationPage, setTransactionAutomationPage] = React.useState(1);
-    const [transactionAutomationDraw, setTransactionAutomationDraw] = React.useState(1);
     const [transactionAutomationDeleting, setTransactionAutomationDeleting] = React.useState<TransactionAutomationSummary | null>(null);
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         if (api !== null) forget(refreshLists)(api);
     }, [api]);
 
     return <>
-        <Hero title="Automation" />
+        <Hero title={t("automation.automation")} />
         <div className="p-3">
-            <Card title="Transaction automations" isNarrow={false}>
+            <Card title={t("automation.transaction_automations")!} isNarrow={false}>
                 <Table pageSize={10}
                     renderItem={(automation, i) => <tr key={i}>
                         <td>{automation.name}</td>
@@ -38,7 +39,7 @@ export default function PageAutomation (): React.ReactElement {
                         <td><YesNoDisplay value={automation.enabled} /></td>
                         <td>
                             {automation.permissions === TransactionAutomationPermissions.Modify && <>
-                                <Tooltip content="Run automation on existing transactions">
+                                <Tooltip content={t("automation.transaction.run_on_existing")}>
                                     <Link to={routes.automationTransactionEdit(automation.id.toString())} state={{ expandPreview: true }}>
                                         <InputIconButton disabled={isUpdating} icon={faPersonRunning} />
                                     </Link>
@@ -52,30 +53,38 @@ export default function PageAutomation (): React.ReactElement {
                     </tr>}
                     page={transactionAutomationPage}
                     goToPage={setTransactionAutomationPage}
-                    draw={transactionAutomationDraw}
-                    type="sync"
-                    renderType="table"
                     headings={<tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Enabled</th>
-                        <th>Actions</th>
+                        <th>{t("common.name")}</th>
+                        <th>{t("common.description")}</th>
+                        <th>{t("common.enabled")}</th>
+                        <th>{t("common.actions")}</th>
                     </tr>} items={transactionAutomations} />
                 <div className="buttons">
-                    <Link to={routes.automationTransactionCreate()} className="button is-primary">Create transaction automation</Link>
+                    <Link to={routes.automationTransactionCreate()}
+                        className="button is-primary">
+                        {t("automation.create_transaction")}
+                    </Link>
                 </div>
             </Card>
         </div>
         <Modal
             active={transactionAutomationDeleting !== null}
-            title="Delete automation"
+            title={t("automation.delete")}
             close={() => setTransactionAutomationDeleting(null)}
             footer={<>
-                <InputButton disabled={isUpdating} className="is-danger" onClick={() => forget(deleteTransactionAutomation)(transactionAutomationDeleting?.id)}>Delete</InputButton>
-                <InputButton disabled={isUpdating} onClick={() => setTransactionAutomationDeleting(null)}>Cancel</InputButton>
+                <InputButton disabled={isUpdating}
+                    className="is-danger"
+                    onClick={() => forget(deleteTransactionAutomation)(transactionAutomationDeleting?.id)}>
+                    {t("automation.delete")}
+                </InputButton>
+                <InputButton
+                    disabled={isUpdating}
+                    onClick={() => setTransactionAutomationDeleting(null)}>
+                    {t("common.cancel")}
+                </InputButton>
             </>}>
-            Are you sure you want to delete the automation &ldquo;{transactionAutomationDeleting?.name}&rdquo; with the description &ldquo;{transactionAutomationDeleting?.description}&rdquo;?
-            This action is ireversible
+            <p>{t("automation.confirm_delete", { name: transactionAutomationDeleting?.name, description: transactionAutomationDeleting?.description }) }</p>
+            <p>{t("common.action_is_irreversible")}</p>
         </Modal>
     </>;
 
@@ -83,7 +92,6 @@ export default function PageAutomation (): React.ReactElement {
         const result = await api.Automation.Transaction.list();
         if (result.status === 200) {
             setTransactionAutomations(result.data);
-            setTransactionAutomationDraw(draw => draw + 1);
         }
     }
 
