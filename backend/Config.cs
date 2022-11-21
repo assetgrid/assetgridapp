@@ -2,6 +2,6 @@
 {
     public static class Config
     {
-        public const string Version = "0.2.2-dev";
+        public const string Version = "0.3.0-dev";
     }
 }

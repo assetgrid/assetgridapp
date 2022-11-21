@@ -19,13 +19,13 @@ namespace assetgrid_backend.Controllers.Automation
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
-        private readonly MetaService _meta;
+        private readonly IMetaService _meta;
 
         public TransactionAutomationController(
             AssetgridDbContext context,
             IUserService userService,
             IOptions<ApiBehaviorOptions> apiBehaviorOptions,
-            MetaService meta)
+            IMetaService meta)
         {
             _context = context;
             _user = userService;
