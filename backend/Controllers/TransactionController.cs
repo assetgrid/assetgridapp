@@ -226,6 +226,7 @@ namespace assetgrid_backend.Controllers
                         .Include(t => t.DestinationAccount!.Identifiers)
                         .Include(t => t.TransactionLines)
                         .Include(t => t.Identifiers)
+                        .AsSingleQuery()
                         .SingleAsync(t => t.Id == id);
 
                     if (dbObject.SourceAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null && dbObject.DestinationAccount?.Users?.SingleOrDefault(x => x.UserId == user.Id) == null)
@@ -438,6 +439,7 @@ namespace assetgrid_backend.Controllers
                     var metaFields = await _meta.GetFields(user.Id);
                     var transactions = await _context.Transactions
                         .Include(t => t.TransactionLines)
+                        .AsSingleQuery()
                         .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
                         .ApplySearch(query, metaFields)
                         .ToListAsync();
@@ -468,6 +470,7 @@ namespace assetgrid_backend.Controllers
                     .Skip(query.From)
                     .Take(query.To - query.From)
                     .SelectView(user.Id)
+                    .AsSingleQuery()
                     .ToListAsync();
 
                 return Ok(new ViewSearchResponse<ViewTransaction>

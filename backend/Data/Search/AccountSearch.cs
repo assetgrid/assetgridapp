@@ -31,7 +31,7 @@ namespace assetgrid_backend.Data.Search
                 var expression = Search.SearchGroupToExpression<UserAccount>(query.Query, columns, parameter, metaFields);
                 if (expression != null)
                 {
-                    return items.Where(Expression.Lambda<Func<UserAccount, bool>>(expression, parameter));
+                    items = items.Where(Expression.Lambda<Func<UserAccount, bool>>(expression, parameter));
                 }
             }
 
