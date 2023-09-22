@@ -13,7 +13,7 @@ import { serializeTransactionAutomation, TransactionAutomation, TransactionAutom
 import { CreateMetaField, MetaField, serializeSetMetaFieldValue } from "../models/meta";
 import { useQuery } from "@tanstack/react-query";
 
-let rootUrl = "https://localhost:7262";
+let rootUrl = "http://localhost:5262";
 if (process.env.NODE_ENV === "production") {
     rootUrl = "";
 }
