@@ -21,7 +21,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Logs**
-Please provide log files. Running Assetgrid with the environment variable "Logging:Loglevel:Default"="Information" will provide extra debug information, to help solve your issue.
+Please provide log files. Running Assetgrid with the environment variable "Logging:Loglevel:Default": "Information" will provide extra debug information, to help solve your issue.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.

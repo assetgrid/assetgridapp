@@ -37,6 +37,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+    - name: Copy appsettings.json -> appsettings.Development.json
+      run: cp "./backend/appsettings.json" "./backend/appsettings.Development.json"
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
