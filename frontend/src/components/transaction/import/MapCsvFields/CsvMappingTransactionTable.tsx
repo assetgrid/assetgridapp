@@ -28,7 +28,7 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
         return <p>{t("common.loading_please_wait")}</p>;
     }
 
-    const items = React.useMemo(() => props.transactions.filter(props.tableFilter), [props.tableFilter]);
+    const items = React.useMemo(() => props.transactions.filter(props.tableFilter), [props.tableFilter, props.transactions]);
 
     return <Table pageSize={20}
         items={items}
@@ -63,7 +63,7 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
                 <td>
                     {props.options.destinationAccountType === "single"
                         ? (transaction.destination !== null ? <AccountLink account={transaction.destination} targetBlank={true} /> : <>{t("common.none")}</>)
-                        : <Tooltip content={t("transaction.identifier_value", { value: transaction.sourceText })}>
+                        : <Tooltip content={t("transaction.identifier_value", { value: transaction.destinationText })}>
                             {transaction.destination !== null ? <AccountLink account={transaction.destination} targetBlank={true} /> : <>{t("common.none")}</>}
                         </Tooltip>}
                 </td>
