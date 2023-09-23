@@ -60,7 +60,6 @@ namespace backend.unittests.Tests
                 {
                     MetaId = x.MetaId,
                     Value = x.Value,
-                    Type = x.Type
                 }).ToList(),
                 Total = model.Total,
                 TotalString = model.TotalString,

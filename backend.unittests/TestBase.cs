@@ -78,7 +78,7 @@ namespace backend.unittests
                                             It.IsAny<string>(),
                                             It.IsAny<Object>()));
             TransactionController.ObjectValidator = objectValidator.Object;
-            AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), MetaService);
+            AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), MetaService, AutomationService);
             TaxonomyController = new TaxonomyController(Context, UserService);
         }
     }

@@ -117,7 +117,7 @@ namespace assetgrid_backend.Services
                     break;
                 case ActionSetAccount a:
                     // Verify that the user has write permissions to the account
-                    if (a.Account != null)
+                    if (a.Value != null)
                     {
                         var writePermissions = new[] { UserAccountPermissions.ModifyTransactions, UserAccountPermissions.All };
                         var canWrite = _context.UserAccounts
