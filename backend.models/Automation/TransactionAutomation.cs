@@ -196,14 +196,14 @@ namespace assetgrid_backend.models.Automation
             }
         }
 
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
+        public override async Task Run(Transaction transaction, AssetgridDbContext context, User user)
         {
-            var valueAccount = ValueAccount(context, user);
+            var valueAccount = await ValueAccount(context, user);
             if ((Account == "source" && transaction.DestinationAccountId == Value) ||
                 (Account == "destination" && transaction.SourceAccountId == Value))
             {
                 // Do nothing as it would result in a transaction with the same account twice or no source or destination
-                return Task.CompletedTask;
+                return;
             }
 
             switch (Account)
@@ -217,7 +217,7 @@ namespace assetgrid_backend.models.Automation
                 default:
                     throw new Exception($"Unknown account '{Account}'");
             }
-            return Task.CompletedTask;
+            return;
         }
     }
 

@@ -27,7 +27,10 @@ namespace assetgrid_backend.Services
             var transactionQuery = new List<Transaction> { transaction }.AsQueryable();
             if (transactionQuery.ApplySearch(automation.Query, metaFields).Count() == 1)
             {
-                automation.Actions.ForEach(action => action.Run(transaction, _context, user));
+                foreach (var action in automation.Actions)
+                {
+                    await action.Run(transaction, _context, user);
+                }
             }
         }
     }
