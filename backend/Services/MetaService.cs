@@ -342,8 +342,8 @@ namespace assetgrid_backend.Services
                             {
                                 var writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
                                 var canWrite = await _context.Transactions
-                                    .Where(transaction => transaction.SourceAccount.Users.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)) ||
-                                        transaction.DestinationAccount.Users.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)))
+                                    .Where(transaction => transaction.SourceAccount!.Users!.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)) ||
+                                        transaction.DestinationAccount!.Users!.Any(x => x.UserId == userId && writePermissions.Contains(x.Permissions)))
                                     .AnyAsync(account => account.Id == value);
                                 if (!canWrite)
                                 {
