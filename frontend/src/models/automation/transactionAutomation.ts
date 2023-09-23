@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { SearchGroup } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
+import { MetaFieldValue } from "../meta";
 
 export interface TransactionAutomation {
     id?: number
@@ -45,7 +46,7 @@ export enum TransactionAutomationTrigger {
 }
 
 export type TransactionAction = ActionSetTimestmap | ActionSetDescription | ActionSetAmount | ActionSetLines
-| ActionSetAccount | ActionSetCategory | ActionDelete;
+| ActionSetAccount | ActionSetCategory | ActionSetMetaValue | ActionDelete;
 
 export interface ActionSetTimestmap {
     key: "set-timestamp"
@@ -76,6 +77,12 @@ export interface ActionSetAccount {
 export interface ActionSetCategory {
     key: "set-category"
     value: string
+}
+
+export interface ActionSetMetaValue {
+    key: "set-meta-value"
+    fieldId: number | null
+    value: MetaFieldValue["value"] | null
 }
 
 export interface ActionDelete {

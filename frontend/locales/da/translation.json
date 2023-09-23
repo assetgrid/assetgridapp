@@ -92,6 +92,7 @@
     "error_occured": "Der opstod en fejl",
     "error_page_text": "<p>Der opstod en ukendt fejl.</p><1>Hvis du mener, at dette er en fejl, kan du rapportere det på vores <1>Github side</1></1>",
     "example": "Eksempel: {{example}}",
+    "file": "fil",
     "general_options": "Generelle indstillinger",
     "id": "ID",
     "identifier": "Identifikator",
@@ -129,7 +130,9 @@
     "unique_identifiers": "Unikke identifikatorer",
     "value": "Værdi",
     "week": "Uge",
-    "year": "År"
+    "year": "År",
+    "no": "nej",
+    "yes": "ja"
   },
   "delete": {
     "account": {
@@ -238,6 +241,10 @@
   "login": {
     "sign_in_to_assetgrid": "Log på Assetgrid"
   },
+  "meta": {
+    "field_name": "Navn på felt",
+    "select_field": "Vælg brugerdefineret felt"
+  },
   "metadata": {
     "add_custom_field": "Opret brugerdefineret felt",
     "confirm_delete_field": "Er du sikker på, at du vil slette det brugerdefinerede felt “{{fieldName}}”? Værdien af dette felt vil blive fjernet fra alle transaktioner.",
@@ -317,6 +324,7 @@
     "one_condition_met": "<0>En</0> af følgende betingelser skal være opfyldt",
     "query": "Søgeforespørgsel",
     "search": "Søg",
+    "search_for_meta_field": "Søg efter brugerdefineret felt",
     "search_for_transaction": "Søg efter transaktion",
     "search_for_transactions": "Søg efter transaktioner",
     "simple_search": "Simpel søgning"
@@ -376,6 +384,8 @@
     "set_destination_account_to_no_account": "Sæt modtagerkonto til ingen konto",
     "set_destination_account_to_value": "Sæt modtagerkonto til “{{value}}”",
     "set_lines": "Sæt linjer",
+    "set_meta_field_value": "Sæt brugerdefineret felt “{{fieldName}}” til “{{value}}”",
+    "set_meta_value": "Sæt brugerdefineret felt",
     "set_source_account_to_no_account": "Sæt afsenderkonto til ingen konto",
     "set_source_account_to_value": "Set afsenderkonto til “{{value}}”",
     "set_timestamp": "Sæt tidsstempel",

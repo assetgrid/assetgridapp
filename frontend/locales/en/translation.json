@@ -92,6 +92,7 @@
     "error_occured": "An error occured",
     "error_page_text": "<p>An unknown error occured.</p><1>If you believe that this is a bug you can report it on our <1>Github page</1></1>",
     "example": "Example: {{example}}",
+    "file": "file",
     "general_options": "General options",
     "id": "ID",
     "identifier": "Identifier",
@@ -129,7 +130,9 @@
     "unique_identifiers": "Unique identifiers",
     "value": "Value",
     "week": "Week",
-    "year": "Year"
+    "year": "Year",
+    "no": "no",
+    "yes": "yes"
   },
   "delete": {
     "account": {
@@ -238,6 +241,10 @@
   "login": {
     "sign_in_to_assetgrid": "Sign in to Assetgrid"
   },
+  "meta": {
+    "field_name": "Field name",
+    "select_field": "Select custom field"
+  },
   "metadata": {
     "add_custom_field": "Create custom field",
     "confirm_delete_field": "Are you sure you want to delete the custom field “{{fieldName}}”? The value of this field will be removed from all transactions.",
@@ -317,6 +324,7 @@
     "one_condition_met": "<0>One</0> of the following conditions must be met",
     "query": "Search query",
     "search": "Search",
+    "search_for_meta_field": "Search for custom field",
     "search_for_transaction": "Search for transaction",
     "search_for_transactions": "Search for transactions",
     "simple_search": "Simple search"
@@ -376,6 +384,8 @@
     "set_destination_account_to_no_account": "Set destination account to no account",
     "set_destination_account_to_value": "Set destination account to “{{value}}”",
     "set_lines": "Set lines",
+    "set_meta_field_value": "Set custom field “{{fieldName}}” to “{{value}}”",
+    "set_meta_value": "Set custom field",
     "set_source_account_to_no_account": "Set source account to no account",
     "set_source_account_to_value": "Set source account to “{{value}}”",
     "set_timestamp": "Set timestamp",
