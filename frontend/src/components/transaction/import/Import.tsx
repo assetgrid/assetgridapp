@@ -227,9 +227,15 @@ function SaveProfileModal (props: SaveProfileModalProps): React.ReactElement {
 
         setHasSaved(false);
         setIsSaving(true);
-        await api.User.updateCsvImportProfile(name, props.profile);
-        setIsSaving(false);
-        setHasSaved(true);
+        try {
+            setNameError(null);
+            await api.User.updateCsvImportProfile(name, props.profile);
+            setHasSaved(true);
+        } catch {
+            setNameError(t("common.error_occured"));
+        } finally {
+            setIsSaving(false);
+        }
     }
 }
 

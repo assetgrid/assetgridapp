@@ -136,7 +136,7 @@ namespace assetgrid_backend.Models
             public bool TrimWhitespace { get; set; }
 
             [MaxLength(250)]
-            public required string? Regex { get; set; }
+            public string? Regex { get; set; }
 
             [MaxLength(250)]
             public required string Pattern { get; set; }
