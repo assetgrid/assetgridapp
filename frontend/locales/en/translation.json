@@ -20,7 +20,7 @@
     "offset_not_in_net_worth": "Offset accounts (<1>not</1> included in net worth)",
     "revenue": "Revenue",
     "total": "Total",
-    "transfers": "Transfers",
+    "transfers": "Transactions",
     "your_accounts_in_net_worth": "Your accounts (included in net worth)"
   },
   "automation": {
