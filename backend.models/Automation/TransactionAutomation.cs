@@ -15,6 +15,7 @@ using assetgrid_backend.Models.ViewModels;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Logging.Abstractions;
+using assetgrid_backend.models.ViewModels;
 
 namespace assetgrid_backend.models.Automation
 {
@@ -56,8 +57,6 @@ namespace assetgrid_backend.models.Automation
     {
         public abstract string Key { get; }
         public abstract int Version { get; }
-        public abstract Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user);
-        public abstract Task Run(Transaction transaction, AssetgridDbContext context, User user);
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
@@ -80,18 +79,6 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-timestamp";
         public override int Version => 1;
         public DateTime Value { get; set; }
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            foreach (var transaction in transactions.ToList())
-            {
-                await Run(transaction, context, user);
-            }
-        }
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            transaction.DateTime = Value;
-            return Task.CompletedTask;
-        }
     }
 
     [TransactionAction(1, "set-description")]
@@ -100,18 +87,6 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-description";
         public override int Version => 1;
         public required string Value { get; set; }
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            foreach (var transaction in transactions.ToList())
-            {
-                await Run(transaction, context, user);
-            }
-        }
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            transaction.Description = Value;
-            return Task.CompletedTask;
-        }
     }
 
     [TransactionAction(1, "set-amount")]
@@ -121,33 +96,6 @@ namespace assetgrid_backend.models.Automation
         public override int Version => 1;
         public long Value { get; set; }
         public string ValueString { get => Value.ToString(); set => Value = long.Parse(value); }
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            foreach (var transaction in transactions.Where(t => ! t.IsSplit).ToList())
-            {
-                await Run(transaction, context, user);
-            }
-        }
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            if (transaction.IsSplit == false)
-            {
-                if (Value >= 0)
-                {
-                    transaction.Total = Value;
-                    transaction.TransactionLines.Single().Amount = Value;
-                }
-                else
-                {
-                    transaction.Total = -Value;
-                    transaction.TransactionLines.Single().Amount = -Value;
-                    var sourceId = transaction.SourceAccountId;
-                    transaction.SourceAccountId = transaction.DestinationAccountId;
-                    transaction.DestinationAccountId = sourceId;
-                }
-            }
-            return Task.CompletedTask;
-        }
     }
 
     [TransactionAction(1, "set-account")]
@@ -177,48 +125,6 @@ namespace assetgrid_backend.models.Automation
 
             return result;
         }
-
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            var valueAccount = await ValueAccount(context, user);
-
-            // Don't include transactions where the other account is the same as it would either result in transaction with same
-            // source and destination or no accounts
-            var transactionList = Account switch
-            {
-                "source" => transactions.Where(x => x.DestinationAccountId != Value).ToList(),
-                "destination" => transactions.Where(x => x.SourceAccountId != Value).ToList(),
-                _ => new List<Transaction>(),
-            };
-            foreach (var transaction in transactionList)
-            {
-                await Run(transaction, context, user);
-            }
-        }
-
-        public override async Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            var valueAccount = await ValueAccount(context, user);
-            if ((Account == "source" && transaction.DestinationAccountId == Value) ||
-                (Account == "destination" && transaction.SourceAccountId == Value))
-            {
-                // Do nothing as it would result in a transaction with the same account twice or no source or destination
-                return;
-            }
-
-            switch (Account)
-            {
-                case "source":
-                    transaction.SourceAccountId = Value;
-                    break;
-                case "destination":
-                    transaction.DestinationAccountId = Value;
-                    break;
-                default:
-                    throw new Exception($"Unknown account '{Account}'");
-            }
-            return;
-        }
     }
 
     [TransactionAction(1, "set-category")]
@@ -227,18 +133,6 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-category";
         public override int Version => 1;
         public required string Value { get; set; }
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            foreach (var transaction in transactions.ToList())
-            {
-                await Run(transaction, context, user);
-            }
-        }
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            transaction.TransactionLines.ForEach(line => line.Category = Value);
-            return Task.CompletedTask;
-        }
     }
 
     [TransactionAction(1, "set-lines")]
@@ -247,54 +141,6 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-lines";
         public override int Version => 1;
         public required List<ViewTransactionLine> Value { get; set; }
-        public override async Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            foreach (var transaction in transactions.ToList())
-            {
-                await Run(transaction, context, user);
-            }
-        }
-
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            if (Value.Count == 0)
-            {
-                // Turn transactions into non-split transactions
-                transaction.IsSplit = false;
-                transaction.TransactionLines = new List<TransactionLine> { transaction.TransactionLines.First() };
-                transaction.TransactionLines.First().Amount = transaction.Total;
-            }
-            else
-            {
-                var lines = Value.Select((line, i) => new TransactionLine
-                {
-                    Order = i + 1,
-                    Amount = line.Amount,
-                    Category = line.Category,
-                    Description = line.Description,
-                    Transaction = transaction,
-                }).ToList();
-                var total = lines.Select(line => line.Amount).Sum();
-                var swapSourceDestination = false;
-                if (total < 0)
-                {
-                    swapSourceDestination = true;
-                    total = -total;
-                    lines.ForEach(line => line.Amount = -line.Amount);
-                }
-
-                if (swapSourceDestination)
-                {
-                    var sourceId = transaction.SourceAccountId;
-                    transaction.SourceAccountId = transaction.DestinationAccountId;
-                    transaction.DestinationAccountId = sourceId;
-                }
-                transaction.TransactionLines = lines;
-                transaction.Total = total;
-                transaction.IsSplit = true;
-            }
-            return Task.CompletedTask;
-        }
     }
 
     [TransactionAction(1, "delete")]
@@ -302,17 +148,15 @@ namespace assetgrid_backend.models.Automation
     {
         public override string Key => "delete";
         public override int Version => 1;
-        public override Task Run(IQueryable<Transaction> transactions, AssetgridDbContext context, User user)
-        {
-            context.Transactions.RemoveRange(transactions);
-            return Task.CompletedTask;
-        }
+    }
 
-        public override Task Run(Transaction transaction, AssetgridDbContext context, User user)
-        {
-            context.Transactions.Remove(transaction);
-            return Task.CompletedTask;
-        }
+    [TransactionAction(1, "set-meta-value")]
+    public class ActionSetMetaValue : TransactionAutomationAction
+    {
+        public override string Key => "set-meta-value";
+        public override int Version => 1;
+        public required int FieldId { get; set; }
+        public required object? Value { get; set; }
     }
 
     #endregion

@@ -20,17 +20,20 @@ namespace assetgrid_backend.Controllers.Automation
         private readonly IUserService _user;
         private readonly IOptions<ApiBehaviorOptions> _apiBehaviorOptions;
         private readonly IMetaService _meta;
+        private readonly IAutomationService _automation;
 
         public TransactionAutomationController(
             AssetgridDbContext context,
             IUserService userService,
             IOptions<ApiBehaviorOptions> apiBehaviorOptions,
-            IMetaService meta)
+            IMetaService meta,
+            IAutomationService automation)
         {
             _context = context;
             _user = userService;
             _apiBehaviorOptions = apiBehaviorOptions;
             _meta = meta;
+            _automation = automation;
         }
 
         /// <summary>
@@ -44,34 +47,7 @@ namespace assetgrid_backend.Controllers.Automation
             var user = _user.GetCurrent(HttpContext)!;
             if (ModelState.IsValid)
             {
-                using (var transaction = _context.Database.BeginTransaction())
-                {
-                    // Get a list of all accounts the user can write to
-                    var writeAccountIds = await _context.UserAccounts
-                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                        .Select(account => account.AccountId)
-                        .ToListAsync();
-
-                    var metaFields = await _meta.GetFields(user.Id);
-                    var query = _context.Transactions
-                        .Include(t => t.SourceAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.SourceAccount!.Identifiers)
-                        .Include(t => t.DestinationAccount!.Users!.Where(u => u.UserId == user.Id))
-                        .Include(t => t.DestinationAccount!.Identifiers)
-                        .Include(t => t.TransactionLines)
-                        .Include(t => t.Identifiers)
-                        .Where(t => writeAccountIds.Contains(t.SourceAccountId ?? -1) || writeAccountIds.Contains(t.DestinationAccountId ?? -1))
-                        .ApplySearch(automation.Query, metaFields);
-
-                    foreach (var action in automation.Actions)
-                    {
-                        await action.Run(query, _context, user);
-                    }
-
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
-                }
-
+                await _automation.RunAutomation(automation, user);
                 return Ok();
             }
             return _apiBehaviorOptions.Value?.InvalidModelStateResponseFactory(ControllerContext) ?? BadRequest();

@@ -28,6 +28,7 @@ export function SetMetaValueEditor (props: TransactionActionEditorProps<ActionSe
     }, [props.action.fieldId, fields]);
 
     let prettyValue = "";
+    const value = props.action.value;
     if (props.action.value !== null) {
         switch (field?.valueType) {
             case undefined:
@@ -35,19 +36,19 @@ export function SetMetaValueEditor (props: TransactionActionEditorProps<ActionSe
                 break;
             case FieldValueType.TextLine:
             case FieldValueType.TextLong:
-                prettyValue = props.action.value as string;
+                prettyValue = value as string;
                 break;
             case FieldValueType.Account:
-                prettyValue = `#${(props.action.value as Account).id} ${(props.action.value as Account).name}`;
+                prettyValue = `#${(value as Account).id} ${(value as Account).name}`;
                 break;
             case FieldValueType.Transaction:
-                prettyValue = `#${(props.action.value as Transaction).id} ${(props.action.value as Transaction).description}`;
+                prettyValue = `#${(value as Transaction).id} ${(value as Transaction).description}`;
                 break;
             case FieldValueType.Number:
-                prettyValue = formatNumberWithUser(props.action.value as Decimal, user);
+                prettyValue = formatNumberWithUser(value as Decimal, user);
                 break;
             case FieldValueType.Boolean:
-                prettyValue = props.action.value === true ? t("common.yes") : t("common.no");
+                prettyValue = value === true ? t("common.yes") : t("common.no");
                 break;
             case FieldValueType.Attachment:
                 prettyValue = t("common.file");
@@ -61,7 +62,7 @@ export function SetMetaValueEditor (props: TransactionActionEditorProps<ActionSe
             disabled={false}
             onChange={value => fieldChanged(value)}
             value={field}
-            fields={fields}
+            fields={fields?.filter(x => x.valueType !== FieldValueType.Attachment)}
             errors={isError ? [t("common.error_occured")] : undefined} />
         { field !== null && <TransactionMetaInput
             disabled={false}

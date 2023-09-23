@@ -33,7 +33,6 @@ namespace assetgrid_backend.models.ViewModels
     {
         public required int MetaId { get; set; }
         public required object? Value { get; set; }
-        public required MetaFieldValueType Type { get; set; }
     }
 
     public class ViewCreateMetaField

@@ -505,141 +505,160 @@ namespace assetgrid_backend.Controllers
 
             if (ModelState.IsValid)
             {
-                var failed = new List<ViewModifyTransaction>();
-                var duplicate = new List<ViewModifyTransaction>();
-                var success = new List<Transaction>();
-
-                var writeAccounts = await _context.UserAccounts
-                    .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
-                    .Include(account => account.Account)
-                    .Include(account => account.Account.Identifiers)
-                    .ToDictionaryAsync(x => x.AccountId, x => x);
-                var writeAccountIds = writeAccounts.Keys;
-
-                var identifiers = transactions
-                    .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
-                    .ToArray();
-                var duplicateIdentifiers = (await _context.TransactionUniqueIdentifiers
-                    .Where(x => writeAccountIds.Contains(x.Transaction.SourceAccountId ?? -1) || writeAccountIds.Contains(x.Transaction.DestinationAccountId ?? -1))
-                    .Where(x => identifiers.Contains(x.Identifier))
-                    .Select(x => x.Identifier)
-                    .ToListAsync())
-                    .ToHashSet();
-
-                // Get all automations that will be run on these transactions
-                var automations = await _context.UserTransactionAutomations
-                        .Include(x => x.TransactionAutomation)
-                        .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
-                        .ToListAsync();
-
-                foreach (var transaction in transactions)
+                using (var dbTransaction = await _context.Database.BeginTransactionAsync())
                 {
-                    if (transaction.Identifiers.Any(x => duplicateIdentifiers.Contains(x.Trim())))
+                    var failed = new List<ViewModifyTransaction>();
+                    var duplicate = new List<ViewModifyTransaction>();
+                    var success = new List<Transaction>();
+
+                    var writeAccounts = await _context.UserAccounts
+                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                        .Include(account => account.Account)
+                        .Include(account => account.Account.Identifiers)
+                        .ToDictionaryAsync(x => x.AccountId, x => x);
+                    var writeAccountIds = writeAccounts.Keys;
+
+                    var identifiers = transactions
+                        .SelectMany(t => t.Identifiers.Select(identifier => identifier.Trim()))
+                        .ToArray();
+                    var duplicateIdentifiers = (await _context.TransactionUniqueIdentifiers
+                        .Where(x => writeAccountIds.Contains(x.Transaction.SourceAccountId ?? -1) || writeAccountIds.Contains(x.Transaction.DestinationAccountId ?? -1))
+                        .Where(x => identifiers.Contains(x.Identifier))
+                        .Select(x => x.Identifier)
+                        .ToListAsync())
+                        .ToHashSet();
+
+                    // Get all automations that will be run on these transactions
+                    var automations = await _context.UserTransactionAutomations
+                            .Include(x => x.TransactionAutomation)
+                            .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
+                            .ToListAsync();
+
+                    // Prefetch meta fields to speed up import
+                    var metafields = await _meta.GetFields(user.Id);
+
+                    foreach (var transaction in transactions)
                     {
-                        duplicate.Add(transaction);
+                        if (transaction.Identifiers.Any(x => duplicateIdentifiers.Contains(x.Trim())))
+                        {
+                            duplicate.Add(transaction);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                if ((transaction.SourceId.HasValue && !writeAccounts.ContainsKey(transaction.SourceId.Value)) ||
+                                    (transaction.DestinationId.HasValue && !writeAccounts.ContainsKey(transaction.DestinationId.Value)))
+                                {
+                                    throw new Exception("Cannot write to this account");
+                                }
+
+                                transaction.Identifiers.ForEach(x => duplicateIdentifiers.Add(x.Trim()));
+
+                                var result = new Transaction
+                                {
+                                    DateTime = transaction.DateTime,
+                                    SourceAccountId = transaction.SourceId,
+                                    Description = transaction.Description,
+                                    DestinationAccountId = transaction.DestinationId,
+                                    IsSplit = transaction.IsSplit,
+                                    Identifiers = null!,
+                                    Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
+                                    TransactionLines = null!,
+                                };
+                                result.Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
+                                result.TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
+                                {
+                                    Amount = line.Amount,
+                                    Description = line.Description,
+                                    Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
+                                    Order = i + 1,
+                                    Transaction = result,
+                                    TransactionId = result.Id
+                                }).ToList();
+
+                                // Always store transactions in a format where the total is positive
+                                if (result.Total < 0)
+                                {
+                                    result.Total = -result.Total;
+                                    var sourceId = result.SourceAccountId;
+                                    result.SourceAccountId = result.DestinationAccountId;
+                                    result.DestinationAccountId = sourceId;
+                                    result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                                }
+
+                                _context.Transactions.Add(result);
+                                success.Add(result);
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.LogError(e, e.Message);
+                                failed.Add(transaction);
+                            }
+                        }
                     }
-                    else
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.AutoDetectChangesEnabled = true;
+
+                    foreach (var transaction in success)
                     {
-                        try
+                        foreach (var automation in automations)
                         {
-                            if ((transaction.SourceId.HasValue && !writeAccounts.ContainsKey(transaction.SourceId.Value)) ||
-                                (transaction.DestinationId.HasValue && !writeAccounts.ContainsKey(transaction.DestinationId.Value)))
+                            try
                             {
-                                throw new Exception("Cannot write to this account");
+                                var applied = await _automation.ApplyAutomationToTransaction(transaction, automation.TransactionAutomation, user, metafields);
                             }
-
-                            transaction.Identifiers.ForEach(x => duplicateIdentifiers.Add(x.Trim()));
-
-                            var result = new Transaction
+                            catch (Exception e)
                             {
-                                DateTime = transaction.DateTime,
-                                SourceAccountId = transaction.SourceId,
-                                Description = transaction.Description,
-                                DestinationAccountId = transaction.DestinationId,
-                                IsSplit = transaction.IsSplit,
-                                Identifiers = null!,
-                                Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
-                                TransactionLines = null!,
-                            };
-                            result.Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
-                            result.TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
-                            {
-                                Amount = line.Amount,
-                                Description = line.Description,
-                                Category = string.IsNullOrWhiteSpace(line.Category) ? "" : line.Category.Trim(),
-                                Order = i + 1,
-                                Transaction = result,
-                                TransactionId = result.Id
-                            }).ToList();
-
-                            // Always store transactions in a format where the total is positive
-                            if (result.Total < 0)
-                            {
-                                result.Total = -result.Total;
-                                var sourceId = result.SourceAccountId;
-                                result.SourceAccountId = result.DestinationAccountId;
-                                result.DestinationAccountId = sourceId;
-                                result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                                _logger.LogError(e, e.Message);
                             }
-
-                            foreach (var automation in automations)
-                            {
-                                await _automation.ApplyAutomationToTransaction(result, automation.TransactionAutomation, user);
-                            }
-
-                            _context.Transactions.Add(result);
-                            success.Add(result);
-                        }
-                        catch (Exception e)
-                        {
-                            _logger.LogError(e, e.Message);
-                            failed.Add(transaction);
                         }
                     }
+
+                    await _context.SaveChangesAsync();
+                    await dbTransaction.CommitAsync();
+
+                    return Ok(new ViewTransactionCreateManyResponse
+                    {
+                        Succeeded = success.Select(result => new ViewTransaction
+                        {
+                            Id = result.Id,
+                            Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
+                            DateTime = result.DateTime,
+                            Description = result.Description,
+                            Total = result.Total,
+                            IsSplit = result.IsSplit,
+                            Source = result.SourceAccount != null
+                                        ? !writeAccounts.ContainsKey(result.SourceAccount.Id) ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
+                                            id: result.SourceAccount.Id,
+                                            name: result.SourceAccount.Name,
+                                            description: result.SourceAccount.Description,
+                                            identifiers: result.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                            favorite: writeAccounts[result.SourceAccount.Id].Favorite,
+                                            includeInNetWorth: writeAccounts[result.SourceAccount.Id].IncludeInNetWorth,
+                                            permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.SourceAccount.Id].Permissions),
+                                            balance: 0
+                                        ) : null,
+                            Destination = result.DestinationAccount != null
+                                        ? !writeAccounts.ContainsKey(result.DestinationAccount.Id) ? ViewAccount.GetNoReadAccess(result.DestinationAccount.Id) : new ViewAccount(
+                                            id: result.DestinationAccount.Id,
+                                            name: result.DestinationAccount.Name,
+                                            description: result.DestinationAccount.Description,
+                                            identifiers: result.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
+                                            favorite: writeAccounts[result.DestinationAccount.Id].Favorite,
+                                            includeInNetWorth: writeAccounts[result.DestinationAccount.Id].IncludeInNetWorth,
+                                            permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.DestinationAccount.Id].Permissions),
+                                            balance: 0
+                                        ) : null,
+                            Lines = result.TransactionLines
+                                .OrderBy(line => line.Order)
+                                .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
+                                .ToList(),
+                        }).ToList(),
+                        Failed = failed,
+                        Duplicate = duplicate,
+                    });
                 }
-                await _context.SaveChangesAsync();
-                _context.ChangeTracker.AutoDetectChangesEnabled = true;
-
-                return Ok(new ViewTransactionCreateManyResponse
-                {
-                    Succeeded = success.Select(result => new ViewTransaction
-                    {
-                        Id = result.Id,
-                        Identifiers = result.Identifiers.Select(x => x.Identifier).ToList(),
-                        DateTime = result.DateTime,
-                        Description = result.Description,
-                        Total = result.Total,
-                        IsSplit = result.IsSplit,
-                        Source = result.SourceAccount != null
-                                    ? !writeAccounts.ContainsKey(result.SourceAccount.Id) ? ViewAccount.GetNoReadAccess(result.SourceAccount.Id) : new ViewAccount(
-                                        id: result.SourceAccount.Id,
-                                        name: result.SourceAccount.Name,
-                                        description: result.SourceAccount.Description,
-                                        identifiers: result.SourceAccount.Identifiers!.Select(x => x.Identifier).ToList(),
-                                        favorite: writeAccounts[result.SourceAccount.Id].Favorite,
-                                        includeInNetWorth: writeAccounts[result.SourceAccount.Id].IncludeInNetWorth,
-                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.SourceAccount.Id].Permissions),
-                                        balance: 0
-                                    ) : null,
-                        Destination = result.DestinationAccount != null
-                                     ? !writeAccounts.ContainsKey(result.DestinationAccount.Id) ? ViewAccount.GetNoReadAccess(result.DestinationAccount.Id) : new ViewAccount(
-                                        id: result.DestinationAccount.Id,
-                                        name: result.DestinationAccount.Name,
-                                        description: result.DestinationAccount.Description,
-                                        identifiers: result.DestinationAccount.Identifiers!.Select(x => x.Identifier).ToList(),
-                                        favorite: writeAccounts[result.DestinationAccount.Id].Favorite,
-                                        includeInNetWorth: writeAccounts[result.DestinationAccount.Id].IncludeInNetWorth,
-                                        permissions: ViewAccount.PermissionsFromDbPermissions(writeAccounts[result.DestinationAccount.Id].Permissions),
-                                        balance: 0
-                                    ) : null,
-                        Lines = result.TransactionLines
-                            .OrderBy(line => line.Order)
-                            .Select(line => new ViewTransactionLine(amount: line.Amount, description: line.Description, category: line.Category))
-                            .ToList(),
-                    }).ToList(),
-                    Failed = failed,
-                    Duplicate = duplicate,
-                });
             }
 
             _context.ChangeTracker.AutoDetectChangesEnabled = true;

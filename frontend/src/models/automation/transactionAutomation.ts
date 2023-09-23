@@ -99,6 +99,11 @@ export function serializeTransactionAction (action: TransactionAction): Transact
             return { ...action, value: action.value.toISO() } as any as TransactionAction;
         case "set-lines":
             return { ...action, value: action.value.map(serializeTransactionLine) } as any as TransactionAction;
+        case "set-meta-value":
+            if (action.value !== null && (action.value as any).id !== undefined) {
+                return { ...action, value: (action.value as any).id } as any as TransactionAction;
+            }
+            return action;
         default:
             return action;
     }
