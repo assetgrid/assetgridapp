@@ -3,7 +3,7 @@ import * as React from "react";
 import { useNavigate } from "react-router";
 import { useApi } from "../../lib/ApiClient";
 import { routes } from "../../lib/routes";
-import { forget, formatNumberWithUser } from "../../lib/Utils";
+import { formatNumberWithUser } from "../../lib/Utils";
 import { Account } from "../../models/account";
 import Card from "../common/Card";
 import InputButton from "../input/InputButton";
@@ -16,13 +16,16 @@ import * as regular from "@fortawesome/free-regular-svg-icons";
 import InputTextMultiple from "../input/InputTextMultiple";
 import { useTranslation } from "react-i18next";
 import { useUser } from "../App";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { UseMutateFunction } from "@tanstack/react-query";
 import { HttpErrorResult } from "../../models/api";
-import { User } from "../../models/user";
 
 interface Props {
     account: Account
-    isUpdatingFavorite: boolean
+    accountMutation: {
+        mutate: UseMutateFunction<Account, HttpErrorResult, Account, unknown>
+        error: HttpErrorResult | null
+        isLoading: boolean
+    }
 }
 
 export default function AccountDetailsCard (props: Props): React.ReactElement {
@@ -30,31 +33,7 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
     const user = useUser();
     const navigate = useNavigate();
     const api = useApi();
-    const queryClient = useQueryClient();
-    const { mutate, error, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
-        mutationFn: async account => await api.Account.update(props.account.id, account),
-        onSuccess: result => {
-            queryClient.setQueryData<Account>(["account", props.account.id, "full"], _ => result);
-            queryClient.setQueryData<Account>(["account", props.account.id], _ => result);
-            forget(queryClient.invalidateQueries)(["account", "list"]);
-
-            // Update favorite accounts
-            if (result.favorite !== props.account.favorite) {
-                if (result.favorite) {
-                    queryClient.setQueryData<User>(["user"], old => ({
-                        ...old!,
-                        favoriteAccounts: [...old!.favoriteAccounts, result]
-                    }));
-                } else {
-                    queryClient.setQueryData<User>(["user"], old => ({
-                        ...old!,
-                        favoriteAccounts: old!.favoriteAccounts.filter(fav => fav.id !== result.id)
-                    }));
-                }
-            }
-            setEditingModel(null);
-        }
-    });
+    const { mutate, error, isLoading: isMutating } = props.accountMutation;
     const errors = error?.status === 400 ? error.errors : {};
     const { t } = useTranslation();
 
@@ -63,11 +42,13 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
             style={{ flexGrow: 1 }}
             title={<>
                 <span style={{ flexGrow: 1 }}>{t("account.account_details")}</span>
-                {props.isUpdatingFavorite
+                {isMutating
                     ? <span className="icon">
                         <FontAwesomeIcon icon={solid.faSpinner} pulse />
                     </span>
-                    : <span className="icon" onClick={() => mutate({ ...props.account, favorite: !props.account.favorite })} style={{ cursor: "pointer" }}>
+                    : <span className="icon"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => { mutate({ ...props.account, favorite: !props.account.favorite }); setEditingModel(null); }}>
                         {props.account.favorite ? <FontAwesomeIcon icon={solid.faStar} /> : <FontAwesomeIcon icon={regular.faStar} />}
                     </span>}
                 <InputIconButton icon={solid.faPen} onClick={() => setEditingModel(props.account)} />
@@ -171,7 +152,11 @@ export default function AccountDetailsCard (props: Props): React.ReactElement {
                 </tbody>
             </table>
             <div className="buttons">
-                <InputButton disabled={isMutating || api === null} className="is-primary" onClick={() => mutate(model)}>{t("common.save_changes")}</InputButton>
+                <InputButton disabled={isMutating || api === null}
+                    className="is-primary"
+                    onClick={() => { mutate(model); setEditingModel(null); }}>
+                    {t("common.save_changes")}
+                </InputButton>
                 <InputButton onClick={() => setEditingModel(null)}>{t("common.cancel")}</InputButton>
             </div>
         </Card>;

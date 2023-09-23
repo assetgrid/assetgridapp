@@ -48,12 +48,12 @@ export default function PageAccount (): React.ReactElement {
     const api = useApi();
     const { data: account, isError } = useQuery({ queryKey: ["account", id, "full"], queryFn: async () => await api.Account.get(id) });
     const queryClient = useQueryClient();
-    const { mutate, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
-        mutationFn: async account => await api.Account.update(id, account),
-        onSuccess: result => {
+    const { mutate, error, isLoading: isMutating } = useMutation<Account, HttpErrorResult, Account, unknown>({
+        mutationFn: async account => ({ ...(await api.Account.update(id, account)), balance: account.balance }),
+        onSuccess: async (result) => {
             queryClient.setQueryData<Account>(["account", id, "full"], _ => result);
             queryClient.setQueryData<Account>(["account", id], _ => result);
-            forget(queryClient.invalidateQueries)(["account", "list"]);
+            await queryClient.invalidateQueries(["account", "list"]);
 
             // Update favorite accounts
             if (result.favorite !== account?.favorite) {
@@ -118,7 +118,7 @@ export default function PageAccount (): React.ReactElement {
         </>}
         subtitle={account.description.trim() !== "" ? account.description : PeriodFunctions.print(period)}
         period={[period, period => { setPeriod(period); setPage(1); }]} />,
-        <AccountDetailsCard account={account} isUpdatingFavorite={isMutating} />,
+        <AccountDetailsCard account={account} accountMutation={{ mutate, error, isLoading: isMutating }} />,
         <AccountCategoryChart id={id} period={period} />,
         <AccountBalanceChart id={id} period={period} />,
         <AccountTransactionList
