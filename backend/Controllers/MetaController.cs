@@ -16,7 +16,7 @@ namespace assetgrid_backend.Controllers
     [ApiController]
     [Authorize]
     [Route("/api/v1/[controller]")]
-    public class MetaController : Controller
+    public class MetaController : Controller 
     {
         private readonly AssetgridDbContext _context;
         private readonly IUserService _user;

@@ -127,6 +127,9 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -135,7 +138,12 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Property<long>("FileSize")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Attachments");
                 });
@@ -616,6 +624,17 @@ namespace assetgrid_backend.Migrations.Sqlite.Migrations
                     b.Navigation("TransactionAutomation");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("assetgrid_backend.models.MetaFields.Attachment", b =>
+                {
+                    b.HasOne("assetgrid_backend.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("assetgrid_backend.models.MetaFields.MetaAccount<assetgrid_backend.Models.Transaction>", b =>

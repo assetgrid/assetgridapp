@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using assetgrid_backend.Models;
 
@@ -10,9 +11,10 @@ using assetgrid_backend.Models;
 namespace assetgrid_backend.Migrations.MySql
 {
     [DbContext(typeof(AssetgridDbContext))]
-    partial class AssetgridDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230924122851_0.4.0")]
+    partial class _040
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
