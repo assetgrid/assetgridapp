@@ -28,8 +28,8 @@ export function SetMetaValueEditor (props: TransactionActionEditorProps<ActionSe
     }, [props.action.fieldId, fields]);
 
     let prettyValue = "";
-    const value = props.action.value;
-    if (props.action.value !== null) {
+    const value = props.action.value?.value ?? null;
+    if (value !== null) {
         switch (field?.valueType) {
             case undefined:
                 prettyValue = "";
@@ -68,10 +68,17 @@ export function SetMetaValueEditor (props: TransactionActionEditorProps<ActionSe
             disabled={false}
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             field={{
-                value: props.action.value,
+                value: props.action.value?.value ?? null,
                 type: field.valueType
             } as MetaFieldType}
-            onChange={value => props.onChange({ ...props.action, value })}
+            onChange={value => props.onChange({
+                ...props.action,
+                value: {
+                    metaId: field.id,
+                    type: field.valueType,
+                    value
+                }
+            })}
         /> }
     </DefaultTransactionEditorLayout>;
 

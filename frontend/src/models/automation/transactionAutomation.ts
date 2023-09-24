@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { SearchGroup } from "../search";
 import { serializeTransactionLine, TransactionLine } from "../transaction";
-import { MetaFieldValue } from "../meta";
+import { serializeSetMetaFieldValue, SetMetaFieldValue } from "../meta";
 
 export interface TransactionAutomation {
     id?: number
@@ -82,7 +82,7 @@ export interface ActionSetCategory {
 export interface ActionSetMetaValue {
     key: "set-meta-value"
     fieldId: number | null
-    value: MetaFieldValue["value"] | null
+    value: SetMetaFieldValue | null
 }
 
 export interface ActionDelete {
@@ -100,8 +100,8 @@ export function serializeTransactionAction (action: TransactionAction): Transact
         case "set-lines":
             return { ...action, value: action.value.map(serializeTransactionLine) } as any as TransactionAction;
         case "set-meta-value":
-            if (action.value !== null && (action.value as any).id !== undefined) {
-                return { ...action, value: (action.value as any).id } as any as TransactionAction;
+            if (action.value !== null) {
+                return { ...action, value: serializeSetMetaFieldValue(action.value) } as any as TransactionAction;
             }
             return action;
         default:

@@ -43,7 +43,7 @@ export function serializeSetMetaFieldValue (field: SetMetaFieldValue): SetMetaFi
                 field.value = (field.value as Transaction).id as any;
                 break;
             case FieldValueType.Attachment:
-                // Attachments are uploaded using a separate call, so non-null values are simply set to truee
+                // Attachments are uploaded using a separate call, so non-null values are simply set to true
                 if (field.value !== null) {
                     field.value = true;
                 }

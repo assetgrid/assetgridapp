@@ -156,7 +156,7 @@ namespace assetgrid_backend.models.Automation
         public override string Key => "set-meta-value";
         public override int Version => 1;
         public required int FieldId { get; set; }
-        public required object? Value { get; set; }
+        public required ViewSetMetaField Value { get; set; }
     }
 
     #endregion

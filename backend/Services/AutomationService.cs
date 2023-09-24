@@ -193,13 +193,9 @@ namespace assetgrid_backend.Services
                     _context.Transactions.Remove(transaction);
                     break;
                 case ActionSetMetaValue a:
-                    await _meta.SetTransactionMetaValues(transaction.Id, user.Id, new List<ViewSetMetaField>
-                    {
-                        new ViewSetMetaField {
-                            MetaId = a.FieldId,
-                            Value = a.Value,
-                        }
-                    });
+                    await _meta.SetTransactionMetaValues(
+                        transaction.Id,
+                        user.Id, new List<ViewSetMetaField> { a.Value });
                     break;
             }
         }
