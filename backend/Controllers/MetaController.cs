@@ -165,6 +165,7 @@ namespace assetgrid_backend.Controllers
         public async Task<IActionResult> UploadAttachment(int fieldId, string type, int objectId, IFormFile file)
         {
             var user = _user.GetCurrent(HttpContext)!;
+            if (user == null) return Unauthorized();
 
             if (type.ToLower() != "transaction")
             {
@@ -192,7 +193,7 @@ namespace assetgrid_backend.Controllers
                     _attachment.DeleteAttachment(oldAttachment.Value);
                     _context.Remove(oldAttachment);
                 }
-                attachment = await _attachment.CreateAttachment(file);
+                attachment = await _attachment.CreateAttachment(file, user);
 
                 var previousValue = _context.TransactionMetaAttachment.SingleOrDefault(x => x.ObjectId == objectId && x.FieldId == fieldId);
                 if (previousValue != null)

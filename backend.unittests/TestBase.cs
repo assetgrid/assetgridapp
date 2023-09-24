@@ -30,6 +30,7 @@ namespace backend.unittests
         public TransactionController TransactionController { get; set; }
         public TransactionAutomationController AutomationController { get; set; }
         public TaxonomyController TaxonomyController { get; set; }
+        public MetaController MetaController { get; set; }
 
         // Services
         public UserService UserService { get; set; }
@@ -52,7 +53,8 @@ namespace backend.unittests
             Context = new AssetgridDbContext(options.Options);
 
             // Setup services
-            UserService = new UserService(JwtSecret.Get(), Context);
+            var jwtSecret = JwtSecret.Get();
+            UserService = new UserService(jwtSecret, Context);
             AccountService = new AccountService(Context);
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?> { { "UploadDirectory", "./Content" } })
@@ -80,6 +82,7 @@ namespace backend.unittests
             TransactionController.ObjectValidator = objectValidator.Object;
             AutomationController = new TransactionAutomationController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), MetaService, AutomationService);
             TaxonomyController = new TaxonomyController(Context, UserService);
+            MetaController = new MetaController(Context, UserService, Options.Create<ApiBehaviorOptions>(null!), AttachmentService, jwtSecret);
         }
     }
 }

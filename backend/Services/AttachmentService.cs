@@ -19,7 +19,7 @@ namespace assetgrid_backend.Services
             _context = context;
         }
 
-        public async Task<Attachment> CreateAttachment (IFormFile file)
+        public async Task<Attachment> CreateAttachment (IFormFile file, User owner)
         {
             var fileName = file.FileName;
             if (fileName.Length > 250)
@@ -35,7 +35,10 @@ namespace assetgrid_backend.Services
             var attachment = new Attachment
             {
                 FileName = fileName,
-                FileSize = file.Length
+                FileSize = file.Length,
+                DateTime = DateTime.Now,
+                OwnerId = owner.Id,
+                Owner = owner
             };
             _context.Attachments.Add(attachment);
             await _context.SaveChangesAsync();

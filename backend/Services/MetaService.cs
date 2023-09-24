@@ -100,9 +100,12 @@ namespace assetgrid_backend.Services
                     MetaFieldValueType.Boolean => x.Field.TransactionMetaBoolean?.SingleOrDefault()?.Value,
                     MetaFieldValueType.Number => x.Field.TransactionMetaNumber?.SingleOrDefault()?.Value.ToString(),
                     MetaFieldValueType.Account => x.Field.TransactionMetaAccount?.SingleOrDefault()?.ValueId != null
-                        ? accounts[x.Field.TransactionMetaAccount.SingleOrDefault()!.ValueId]
-                        : null,
-                    MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.ValueId != null
+                        ? (accounts.ContainsKey(x.Field.TransactionMetaAccount.SingleOrDefault()!.ValueId)
+                            ? accounts[x.Field.TransactionMetaAccount.SingleOrDefault()!.ValueId]
+                            : ViewAccount.GetNoReadAccess(x.Field.TransactionMetaAccount.SingleOrDefault()!.ValueId)
+                        ) : null,
+                    MetaFieldValueType.Transaction => x.Field.TransactionMetaTransaction?.SingleOrDefault()?.ValueId != null &&
+                            transactions.ContainsKey(x.Field.TransactionMetaTransaction.SingleOrDefault()!.ValueId)
                         ? transactions[x.Field.TransactionMetaTransaction.SingleOrDefault()!.ValueId]
                         : null,
                     _ => throw new Exception("Unknown meta field value type")
