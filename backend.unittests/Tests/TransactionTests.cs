@@ -1091,6 +1091,45 @@ namespace backend.unittests.Tests
             Assert.Equal("New description", updatedTransaction.Description);
             Assert.Equal("test category", updatedTransaction.Lines.First().Category);
         }
+
+        [Fact]
+        public async void CreateModifyTransactionMultipleLines()
+        {
+            var model = new ViewModifyTransaction
+            {
+                Total = 1000,
+                DateTime = DateTime.Now,
+                Description = "Test description",
+                SourceId = AccountA.Id,
+                DestinationId = null,
+                Identifiers = new List<string>(),
+                Lines = new List<ViewTransactionLine> {
+                    new ViewTransactionLine(500, "", "Category 1" ),
+                    new ViewTransactionLine(500, "", "Category 2" ),
+                },
+                MetaData = new List<ViewSetMetaField>(),
+            };
+
+            // Make sure the transaction was properly created
+            var transaction = (await TransactionController.Create(model)).OkValue<ViewTransaction>();
+            Assert.NotNull(transaction);
+            Assert.Equivalent(transaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+
+            // Modify the transaction to be unsplit
+            model.Lines = new List<ViewTransactionLine> { new ViewTransactionLine(1000, "", "Category 1") };
+            var modifiedTransaction = (await TransactionController.Update(transaction.Id, model)).OkValue<ViewTransaction>();
+            Assert.NotNull(modifiedTransaction);
+            Assert.Equivalent(modifiedTransaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+
+            // Modify the transaction to be split again
+            model.Lines = new List<ViewTransactionLine> {
+                new ViewTransactionLine(500, "", "Category 1" ),
+                new ViewTransactionLine(500, "", "Category 2" ),
+            };
+            modifiedTransaction = (await TransactionController.Update(transaction.Id, model)).OkValue<ViewTransaction>();
+            Assert.NotNull(modifiedTransaction);
+            Assert.Equivalent(modifiedTransaction, (await TransactionController.Get(transaction.Id)).OkValue<ViewTransaction>());
+        }
     }
 
 }
