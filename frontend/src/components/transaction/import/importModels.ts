@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { DateTime } from "luxon";
 import { Account } from "../../../models/account";
+import { SetMetaFieldValue } from "../../../models/meta";
 
 export interface CsvCreateTransaction {
     rowNumber: number
@@ -18,4 +19,6 @@ export interface CsvCreateTransaction {
 
     amountText: string
     amount: Decimal | "invalid"
+
+    metaFields: SetMetaFieldValue[]
 }

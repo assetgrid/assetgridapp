@@ -141,7 +141,7 @@ export function Import (props: Props): React.ReactElement {
             total: transaction.amount === "invalid" ? new Decimal(0) : transaction.amount,
             isSplit: false,
             lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }],
-            metaData: null
+            metaData: transaction.metaFields
         }));
         let progress = invalidTransactions.length;
         let succeeded: Transaction[] = [];
@@ -162,7 +162,7 @@ export function Import (props: Props): React.ReactElement {
             total: transaction.amount as Decimal, // We know it's not invalid as we filter those out earlier
             isSplit: false,
             lines: [{ amount: transaction.amount as Decimal, category: transaction.category, description: "" }],
-            metaData: null
+            metaData: transaction.metaFields
         }));
 
         while (progress - invalidTransactions.length < createModels.length - 1) {

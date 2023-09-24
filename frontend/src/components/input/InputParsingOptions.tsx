@@ -118,7 +118,7 @@ export class InputParseOptionsModal extends React.Component<InputParseOptionsMod
     public render (): React.ReactElement {
         return <Modal
             active={true}
-            title={"Parse options"}
+            title={t("import.parse_options")}
             close={() => this.props.close()}
             footer={<>
                 <button className="button is-success" onClick={() => this.saveChanges()} disabled={!this.state.valid}>{t("common.apply_changes")}</button>

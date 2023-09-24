@@ -12,6 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
 using assetgrid_backend.models.ViewModels;
+using assetgrid_backend.models.MetaFields;
 
 namespace assetgrid_backend.Controllers
 {
@@ -511,8 +512,9 @@ namespace assetgrid_backend.Controllers
                     var duplicate = new List<ViewModifyTransaction>();
                     var success = new List<Transaction>();
 
+                    var writePermissions = new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions };
                     var writeAccounts = await _context.UserAccounts
-                        .Where(account => account.UserId == user.Id && new[] { UserAccountPermissions.All, UserAccountPermissions.ModifyTransactions }.Contains(account.Permissions))
+                        .Where(account => account.UserId == user.Id && writePermissions.Contains(account.Permissions))
                         .Include(account => account.Account)
                         .Include(account => account.Account.Identifiers)
                         .ToDictionaryAsync(x => x.AccountId, x => x);
@@ -528,14 +530,37 @@ namespace assetgrid_backend.Controllers
                         .ToListAsync())
                         .ToHashSet();
 
+                    // Prefetch meta fields to speed up import
+                    var metafields = await _meta.GetFields(user.Id);
+
+                    // Create a list of all transactions referenced in the meta data
+                    List<int> referencedTransactionIds = new List<int>();
+                    foreach (var transaction in transactions)
+                    {
+                        if (transaction.MetaData != null)
+                        {
+                            foreach (var metaValue in transaction.MetaData!)
+                            {
+                                if (metaValue.Value != null && metafields.ContainsKey(metaValue.MetaId) &&
+                                    metafields[metaValue.MetaId].ValueType == MetaFieldValueType.Number)
+                                {
+                                    referencedTransactionIds.Add((int)metaValue.Value!);
+                                }
+                            }
+                        }
+                    }
+                    var writeableTransactionIds = _context.Transactions
+                        .Where(x => referencedTransactionIds.Contains(x.Id))
+                        .Where(x => x.SourceAccount!.Users!.Any(x => x.UserId == user.Id && writePermissions.Contains(x.Permissions)) ||
+                            x.DestinationAccount!.Users!.Any(x => x.UserId == user.Id && writePermissions.Contains(x.Permissions)))
+                        .Select(x => x.Id)
+                        .ToHashSet();
+
                     // Get all automations that will be run on these transactions
                     var automations = await _context.UserTransactionAutomations
                             .Include(x => x.TransactionAutomation)
                             .Where(x => x.UserId == user.Id && x.Enabled && x.TransactionAutomation.TriggerOnCreate)
                             .ToListAsync();
-
-                    // Prefetch meta fields to speed up import
-                    var metafields = await _meta.GetFields(user.Id);
 
                     foreach (var transaction in transactions)
                     {
@@ -565,6 +590,13 @@ namespace assetgrid_backend.Controllers
                                     Identifiers = null!,
                                     Total = transaction.Total ?? transaction.Lines.Select(line => line.Amount).Sum(),
                                     TransactionLines = null!,
+                                    MetaAccountValues = new List<models.MetaFields.MetaAccount<Transaction>>(),
+                                    MetaTextLineValues = new List<models.MetaFields.MetaTextLine<Transaction>>(),
+                                    MetaTextLongValues = new List<models.MetaFields.MetaTextLong<Transaction>>(),
+                                    MetaAttachmentValues = new List<models.MetaFields.MetaAttachment<Transaction>>(),
+                                    MetaBooleanValues = new List<models.MetaFields.MetaBoolean<Transaction>>(),
+                                    MetaNumberValues = new List<models.MetaFields.MetaNumber<Transaction>>(),
+                                    MetaTransactionValues = new List<models.MetaFields.MetaTransaction<Transaction>>(),
                                 };
                                 result.Identifiers = transaction.Identifiers.Select(x => new TransactionUniqueIdentifier(result, x)).ToList();
                                 result.TransactionLines = transaction.Lines.Select((line, i) => new TransactionLine
@@ -585,6 +617,16 @@ namespace assetgrid_backend.Controllers
                                     result.SourceAccountId = result.DestinationAccountId;
                                     result.DestinationAccountId = sourceId;
                                     result.TransactionLines.ForEach(line => line.Amount = -line.Amount);
+                                }
+
+                                // Set metadata
+                                if (transaction.MetaData?.Any() ?? false)
+                                {
+                                    _meta.SetTransactionMetaValues(result,
+                                    transaction.MetaData,
+                                    metafields,
+                                    writeAccountIds.ToHashSet(),
+                                    writeableTransactionIds);
                                 }
 
                                 _context.Transactions.Add(result);

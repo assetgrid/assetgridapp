@@ -71,3 +71,5 @@
 - [ ] Show errors for transaction lines in the inline editor
 - [ ] Add tests for metadata fields (especially read/write permissions)
 - [ ] Verify that attachments are deleted when no transactions reference them
+- [ ] Add date meta field
+- [ ] Make it possible to save import profiles referencing custom fields

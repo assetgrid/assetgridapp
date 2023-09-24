@@ -105,6 +105,7 @@
     "month": "Month",
     "name": "Name",
     "net_worth": "Net worth",
+    "no": "no",
     "no_account": "No account",
     "no_attachment": "No attachment",
     "no_category": "No category",
@@ -131,7 +132,6 @@
     "value": "Value",
     "week": "Week",
     "year": "Year",
-    "no": "no",
     "yes": "yes"
   },
   "delete": {
@@ -149,6 +149,7 @@
     "auto_detect_text_encoding": "Automatically detect text encoding",
     "category_column": "Category column",
     "checking_for_duplicates": "Checking for duplicates…",
+    "column": "Column",
     "could_not_calculate_identifier_for_transaction": "Could not calculate identifier for this transaction",
     "could_not_parse_amount": "Could not parse amount",
     "could_not_parse_timestamp": "Could not parse timestamp",
@@ -191,7 +192,9 @@
     "impossible_csv_github_link": "If your bank exported a CSV file that is impossible to import due to missing features in the current importer, you can file an issue on our <1>Github page</1>",
     "issues_detected": "Issues detected",
     "map_columns": "Map columns",
+    "map_meta_fields": "Map custom fields",
     "mapping_options": "Mapping options",
+    "meta_fields": "Custom fields",
     "n_duplicate_transactions": "{{count}} transaction has duplicate identifiers. Only one transaction can exist for each identifier.",
     "n_duplicate_transactions_plural": "{{count}} transactions have duplicate identifiers. Only one transaction can exist for each identifier.",
     "n_error_transactions": "{{count}} transaction has errors. It will not be created.",
@@ -203,6 +206,7 @@
     "no_accounts_found_in_csv": "No accounts were found in your CSV file. Check that you have selected the correct columns.",
     "no_destination_account": "No destination account",
     "no_issues_detected": "No issues detected.",
+    "no_meta_fields": "You have no custom fields",
     "no_profiles_can_create_after_import": "You do not have any import profiles. It will be possible to create an import profile at the end of the import process.",
     "no_source_account": "No source account",
     "only_showing_duplicate_transactions": "Currently only duplicate transactions are shown.",
@@ -242,7 +246,9 @@
     "sign_in_to_assetgrid": "Sign in to Assetgrid"
   },
   "meta": {
+    "field_import_not_supported": "Importing custom fields of this type is not yet supported",
     "field_name": "Field name",
+    "meta_field": "Custom field",
     "select_field": "Select custom field"
   },
   "metadata": {

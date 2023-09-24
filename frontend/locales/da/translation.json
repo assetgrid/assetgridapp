@@ -105,6 +105,7 @@
     "month": "Måned",
     "name": "Navn",
     "net_worth": "Nettoformue",
+    "no": "nej",
     "no_account": "Ingen konto",
     "no_attachment": "Ingen vedhæftning",
     "no_category": "Ingen kategori",
@@ -131,7 +132,6 @@
     "value": "Værdi",
     "week": "Uge",
     "year": "År",
-    "no": "nej",
     "yes": "ja"
   },
   "delete": {
@@ -149,6 +149,7 @@
     "auto_detect_text_encoding": "Detektér tekstkodning automatisk",
     "category_column": "Kategorikolonne",
     "checking_for_duplicates": "Kontrollerer for dubletter…",
+    "column": "Kolonne",
     "could_not_calculate_identifier_for_transaction": "Kunne ikke beregne identifikator for denne transaktion",
     "could_not_parse_amount": "Kunne ikke fortolke beløb",
     "could_not_parse_timestamp": "Kunne ikke fortolke tidsstempel",
@@ -191,7 +192,9 @@
     "impossible_csv_github_link": "Hvis din bank har eksporteret en CSV-fil, der er umulig at importere på grund af manglende funktioner i det nuværende importværktøj, kan du oprette en fejlmelding på vores <1>Github side</1>",
     "issues_detected": "Problemer fundet",
     "map_columns": "Sammenkæd kolonner",
+    "map_meta_fields": "Sammenkæd brugerdefinerede felter",
     "mapping_options": "Indstillinger for sammenkædning",
+    "meta_fields": "Brugerdefinerede felter",
     "n_duplicate_transactions": "{{count}} transaktion har dublikerede identifikatorer. Der kan kun eksistere en transaktion for hver identifikator.",
     "n_duplicate_transactions_plural": "{{count}} transaktioner har duplikerede identifikatorer. Der kan kun eksistere en transaktion for hver identifikator.",
     "n_error_transactions": "{{count}} transaktion har fejl. Den vil ikke blive oprettet.",
@@ -203,6 +206,7 @@
     "no_accounts_found_in_csv": "Ingen konti blev fundet i din CSV-fil. Kontrollér, at du har valgt de korrekte kolonner.",
     "no_destination_account": "Ingen modtagerkonto",
     "no_issues_detected": "Ingen problemer fundet.",
+    "no_meta_fields": "Du har ingen brugerdefinerede felter",
     "no_profiles_can_create_after_import": "Du har ingen importprofiler. Det vil være muligt at oprette en importprofil sidst i importprocessen.",
     "no_source_account": "Ingen afsenderkonto",
     "only_showing_duplicate_transactions": "I øjeblikket vises kun duplikerede transaktioner.",
@@ -242,7 +246,9 @@
     "sign_in_to_assetgrid": "Log på Assetgrid"
   },
   "meta": {
+    "field_import_not_supported": "Import af brugerdefinerede felter af denne type understøttes endnu ikke",
     "field_name": "Navn på felt",
+    "meta_field": "Brugerdefineret felt",
     "select_field": "Vælg brugerdefineret felt"
   },
   "metadata": {

@@ -1,3 +1,5 @@
+import { MetaField } from "./meta";
+
 export type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
 export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
 
@@ -40,6 +42,8 @@ export interface CsvImportProfile {
     dateColumn: string | null
     dateFormat: string
     dateParseOptions: ParseOptions
+
+    metaParseOptions: MetaParseOptions[]
 };
 
 export interface ParseOptions {
@@ -47,6 +51,13 @@ export interface ParseOptions {
 
     regex: RegExp | null
     pattern: string
+}
+
+export interface MetaParseOptions {
+    metaId: number
+    type: MetaField["valueType"]
+    column: string | null
+    parseOptions: ParseOptions
 }
 
 export function parseWithOptions (input: string, options: ParseOptions): string {

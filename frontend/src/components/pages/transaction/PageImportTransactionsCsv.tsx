@@ -8,9 +8,10 @@ import Hero from "../../common/Hero";
 import { Import } from "../../transaction/import/Import";
 import ImportCsv from "../../transaction/import/ImportCsv";
 import { CsvCreateTransaction } from "../../transaction/import/importModels";
-import MapCsvFields, { updateAutoIdentifiers } from "../../transaction/import/MapCsvFields/MapCsvFields";
+import MapCsvFields from "../../transaction/import/MapCsvFields/MapCsvFields";
+import { reparseAutoIdentifiers } from "../../transaction/import/MapCsvFields/parseTransactionsCsv";
 
-const defaultParseOptions: ParseOptions = {
+export const DefaultParseOptions: ParseOptions = {
     trimWhitespace: true,
     regex: null,
     pattern: "{0}"
@@ -38,30 +39,32 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
 
         duplicateHandling: "automatic",
         identifierColumn: null,
-        identifierParseOptions: defaultParseOptions,
+        identifierParseOptions: DefaultParseOptions,
         sourceAccountColumn: null,
         sourceAccountId: null,
         sourceAccountType: "column",
-        sourceAccountParseOptions: defaultParseOptions,
+        sourceAccountParseOptions: DefaultParseOptions,
         destinationAccountColumn: null,
         destinationAccountId: null,
         destinationAccountType: "column",
-        destinationAccountParseOptions: defaultParseOptions,
+        destinationAccountParseOptions: DefaultParseOptions,
         debitAmountColumn: null,
-        debitAmountParseOptions: defaultParseOptions,
+        debitAmountParseOptions: DefaultParseOptions,
         separateCreditDebitColumns: false,
         creditAmountColumn: null,
-        creditAmountParseOptions: defaultParseOptions,
+        creditAmountParseOptions: DefaultParseOptions,
 
         decimalSeparator: ".",
         dateColumn: null,
-        dateParseOptions: defaultParseOptions,
+        dateParseOptions: DefaultParseOptions,
         // https://moment.github.io/luxon/#/parsing?id=table-of-tokens
         dateFormat: "yyyy-MM-dd",
         descriptionColumn: null,
-        descriptionParseOptions: defaultParseOptions,
+        descriptionParseOptions: DefaultParseOptions,
         categoryColumn: null,
-        categoryParseOptions: defaultParseOptions
+        categoryParseOptions: DefaultParseOptions,
+
+        metaParseOptions: []
     });
 
     const updateDuplicateAccountsDebounced = React.useCallback(debounce(updateDuplicateAccounts, 500), []);
@@ -157,7 +160,7 @@ export default function PageImportTransactionsCsv (): React.ReactElement {
             }));
 
             setTransactions(
-                updateAutoIdentifiers([...transactions.map(transaction => ({
+                reparseAutoIdentifiers([...transactions.map(transaction => ({
                     ...transaction,
                     source: identifierDictionary[transaction.sourceText] ?? null,
                     destination: identifierDictionary[transaction.destinationText] ?? null

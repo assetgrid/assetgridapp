@@ -6,7 +6,6 @@ import InputSelect from "../../../input/InputSelect";
 import InputText from "../../../input/InputText";
 import { CsvCreateTransaction } from "../importModels";
 import { InputParseOptionsModal } from "../../../input/InputParsingOptions";
-import Decimal from "decimal.js";
 import Message from "../../../common/Message";
 import InputButton from "../../../input/InputButton";
 import CsvMappingIssues from "./CsvMappingIssues";
@@ -16,6 +15,8 @@ import { CsvImportProfile, DuplicateHandlingOptions, ParseOptions, parseWithOpti
 import AccountSelector from "./AccountSelector";
 import InputCheckbox from "../../../input/InputCheckbox";
 import { Trans, useTranslation } from "react-i18next";
+import MapMeta from "./MapMeta";
+import { getAmount, getIdentifier, getValue, parseTransactions, reparseAutoIdentifiers } from "./parseTransactionsCsv";
 
 interface Props {
     data: any[]
@@ -476,6 +477,15 @@ export default function MapCsvFields (props: Props): React.ReactElement {
             </div>
         </Card>
 
+        {props.transactions != null && <MapMeta
+            options={props.options}
+            setOptions={() => 0}
+            disabled={!props.apiReady}
+            transactions={props.transactions}
+            data={props.data}
+            onChange={props.onChange}
+            setModal={setModal} />}
+
         {(props.options.sourceAccountType === "column" || props.options.destinationAccountType === "column") &&
             <AccountSelector
                 accounts={props.accounts}
@@ -523,7 +533,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
         creditParseOptions: ParseOptions,
         separateCreditDebitColumns: boolean,
         decimalSeparator: string): void {
-        props.onChange(updateAutoIdentifiers([
+        props.onChange(reparseAutoIdentifiers([
             ...props.data.map((row, i) => {
                 const amount = getAmount(row, debitColumn, debitParseOptions, creditColumn, creditParseOptions, separateCreditDebitColumns, decimalSeparator);
                 return {
@@ -591,7 +601,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
             return;
         }
 
-        props.onChange(updateAutoIdentifiers([
+        props.onChange(reparseAutoIdentifiers([
             ...props.data.map((row, i) => {
                 const dateText = parseWithOptions(dateColumn !== null ? (row)[dateColumn] ?? "" : "", parseOptions);
                 return {
@@ -624,7 +634,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
         };
 
         props.onChange(
-            updateAutoIdentifiers([
+            reparseAutoIdentifiers([
                 ...props.data.map((row, i) => ({
                     ...props.transactions![i],
                     identifier: getIdentifier(duplicateHandling, identifierColumn, parseOptions, row)
@@ -688,7 +698,7 @@ export default function MapCsvFields (props: Props): React.ReactElement {
             newOptions.destinationAccountId = value?.id ?? null;
             newOptions.destinationAccountParseOptions = parseOptions;
         }
-        props.onChange(updateAutoIdentifiers(newTransactions, newOptions), newOptions);
+        props.onChange(reparseAutoIdentifiers(newTransactions, newOptions), newOptions);
 
         function getAccount (row: { [key: string]: string }): Account | null {
             if (accountType === "single") {
@@ -702,206 +712,5 @@ export default function MapCsvFields (props: Props): React.ReactElement {
                 }
             }
         }
-    }
-}
-
-/**
- * Updates automatic identifiers for all transactions, but only if identifier is set to automatic
- */
-export function updateAutoIdentifiers (transactions: CsvCreateTransaction[], options: CsvImportProfile): CsvCreateTransaction[] {
-    if (options.duplicateHandling !== "automatic") return transactions;
-
-    const counts: { [key: string]: number } = {};
-    return transactions.map(t => {
-        let identifier = getAutoIdentifier(t);
-
-        if (identifier === null) {
-            return { ...t, identifier };
-        }
-
-        if (counts[identifier] === undefined) counts[identifier] = 0;
-        counts[identifier] += 1;
-
-        identifier = `${identifier}|${counts[identifier]}`;
-
-        return { ...t, identifier };
-    });
-}
-
-/**
- * Calculates an automatic identifier for the transaction
- * @param transaction The transaction to calculate an identifier for
- * @returns A unique identifier
- */
-function getAutoIdentifier (transaction: CsvCreateTransaction): string | null {
-    if (transaction.amount === "invalid" || !transaction.dateTime.isValid) {
-        return null;
-    }
-
-    if (transaction.amount.greaterThanOrEqualTo(0)) {
-        return formatAccount(transaction.source) + "→" + formatAccount(transaction.destination) +
-            "|" + transaction.dateTime.toISO({ suppressMilliseconds: true, includeOffset: false, includePrefix: false }) +
-            "|" + transaction.amount.toDecimalPlaces(4).toString();
-    } else {
-        return formatAccount(transaction.destination) + "→" + formatAccount(transaction.source) +
-            "|" + transaction.dateTime.toISO({ suppressMilliseconds: true, includeOffset: false, includePrefix: false }) +
-            "|" + transaction.amount.neg().toDecimalPlaces(4).toString();
-    }
-
-    function formatAccount (account: Account | null): string {
-        switch (account) {
-            case null:
-                return ".";
-            default:
-                return account.id.toString();
-        }
-    }
-}
-
-/**
- * Gets the value of a field from the raw CSV row by the field name
- * @param row An object representing the CSV row
- * @param columnName The name of the field to get the value of
- * @returns The value of that field
- */
-function getValue (row: { [key: string]: string }, columnName: string | null): string {
-    return columnName !== null ? row[columnName] : "";
-}
-
-/**
- * Creates transaction from raw CSV data
- * @param data The raw csv data to parse. Each object corresponds to a CSV row
- * @param options The options telling which CSV fields to map to which fields on the transaction
- * @returns An array of parsed transactions
- */
-function parseTransactions (data: any[], options: CsvImportProfile, accounts: Account[]): CsvCreateTransaction[] {
-    const result = data.map((row, i): CsvCreateTransaction => {
-        const dateText = parseWithOptions(getValue(row, options.dateColumn), options.dateParseOptions);
-        const sourceText = options.sourceAccountType === "column"
-            ? parseWithOptions(getValue(row, options.sourceAccountColumn), options.sourceAccountParseOptions)
-            : "";
-        const destinationText = options.destinationAccountType === "column"
-            ? parseWithOptions(getValue(row, options.destinationAccountColumn), options.destinationAccountParseOptions)
-            : "";
-        const amount = getAmount(row,
-            options.debitAmountColumn,
-            options.debitAmountParseOptions,
-            options.creditAmountColumn,
-            options.creditAmountParseOptions,
-            options.separateCreditDebitColumns,
-            options.decimalSeparator);
-
-        return {
-            rowNumber: i,
-            dateText,
-            dateTime: DateTime.fromFormat(dateText, options.dateFormat),
-            description: parseWithOptions(getValue(row, options.descriptionColumn), options.descriptionParseOptions),
-            category: parseWithOptions(getValue(row, options.categoryColumn), options.categoryParseOptions),
-            sourceText,
-            source: accounts.find(account => options.sourceAccountType === "single"
-                ? account.id === options.sourceAccountId
-                : account.identifiers.some(x => x === sourceText)
-            ) ?? null,
-            destinationText,
-            destination: accounts.find(account => options.destinationAccountType === "single"
-                ? account.id === options.destinationAccountId
-                : account.identifiers.some(x => x === destinationText)
-            ) ?? null,
-            identifier: getIdentifier(options.duplicateHandling, options.identifierColumn, options.identifierParseOptions, row),
-            amountText: amount.text,
-            amount: amount.value
-        };
-    });
-
-    return updateAutoIdentifiers(result, options);
-}
-
-function getAmount (row: { [key: string]: string },
-    debitAmountColumn: string | null,
-    debitAmountParseOptions: ParseOptions,
-    creditAmountColumn: string | null,
-    creditAmountParseOptions: ParseOptions,
-    separateCreditDebitColumns: boolean,
-    decimalSeparator: string): { text: string, value: Decimal | "invalid" } {
-    const debitValue = parseWithOptions(getValue(row, debitAmountColumn), debitAmountParseOptions);
-    const debitAmount = parseAmount(debitValue, decimalSeparator, debitAmountParseOptions);
-    const creditValue = parseWithOptions(getValue(row, creditAmountColumn), creditAmountParseOptions);
-    const creditAmount = parseAmount(creditValue, decimalSeparator, creditAmountParseOptions);
-
-    if (separateCreditDebitColumns) {
-        if (debitValue.trim() === "" || debitAmount === "invalid") {
-            return {
-                text: creditValue,
-                value: creditAmount === "invalid" ? "invalid" : creditAmount.times(-1)
-            };
-        }
-        return {
-            text: debitValue,
-            value: debitAmount
-        };
-    } else {
-        return {
-            text: debitValue,
-            value: debitAmount
-        };
-    }
-}
-
-/**
- * Parses
- * @param rawValue The raw string to be parsed
- * @param parseOptions The options with which to parse
- * @returns A decimal representation of the number or the string "invalid" if parsing failed
- */
-function parseAmount (rawValue: string, decimalSeparator: string, parseOptions: ParseOptions): Decimal | "invalid" {
-    function escapeRegExp (string: string): string {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-    }
-
-    if (rawValue === undefined || rawValue === null) {
-        rawValue = "";
-    }
-
-    rawValue = parseWithOptions(rawValue, parseOptions);
-
-    // Remove everything except numbers and the decimal separator
-    rawValue = rawValue.replace(new RegExp("[^" + escapeRegExp(decimalSeparator) + "\\-\\d]", "g"), "");
-    // Change decimal separator to period
-    rawValue = rawValue.replace(new RegExp(escapeRegExp(decimalSeparator), "g"), ".");
-
-    let result: Decimal | "invalid" = "invalid";
-    try {
-        result = new Decimal(rawValue);
-    } catch (error) {
-        result = "invalid";
-    }
-    return result;
-}
-
-/**
- * Gets the unique identifier value for a transaction
- * @param duplicateHandling The options for duplicate handling
- * @param identifierColumn The name of the column in the raw CSV
- * @param parseOptions The options by which to parse the name column
- * @param rowNumber The number of the row to calculate the identifier for
- * @param row Raw CSV row
- * @param data Raw CSV data set
- * @returns The unique identifier for the transaction described by the function parameters
- */
-function getIdentifier (duplicateHandling: DuplicateHandlingOptions,
-    identifierColumn: string | null,
-    parseOptions: ParseOptions,
-    row: { [key: string]: string }): string | null {
-    switch (duplicateHandling) {
-        case "none":
-            return null;
-        case "identifier":
-            if (identifierColumn == null) {
-                return "";
-            } else {
-                return parseWithOptions(getValue(row, identifierColumn), parseOptions);
-            }
-        case "automatic":
-            return "";
     }
 }
