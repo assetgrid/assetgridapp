@@ -10,6 +10,9 @@ import Table from "../../../common/Table";
 import Tooltip from "../../../common/Tooltip";
 import { CsvCreateTransaction } from "../importModels";
 import DuplicateIndicator from "./DuplicateIndicator";
+import { useQuery } from "@tanstack/react-query";
+import { useApi } from "../../../../lib/ApiClient";
+import { MetaFieldValue } from "./MetaFieldValue";
 
 interface Props {
     transactions: CsvCreateTransaction[]
@@ -29,6 +32,12 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
     }
 
     const items = React.useMemo(() => props.transactions.filter(props.tableFilter), [props.tableFilter, props.transactions]);
+    const api = useApi();
+    const { data: metaFields } = useQuery({ queryKey: ["meta"], queryFn: api.Meta.list });
+
+    if (metaFields === undefined) {
+        return <p>{t("common.loading_please_wait")}</p>;
+    }
 
     return <Table pageSize={20}
         items={items}
@@ -40,6 +49,7 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
             <th>{t("transaction.source")}</th>
             <th>{t("transaction.destination")}</th>
             <th>{t("common.category")}</th>
+            {metaFields.map(x => <th key={x.id}>{x.name}</th>)}
         </tr>}
         page={page}
         goToPage={setPage}
@@ -70,6 +80,12 @@ export default function CsvMappingTransactionTable (props: Props): React.ReactEl
                 <td>
                     {transaction.category}
                 </td>
+                {metaFields.map(field => <td key={field.id}>
+                    <MetaFieldValue
+                        field={field}
+                        value={transaction.metaFields.find(x => x.metaId === field.id)}
+                    />
+                </td>)}
             </tr>}
     />;
 

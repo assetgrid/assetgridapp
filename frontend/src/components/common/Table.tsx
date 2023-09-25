@@ -29,19 +29,21 @@ export default function Table<T> (props: Props<T>): React.ReactElement {
     }, [props.items]);
 
     return <>
-        <table className="table is-fullwidth is-hoverable" style={{ marginBottom: 0 }}>
-            <thead>
-                {props.headings}
-            </thead>
-            <tfoot>
-                {props.headings}
-            </tfoot>
-            <tbody>
-                {paginatedItems.map(item =>
-                    props.renderItem(item.item, item.index)
-                )}
-            </tbody>
-        </table>
+        <div style={{ overflowX: "auto" }}>
+            <table className="table is-fullwidth is-hoverable" style={{ marginBottom: 0 }}>
+                <thead>
+                    {props.headings}
+                </thead>
+                <tfoot>
+                    {props.headings}
+                </tfoot>
+                <tbody>
+                    {paginatedItems.map(item =>
+                        props.renderItem(item.item, item.index)
+                    )}
+                </tbody>
+            </table>
+        </div>
         <Pagination goToPage={props.goToPage}
             page={props.page}
             pageSize={props.pageSize}

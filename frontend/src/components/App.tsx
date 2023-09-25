@@ -47,7 +47,7 @@ export default function AssetgridApp (): React.ReactElement {
                     <MobileHeader setShowSidebar={setShowSidebar} sidebarVisible={showSidebar} />
                     <div style={{ display: "flex", flexGrow: 1 }}>
                         <Sidebar show={showSidebar} setShowSidebar={setShowSidebar}></Sidebar>
-                        <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%" }}>
+                        <div className={"main-content" + (showSidebar ? " sidebar-shown" : "")} style={{ flexGrow: 1, backgroundColor: "#EEE", maxWidth: "100%", overflowX: "hidden" }}>
                             <Routes>
                                 <Route path={routes.dashboard()} element={<PageDashboard />} />
                                 <Route path={routes.importCsv()} element={<PageImportTransactionsCsv />} />

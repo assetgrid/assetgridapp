@@ -20,5 +20,9 @@ export interface CsvCreateTransaction {
     amountText: string
     amount: Decimal | "invalid"
 
-    metaFields: SetMetaFieldValue[]
+    metaFields: CsvCreateTransactionMetaValue[]
 }
+
+export type CsvCreateTransactionMetaValue = SetMetaFieldValue & {
+    sourceText: string
+};

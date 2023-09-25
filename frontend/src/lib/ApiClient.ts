@@ -627,7 +627,8 @@ const Transaction = (token: string) => ({
                     ...transaction,
                     total: undefined,
                     totalString: transaction.total.mul(new Decimal(10000)).round().toString(),
-                    lines: transaction.lines.map(line => ({ ...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString() }))
+                    lines: transaction.lines.map(line => ({ ...line, amount: undefined, amountString: line.amount.mul(new Decimal(10000)).round().toString() })),
+                    metaData: transaction.metaData?.map(x => serializeSetMetaFieldValue(x))
                 })), {
                     headers: { authorization: "Bearer: " + token }
                 }).then(result => resolve({

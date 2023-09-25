@@ -1,9 +1,9 @@
 import { DateTime } from "luxon";
 import { Account } from "../../../../models/account";
 import { CsvImportProfile, DuplicateHandlingOptions, MetaParseOptions, ParseOptions, parseWithOptions } from "../../../../models/csvImportProfile";
-import { CsvCreateTransaction } from "../importModels";
+import { CsvCreateTransaction, CsvCreateTransactionMetaValue } from "../importModels";
 import Decimal from "decimal.js";
-import { FieldValueType, SetMetaFieldValue } from "../../../../models/meta";
+import { FieldValueType } from "../../../../models/meta";
 
 /**
  * Creates transaction from raw CSV data
@@ -154,19 +154,22 @@ export function getIdentifier (duplicateHandling: DuplicateHandlingOptions,
     }
 }
 
-function parseMetaFields (row: any, options: MetaParseOptions[]): SetMetaFieldValue[] {
+function parseMetaFields (row: any, options: MetaParseOptions[]): CsvCreateTransactionMetaValue[] {
     return options.map(x => ({
         metaId: x.metaId,
         type: x.type,
-        value: parseMetaValue(row, x)
+        ...parseMetaValue(row, x)
     }));
 }
 
-export function parseMetaValue (row: any, options: MetaParseOptions): SetMetaFieldValue["value"] {
+export function parseMetaValue (row: any, options: MetaParseOptions): { value: CsvCreateTransactionMetaValue["value"], sourceText: string } {
+    const sourceText = parseWithOptions(getValue(row, options.column), options.parseOptions);
     switch (options.type) {
         case FieldValueType.TextLine:
         case FieldValueType.TextLong:
-            return parseWithOptions(getValue(row, options.column), options.parseOptions);
+            return { sourceText, value: sourceText };
+        case FieldValueType.Number:
+            return { sourceText, value: parseAmount(getValue(row, options.column), options.decimalSeparator, options.parseOptions) };
         default:
             throw new Error("Cannot parse field");
     }

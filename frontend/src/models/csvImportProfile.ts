@@ -1,4 +1,4 @@
-import { MetaField } from "./meta";
+import { FieldValueType } from "./meta";
 
 export type DuplicateHandlingOptions = "none" | "identifier" | "automatic";
 export type AccountIdentifier = "select" | "id" | "name" | "accountNumber";
@@ -53,12 +53,15 @@ export interface ParseOptions {
     pattern: string
 }
 
-export interface MetaParseOptions {
+export type MetaParseOptions = MetaParseOptionsText | MetaParseOptionsNumber;
+
+interface MetaParseOptionsBase {
     metaId: number
-    type: MetaField["valueType"]
     column: string | null
     parseOptions: ParseOptions
-}
+};
+export type MetaParseOptionsText = MetaParseOptionsBase & { type: FieldValueType.TextLine | FieldValueType.TextLong };
+export type MetaParseOptionsNumber = MetaParseOptionsBase & { type: FieldValueType.Number, decimalSeparator: string };
 
 export function parseWithOptions (input: string, options: ParseOptions): string {
     let result = input ?? "";

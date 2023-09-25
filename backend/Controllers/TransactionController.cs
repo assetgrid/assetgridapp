@@ -13,6 +13,7 @@ using assetgrid_backend.Data.Search;
 using assetgrid_backend.models.Search;
 using assetgrid_backend.models.ViewModels;
 using assetgrid_backend.models.MetaFields;
+using System.Text.Json;
 
 namespace assetgrid_backend.Controllers
 {
@@ -542,9 +543,20 @@ namespace assetgrid_backend.Controllers
                             foreach (var metaValue in transaction.MetaData!)
                             {
                                 if (metaValue.Value != null && metafields.ContainsKey(metaValue.MetaId) &&
-                                    metafields[metaValue.MetaId].ValueType == MetaFieldValueType.Number)
+                                    metafields[metaValue.MetaId].ValueType == MetaFieldValueType.Transaction)
                                 {
-                                    referencedTransactionIds.Add((int)metaValue.Value!);
+                                    int? transactionIdValue = metaValue.Value switch
+                                    {
+                                        JsonElement x => x.ValueKind == JsonValueKind.Number ? x.GetInt32() : null,
+                                        int x => x,
+                                        null => null,
+                                        _ => throw new Exception("Incorrect type of value")
+                                    };
+                                    
+                                    if (transactionIdValue.HasValue)
+                                    {
+                                        referencedTransactionIds.Add(transactionIdValue.Value);
+                                    }
                                 }
                             }
                         }
