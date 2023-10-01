@@ -6,4 +6,6 @@ COPY ./frontend/dist.production /usr/share/assetgrid/wwwroot/dist/
 
 WORKDIR /usr/share/assetgrid
 
+EXPOSE 8080
+
 CMD ["dotnet", "backend.dll", "--urls=http://0.0.0.0:8080/"]
